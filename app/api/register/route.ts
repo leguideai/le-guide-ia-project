@@ -652,12 +652,17 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     console.error("Registration error:", error);
 
-    // Never expose internal details — return a safe message
+    // Return a useful message for Cloudflare/Google setup issues.
+    const errorMessage = error instanceof Error ? error.message : "UNKNOWN_ERROR";
     const message =
-      error instanceof Error && error.message === "MISSING_CREDENTIALS"
-        ? "Configuration serveur incomplète. Veuillez contacter l'administrateur."
-        : "Une erreur est survenue lors de l'inscription. Veuillez réessayer.";
+      errorMessage === "MISSING_CREDENTIALS"
+        ? "Variables d'environnement Google manquantes ou invalides."
+        : errorMessage === "GOOGLE_TOKEN_EXCHANGE_FAILED"
+          ? "Impossible d'obtenir un jeton Google. Vérifie le client email et la private key."
+          : errorMessage.startsWith("GOOGLE_SHEETS_REQUEST_FAILED_")
+            ? "Google Sheets refuse la requête. Vérifie que le service account a accès au spreadsheet."
+            : `Une erreur est survenue lors de l'inscription (${errorMessage}).`;
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message, code: errorMessage }, { status: 500 });
   }
 }
