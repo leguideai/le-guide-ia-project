@@ -38,6 +38,9 @@ export const metadata: Metadata = {
   metadataBase,
   authors: [{ name: 'Le Guide IA', url: 'https://leguideai.com' }],
   publisher: { name: 'Le Guide IA' },
+  verification: {
+    google: 'gyjctmFrz-g1vy-5Mfq5F3ZHC1gxz8q0Bgtaf-mRI20',
+  },
   themeColor: '#0f172a',
   alternates: {
     canonical: 'https://leguideai.com',
