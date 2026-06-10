@@ -261,6 +261,7 @@ function SignupForm({ perks }: { perks: string[] }) {
 
   const inputBase =
     "rounded-lg border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
+  const whatsappGroupHref = "https://chat.whatsapp.com/KOzRqZO1HwGKIU3g3d3wYa"
 
   if (success) {
     return (
@@ -299,6 +300,17 @@ function SignupForm({ perks }: { perks: string[] }) {
               </li>
             </ul>
           </div>
+          <a
+            href={whatsappGroupHref}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "mt-6 h-12 w-full gap-2 font-semibold",
+            )}
+          >
+            Rejoindre la communauté WhatsApp
+          </a>
         </div>
       </motion.div>
     )

@@ -4,10 +4,10 @@ import { motion } from "motion/react"
 import { Users, CalendarDays, Cpu, Target } from "lucide-react"
 
 const goals = [
-  { icon: Users, value: "1000+", label: "Participants visés" },
+  { icon: Users, value: "420", label: "Inscrits actuellement" },
   { icon: CalendarDays, value: "5 jours", label: "De formation pratique gratuite" },
-  { icon: Cpu, value: "4 outils IA", label: "ChatGPT · Claude · Gemini · Canva IA" },
-  { icon: Target, value: "100%", label: "Pratique, des résultats dès le 1er jour" },
+  { icon: Cpu, value: "21 pays", label: "Déjà représentés parmi les inscrits" },
+  { icon: Target, value: "1 000", label: "Objectif total de participants" },
 ]
 
 export function Stats() {

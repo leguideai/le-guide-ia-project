@@ -10,6 +10,8 @@ const features = [
   "Cas pratiques",
   "Automatisation",
   "Stratégie IA appliquée",
+  "Garantie satisfait ou remboursé",
+  "Attestation de participation : 9 900 FCFA",
   "Certificat de fin de parcours",
   "Accès à la communauté PRO",
 ]
@@ -61,12 +63,15 @@ export function Parcours() {
           </div>
 
           <div className="rounded-2xl border border-border bg-card/80 p-6 backdrop-blur-sm">
-            <div className="text-sm font-medium text-muted-foreground">Prix fondateur</div>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="font-heading text-4xl font-extrabold text-glow text-foreground">À définir</span>
-            </div>
-            <div className="mt-2 text-sm text-muted-foreground">
-              Prix standard&nbsp;: <span className="font-medium text-foreground/80 line-through">259 000 FCFA</span>
+            <div className="mt-1 flex flex-col gap-3">
+              <div className="flex items-baseline gap-3 whitespace-nowrap">
+                <span className="text-sm font-medium text-muted-foreground">Prix fondateur :</span>
+                <span className="text-sm font-medium text-muted-foreground line-through">199 000 FCFA</span>
+              </div>
+              <div className="flex items-baseline gap-3 whitespace-nowrap">
+                <span className="text-sm font-medium text-muted-foreground">Prix standard :</span>
+                <span className="font-extrabold text-primary text-2xl">Surprise</span>
+              </div>
             </div>
             <a
               href="#inscription"
