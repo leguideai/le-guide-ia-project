@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Sitemap: https://leguideai.com/sitemap.xml
+Host: https://leguideai.com
