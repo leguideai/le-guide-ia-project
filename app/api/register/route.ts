@@ -245,27 +245,21 @@ function base64UrlEncode(value: ArrayBuffer | Uint8Array | string): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function pemToArrayBuffer(pem: string): ArrayBuffer {
+function pemToKeyBytes(pem: string): Uint8Array<ArrayBuffer> {
   const normalized = pem
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/\s+/g, "");
 
   const binary = atob(normalized);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-
-  return bytes.buffer;
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0)) as Uint8Array<ArrayBuffer>;
 }
 
 async function getSigningKey(credentials: ServiceAccountCredentials): Promise<CryptoKey> {
   if (!cachedKeyImport) {
     cachedKeyImport = crypto.subtle.importKey(
       "pkcs8",
-      pemToArrayBuffer(credentials.private_key),
+      pemToKeyBytes(credentials.private_key),
       { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
       false,
       ["sign"]
