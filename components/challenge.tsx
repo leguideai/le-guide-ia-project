@@ -47,7 +47,7 @@ const days = [
 ]
 
 const perks = [
-  "5 lives pratiques avec démos",
+  "7 lives pratiques avec démos",
   "Communauté WhatsApp active",
   "Exercices & replays inclus",
   "Aucune carte bancaire requise",

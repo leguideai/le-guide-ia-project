@@ -4,7 +4,7 @@ import { motion } from "motion/react"
 import { Video, MonitorPlay, Dumbbell, Users, FileCheck, Compass, ArrowUpRight } from "lucide-react"
 
 const bonuses = [
-  { icon: Video, text: "5 sessions pratiques en direct" },
+  { icon: Video, text: "7 sessions pratiques en direct" },
   { icon: MonitorPlay, text: "Des démonstrations concrètes" },
   { icon: Dumbbell, text: "Des exercices simples à appliquer" },
   { icon: Users, text: "L'accès à la communauté WhatsApp" },
