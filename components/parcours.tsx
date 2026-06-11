@@ -5,15 +5,12 @@ import { Check, ArrowRight } from "lucide-react"
 
 const features = [
   "10 sessions premium",
-  "2 sessions pratiques hebdomadaires",
-  "Accompagnement plus structuré",
+  "2 sessions pratiques",
+  "Accompagnement PRO",
   "Cas pratiques",
   "Automatisation",
   "Stratégie IA appliquée",
   "Garantie satisfait ou remboursé",
-  "Attestation de participation : 9 900 FCFA",
-  "Certificat de fin de parcours",
-  "Accès à la communauté PRO",
 ]
 
 export function Parcours() {
@@ -66,11 +63,11 @@ export function Parcours() {
             <div className="mt-1 flex flex-col gap-3">
               <div className="flex items-baseline gap-3 whitespace-nowrap">
                 <span className="text-sm font-medium text-muted-foreground">Prix fondateur :</span>
-                <span className="text-sm font-medium text-muted-foreground line-through">199 000 FCFA</span>
+                <span className="font-extrabold text-primary text-2xl">Surprise</span>
               </div>
               <div className="flex items-baseline gap-3 whitespace-nowrap">
                 <span className="text-sm font-medium text-muted-foreground">Prix standard :</span>
-                <span className="font-extrabold text-primary text-2xl">Surprise</span>
+                <span className="text-sm font-medium text-muted-foreground line-through">199 000 FCFA</span>
               </div>
             </div>
             <a

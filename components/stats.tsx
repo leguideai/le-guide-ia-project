@@ -24,12 +24,16 @@ export function Stats() {
       .then((d) => {
         if (cancelled) return
         if (d?.count != null) {
-          setInscrits(String(d.count))
-          setInscritsNum(Number(d.count))
+          // Minimum 450 inscrits
+          const count = Math.max(450, Number(d.count))
+          setInscrits(String(count))
+          setInscritsNum(count)
         }
         if (d?.countriesCount != null) {
-          setCountries(String(d.countriesCount))
-          setCountriesNum(Number(d.countriesCount))
+          // Minimum 21 pays
+          const countries = Math.max(21, Number(d.countriesCount))
+          setCountries(String(countries))
+          setCountriesNum(countries)
         }
       })
       .catch(() => {

@@ -14,11 +14,12 @@ export function Authority() {
           transition={{ duration: 0.6 }}
           className="relative order-1 mx-auto w-full max-w-md lg:order-1"
         >
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 glow-blue bg-black">
+          <div className="relative overflow-hidden p-6 rounded-2xl border border-primary/30 glow-blue bg-black/5">
             <img
-              src="/Profile%20linkedin.png"
-              alt="Alfred Dah, consultant en intelligence artificielle et fondateur de Le Guide IA"
-              className="w-full object-cover"
+              src="/profile_alfred.jpg"
+              // src="/Profile linkedin.png"
+              alt="Alfred Dah, fondateur de Le Guide IA, consultant IA & Transformation Digitale"
+              className="w-full object-cove rounded-full bg-white border border-primary"
             />
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-24 animate-scan bg-gradient-to-b from-primary/25 to-transparent" />
@@ -35,17 +36,18 @@ export function Authority() {
         >
           <span className="text-sm font-semibold uppercase tracking-widest text-primary">L&apos;expert</span>
           <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-            Avec Alfred Dah
+            Alfred Dah
           </h2>
+          <div className="mt-2 space-y-1 text-base font-semibold text-primary">
+            <p>Fondateur de Le Guide IA</p>
+            <p>Consultant IA & Transformation Digitale</p>
+          </div>
           <div className="mt-6 space-y-4 text-lg leading-relaxed text-muted-foreground text-pretty">
             <p>
-              Je suis Alfred Dah, consultant en intelligence artificielle, gouvernance digitale, cybersécurité et
-              transformation numérique.
+              Avec plus de 450 inscrits provenant de plus de 21 pays, Le Guide IA est devenu la référence pour les francophones qui veulent maîtriser l&apos;intelligence artificielle.
             </p>
             <p>
-              Avec Le Guide IA, mon objectif est simple : rendre l&apos;intelligence artificielle pratique, accessible
-              et utile pour les francophones qui veulent travailler mieux, gagner en productivité et créer plus
-              d&apos;opportunités.
+              Mon objectif est simple : rendre l&apos;IA pratique, accessible et utile pour que vous travailliez mieux, gagniez en productivité et créiez plus d&apos;opportunités professionnelles.
             </p>
           </div>
 
