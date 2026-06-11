@@ -33,7 +33,7 @@ export function Hero() {
               <span className="absolute inline-flex size-full animate-pulse-ring rounded-full bg-primary" />
               <span className="relative inline-flex size-2 rounded-full bg-primary" />
             </span>
-            CHALLENGE IA GRATUIT · 24–28 JUIN 2026 · AFRIQUE FRANCOPHONE
+            🔥 SESSION SPÉCIALE: CV & LINKEDIN · 13 JUIN · BONUS OFFERT
           </motion.div>
 
           <motion.h1
@@ -42,8 +42,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-6 font-heading text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-6xl"
           >
-            Sans l&apos;IA, vous{" "}
-            <span className="relative text-primary text-glow">prenez du retard.</span>
+            Maîtrisez l&apos;IA ou{" "}
+            <span className="relative text-primary text-glow">restez compétitif.</span>
           </motion.h1>
 
           <motion.p
