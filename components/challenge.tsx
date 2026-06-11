@@ -146,7 +146,7 @@ function SignupForm({ perks }: { perks: string[] }) {
   const [values, setValues] = useState({
     name: "",
     email: "",
-    dial: "+225",
+    dial: "+226",
     whatsapp: "",
     country: "",
     profil: "",
