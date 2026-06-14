@@ -518,9 +518,9 @@ function SignupForm({ perks }: { perks: string[] }) {
             <option value="Etudiant">Etudiant</option>
             <option value="Professionnel">Professionnel</option>
             <option value="Entrepreneur">Entrepreneur</option>
-            <option value="Chercheur d'emploi">Chercheur d&apos;emploi</option>
+            {/* <option value="Chercheur d'emploi">Chercheur d&apos;emploi</option>
             <option value="Formateur/Consultant">Formateur/Consultant</option>
-            <option value="Autre">Autre</option>
+            <option value="Autre">Autre</option> */}
           </select>
           {errors.profil && <p className="text-xs text-destructive">{errors.profil}</p>}
         </div>
