@@ -104,14 +104,6 @@ export function Challenge() {
             Le Challenge IA Gratuit se déroule du 24 au 28 juin 2026. Inscrivez-vous maintenant pour recevoir les
             informations de participation, rejoindre la communauté et accéder aux exercices.
           </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-4"
-          >
-          </motion.div>
           <div className="mt-8 space-y-3">
             {days.map((d, i) => (
               <motion.div
