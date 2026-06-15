@@ -13,7 +13,7 @@ import { Bonus } from "@/components/bonus"
 import { Parcours } from "@/components/parcours"
 import { Authority } from "@/components/authority"
 import { CtaFooter } from "@/components/cta-footer"
-import { WhatsAppFloat } from "@/components/whatsapp-float"
+import { ScrollToTop } from "@/components/whatsapp-float"
 
 export default function Page() {
   return (
@@ -33,7 +33,7 @@ export default function Page() {
       <Parcours />
       <Authority />
       <CtaFooter />
-      <WhatsAppFloat />
+      <ScrollToTop />
     </main>
   )
 }
