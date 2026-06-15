@@ -38,6 +38,16 @@ function maxDigitsForDial(dial: string): number {
   return example ? example.nationalNumber.length : 15
 }
 
+const whatsappGroups: Record<string, string> = {
+  Etudiant: "https://chat.whatsapp.com/KrjNwtCRbL04NQHmIPP4WX",
+  Professionnel: "https://chat.whatsapp.com/LKrNkc33XlDBuGlnSqhqLG",
+  Entrepreneur: "https://chat.whatsapp.com/BYZv3RupCjeKW6uEGETWEf",
+}
+
+function getWhatsAppGroupHref(profil: string): string {
+  return whatsappGroups[profil] ?? "https://chat.whatsapp.com/KOzRqZO1HwGKIU3g3d3wYa"
+}
+
 const days = [
   { day: "Jour 1", title: "Les fondations de l'IA", desc: "Comprendre et démarrer sans jargon" },
   { day: "Jour 2", title: "CV & LinkedIn boostés par l'IA", desc: "Optimisez votre profil pro" },
@@ -271,7 +281,7 @@ function SignupForm({ perks }: { perks: string[] }) {
 
   const inputBase =
     "rounded-lg border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
-  const whatsappGroupHref = "https://chat.whatsapp.com/KOzRqZO1HwGKIU3g3d3wYa"
+  const whatsappGroupHref = getWhatsAppGroupHref(values.profil)
 
   if (success) {
     return (
