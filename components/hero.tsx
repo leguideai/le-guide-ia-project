@@ -23,18 +23,6 @@ export function Hero() {
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 md:px-8 lg:grid-cols-2">
         {/* Left */}
         <div className="order-2 lg:order-1">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary"
-          >
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-pulse-ring rounded-full bg-primary" />
-              <span className="relative inline-flex size-2 rounded-full bg-primary" />
-            </span>
-            🔥 SESSION SPÉCIALE: CV & LINKEDIN · 13 JUIN · BONUS OFFERT
-          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 24 }}

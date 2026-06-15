@@ -111,9 +111,6 @@ export function Challenge() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="mt-6 rounded-xl border border-primary/40 bg-primary/5 p-4"
           >
-            <p className="text-sm font-semibold text-primary">✨ BONUS SPÉCIAL</p>
-            <p className="mt-2 font-semibold text-foreground">Session CV & LinkedIn – 13 juin</p>
-            <p className="mt-1 text-sm text-muted-foreground">Une session d'optimisation gratuite avant le challenge principal</p>
           </motion.div>
           <div className="mt-8 space-y-3">
             {days.map((d, i) => (
