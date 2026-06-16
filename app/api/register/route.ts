@@ -499,23 +499,51 @@ export async function POST(request: NextRequest) {
 
     const rows = dataRes.data.values || [];
 
-    // ---- Check duplicates (email in col D=index 3, phone in col C=index 2) ----
+    // ---- Check duplicates and update profile if empty ----
+    let rowIndex = 0;
     for (const row of rows) {
       const existingEmail = (row[3] || "").toString().trim().toLowerCase();
       const existingPhone = (row[2] || "").toString().replace(/[\s']/g, "");
 
-      if (existingEmail && existingEmail === trimmedEmail) {
-        return NextResponse.json(
-          { error: "Cette adresse email est déjà inscrite au Challenge IA.", field: "email" },
-          { status: 409 }
-        );
+      const emailMatches = existingEmail && existingEmail === trimmedEmail;
+      const phoneMatches = existingPhone && existingPhone === phoneNoSpaces;
+
+      if (emailMatches || phoneMatches) {
+        const existingProfil = (row[6] || "").toString().trim();
+
+        if (!existingProfil) {
+          const targetRowIndex = 5 + rowIndex;
+          const range = `${SHEET_NAME}!G${targetRowIndex}`;
+
+          await sheets.spreadsheets.values.update({
+            spreadsheetId: SPREADSHEET_ID,
+            range,
+            valueInputOption: "USER_ENTERED",
+            requestBody: {
+              values: [[profil]],
+            },
+          });
+
+          return NextResponse.json({
+            success: true,
+            message: "Votre profil a été mis à jour avec succès.",
+          });
+        }
+
+        if (emailMatches) {
+          return NextResponse.json(
+            { error: "Cette adresse email est déjà inscrite au Challenge IA.", field: "email" },
+            { status: 409 }
+          );
+        }
+        if (phoneMatches) {
+          return NextResponse.json(
+            { error: "Ce numéro WhatsApp est déjà inscrit au Challenge IA.", field: "whatsapp" },
+            { status: 409 }
+          );
+        }
       }
-      if (existingPhone && existingPhone === phoneNoSpaces) {
-        return NextResponse.json(
-          { error: "Ce numéro WhatsApp est déjà inscrit au Challenge IA.", field: "whatsapp" },
-          { status: 409 }
-        );
-      }
+      rowIndex++;
     }
 
     // ---- Manage Référentiel (add missing dial code if needed) ----
