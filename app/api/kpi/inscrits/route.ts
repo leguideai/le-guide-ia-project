@@ -243,7 +243,23 @@ export async function GET() {
       if (c) countrySet.add(c.toLowerCase());
     }
 
-    return NextResponse.json({ count, countriesCount: countrySet.size });
+    let countriesCount = countrySet.size;
+    try {
+      const dashboardRes = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `Tableau de Bord!C21`,
+        valueRenderOption: "UNFORMATTED_VALUE",
+      });
+      const dashboardValue = dashboardRes.data.values?.[0]?.[0];
+      const dashboardCount = Number(dashboardValue);
+      if (!Number.isNaN(dashboardCount) && dashboardCount > 0) {
+        countriesCount = dashboardCount;
+      }
+    } catch {
+      // ignore and use computed count from the registry
+    }
+
+    return NextResponse.json({ count, countriesCount });
   } catch (err: unknown) {
     console.error("KPI inscrits error:", err);
     return NextResponse.json({ error: "failed" }, { status: 500 });
