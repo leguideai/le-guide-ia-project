@@ -7,7 +7,7 @@ import { Users, CalendarDays, Cpu, Target } from "lucide-react"
 const goals = [
   { icon: Users, value: "...", label: "Inscrits actuellement" },
   { icon: CalendarDays, value: "5 jours", label: "De formation pratique gratuite" },
-  { icon: Cpu, value: "21 pays", label: "Déjà représentés parmi les inscrits" },
+  { icon: Cpu, value: "...", label: "Déjà représentés parmi les inscrits" },
   { icon: Target, value: "1 000", label: "Objectif total de participants" },
 ]
 
@@ -30,10 +30,11 @@ export function Stats() {
           setInscritsNum(count)
         }
         if (d?.countriesCount != null) {
-          // Minimum 21 pays
-          const countries = Math.max(21, Number(d.countriesCount))
-          setCountries(String(countries))
-          setCountriesNum(countries)
+          const countries = Number(d.countriesCount)
+          if (!Number.isNaN(countries)) {
+            setCountries(String(countries))
+            setCountriesNum(countries)
+          }
         }
       })
       .catch(() => {
