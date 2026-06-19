@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
 
@@ -220,6 +222,23 @@ function getServiceAccountCredentials(): ServiceAccountCredentials {
   const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY;
 
   if (!clientEmail || !privateKey) {
+    // Try reading service_account.json in project root as a fallback
+    try {
+      const filePath = path.join(process.cwd(), "service_account.json");
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, "utf8");
+        const parsed = JSON.parse(raw) as Partial<ServiceAccountCredentials>;
+        if (parsed.client_email && parsed.private_key) {
+          return {
+            client_email: parsed.client_email,
+            private_key: parsed.private_key,
+          };
+        }
+      }
+    } catch (e) {
+      // ignore and fall through to error
+    }
+
     throw new Error("MISSING_CREDENTIALS");
   }
 
@@ -416,10 +435,17 @@ function formatPhone(dial: string, national: string): string {
   return `${dial} ${parts.join(" ")}`;
 }
 
+/** Normalize a dial code to a +prefix string without spaces */
+function normalizeDial(dial: string): string {
+  const digits = dial.replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.startsWith("+") ? digits : `+${digits}`;
+}
+
 /** Resolve the base prefix digits for an indicatif (without +) */
 function resolveDialDigits(dial: string): { prefix: string; name: string } | null {
-  // dial comes as "+225" → digits = "225"
-  const digits = dial.startsWith("+") ? dial.substring(1) : dial;
+  const normalized = normalizeDial(dial);
+  const digits = normalized.startsWith("+") ? normalized.substring(1) : normalized;
 
   // Try 3-digit, 2-digit, 1-digit lookups (same cascade as importateur)
   if (digits.length >= 3) {
@@ -437,20 +463,10 @@ function resolveDialDigits(dial: string): { prefix: string; name: string } | nul
   return null;
 }
 
-/** Check if a dial code is present in the referentiel map (cascade check) */
+/** Check if a dial code is present in the referentiel map */
 function isDialInReferentiel(dial: string, refMap: Record<string, string>): boolean {
-  const digits = dial.startsWith("+") ? dial.substring(1) : dial;
-
-  // For +1 (USA/Canada) check exact
-  if (dial.startsWith("+1")) {
-    return !!refMap[dial];
-  }
-
-  // Cascade: 3-digit, 2-digit, 1-digit
-  if (digits.length >= 3 && refMap["+" + digits.substring(0, 3)]) return true;
-  if (digits.length >= 2 && refMap["+" + digits.substring(0, 2)]) return true;
-  if (digits.length >= 1 && refMap["+" + digits.substring(0, 1)]) return true;
-  return false;
+  const normalized = normalizeDial(dial);
+  return !!refMap[normalized];
 }
 
 // ---------------------------------------------------------------------------
@@ -560,14 +576,22 @@ export async function POST(request: NextRequest) {
 
     if (!isDialInReferentiel(dial, referentielMap)) {
       const resolved = resolveDialDigits(dial);
+      let nameToWrite: string | null = null;
+
       if (resolved) {
+        nameToWrite = resolved.name;
+      } else if (country) {
+        nameToWrite = country;
+      }
+
+      if (nameToWrite) {
         // Add the base prefix to the Référentiel sheet
         await sheets.spreadsheets.values.append({
           spreadsheetId: SPREADSHEET_ID,
           range: "Référentiel!A:B",
           valueInputOption: "RAW",
           requestBody: {
-            values: [[resolved.prefix, resolved.name]],
+            values: [[normalizeDial(dial), nameToWrite]],
           },
         });
       }
