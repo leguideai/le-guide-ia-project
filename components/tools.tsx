@@ -1,35 +1,38 @@
 "use client"
 
 import { motion } from "motion/react"
-
-const tools = [
-  {
-    name: "ChatGPT",
-    desc: "Pour rédiger, structurer, résumer, réfléchir, préparer vos documents et améliorer votre productivité.",
-    logo: "/logos/chatgpt.png",
-    bg: "bg-black ring-white/15",
-  },
-  {
-    name: "Claude",
-    desc: "Pour analyser des documents, améliorer la qualité des textes, structurer des idées complexes et produire des contenus solides.",
-    logo: "/logos/claude.png",
-    bg: "bg-white ring-black/10",
-  },
-  {
-    name: "Gemini",
-    desc: "Pour rechercher, comparer, travailler avec l'écosystème Google et exploiter les capacités multimodales.",
-    logo: "/logos/gemini.png",
-    bg: "bg-white ring-black/10",
-  },
-  {
-    name: "Canva IA",
-    desc: "Pour créer rapidement des visuels, présentations et supports professionnels.",
-    logo: "/logos/canva.png",
-    bg: "bg-white ring-black/10",
-  },
-]
+import { useLanguage } from "@/lib/language-context"
 
 export function Tools() {
+  const { t } = useLanguage()
+
+  const tools = [
+    {
+      name: "ChatGPT",
+      desc: t("tools.toolsList.chatgpt"),
+      logo: "/logos/chatgpt.png",
+      bg: "bg-black ring-white/15",
+    },
+    {
+      name: "Claude",
+      desc: t("tools.toolsList.claude"),
+      logo: "/logos/claude.png",
+      bg: "bg-white ring-black/10",
+    },
+    {
+      name: "Gemini",
+      desc: t("tools.toolsList.gemini"),
+      logo: "/logos/gemini.png",
+      bg: "bg-white ring-black/10",
+    },
+    {
+      name: "Canva IA",
+      desc: t("tools.toolsList.canva"),
+      logo: "/logos/canva.png",
+      bg: "bg-white ring-black/10",
+    },
+  ]
+
   return (
     <section id="outils" className="relative border-y border-border/60 bg-card/20 py-24">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -41,14 +44,13 @@ export function Tools() {
           className="mb-14 max-w-2xl"
         >
           <span className="text-sm font-semibold uppercase tracking-widest text-primary">
-            Les outils utilisés
+            {t("tools.tag")}
           </span>
           <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-            Les outils que nous allons utiliser
+            {t("tools.title")}
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Pas de théorie inutile. Vous apprenez à utiliser concrètement les meilleurs outils du marché, adaptés à
-            votre réalité africaine francophone.
+            {t("tools.desc")}
           </p>
         </motion.div>
 

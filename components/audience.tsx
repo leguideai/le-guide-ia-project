@@ -2,36 +2,18 @@
 
 import { motion } from "motion/react"
 import { GraduationCap, Search, Briefcase, Rocket, Building2 } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
-const audiences = [
-  {
-    icon: GraduationCap,
-    title: "Étudiant",
-    desc: "Vous voulez mieux apprendre, mieux rédiger, mieux préparer votre avenir et développer des compétences recherchées.",
-  },
-  {
-    icon: Search,
-    title: "Chercheur d'emploi",
-    desc: "Vous voulez améliorer votre CV, votre profil LinkedIn et votre visibilité professionnelle.",
-  },
-  {
-    icon: Briefcase,
-    title: "Professionnel",
-    desc: "Vous voulez gagner du temps, devenir plus productif et rester compétitif dans un monde qui change vite.",
-  },
-  {
-    icon: Rocket,
-    title: "Entrepreneur",
-    desc: "Vous voulez utiliser l'IA pour créer du contenu, mieux communiquer, mieux vendre et structurer votre activité.",
-  },
-  {
-    icon: Building2,
-    title: "Dirigeant ou manager",
-    desc: "Vous voulez comprendre comment l'IA peut devenir un levier stratégique pour votre organisation.",
-  },
-]
+const icons = [GraduationCap, Search, Briefcase, Rocket, Building2]
 
 export function Audience() {
+  const { t } = useLanguage()
+  const translatedAudiences = (t("audience.audiences") || []) as Array<{ title: string; desc: string }>
+  const audiences = translatedAudiences.map((a, i) => ({
+    ...a,
+    icon: icons[i] || GraduationCap,
+  }))
+
   return (
     <section id="audience" className="mx-auto max-w-7xl px-4 py-24 md:px-8">
       <motion.div
@@ -41,16 +23,16 @@ export function Audience() {
         transition={{ duration: 0.5 }}
         className="mb-14 text-center"
       >
-        <span className="text-sm font-semibold uppercase tracking-widest text-primary">Pour qui ?</span>
+        <span className="text-sm font-semibold uppercase tracking-widest text-primary">{t("audience.tag")}</span>
         <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-          Ce challenge est fait pour vous si vous êtes :
+          {t("audience.title")}
         </h2>
       </motion.div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {audiences.map((a, i) => (
           <motion.div
-            key={a.title}
+            key={i}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}

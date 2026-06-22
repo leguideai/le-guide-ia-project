@@ -4,20 +4,23 @@ import { motion } from "motion/react"
 import { Gift, ArrowRight, Calendar, Zap } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-
-const pillars = [
-  { label: "Apprenez l'IA", sub: "Prenez une longueur d'avance" },
-  { label: "Travaillez mieux", sub: "Gagnez en productivité" },
-  { label: "Gagnez plus", sub: "Créez de nouvelles opportunités" },
-]
-
-const stats = [
-  { value: "5 jours", label: "100% gratuit" },
-  { value: "4 outils", label: "ChatGPT · Claude · Gemini · Canva" },
-  { value: "24–28 juin", label: "2026 · en ligne" },
-]
+import { useLanguage } from "@/lib/language-context"
 
 export function Hero() {
+  const { t } = useLanguage()
+
+  const pillars = [
+    { label: t("hero.pillars.pillar1Title"), sub: t("hero.pillars.pillar1Sub") },
+    { label: t("hero.pillars.pillar2Title"), sub: t("hero.pillars.pillar2Sub") },
+    { label: t("hero.pillars.pillar3Title"), sub: t("hero.pillars.pillar3Sub") },
+  ]
+
+  const stats = [
+    { value: t("hero.stats.days"), label: t("hero.stats.daysLabel") },
+    { value: t("hero.stats.tools"), label: t("hero.stats.toolsLabel") },
+    { value: t("hero.stats.dates"), label: t("hero.stats.datesLabel") },
+  ]
+
   return (
     <section className="relative overflow-hidden pt-32 pb-20 md:pt-40">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 md:px-8 lg:grid-cols-2">
@@ -30,8 +33,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="mt-6 font-heading text-4xl font-extrabold leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-6xl"
           >
-            Maîtrisez l&apos;IA ou{" "}
-            <span className="relative text-primary text-glow">restez compétitif.</span>
+            {t("hero.titlePart1")}
+            <span className="relative text-primary text-glow">{t("hero.titlePart2")}</span>
           </motion.h1>
 
           <motion.p
@@ -40,9 +43,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty"
           >
-            Apprenez à utiliser l&apos;intelligence artificielle pour améliorer votre CV, optimiser votre profil
-            LinkedIn, gagner du temps, créer du contenu, automatiser vos tâches et développer de nouvelles
-            opportunités professionnelles.
+            {t("hero.desc1")}
           </motion.p>
 
           <motion.p
@@ -51,8 +52,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.25 }}
             className="mt-4 max-w-xl text-base leading-relaxed text-foreground/80 text-pretty"
           >
-            Le Guide IA vous montre comment passer de la curiosité à la pratique, avec des démonstrations concrètes
-            sur ChatGPT, Claude, Gemini et Canva IA.
+            {t("hero.desc2")}
           </motion.p>
 
           <motion.div
@@ -66,7 +66,7 @@ export function Hero() {
               className={cn(buttonVariants({ size: "lg" }), "glow-blue h-12 px-7 text-base font-semibold")}
             >
               <Gift className="size-5" />
-              Rejoindre le Challenge Gratuit
+              {t("hero.ctaFree")}
             </a>
             <a
               href="#programme"
@@ -75,7 +75,7 @@ export function Hero() {
                 "h-12 border-border bg-transparent px-7 text-base",
               )}
             >
-              Voir le programme des 5 jours
+              {t("hero.ctaProgram")}
               <ArrowRight className="size-4" />
             </a>
           </motion.div>
@@ -86,7 +86,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mt-4 text-sm text-muted-foreground"
           >
-            Inscription gratuite · Aucune carte bancaire requise · Places limitées
+            {t("hero.badgeFree")}
           </motion.p>
 
           <motion.div
@@ -95,8 +95,8 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.5 }}
             className="mt-10 flex flex-wrap gap-8 border-t border-border/60 pt-6"
           >
-            {stats.map((s) => (
-              <div key={s.label}>
+            {stats.map((s, idx) => (
+              <div key={idx}>
                 <div className="font-heading text-2xl font-extrabold text-foreground">{s.value}</div>
                 <div className="text-xs text-muted-foreground">{s.label}</div>
               </div>
@@ -131,7 +131,7 @@ export function Hero() {
           >
             <Calendar className="size-5 text-accent" />
             <div>
-              <div className="text-sm font-bold">Challenge gratuit</div>
+              <div className="text-sm font-bold">{t("hero.challengeBadge")}</div>
               <div className="text-xs text-muted-foreground">24 – 28 juin 2026</div>
             </div>
           </motion.div>
@@ -142,7 +142,7 @@ export function Hero() {
             className="absolute -top-4 -right-3 flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/15 px-4 py-3 backdrop-blur-md"
           >
             <Zap className="size-5 text-primary" />
-            <span className="text-sm font-semibold text-primary">100% Pratique</span>
+            <span className="text-sm font-semibold text-primary">{t("hero.practicalBadge")}</span>
           </motion.div>
         </motion.div>
       </div>
@@ -152,7 +152,7 @@ export function Hero() {
         <div className="grid gap-4 sm:grid-cols-3">
           {pillars.map((p, i) => (
             <motion.div
-              key={p.label}
+              key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
