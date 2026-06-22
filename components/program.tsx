@@ -2,41 +2,19 @@
 
 import { motion } from "motion/react"
 import { Lightbulb, FileText, Zap, Palette, Rocket } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
-const days = [
-  {
-    icon: Lightbulb,
-    day: "Jour 1",
-    title: "Comprendre l'IA sans jargon",
-    desc: "Découvrez ce que l'IA peut vraiment faire pour vous, comment poser de meilleures demandes et comment éviter les erreurs courantes.",
-  },
-  {
-    icon: FileText,
-    day: "Jour 2",
-    title: "CV & LinkedIn à l'ère de l'IA",
-    desc: "Rendez votre CV plus clair et plus professionnel, lisible par les recruteurs comme par les outils modernes. Optimisez votre profil LinkedIn pour devenir plus visible.",
-  },
-  {
-    icon: Zap,
-    day: "Jour 3",
-    title: "Productivité & automatisation",
-    desc: "Utilisez l'IA pour gagner du temps, organiser vos idées, rédiger plus vite, préparer vos documents et automatiser certaines tâches répétitives.",
-  },
-  {
-    icon: Palette,
-    day: "Jour 4",
-    title: "Création de contenu & visuels pros",
-    desc: "Utilisez ChatGPT, Claude et Canva IA pour créer des posts, présentations, visuels, scripts vidéo et contenus professionnels.",
-  },
-  {
-    icon: Rocket,
-    day: "Jour 5",
-    title: "Passer à l'action",
-    desc: "Construisez votre plan IA personnel : comment intégrer l'IA dans votre carrière, vos études, votre activité ou votre entreprise.",
-  },
-]
+const dayIcons = [Lightbulb, FileText, Zap, Palette, Rocket]
 
 export function Program() {
+  const { t } = useLanguage()
+
+  const translatedDays = (t("program.days") || []) as Array<{ day: string; title: string; desc: string }>
+  const days = translatedDays.map((d, i) => ({
+    ...d,
+    icon: dayIcons[i] || Rocket,
+  }))
+
   return (
     <section id="programme" className="relative py-24">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -47,13 +25,12 @@ export function Program() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <span className="text-sm font-semibold uppercase tracking-widest text-primary">Le Programme</span>
+          <span className="text-sm font-semibold uppercase tracking-widest text-primary">{t("program.tag")}</span>
           <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-            Le programme du Challenge IA Gratuit
+            {t("program.title")}
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty">
-            5 jours, 5 cas d&apos;usage concrets. Une démonstration en direct et une méthode applicable
-            immédiatement, chaque jour.
+            {t("program.desc")}
           </p>
         </motion.div>
 
@@ -126,8 +103,7 @@ export function Program() {
               <Rocket className="size-7" />
             </span>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground text-pretty">
-              5 jours pour passer de spectateur à acteur de l&apos;IA. À la fin, vous repartez avec un plan
-              concret prêt à appliquer.
+              {t("program.summit")}
             </p>
           </motion.div>
         </div>
@@ -143,7 +119,7 @@ export function Program() {
             href="#inscription"
             className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-7 text-base font-semibold text-primary-foreground glow-blue transition-opacity hover:opacity-90"
           >
-            Rejoindre le Challenge Gratuit
+            {t("program.cta")}
           </a>
         </motion.div>
       </div>

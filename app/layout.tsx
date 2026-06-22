@@ -97,6 +97,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { LanguageProvider } from '@/lib/language-context'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -159,8 +161,11 @@ export default function RootLayout({
             }),
           }}
         />
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   )
 }
+

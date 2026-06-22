@@ -8,6 +8,7 @@ import examples from "libphonenumber-js/examples.mobile.json"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { countries } from "@/lib/countries"
+import { useLanguage } from "@/lib/language-context"
 
 const dialCodes = Array.from(new Set(countries.map((c) => c.dial))).sort(
   (a, b) => Number(a.replace("+", "")) - Number(b.replace("+", "")),
@@ -48,22 +49,17 @@ function getWhatsAppGroupHref(profil: string): string {
   return whatsappGroups[profil] ?? "https://chat.whatsapp.com/KOzRqZO1HwGKIU3g3d3wYa"
 }
 
-const days = [
-  { day: "Jour 1", title: "Les fondations de l'IA", desc: "Comprendre et démarrer sans jargon" },
-  { day: "Jour 2", title: "CV & LinkedIn boostés par l'IA", desc: "Optimisez votre profil pro" },
-  { day: "Jour 3", title: "Productivité & automatisation", desc: "Gagnez des heures chaque semaine" },
-  { day: "Jour 4", title: "Créer du contenu & des visuels", desc: "ChatGPT, Claude, Canva IA en action" },
-  { day: "Jour 5", title: "Passer à l'action", desc: "Votre plan IA personnalisé" },
-]
-
-const perks = [
-  "5 lives pratiques avec démos",
-  "Communauté WhatsApp active",
-  "Exercices & replays inclus",
-  "Aucune carte bancaire requise",
-]
-
 export function Challenge() {
+  const { t, language } = useLanguage()
+
+  const translatedDays = (t("challenge.daysSide") || []) as Array<{ title: string; desc: string }>
+  const days = translatedDays.map((d, i) => ({
+    ...d,
+    day: language === "fr" ? `Jour ${i + 1}` : `Day ${i + 1}`,
+  }))
+
+  const perks = (t("challenge.form.perks") || []) as string[]
+
   return (
     <section id="inscription" className="relative overflow-hidden border-y border-border/60 py-24">
       <div className="pointer-events-none absolute inset-0">
@@ -81,7 +77,7 @@ export function Challenge() {
             className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-1.5 text-sm font-bold text-accent-foreground"
           >
             <Gift className="size-4" />
-            100% Gratuit · 24 – 28 juin 2026
+            {t("challenge.badge")}
           </motion.span>
 
           <motion.h2
@@ -91,7 +87,7 @@ export function Challenge() {
             transition={{ duration: 0.5, delay: 0.05 }}
             className="mt-5 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl"
           >
-            Réservez votre place gratuitement
+            {t("challenge.title")}
           </motion.h2>
 
           <motion.p
@@ -101,13 +97,12 @@ export function Challenge() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mt-4 text-lg leading-relaxed text-muted-foreground text-pretty"
           >
-            Le Challenge IA Gratuit se déroule du 24 au 28 juin 2026. Inscrivez-vous maintenant pour recevoir les
-            informations de participation, rejoindre la communauté et accéder aux exercices.
+            {t("challenge.desc")}
           </motion.p>
           <div className="mt-8 space-y-3">
             {days.map((d, i) => (
               <motion.div
-                key={d.day}
+                key={i}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
@@ -115,7 +110,7 @@ export function Challenge() {
                 className="flex items-center gap-4 rounded-xl border border-border bg-card/60 p-4 backdrop-blur-sm transition-colors hover:border-primary/40"
               >
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/15 font-mono text-sm font-bold text-primary ring-1 ring-primary/25">
-                  J{i + 1}
+                  {language === "fr" ? `J${i + 1}` : `D${i + 1}`}
                 </span>
                 <div>
                   <div className="font-semibold">{d.title}</div>
@@ -142,6 +137,7 @@ export function Challenge() {
 }
 
 function SignupForm({ perks }: { perks: string[] }) {
+  const { t, language } = useLanguage()
   const [values, setValues] = useState({
     name: "",
     email: "",
@@ -196,30 +192,30 @@ function SignupForm({ perks }: { perks: string[] }) {
     const next: Record<string, string> = {}
 
     if (!values.name.trim()) {
-      next.name = "Veuillez saisir votre prénom et nom."
+      next.name = t("challenge.form.errors.name")
     }
 
     if (!values.email.trim()) {
-      next.email = "Veuillez saisir votre email."
+      next.email = t("challenge.form.errors.email")
     } else if (!EMAIL_REGEX.test(values.email.trim())) {
-      next.email = "Veuillez saisir un email valide (ex : vous@email.com)."
+      next.email = t("challenge.form.errors.emailInvalid")
     }
 
     if (!values.whatsapp.trim()) {
-      next.whatsapp = "Veuillez saisir votre numéro WhatsApp."
+      next.whatsapp = t("challenge.form.errors.whatsapp")
     } else {
       const full = `${values.dial}${values.whatsapp.replace(/[^\d]/g, "")}`
       if (!isValidPhoneNumber(full)) {
-        next.whatsapp = `Numéro invalide pour l'indicatif ${values.dial}.`
+        next.whatsapp = t("challenge.form.errors.whatsappInvalid").replace("{dial}", values.dial)
       }
     }
 
     if (!values.country) {
-      next.country = "Veuillez sélectionner votre pays."
+      next.country = t("challenge.form.errors.country")
     }
 
     if (!values.profil) {
-      next.profil = "Veuillez sélectionner votre profil."
+      next.profil = t("challenge.form.errors.profile")
     }
 
     setErrors(next)
@@ -252,17 +248,25 @@ function SignupForm({ perks }: { perks: string[] }) {
 
       if (!res.ok) {
         if (res.status === 409 && data.field) {
-          // Duplicate — show the error on the relevant field
-          setErrors((prev) => ({ ...prev, [data.field]: data.error }))
+          // Translate duplicate error messages client-side if english
+          let errorMsg = data.error
+          if (language === "en") {
+            if (data.field === "email") {
+              errorMsg = "This email address is already registered for the AI Challenge."
+            } else if (data.field === "whatsapp") {
+              errorMsg = "This WhatsApp number is already registered for the AI Challenge."
+            }
+          }
+          setErrors((prev) => ({ ...prev, [data.field]: errorMsg }))
         } else {
-          setServerError(data.error || "Une erreur est survenue. Veuillez réessayer.")
+          setServerError(data.error || t("challenge.form.errors.server"))
         }
         return
       }
 
       setSuccess(true)
     } catch {
-      setServerError("Impossible de contacter le serveur. Vérifiez votre connexion internet.")
+      setServerError(t("challenge.form.errors.network"))
     } finally {
       setLoading(false)
     }
@@ -273,6 +277,11 @@ function SignupForm({ perks }: { perks: string[] }) {
   const whatsappGroupHref = getWhatsAppGroupHref(values.profil)
 
   if (success) {
+    const successDesc = t("challenge.success.desc")
+      .replace("{name}", values.name.split(" ")[0])
+      .replace("{dial}", values.dial)
+      .replace("{whatsapp}", values.whatsapp)
+
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -287,25 +296,24 @@ function SignupForm({ perks }: { perks: string[] }) {
           <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_0_28px] shadow-primary/50">
             <PartyPopper className="size-8" />
           </span>
-          <h3 className="mt-6 font-heading text-2xl font-extrabold">Inscription confirmée</h3>
+          <h3 className="mt-6 font-heading text-2xl font-extrabold">{t("challenge.success.title")}</h3>
           <p className="mt-3 text-pretty text-muted-foreground">
-            Bravo {values.name.split(" ")[0]}, votre place au Challenge IA Gratuit est réservée. Vous recevrez
-            les informations de participation par email et sur WhatsApp ({values.dial} {values.whatsapp}).
+            {successDesc}
           </p>
           <div className="mt-6 rounded-xl border border-border bg-background/60 p-4 text-left text-sm">
-            <p className="font-semibold text-foreground">Prochaines étapes</p>
+            <p className="font-semibold text-foreground">{t("challenge.success.nextSteps")}</p>
             <ul className="mt-2 space-y-2 text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Check className="size-4 shrink-0 text-primary" />
-                Surveillez votre boîte mail ({values.email})
+                {t("challenge.success.stepsList.0").replace("{email}", values.email)}
               </li>
               <li className="flex items-center gap-2">
                 <Check className="size-4 shrink-0 text-primary" />
-                Rejoignez la communauté WhatsApp
+                {t("challenge.success.stepsList.1")}
               </li>
               <li className="flex items-center gap-2">
                 <Check className="size-4 shrink-0 text-primary" />
-                Rendez-vous le 24 juin 2026
+                {t("challenge.success.stepsList.2")}
               </li>
             </ul>
           </div>
@@ -315,10 +323,10 @@ function SignupForm({ perks }: { perks: string[] }) {
             rel="noreferrer"
             className={cn(
               buttonVariants({ size: "lg" }),
-              "mt-6 h-12 w-full gap-2 font-semibold",
+              "mt-6 h-12 w-full gap-2 font-semibold cursor-pointer",
             )}
           >
-            Rejoindre la communauté WhatsApp
+            {t("challenge.success.ctaWhatsapp")}
           </a>
         </div>
       </motion.div>
@@ -331,14 +339,14 @@ function SignupForm({ perks }: { perks: string[] }) {
         <div className="absolute inset-x-0 top-0 h-20 animate-scan bg-gradient-to-b from-primary/15 to-transparent" />
       </div>
 
-      <h3 className="font-heading text-xl font-bold">Je rejoins le Challenge IA Gratuit</h3>
+      <h3 className="font-heading text-xl font-bold">{t("challenge.form.title")}</h3>
       <p className="mt-2 text-sm text-muted-foreground">
-        Inscription gratuite. Places limitées pour garantir un accompagnement de qualité.
+        {t("challenge.form.subtitle")}
       </p>
 
       <ul className="mt-5 space-y-2">
-        {perks.map((p) => (
-          <li key={p} className="flex items-center gap-2 text-sm text-muted-foreground">
+        {perks.map((p, idx) => (
+          <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
             <Check className="size-4 shrink-0 text-primary" />
             {p}
           </li>
@@ -348,7 +356,7 @@ function SignupForm({ perks }: { perks: string[] }) {
       <form noValidate onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label htmlFor="name" className="text-sm font-medium">
-            Prénom et nom
+            {t("challenge.form.labelName")}
           </label>
           <input
             id="name"
@@ -358,14 +366,14 @@ function SignupForm({ perks }: { perks: string[] }) {
             value={values.name}
             onChange={(e) => set("name", e.target.value)}
             aria-invalid={!!errors.name}
-            placeholder="Votre prénom et nom"
+            placeholder={t("challenge.form.placeholderName")}
             className={cn(inputBase, errors.name ? "border-destructive" : "border-input")}
           />
           {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="email" className="text-sm font-medium">
-            Email
+            {t("challenge.form.labelEmail")}
           </label>
           <input
             id="email"
@@ -375,7 +383,7 @@ function SignupForm({ perks }: { perks: string[] }) {
             value={values.email}
             onChange={(e) => set("email", e.target.value)}
             aria-invalid={!!errors.email}
-            placeholder="vous@email.com"
+            placeholder={t("challenge.form.placeholderEmail")}
             className={cn(inputBase, errors.email ? "border-destructive" : "border-input")}
           />
           {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
@@ -383,7 +391,7 @@ function SignupForm({ perks }: { perks: string[] }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             <label htmlFor="whatsapp" className="text-sm font-medium">
-              WhatsApp
+              {t("challenge.form.labelWhatsapp")}
             </label>
             <div
               className={cn(
@@ -427,7 +435,7 @@ function SignupForm({ perks }: { perks: string[] }) {
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="country" className="text-sm font-medium">
-              Pays
+              {t("challenge.form.labelCountry")}
             </label>
             <div className="relative" ref={countryDropdownRef}>
               <button
@@ -449,7 +457,7 @@ function SignupForm({ perks }: { perks: string[] }) {
                 <span>
                   {values.country
                     ? `${getFlagEmoji(countries.find((c) => c.name === values.country)?.code || "")} ${values.country}`
-                    : "Sélectionnez votre pays"}
+                    : t("challenge.form.placeholderCountry")}
                 </span>
                 <span className="pointer-events-none ml-2 text-muted-foreground text-xs">▼</span>
               </button>
@@ -459,7 +467,7 @@ function SignupForm({ perks }: { perks: string[] }) {
                   <div className="sticky top-0 bg-card pb-2 z-10">
                     <input
                       type="text"
-                      placeholder="Rechercher un pays..."
+                      placeholder={t("challenge.form.searchCountryPlaceholder")}
                       value={countrySearchQuery}
                       onChange={(e) => setCountrySearchQuery(e.target.value)}
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs outline-none focus:border-primary"
@@ -488,7 +496,7 @@ function SignupForm({ perks }: { perks: string[] }) {
                       ))
                     ) : (
                       <li className="px-3 py-2 text-center text-xs text-muted-foreground">
-                        Aucun pays trouvé
+                        {t("challenge.form.noCountryFound")}
                       </li>
                     )}
                   </ul>
@@ -500,7 +508,7 @@ function SignupForm({ perks }: { perks: string[] }) {
         </div>
         <div className="flex flex-col gap-2">
           <label htmlFor="profil" className="text-sm font-medium">
-            Votre profil
+            {t("challenge.form.labelProfile")}
           </label>
           <select
             id="profil"
@@ -512,21 +520,18 @@ function SignupForm({ perks }: { perks: string[] }) {
             className={cn(inputBase, errors.profil ? "border-destructive" : "border-input")}
           >
             <option value="" disabled>
-              Sélectionnez votre profil
+              {t("challenge.form.placeholderProfile")}
             </option>
-            <option value="Etudiant">Etudiant</option>
-            <option value="Professionnel">Professionnel</option>
-            <option value="Entrepreneur">Entrepreneur</option>
-            {/* <option value="Chercheur d'emploi">Chercheur d&apos;emploi</option>
-            <option value="Formateur/Consultant">Formateur/Consultant</option>
-            <option value="Autre">Autre</option> */}
+            <option value="Etudiant">{t("challenge.form.profiles.student")}</option>
+            <option value="Professionnel">{t("challenge.form.profiles.professional")}</option>
+            <option value="Entrepreneur">{t("challenge.form.profiles.entrepreneur")}</option>
           </select>
           {errors.profil && <p className="text-xs text-destructive">{errors.profil}</p>}
         </div>
         <button
           type="submit"
           disabled={loading}
-          className={cn(buttonVariants({ size: "lg" }), "mt-2 h-12 text-base font-semibold", loading && "opacity-70 cursor-not-allowed")}
+          className={cn(buttonVariants({ size: "lg" }), "mt-2 h-12 text-base font-semibold cursor-pointer", loading && "opacity-70 cursor-not-allowed")}
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -534,10 +539,10 @@ function SignupForm({ perks }: { perks: string[] }) {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              Inscription en cours…
+              {t("challenge.form.loading")}
             </span>
           ) : (
-            "Je rejoins le Challenge IA Gratuit"
+            t("challenge.form.cta")
           )}
         </button>
         {serverError && (
@@ -547,11 +552,11 @@ function SignupForm({ perks }: { perks: string[] }) {
         )}
         {submitted && Object.keys(errors).length > 0 && (
           <p className="text-center text-xs text-destructive">
-            Veuillez corriger les champs en rouge avant de continuer.
+            {t("challenge.form.errors.fixFields")}
           </p>
         )}
         <p className="text-center text-xs text-muted-foreground">
-          Aucune carte bancaire requise. Vous recevrez les informations pratiques après votre inscription.
+          {t("challenge.form.cardFooterNote")}
         </p>
       </form>
     </div>

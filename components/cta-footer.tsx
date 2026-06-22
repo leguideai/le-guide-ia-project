@@ -1,9 +1,10 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Globe, Mail, Gift, Sparkles } from "lucide-react"
+import { Mail, Gift } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/lib/language-context"
 
 const socials = [
   {
@@ -29,6 +30,8 @@ const socials = [
 ]
 
 export function CtaFooter() {
+  const { t } = useLanguage()
+
   return (
     <footer className="relative border-t border-border/60 bg-card/20">
       <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
@@ -42,34 +45,32 @@ export function CtaFooter() {
           <div className="pointer-events-none absolute inset-0 grid-bg opacity-40" />
           <div className="relative">
             <h2 className="font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-              Prêt à prendre une longueur d&apos;avance ?
+              {t("ctaFooter.title")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
-              L&apos;IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd&apos;hui de vous
-              préparer sérieusement. Rejoignez le Challenge IA Gratuit et commencez à utiliser l&apos;intelligence
-              artificielle comme un véritable levier professionnel.
+              {t("ctaFooter.desc")}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href="#inscription"
-                className={cn(buttonVariants({ size: "lg" }), "h-12 px-7 text-base font-bold")}
+                className={cn(buttonVariants({ size: "lg" }), "h-12 px-7 text-base font-bold cursor-pointer")}
               >
                 <Gift className="size-5" />
-                Je réserve ma place gratuitement
+                {t("ctaFooter.ctaFree")}
               </a>
               <a
                 href="mailto:alfred@leguideai.com"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-12 border-border bg-transparent px-7 text-base",
+                  "h-12 border-border bg-transparent px-7 text-base cursor-pointer",
                 )}
               >
                 <Mail className="size-5" />
-                Nous contacter
+                {t("ctaFooter.ctaContact")}
               </a>
             </div>
             <p className="mt-6 text-sm font-medium text-primary">
-              Le futur appartient à ceux qui se préparent avant les autres.
+              {t("ctaFooter.footerNote")}
             </p>
           </div>
         </motion.div>
@@ -91,7 +92,6 @@ export function CtaFooter() {
 
           <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground sm:items-end">
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
-              {/* site link removed as requested */}
               <a
                 href="mailto:alfred@leguideai.com"
                 className="inline-flex items-center gap-2 transition-colors hover:text-foreground"
@@ -120,10 +120,9 @@ export function CtaFooter() {
         </div>
 
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Le Guide IA. Tous droits réservés.
+          {t("ctaFooter.rights").replace("{year}", new Date().getFullYear().toString())}
         </p>
       </div>
     </footer>
   )
 }
-

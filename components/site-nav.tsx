@@ -2,21 +2,23 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Menu, X, Sparkles } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-
-const links = [
-  { label: "Programme", href: "#programme" },
-  { label: "Pour qui ?", href: "#audience" },
-  { label: "Outils", href: "#outils" },
-  { label: "Bootcamp PRO", href: "#parcours" },
-  { label: "S'inscrire", href: "#inscription" },
-]
+import { useLanguage } from "@/lib/language-context"
 
 export function SiteNav() {
+  const { language, setLanguage, t } = useLanguage()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  const links = [
+    { label: t("nav.programme"), href: "#programme" },
+    { label: t("nav.audience"), href: "#audience" },
+    { label: t("nav.tools"), href: "#outils" },
+    { label: t("nav.bootcamp"), href: "#parcours" },
+    { label: t("nav.register"), href: "#inscription" },
+  ]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -24,6 +26,35 @@ export function SiteNav() {
     window.addEventListener("scroll", onScroll)
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
+
+  const languageToggle = (
+    <div className="flex items-center gap-1 rounded-full bg-secondary/60 p-1 ring-1 ring-border/80">
+      <button
+        type="button"
+        onClick={() => setLanguage("fr")}
+        className={cn(
+          "rounded-full px-2.5 py-1 text-xs font-bold uppercase transition-all duration-200 cursor-pointer",
+          language === "fr"
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        FR
+      </button>
+      <button
+        type="button"
+        onClick={() => setLanguage("en")}
+        className={cn(
+          "rounded-full px-2.5 py-1 text-xs font-bold uppercase transition-all duration-200 cursor-pointer",
+          language === "en"
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        EN
+      </button>
+    </div>
+  )
 
   return (
     <motion.header
@@ -58,20 +89,24 @@ export function SiteNav() {
           ))}
         </div>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-4 lg:flex">
+          {languageToggle}
           <a href="#inscription" className={cn(buttonVariants({ size: "lg" }), "glow-blue font-semibold")}>
-            Rejoindre le Challenge Gratuit
+            {t("nav.cta")}
           </a>
         </div>
 
-        <button
-          type="button"
-          className="flex size-10 items-center justify-center rounded-lg border border-border text-foreground lg:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Menu"
-        >
-          {open ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        <div className="flex items-center gap-3 lg:hidden">
+          {languageToggle}
+          <button
+            type="button"
+            className="flex size-10 items-center justify-center rounded-lg border border-border text-foreground"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Menu"
+          >
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -98,7 +133,7 @@ export function SiteNav() {
                 onClick={() => setOpen(false)}
                 className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full font-semibold")}
               >
-                Rejoindre le Challenge Gratuit
+                {t("nav.cta")}
               </a>
             </div>
           </motion.div>

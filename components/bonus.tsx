@@ -2,18 +2,19 @@
 
 import { motion } from "motion/react"
 import { Video, MonitorPlay, Dumbbell, Users, FileCheck, Compass, ArrowUpRight } from "lucide-react"
+import { useLanguage } from "@/lib/language-context"
 
-const bonuses = [
-  { icon: Video, text: "5 sessions pratiques en direct" },
-  { icon: MonitorPlay, text: "Des démonstrations concrètes" },
-  { icon: Dumbbell, text: "Des exercices simples à appliquer" },
-  { icon: Users, text: "L'accès à la communauté WhatsApp" },
-  { icon: FileCheck, text: "Des conseils pour votre CV et LinkedIn" },
-  { icon: Compass, text: "Une méthode claire pour mieux utiliser l'IA" },
-  { icon: ArrowUpRight, text: "Une orientation vers le Bootcamp PRO pour aller plus loin" },
-]
+const icons = [Video, MonitorPlay, Dumbbell, Users, FileCheck, Compass, ArrowUpRight]
 
 export function Bonus() {
+  const { t } = useLanguage()
+
+  const translatedBonuses = (t("bonus.items") || []) as string[]
+  const bonuses = translatedBonuses.map((text, i) => ({
+    text,
+    icon: icons[i] || Compass,
+  }))
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-24 md:px-8">
       <motion.div
@@ -23,16 +24,16 @@ export function Bonus() {
         transition={{ duration: 0.5 }}
         className="mb-14 text-center"
       >
-        <span className="text-sm font-semibold uppercase tracking-widest text-primary">Vos bonus</span>
+        <span className="text-sm font-semibold uppercase tracking-widest text-primary">{t("bonus.tag")}</span>
         <h2 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-          Ce que vous recevez en rejoignant le challenge
+          {t("bonus.title")}
         </h2>
       </motion.div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {bonuses.map((b, i) => (
           <motion.div
-            key={b.text}
+            key={i}
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
