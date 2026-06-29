@@ -1,7 +1,8 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "motion/react"
-import { Mail, Gift } from "lucide-react"
+import { Mail, CheckCircle2 } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
@@ -22,59 +23,129 @@ const socials = [
     href: "https://www.facebook.com/share/1crb38psK1/?mibextid=wwXIfr",
     path: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
   },
-  {
-    label: "TikTok",
-    href: "#",
-    path: "M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z",
-  },
 ]
+
+function InlineCountdown() {
+  const targetDate = new Date("2026-07-11T00:00:00Z").getTime()
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
+  const [expired, setExpired] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const updateCountdown = () => {
+      const now = new Date().getTime()
+      const distance = targetDate - now
+
+      if (distance < 0) {
+        setExpired(true)
+      } else {
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+        setTimeLeft({ days, hours, minutes })
+      }
+    }
+
+    updateCountdown()
+    const timer = setInterval(updateCountdown, 1000)
+    return () => clearInterval(timer)
+  }, [targetDate])
+
+  if (!mounted || expired) return null
+
+  return (
+    <span className="text-amber-500 font-bold ml-1">
+      · Expire dans {timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m
+    </span>
+  )
+}
 
 export function CtaFooter() {
   const { t } = useLanguage()
 
   return (
-    <footer className="relative border-t border-border/60 bg-card/20">
+    <footer className="relative border-t border-border/60 bg-slate-950">
       <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
+        
+        {/* Section de Clôture Premium */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-8 text-center sm:p-14 glow-blue"
+          className="relative overflow-hidden rounded-3xl bg-[#0D1B3E] border border-primary/20 p-8 sm:p-12 shadow-2xl"
         >
-          <div className="pointer-events-none absolute inset-0 grid-bg opacity-40" />
-          <div className="relative">
-            <h2 className="font-heading text-3xl font-extrabold tracking-tight text-balance sm:text-4xl">
-              {t("ctaFooter.title")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
-              {t("ctaFooter.desc")}
-            </p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href="#inscription"
-                className={cn(buttonVariants({ size: "lg" }), "h-12 px-7 text-base font-bold cursor-pointer")}
-              >
-                <Gift className="size-5" />
-                {t("ctaFooter.ctaFree")}
-              </a>
-              <a
-                href="mailto:alfred@leguideai.com"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "h-12 border-border bg-transparent px-7 text-base cursor-pointer",
-                )}
-              >
-                <Mail className="size-5" />
-                {t("ctaFooter.ctaContact")}
-              </a>
+          {/* Logo en haut à gauche */}
+          <div className="absolute top-6 left-6 flex items-center gap-2.5 z-20">
+            <img
+              src="/Logo%20avatar.png"
+              alt="Logo Le Guide IA"
+              className="size-8 rounded-lg object-cover"
+            />
+            <span className="font-heading text-base font-extrabold tracking-tight text-white">
+              LE GUIDE <span className="text-primary">IA</span>
+            </span>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-12 items-center relative z-10 pt-8 lg:pt-0">
+            {/* Left Content */}
+            <div className="lg:col-span-8 text-left">
+              <h2 className="font-heading text-2xl font-black leading-tight text-white sm:text-3xl max-w-2xl">
+                "{t("ctaFooter.title")}"
+              </h2>
+              <p className="mt-4 text-sm text-slate-300 max-w-xl">
+                {t("ctaFooter.desc")}
+              </p>
+              
+              <div className="mt-8">
+                <a
+                  href="#tarifs"
+                  className={cn(
+                    buttonVariants({ size: "lg" }),
+                    "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
+                  )}
+                >
+                  {t("ctaFooter.ctaPro")}
+                </a>
+                
+                <div className="mt-4 text-xs text-slate-300 flex flex-wrap gap-2 items-center">
+                  <span className="font-bold text-white">{t("ctaFooter.founderPrice")}</span>
+                  <InlineCountdown />
+                </div>
+
+                {/* Checklist Badges */}
+                <div className="mt-6 flex flex-wrap gap-4 text-xs font-semibold text-slate-200">
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="size-4 text-emerald-400" />
+                    {t("pricing.features.5")}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="size-4 text-emerald-400" />
+                    Accès immédiat au groupe WhatsApp
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="size-4 text-emerald-400" />
+                    Certificat officiel
+                  </span>
+                </div>
+              </div>
             </div>
-            <p className="mt-6 text-sm font-medium text-primary">
-              {t("ctaFooter.footerNote")}
-            </p>
+
+            {/* Right Image (Alfred Dah Portrait) */}
+            <div className="lg:col-span-4 hidden lg:block relative">
+              <div className="relative overflow-hidden rounded-2xl border border-primary/20 glow-blue bg-slate-950/20 max-w-[280px] ml-auto">
+                <img
+                  src="/profile_alfred.jpg"
+                  alt="Alfred Dah, fondateur de Le Guide IA"
+                  className="w-full object-cover aspect-[4/5] object-top grayscale hover:grayscale-0 transition-all duration-500"
+                />
+              </div>
+            </div>
           </div>
         </motion.div>
 
+        {/* Footer info links */}
         <div className="mt-14 flex flex-col items-center justify-between gap-6 border-t border-border/60 pt-8 sm:flex-row">
           <div className="flex flex-col items-center gap-2 sm:items-start">
             <a href="#" className="flex items-center gap-2.5">
@@ -83,20 +154,20 @@ export function CtaFooter() {
                 alt="Logo Le Guide IA"
                 className="size-9 rounded-lg object-cover"
               />
-              <span className="font-heading text-lg font-extrabold tracking-tight">
+              <span className="font-heading text-lg font-extrabold tracking-tight text-white">
                 LE GUIDE <span className="text-primary">IA</span>
               </span>
             </a>
-            <span className="text-sm text-muted-foreground">Alfred Dah</span>
+            <span className="text-xs text-muted-foreground">Alfred Dah</span>
           </div>
 
           <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground sm:items-end">
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
               <a
                 href="mailto:alfred@leguideai.com"
-                className="inline-flex items-center gap-2 transition-colors hover:text-foreground"
+                className="inline-flex items-center gap-2 transition-colors hover:text-foreground text-xs"
               >
-                <Mail className="size-4" />
+                <Mail className="size-4 text-primary" />
                 alfred@leguideai.com
               </a>
             </div>
@@ -119,7 +190,7 @@ export function CtaFooter() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-muted-foreground">
+        <p className="mt-8 text-center text-[10px] text-muted-foreground">
           {t("ctaFooter.rights").replace("{year}", new Date().getFullYear().toString())}
         </p>
       </div>
