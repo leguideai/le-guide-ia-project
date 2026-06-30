@@ -314,18 +314,18 @@ export async function POST(request: NextRequest) {
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (foundIndex !== -1) {
-      // User found: update columns R (index 17: Payment Method), S (index 18: Transaction Code), V (index 21: Status)
+      // User found: update columns R (index 17: Attestation Payment), S (index 18: Transaction Code), T (index 19: Bootcamp Interest), V (index 21: Status), W (index 22: Comments)
       const targetRow = 5 + foundIndex;
       
-      // Update Payment Method
+      // Update Attestation Payment Status (Column R)
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!R${targetRow}`,
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [[method]] },
+        requestBody: { values: [["En attente"]] },
       });
 
-      // Update Transaction Code
+      // Update Transaction Code (Column S)
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!S${targetRow}`,
@@ -333,12 +333,28 @@ export async function POST(request: NextRequest) {
         requestBody: { values: [[txCode]] },
       });
 
-      // Update Status
+      // Update Bootcamp Interest (Column T)
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${SHEET_NAME}!T${targetRow}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [["Oui"]] },
+      });
+
+      // Update Status (Column V)
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!V${targetRow}`,
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["A Valider"]] },
+        requestBody: { values: [["Chaud Bootcamp"]] },
+      });
+
+      // Update Comments (Column W)
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${SHEET_NAME}!W${targetRow}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: { values: [["Paiement via " + method]] },
       });
 
       return NextResponse.json({ success: true, message: "Paiement enregistré pour vérification." });
@@ -375,12 +391,12 @@ export async function POST(request: NextRequest) {
         "Client Direct",                 // G: Profil
         "Le Guide AI V2",                // H: Source
         "", "", "", "", "", "", "", "", "", // I-Q
-        method,                          // R: Paiement
+        "En attente",                    // R: Paiement attestation
         txCode,                          // S: Code transaction
         "Oui",                           // T: Interet Bootcamp
         "",                              // U
-        "A Valider",                     // V: Statut global
-        "",                              // W
+        "Chaud Bootcamp",                // V: Statut global
+        "Paiement via " + method,        // W: Commentaires
         dateStr,                         // X: Date d'inscription
       ];
 
