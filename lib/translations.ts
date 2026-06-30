@@ -3,276 +3,242 @@ export const translations: Record<string, any> = {
     nav: {
       programme: "Programme",
       audience: "Pour qui ?",
-      tools: "Outils",
       bootcamp: "Bootcamp PRO",
-      register: "S'inscrire",
-      cta: "Rejoindre le Challenge Gratuit",
+      testimonials: "Témoignages",
+      faq: "FAQ",
+      cta: "Payer maintenant",
       toggleLang: "Switch to English",
     },
     hero: {
-      titlePart1: "Maîtrisez l'IA ou ",
-      titlePart2: "restez compétitif.",
-      desc1: "Apprenez à utiliser l'intelligence artificielle pour améliorer votre CV, optimiser votre profil LinkedIn, gagner du temps, créer du contenu, automatiser vos tâches et développer de nouvelles opportunités professionnelles.",
-      desc2: "Le Guide IA vous montre comment passer de la curiosité à la pratique, avec des démonstrations concrètes sur ChatGPT, Claude, Gemini et Canva IA.",
-      ctaFree: "Rejoindre le Challenge Gratuit",
-      ctaProgram: "Voir le programme des 5 jours",
-      badgeFree: "Inscription gratuite · Aucune carte bancaire requise · Places limitées",
-      challengeBadge: "Challenge gratuit",
-      practicalBadge: "100% Pratique",
-      stats: {
-        days: "5 jours",
-        daysLabel: "100% gratuit",
-        tools: "4 outils",
-        toolsLabel: "ChatGPT · Claude · Gemini · Canva",
-        dates: "24–28 juin",
-        datesLabel: "2026 · en ligne",
-      },
-      pillars: {
-        pillar1Title: "Apprenez l'IA",
-        pillar1Sub: "Prenez une longueur d'avance",
-        pillar2Title: "Travaillez mieux",
-        pillar2Sub: "Gagnez en productivité",
-        pillar3Title: "Gagnez plus",
-        pillar3Sub: "Créez de nouvelles opportunités",
-      },
+      title: "Maîtrisez l'IA. Transformez votre carrière et votre business.",
+      subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora",
+      ctaPro: "Je rejoins le Bootcamp PRO",
+      ctaProgram: "Télécharger le programme",
+      countdownLabel: "L'offre Fondateur expire dans :",
+      badges: [
+        "📅 24 juil – 2 août 2026",
+        "🕖 19h00 GMT",
+        "🌍 100% En ligne",
+        "🎓 10 Sessions intensives"
+      ]
     },
-    stats: {
-      registered: "Inscrits actuellement",
-      registeredLabel: "De formation pratique gratuite",
-      representedLabel: "Déjà représentés parmi les inscrits",
-      targetLabel: "Objectif total de participants",
-      countriesSuffix: " pays",
+    whyBootcamp: {
+      tag: "Pourquoi ce Bootcamp ?",
+      title: "Comparez et comprenez la différence",
+      sansLabel: "SANS LE BOOTCAMP",
+      avecLabel: "AVEC LE BOOTCAMP",
+      items: [
+        { sans: "Utilise l'IA au hasard", avec: "Workflow IA structuré et professionnel" },
+        { sans: "Perd du temps à tâtonner", avec: "Gagne 2h à 4h par jour" },
+        { sans: "CV et LinkedIn non optimisés", avec: "Profil visible par les recruteurs et ATS" },
+        { sans: "Aucun système d'automatisation", avec: "Automatise les tâches répétitives" },
+        { sans: "Pas de méthode claire", avec: "Roadmap 90 jours personnalisée" },
+        { sans: "Isolé dans son apprentissage", avec: "Communauté privée + accompagnement" }
+      ]
     },
-    problem: {
-      tag: "Le constat",
-      title: "Aujourd'hui, l'IA n'est plus une option.",
-      para1: "Pendant que certains utilisent encore l'IA comme un simple gadget, d'autres s'en servent déjà pour rédiger plus vite, mieux présenter leur profil, préparer leurs candidatures, créer du contenu, automatiser des tâches et développer leur activité.",
-      para2: "Le vrai problème n'est pas l'intelligence artificielle. Le vrai problème, c'est de ne pas savoir l'utiliser correctement.",
-      para3: "Vous avez peut-être déjà essayé ChatGPT ou Gemini. Mais si vos résultats sont moyens, ce n'est pas forcément parce que l'outil est limité. C'est souvent parce que la méthode n'est pas bonne.",
-      para4: "Le Guide IA est là pour corriger cela.",
-    },
-    promise: {
-      tag: "La promesse",
-      title: "En 5 jours, apprenez à utiliser l'IA de manière simple, pratique et utile.",
-      para1: "Pas de théorie inutile. Pas de jargon compliqué. Pas de promesses magiques.",
-      para2: "Chaque jour, vous découvrez un cas d'usage concret, une démonstration en direct et une méthode que vous pouvez appliquer immédiatement.",
-      listTitle: "À la fin du challenge, vous saurez utiliser l'IA pour :",
-      benefits: [
-        "améliorer votre CV",
-        "optimiser votre profil LinkedIn",
-        "gagner du temps dans vos tâches quotidiennes",
-        "créer du contenu professionnel",
-        "structurer vos idées et vos projets",
-        "automatiser certaines actions simples",
-        "identifier de nouvelles opportunités de carrière ou de business",
-      ],
+    deliverables: {
+      tag: "Ce que vous obtenez",
+      title: "6 livrables concrets pour votre succès",
+      items: [
+        { num: "01", title: "Workflow IA Pro", desc: "Un système de travail IA immédiatement applicable" },
+        { num: "02", title: "Bibliothèque de prompts", desc: "100+ prompts testés pour votre métier" },
+        { num: "03", title: "Compétences métier IA", desc: "Appliquées à votre secteur professionnel" },
+        { num: "04", title: "Roadmap 90 jours", desc: "Votre plan d'action personnalisé" },
+        { num: "05", title: "Certificat Le Guide IA", desc: "Attestation officielle de formation" },
+        { num: "06", title: "Communauté Premium", desc: "Groupe privé WhatsApp + accompagnement post-bootcamp" }
+      ]
     },
     program: {
       tag: "Le Programme",
-      title: "Le programme du Challenge IA Gratuit",
-      desc: "5 jours, 5 cas d'usage concrets. Une démonstration en direct et une méthode applicable immédiatement, chaque jour.",
-      summit: "5 jours pour passer de spectateur à actor de l'IA. À la fin, vous repartez avec un plan concret prêt à appliquer.",
-      cta: "Rejoindre le Challenge Gratuit",
-      days: [
-        {
-          day: "Jour 1",
-          title: "Comprendre l'IA sans jargon",
-          desc: "Découvrez ce que l'IA peut vraiment faire pour vous, comment poser de meilleures demandes et comment éviter les erreurs courantes.",
-        },
-        {
-          day: "Jour 2",
-          title: "CV & LinkedIn à l'ère de l'IA",
-          desc: "Rendez votre CV plus clair et plus professionnel, lisible par les recruteurs comme par les outils modernes. Optimisez votre profil LinkedIn pour devenir plus visible.",
-        },
-        {
-          day: "Jour 3",
-          title: "Productivité & automatisation",
-          desc: "Utilisez l'IA pour gagner du temps, organiser vos idées, rédiger plus vite, préparer vos documents et automatiser certaines tâches répétitives.",
-        },
-        {
-          day: "Jour 4",
-          title: "Création de contenu & visuels pros",
-          desc: "Utilisez ChatGPT, Claude et Canva IA pour créer des posts, présentations, visuels, scripts vidéo et contenus professionnels.",
-        },
-        {
-          day: "Jour 5",
-          title: "Passer à l'action",
-          desc: "Construisez votre plan IA personnel : comment intégrer l'IA dans votre carrière, vos études, votre activité ou votre entreprise.",
-        },
-      ],
+      title: "Les 10 sessions intensives du Bootcamp PRO",
+      desc: "Une timeline des sessions clés pour maîtriser l'intelligence artificielle pas à pas.",
+      detailsNote: "Chaque session : 1h30 en direct · Replay disponible 48h · Exercice pratique inclus",
+      scheduleNote: "Horaire : 19h00 GMT (heure de Ouagadougou) · Plateforme : lien privé envoyé aux inscrits",
+      sessions: [
+        { date: "24 juillet", session: "Session 1", title: "Mindset IA professionnel + système de travail" },
+        { date: "25 juillet", session: "Session 2", title: "Prompting professionnel avancé" },
+        { date: "26 juillet", session: "Session 3", title: "IA pour emails, rapports et communication" },
+        { date: "27 juillet", session: "Session 4", title: "IA pour productivité et organisation" },
+        { date: "28 juillet", session: "Session 5", title: "IA pour CV, LinkedIn et positionnement" },
+        { date: "29 juillet", session: "Session 6", title: "IA pour présentations et documents pro" },
+        { date: "30 juillet", session: "Session 7", title: "IA pour stratégie, analyse et décision" },
+        { date: "31 juillet", session: "Session 8", title: "IA pour contenu et visibilité" },
+        { date: "1er août", session: "Session 9", title: "IA pour opportunités et offres personnelles" },
+        { date: "2 août", session: "Session 10", title: "Roadmap 90 jours + Certification officielle" }
+      ]
+    },
+    projection: {
+      tag: "Découvrez votre futur",
+      title: "Ce qui change pour vous après le Bootcamp",
+      profiles: [
+        { icon: "👨‍💼", profile: "Professionnel", desc: "Vous travaillez plus vite, produisez plus, et devenez une référence IA dans votre équipe" },
+        { icon: "💼", profile: "Entrepreneur", desc: "Vous automatisez votre entreprise et libérez du temps pour ce qui compte vraiment" },
+        { icon: "🎯", profile: "Chercheur d'emploi", desc: "Votre CV et LinkedIn sont optimisés · Vous passez les filtres ATS · Vous décrochez des entretiens" },
+        { icon: "🚀", profile: "Consultant / Freelance", desc: "Vous vendez plus de missions grâce à votre positionnement IA" }
+      ]
     },
     audience: {
       tag: "Pour qui ?",
-      title: "Ce challenge est fait pour vous si vous êtes :",
-      audiences: [
-        {
-          title: "Étudiant",
-          desc: "Vous voulez mieux apprendre, mieux rédiger, mieux préparer votre avenir et développer des compétences recherchées.",
-        },
-        {
-          title: "Chercheur d'emploi",
-          desc: "Vous voulez améliorer votre CV, votre profil LinkedIn et votre visibilité professionnelle.",
-        },
-        {
-          title: "Professionnel",
-          desc: "Vous voulez gagner du temps, devenir plus productif et rester compétitif dans un monde qui change vite.",
-        },
-        {
-          title: "Entrepreneur",
-          desc: "Vous voulez utiliser l'IA pour créer du contenu, mieux communiquer, mieux vendre et structurer votre activité.",
-        },
-        {
-          title: "Dirigeant ou manager",
-          desc: "Vous voulez comprendre comment l'IA peut devenir un levier stratégique pour votre organisation.",
-        },
-      ],
+      title: "Le Bootcamp PRO s'adresse aux profils ambitieux",
+      profiles: [
+        { title: "Professionnel", desc: "Devenez la référence IA de votre organisation" },
+        { title: "Entrepreneur", desc: "Automatisez, scalez, libérez-vous des tâches répétitives" },
+        { title: "Consultant / Freelance", desc: "Différenciez-vous et vendez plus de missions" },
+        { title: "Chercheur d'emploi", desc: "CV, LinkedIn, ATS — prenez une longueur d'avance" }
+      ]
     },
-    tools: {
-      tag: "Les outils utilisés",
-      title: "Les outils que nous allons utiliser",
-      desc: "Pas de théorie inutile. Vous apprenez à utiliser concrètement les meilleurs outils du marché, adaptés à votre réalité.",
-      toolsList: {
-        chatgpt: "Pour rédiger, structurer, résumer, réfléchir, préparer vos documents et améliorer votre productivité.",
-        claude: "Pour analyser des documents, améliorer la qualité des textes, structurer des idées complexes et produire des contenus solides.",
-        gemini: "Pour rechercher, comparer, travailler avec l'écosystème Google et exploiter les capacités multimodales.",
-        canva: "Pour créer rapidement des visuels, présentations et supports professionnels.",
-      },
-    },
-    method: {
-      tag: "La méthode",
-      title: "La méthode Le Guide IA",
-      desc: "Nous n'allons pas seulement vous montrer des outils. Nous allons vous apprendre une méthode simple.",
-      steps: [
-        {
-          title: "Comprendre",
-          desc: "Savoir ce que l'IA peut faire et ce qu'elle ne doit pas faire à votre place.",
-        },
-        {
-          title: "Pratiquer",
-          desc: "Voir des démonstrations concrètes et reproduire les exercices.",
-        },
-        {
-          title: "Adapter",
-          desc: "Appliquer l'IA à votre réalité : études, emploi, business, organisation ou carrière.",
-        },
-        {
-          title: "Progresser",
-          desc: "Passer d'un usage vague de l'IA à une utilisation structurée, professionnelle et productive.",
-        },
-      ],
-    },
-    challenge: {
-      badge: "100% Gratuit · 24 – 28 juin 2026",
-      title: "Réservez votre place gratuitement",
-      desc: "Le Challenge IA Gratuit se déroule du 24 au 28 juin 2026. Inscrivez-vous maintenant pour recevoir les informations de participation, rejoindre la communauté et accéder aux exercices.",
-      daysSide: [
-        { title: "Les fondations de l'IA", desc: "Comprendre et démarrer sans jargon" },
-        { title: "CV & LinkedIn boostés par l'IA", desc: "Optimisez votre profil pro" },
-        { title: "Productivité & automatisation", desc: "Gagnez des heures chaque semaine" },
-        { title: "Créer du contenu & des visuels", desc: "ChatGPT, Claude, Canva IA en action" },
-        { title: "Passer à l'action", desc: "Votre plan IA personnalisé" },
-      ],
-      form: {
-        title: "Je rejoins le Challenge IA Gratuit",
-        subtitle: "Inscription gratuite. Places limitées pour garantir un accompagnement de qualité.",
-        perks: [
-          "5 lives pratiques avec démos",
-          "Communauté WhatsApp active",
-          "Exercices & replays inclus",
-          "Aucune carte bancaire requise",
-        ],
-        labelName: "Prénom et nom",
-        placeholderName: "Votre prénom et nom",
-        labelEmail: "Email",
-        placeholderEmail: "vous@email.com",
-        labelWhatsapp: "WhatsApp",
-        labelCountry: "Pays",
-        placeholderCountry: "Sélectionner votre pays",
-        searchCountryPlaceholder: "Rechercher un pays...",
-        noCountryFound: "Aucun pays trouvé",
-        labelProfile: "Profil",
-        placeholderProfile: "Je suis...",
-        profiles: {
-          student: "Étudiant",
-          jobseeker: "Chercheur d'emploi",
-          professional: "Professionnel",
-          entrepreneur: "Entrepreneur",
-          manager: "Dirigeant ou manager",
-        },
-        cta: "Rejoindre le Challenge Gratuit",
-        loading: "Inscription en cours...",
-        errors: {
-          name: "Veuillez saisir votre prénom et nom.",
-          email: "Veuillez saisir votre email.",
-          emailInvalid: "Veuillez saisir un email valide (ex : vous@email.com).",
-          whatsapp: "Veuillez saisir votre numéro WhatsApp.",
-          whatsappInvalid: "Numéro invalide pour l'indicatif {dial}.",
-          country: "Veuillez sélectionner votre pays.",
-          profile: "Veuillez sélectionner votre profil.",
-          server: "Une erreur est survenue. Veuillez réessayer.",
-          network: "Impossible de contacter le serveur. Vérifiez votre connexion internet.",
-          fixFields: "Veuillez corriger les champs en rouge avant de continuer.",
-        },
-        cardFooterNote: "Aucune carte bancaire requise. Vous recevrez les informations pratiques après votre inscription.",
-      },
-      success: {
-        title: "Inscription confirmée",
-        desc: "Bravo {name}, votre place au Challenge IA Gratuit est réservée. Vous recevrez les informations de participation par email et sur WhatsApp ({dial} {whatsapp}).",
-        nextSteps: "Prochaines étapes",
-        stepsList: [
-          "Surveillez votre boîte mail ({email})",
-          "Rejoignez la communauté WhatsApp",
-          "Rendez-vous le 24 juin 2026",
-        ],
-        ctaWhatsapp: "Rejoindre la communauté WhatsApp",
-      },
-    },
-    bonus: {
-      tag: "Vos bonus",
-      title: "Ce que vous recevez en rejoignant le challenge",
+    differentiators: {
+      tag: "Pourquoi Le Guide IA ?",
+      title: "Ce qui nous rend uniques",
       items: [
-        "5 sessions pratiques en direct",
-        "Des démonstrations concrètes",
-        "Des exercices simples à appliquer",
-        "L'accès à la communauté WhatsApp",
-        "Des conseils pour votre CV et LinkedIn",
-        "Une méthode claire pour mieux utiliser l'IA",
-        "Une orientation vers le Bootcamp PRO pour aller plus loin",
-      ],
+        { title: "Formation 100% en français", desc: "Aucune barrière linguistique pour l'apprenant francophone" },
+        { title: "Cas africains et diaspora", desc: "Exemples tirés de la réalité locale, pas du contexte occidental" },
+        { title: "Exercices pratiques à chaque session", desc: "On apprend en faisant, pas en regardant" },
+        { title: "Groupe WhatsApp privé inclus", desc: "Communauté active d'entraide post-Bootcamp" },
+        { title: "Accompagnement personnalisé", desc: "Questions répondues par Alfred Dah directement" },
+        { title: "Certificat officiel Le Guide IA", desc: "Preuve concrète de votre formation" }
+      ]
     },
-    parcours: {
-      tag: "Aller plus loin",
-      title: "Après le challenge : passez au niveau supérieur",
-      desc: "Le challenge gratuit vous donne les bases. Pour ceux qui veulent aller plus loin, Le Guide IA proposera un Bootcamp PRO premium pour transformer vos connaissances en résultats concrètes et durables.",
-      bootcampTitle: "Transformez vos connaissances en résultats.",
+    process: {
+      tag: "Comment ça se passe ?",
+      title: "Le déroulement de votre parcours",
+      steps: [
+        { step: "01", title: "Inscription", time: "Maintenant", desc: "Paiement sécurisé → confirmation immédiate" },
+        { step: "02", title: "Bienvenue", time: "Sous 24h", desc: "Accès WhatsApp groupe privé + kit d'onboarding" },
+        { step: "03", title: "Lives", time: "24 juil – 2 août", desc: "10 sessions à 19h GMT · 1h30 chacune" },
+        { step: "04", title: "Replays", time: "Sous 48h", desc: "Replay disponible si vous avez manqué une session" },
+        { step: "05", title: "Exercices", time: "Après chaque live", desc: "1 livrable pratique par session" },
+        { step: "06", title: "Certification", time: "2 août", desc: "Certificat officiel Le Guide IA remis" }
+      ]
+    },
+    pricing: {
+      tag: "Tarifs",
+      title: "Choisissez votre accès au Bootcamp PRO",
+      founderCard: {
+        badge: "🏅 OFFRE FONDATEUR",
+        priceFcfa: "99 000 FCFA",
+        priceUsd: "179 $",
+        expireLabel: "⏳ Offre expire le 11 juillet 2026 à minuit GMT"
+      },
+      standardCard: {
+        badge: "PRIX STANDARD",
+        priceFcfa: "199 000 FCFA",
+        priceUsd: "349 $",
+        dateLabel: "À partir du 12 juillet 2026"
+      },
       features: [
-        "10 sessions premium",
-        "2 sessions pratiques",
-        "Accompagnement PRO",
-        "Cas pratiques",
-        "Automatisation",
-        "Stratégie IA appliquée",
-        "Garantie satisfait ou remboursé",
-      ],
-      priceFounder: "Prix fondateur :",
-      surprise: "Surprise",
-      priceStandard: "Prix standard :",
-      cta: "Je veux être informé",
-      footerNote: "Commencez par le challenge gratuit. L'accès PRO est proposé ensuite.",
+        "10 sessions premium en direct",
+        "Replays disponibles 48h",
+        "Exercices pratiques après chaque live",
+        "Groupe WhatsApp privé d'entraide",
+        "Certificat officiel Le Guide IA",
+        "Garantie satisfait ou remboursé (sous conditions)"
+      ]
+    },
+    testimonials: {
+      tag: "Témoignages",
+      title: "Ce qu'en disent les participants",
+      desc: "Des retours d'expérience concrets d'élèves ayant suivi nos formations précédentes.",
+      items: [
+        { name: "Moussa", country: "Sénégal", role: "Entrepreneur", text: "Le Guide IA a changé ma perception de l'IA. J'ai automatisé 80% de mon service client sur WhatsApp et économisé des heures de travail quotidien.", image: "/moussa.jpg" },
+        { name: "Fatoumata", country: "Côte d'Ivoire", role: "Responsable RH", text: "Grâce aux exercices de prompting sur Claude et ChatGPT, j'ai réécrit toutes les fiches de poste de mon service en une après-midi. Impressionnant !", image: "/fatoumata.jpg" },
+        { name: "Amadou", country: "Burkina Faso", role: "Consultant", text: "Ce bootcamp est très différent des formations théoriques gratuites. Les exemples s'adaptent réellement à nos connexions, nos cas locaux et notre environnement professionnel.", image: "/amadou.jpg" },
+        { name: "Sarah", country: "France (Diaspora)", role: "Chercheuse d'emploi", text: "J'ai optimisé mon CV et mon profil LinkedIn avec la méthode d'Alfred. J'ai été contactée par deux recruteurs en moins d'une semaine après la mise à jour.", image: "/sarah.jpg" },
+        { name: "Jean-Pierre", country: "Cameroun", role: "Développeur d'affaires", text: "Le module sur la rédaction d'e-mails et de rapports professionnels est une pépite. Mes propositions commerciales sont plus percutantes.", image: "/jeanpierre.jpg" },
+        { name: "Awa", country: "Mali", role: "Étudiante", text: "Je me sens armée pour mon entrée sur le marché du travail. Le certificat Le Guide IA est déjà fièrement affiché sur mon profil LinkedIn.", image: "/awa.jpg" }
+      ]
     },
     authority: {
       tag: "L'expert",
       founderTitle: "Fondateur de Le Guide IA",
-      consultantTitle: "Consultant IA & Transformation Digitale",
-      desc1: "Avec plus de 450 inscrits provenant de plus de 21 pays, Le Guide IA est devenu la référence pour les francophones qui veulent maîtriser l'intelligence artificielle.",
+      consultantTitle: "Expert IA & Transformation Digitale",
+      cisa: "CISA — Certified Information Systems Auditor",
+      experience: "24+ ans d'expérience professionnelle",
+      mba: "MBA + AI Governance",
+      videoPlaceholder: "Vidéo de présentation (60s)",
+      desc1: "Expert certifié et auditeur de systèmes d'information chevronné, Alfred Dah aide les professionnels et entreprises d'Afrique francophone et de la diaspora à s'approprier les technologies d'avenir.",
       desc2: "Mon objectif est simple : rendre l'IA pratique, accessible et utile pour que vous travailliez mieux, gagniez en productivité et créiez plus d'opportunités professionnelles.",
-      quote: "Ici, on apprend. On pratique. On progresse.",
+      quote: "Votre avenir professionnel ne dépend plus seulement de vos compétences. Il dépend aussi de votre capacité à travailler avec l'IA.",
+      stats: {
+        countries: "26+ pays",
+        countriesLabel: "représentés parmi les participants",
+        followers: "6 326",
+        followersLabel: "abonnés LinkedIn (à jour)",
+        target: "500+",
+        targetLabel: "professionnels formés"
+      }
+    },
+    payment: {
+      tag: "Paiement",
+      title: "Validez votre inscription",
+      subtitle: "Choisissez votre mode de paiement préféré et envoyez le formulaire de confirmation une fois le transfert effectué.",
+      methods: {
+        om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 76 00 00 00 (Alfred Dah). Indiquer votre nom dans le motif." },
+        wave: { name: "Wave", target: "Afrique de l'Ouest", detail: "Transfert direct via Wave au +221 77 00 00 00 (Alfred Dah)." },
+        zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer à l'adresse email : pay@leguideai.com." },
+        bank: { name: "Virement Bancaire", target: "", detail: "Veuillez nous contacter sur WhatsApp pour obtenir notre RIB officiel." }
+      },
+      form: {
+        title: "Confirmer mon paiement",
+        subtitle: "Remplissez ce formulaire après votre transfert pour recevoir vos accès sous 24h.",
+        labelName: "Nom et Prénom",
+        placeholderName: "Votre nom complet",
+        labelEmail: "Email de réception",
+        placeholderEmail: "vous@email.com",
+        labelWhatsapp: "Numéro WhatsApp",
+        placeholderWhatsapp: "Ex : +221 77 123 45 67",
+        labelCountry: "Pays de résidence",
+        placeholderCountry: "Sélectionnez votre pays",
+        searchCountryPlaceholder: "Rechercher un pays...",
+        noCountryFound: "Aucun pays trouvé",
+        warningNote: "Note : Veuillez conserver la preuve de votre transfert. Nos équipes valideront manuellement vos informations sous 24h après réception.",
+        labelMethod: "Moyen de paiement",
+        placeholderMethod: "Sélectionnez le moyen utilisé",
+        labelTxCode: "Code / Référence de transaction",
+        placeholderTxCode: "Ex: OM_123456789 ou Wave Ref...",
+        cta: "Envoyer la confirmation",
+        loading: "Envoi en cours...",
+        successTitle: "Demande reçue !",
+        successDesc: "Merci {name}. Vos informations ont bien été transmises. Notre équipe va valider votre paiement manuellement sous 24 heures et vous recevrez un e-mail de bienvenue automatique contenant le lien de votre groupe WhatsApp Bootcamp PRO.",
+        errors: {
+          name: "Veuillez entrer votre prénom et nom.",
+          email: "Veuillez entrer une adresse e-mail valide.",
+          whatsapp: "Veuillez entrer votre numéro WhatsApp.",
+          whatsappInvalid: "Numéro WhatsApp invalide pour l'indicatif {dial}.",
+          country: "Veuillez sélectionner votre pays de résidence.",
+          method: "Veuillez sélectionner votre moyen de paiement.",
+          txCode: "Veuillez indiquer la référence de votre transaction.",
+          server: "Une erreur est survenue lors de l'envoi. Veuillez réessayer."
+        }
+      }
+    },
+    faq: {
+      tag: "FAQ",
+      title: "Des questions ? Nous avons les réponses",
+      items: [
+        { q: "Qu'est-ce qui différencie ce Bootcamp d'une formation YouTube gratuite ?", a: "Ce Bootcamp est 100% interactif avec Alfred Dah. Il inclut 10 exercices pratiques modélisés pour des cas réels africains et de la diaspora, un accompagnement personnalisé en direct, et un groupe d'entraide privé WhatsApp pour pérenniser vos acquis." },
+        { q: "Je n'ai jamais utilisé l'IA. Est-ce que je peux suivre le Bootcamp ?", a: "Oui, tout à fait. Nous démarrons avec le mindset et les bases professionnelles du prompting (sessions 1 et 2) avant d'aborder des cas avancés. La formation est conçue pour être progressive et accessible." },
+        { q: "Est-ce que les sessions sont enregistrées si je rate un live ?", a: "Oui. Toutes les sessions sont enregistrées et les replays sont disponibles sous 48h dans votre espace membre." },
+        { q: "Quel est le fuseau horaire ?", a: "Toutes les sessions en direct se déroulent à 19h00 GMT (heure de Ouagadougou/Abidjan/Dakar). Pour le Cameroun/Gabon/Congo il sera 20h00, et pour la France il sera 21h00." },
+        { q: "Comment s'effectue le paiement depuis mon pays ?", a: "Vous pouvez payer facilement par Orange Money, Wave, Zelle ou par virement bancaire pour les entreprises. Les détails de paiement et le formulaire de confirmation sont disponibles dans la section Paiement ci-dessus." },
+        { q: "Y a-t-il une garantie satisfait ou remboursé ?", a: "Oui, nous offrons une garantie satisfait ou remboursé sous conditions d'assiduité (avoir assisté aux lives et soumis les 3 premiers exercices) dans les 5 premiers jours du Bootcamp." },
+        { q: "Est-ce que le certificat est reconnu par les employeurs ?", a: "Le certificat Le Guide IA atteste de vos compétences pratiques et de la réalisation de vos livrables. Il est largement valorisé par les employeurs de la sous-région et sur LinkedIn comme preuve de compétence opérationnelle." },
+        { q: "Qu'est-ce qui se passe après le Bootcamp ? Y a-t-il un suivi ?", a: "Après le Bootcamp, vous conservez l'accès au groupe privé WhatsApp Le Guide IA PRO pour continuer à échanger, poser des questions et recevoir nos partages exclusifs." },
+        { q: "Puis-je inscrire mon équipe ou mon entreprise ?", a: "Oui, nous proposons des tarifs de groupe ou des sessions intra-entreprises. Contactez-nous par email à alfred@leguideai.com." },
+        { q: "Quels sont les outils requis pour suivre les lives ?", a: "Un simple ordinateur ou smartphone et une connexion internet. Nous utiliserons des versions gratuites de ChatGPT, Claude, Gemini et Canva IA, vous n'avez pas besoin d'abonnements payants." },
+        { q: "Qui est l'expert Alfred Dah ?", a: "Alfred Dah est un expert certifié CISA en audit de systèmes d'information, titulaire d'un MBA et spécialisé en gouvernance de l'IA, fort de plus de 24 ans d'expérience professionnelle dans la transformation digitale." },
+        { q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 99 000 FCFA (179 $). Cette offre exclusive expire le 11 juillet 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 199 000 FCFA (349 $)." },
+        { q: "Le Bootcamp convient-il aux résidents de la diaspora ?", a: "Oui, tout à fait. Les horaires (19h00 GMT / 21h00 en France) et les moyens de paiement comme Zelle sont spécifiquement adaptés pour faciliter la participation de la diaspora." },
+        { q: "Puis-je obtenir une facture pour mon entreprise ?", a: "Oui, nous pouvons vous émettre une facture professionnelle au nom de votre entreprise pour justifier la formation. Envoyez-nous simplement les détails de facturation sur WhatsApp." },
+        { q: "Comment puis-je rejoindre le groupe WhatsApp privé ?", a: "Une fois votre confirmation de paiement transmise via notre formulaire, notre équipe valide votre accès sous 24h et vous recevez un lien d'intégration WhatsApp direct par e-mail et SMS/WhatsApp." }
+      ]
     },
     ctaFooter: {
       title: "Prêt à prendre une longueur d'avance ?",
-      desc: "L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous préparer sérieusement. Rejoignez le Challenge IA Gratuit et commencez à utiliser l'intelligence artificielle comme un véritable levier professionnel.",
-      ctaFree: "Je réserve ma place gratuitement",
+      desc: "L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le Bootcamp PRO pour maîtriser les outils indispensables à votre réussite.",
+      ctaPro: "Je rejoins le Bootcamp PRO",
       ctaContact: "Nous contacter",
+      founderPrice: "99 000 FCFA · Offre Fondateur",
       footerNote: "Le futur appartient à ceux qui se préparent avant les autres.",
       rights: "© {year} Le Guide IA. Tous droits réservés.",
     },
@@ -284,275 +250,240 @@ export const translations: Record<string, any> = {
     nav: {
       programme: "Program",
       audience: "Who is it for?",
-      tools: "Tools",
       bootcamp: "Bootcamp PRO",
-      register: "Register",
-      cta: "Join the Free Challenge",
+      testimonials: "Testimonials",
+      faq: "FAQ",
+      cta: "Pay now",
       toggleLang: "Passer en Français",
     },
     hero: {
-      titlePart1: "Master AI or ",
-      titlePart2: "stay competitive.",
-      desc1: "Learn to use artificial intelligence to improve your CV, optimize your LinkedIn profile, save time, create content, automate tasks, and develop new professional opportunities.",
-      desc2: "Le Guide IA shows you how to move from curiosity to practice, with concrete demonstrations on ChatGPT, Claude, Gemini, and Canva AI.",
-      ctaFree: "Join the Free Challenge",
-      ctaProgram: "See the 5-day program",
-      badgeFree: "Free registration · No credit card required · Limited slots",
-      challengeBadge: "Free challenge",
-      practicalBadge: "100% Practical",
-      stats: {
-        days: "5 days",
-        daysLabel: "100% free",
-        tools: "4 tools",
-        toolsLabel: "ChatGPT · Claude · Gemini · Canva",
-        dates: "June 24–28",
-        datesLabel: "2026 · online",
-      },
-      pillars: {
-        pillar1Title: "Learn AI",
-        pillar1Sub: "Get a head start",
-        pillar2Title: "Work better",
-        pillar2Sub: "Increase your productivity",
-        pillar3Title: "Earn more",
-        pillar3Sub: "Create new opportunities",
-      },
+      title: "Master AI. Transform your career and your business.",
+      subtitle: "Intensive online training · 100% in French · African & diaspora cases",
+      ctaPro: "Join the Bootcamp PRO",
+      ctaProgram: "Download the Program",
+      countdownLabel: "The Founding Offer expires in:",
+      badges: [
+        "📅 July 24 – Aug 2, 2026",
+        "🕖 7:00 PM GMT",
+        "🌍 100% Online",
+        "🎓 10 Intensive Sessions"
+      ]
     },
-    stats: {
-      registered: "Currently registered",
-      registeredLabel: "Of free practical training",
-      representedLabel: "Already represented among registrants",
-      targetLabel: "Total target participants",
-      countriesSuffix: " countries",
+    whyBootcamp: {
+      tag: "Why this Bootcamp?",
+      title: "Compare and understand the difference",
+      sansLabel: "WITHOUT THE BOOTCAMP",
+      avecLabel: "WITH THE BOOTCAMP",
+      items: [
+        { sans: "Uses AI randomly", avec: "Structured and professional AI workflow" },
+        { sans: "Wastes time guessing", avec: "Saves 2 to 4 hours per day" },
+        { sans: "Unoptimized CV & LinkedIn", avec: "Profile visible to recruiters and ATS" },
+        { sans: "No automation system", avec: "Automates repetitive tasks" },
+        { sans: "No clear methodology", avec: "Personalized 90-day roadmap" },
+        { sans: "Isolated in learning", avec: "Private community + coaching support" }
+      ]
     },
-    problem: {
-      tag: "The observation",
-      title: "Today, AI is no longer an option.",
-      para1: "While some still use AI as a simple gadget, others are already using it to write faster, better present their profile, prepare applications, create content, automate tasks, and grow their business.",
-      para2: "The real problem is not artificial intelligence. The real problem is not knowing how to use it correctly.",
-      para3: "You may have already tried ChatGPT or Gemini. But if your results are average, it's not necessarily because the tool is limited. It's often because the method is not correct.",
-      para4: "Le Guide IA is here to fix that.",
-    },
-    promise: {
-      tag: "The promise",
-      title: "In 5 days, learn to use AI in a simple, practical, and useful way.",
-      para1: "No useless theory. No complicated jargon. No magical promises.",
-      para2: "Every day, you discover a concrete use case, a live demonstration, and a method that you can apply immediately.",
-      listTitle: "By the end of the challenge, you will know how to use AI to:",
-      benefits: [
-        "improve your CV",
-        "optimize your LinkedIn profile",
-        "save time in your daily tasks",
-        "create professional content",
-        "structure your ideas and projects",
-        "automate simple actions",
-        "identify new career or business opportunities",
-      ],
+    deliverables: {
+      tag: "What you get",
+      title: "6 concrete deliverables for your success",
+      items: [
+        { num: "01", title: "Pro AI Workflow", desc: "An immediately applicable AI work system" },
+        { num: "02", title: "Prompts Library", desc: "100+ tested prompts for your profession" },
+        { num: "03", title: "Business AI Skills", desc: "Applied directly to your professional sector" },
+        { num: "04", title: "90-day Roadmap", desc: "Your personalized action plan" },
+        { num: "05", title: "Le Guide IA Certificate", desc: "Official training completion certificate" },
+        { num: "06", title: "Premium Community", desc: "Private WhatsApp group + post-bootcamp support" }
+      ]
     },
     program: {
       tag: "The Program",
-      title: "The Free AI Challenge Program",
-      desc: "5 days, 5 concrete use cases. A live demonstration and an immediately applicable method every day.",
-      summit: "5 days to go from spectator to actor of AI. At the end, you leave with a concrete plan ready to apply.",
-      cta: "Join the Free Challenge",
-      days: [
-        {
-          day: "Day 1",
-          title: "Understand AI without jargon",
-          desc: "Discover what AI can really do for you, how to make better requests, and how to avoid common mistakes.",
-        },
-        {
-          day: "Day 2",
-          title: "CV & LinkedIn in the AI Era",
-          desc: "Make your CV clearer and more professional, readable by recruiters and modern tools alike. Optimize your LinkedIn profile to increase visibility.",
-        },
-        {
-          day: "Day 3",
-          title: "Productivity & Automation",
-          desc: "Use AI to save time, organize your ideas, write faster, prepare documents, and automate repetitive tasks.",
-        },
-        {
-          day: "Day 4",
-          title: "Content Creation & Visuals",
-          desc: "Use ChatGPT, Claude, and Canva AI to create posts, presentations, visuals, video scripts, and professional content.",
-        },
-        {
-          day: "Day 5",
-          title: "Taking Action",
-          desc: "Build your personal AI plan: how to integrate AI into your career, studies, business, or company.",
-        },
-      ],
+      title: "The 10 intensive sessions of the Bootcamp PRO",
+      desc: "A timeline of key sessions to master artificial intelligence step-by-step.",
+      detailsNote: "Each session: 1h30 live · Replay available for 48h · Practical exercise included",
+      scheduleNote: "Time: 7:00 PM GMT (Ouagadougou time) · Platform: private link sent to registrants",
+      sessions: [
+        { date: "July 24", session: "Session 1", title: "Professional AI Mindset + Work System" },
+        { date: "July 25", session: "Session 2", title: "Advanced Professional Prompting" },
+        { date: "July 26", session: "Session 3", title: "AI for Emails, Reports & Communication" },
+        { date: "July 27", session: "Session 4", title: "AI for Productivity & Organization" },
+        { date: "July 28", session: "Session 5", title: "AI for CV, LinkedIn & Positioning" },
+        { date: "July 29", session: "Session 6", title: "AI for Presentations & Pro Documents" },
+        { date: "July 30", session: "Session 7", title: "AI for Strategy, Analysis & Decision Making" },
+        { date: "July 31", session: "Session 8", title: "AI for Content & Visibility" },
+        { date: "August 1", session: "Session 9", title: "AI for Personal Offers & Opportunities" },
+        { date: "August 2", session: "Session 10", title: "90-Day Roadmap + Official Certification" }
+      ]
+    },
+    projection: {
+      tag: "Discover your future",
+      title: "What changes for you after the Bootcamp",
+      profiles: [
+        { icon: "👨‍💼", profile: "Professional", desc: "You work faster, produce more, and become the AI reference in your team" },
+        { icon: "💼", profile: "Entrepreneur", desc: "You automate your business and free up time for what really matters" },
+        { icon: "🎯", profile: "Job Seeker", desc: "Your CV and LinkedIn are optimized · You pass ATS filters · You land interviews" },
+        { icon: "🚀", profile: "Consultant / Freelancer", desc: "You sell more projects thanks to your AI positioning" }
+      ]
     },
     audience: {
       tag: "Who is it for?",
-      title: "This challenge is made for you if you are:",
-      audiences: [
-        {
-          title: "Student",
-          desc: "You want to learn better, write better, prepare for your future, and develop in-demand skills.",
-        },
-        {
-          title: "Job Seeker",
-          desc: "You want to improve your CV, LinkedIn profile, and professional visibility.",
-        },
-        {
-          title: "Professional",
-          desc: "You want to save time, become more productive, and stay competitive in a fast-changing world.",
-        },
-        {
-          title: "Entrepreneur",
-          desc: "You want to use AI to create content, communicate better, sell better, and structure your business.",
-        },
-        {
-          title: "Leader or Manager",
-          desc: "You want to understand how AI can become a strategic lever for your organization.",
-        },
-      ],
+      title: "The Bootcamp PRO targets ambitious profiles",
+      profiles: [
+        { title: "Professional", desc: "Become the AI reference within your organization" },
+        { title: "Entrepreneur", desc: "Automate, scale, and free yourself from repetitive tasks" },
+        { title: "Consultant / Freelancer", desc: "Stand out and sell more consulting projects" },
+        { title: "Job Seeker", desc: "CV, LinkedIn, ATS — take a head start" }
+      ]
     },
-    tools: {
-      tag: "Tools Used",
-      title: "The tools we will use",
-      desc: "No useless theory. You learn to concretely use the best tools on the market, adapted to your reality.",
-      toolsList: {
-        chatgpt: "For writing, structuring, summarizing, brainstorming, preparing documents, and improving productivity.",
-        claude: "For analyzing documents, improving text quality, structuring complex ideas, and producing solid content.",
-        gemini: "For searching, comparing, working with the Google ecosystem, and leveraging multimodal capabilities.",
-        canva: "For quickly creating visuals, presentations, and professional materials.",
-      },
-    },
-    method: {
-      tag: "The Method",
-      title: "The Le Guide IA Method",
-      desc: "We are not just going to show you tools. We are going to teach you a simple method.",
-      steps: [
-        {
-          title: "Understand",
-          desc: "Know what AI can do and what it should not do for you.",
-        },
-        {
-          title: "Practice",
-          desc: "See concrete demonstrations and reproduce the exercises.",
-        },
-        {
-          title: "Adapt",
-          desc: "Apply AI to your reality: studies, job, business, organization, or career.",
-        },
-        {
-          title: "Progress",
-          desc: "Move from a vague use of AI to a structured, professional, and productive usage.",
-        },
-      ],
-    },
-    challenge: {
-      badge: "100% Free · June 24 – 28, 2026",
-      title: "Reserve your spot for free",
-      desc: "The Free AI Challenge runs from June 24 to 28, 2026. Register now to receive participation info, join the community, and access exercises.",
-      daysSide: [
-        { title: "AI Foundations", desc: "Understand and get started without jargon" },
-        { title: "AI-Boosted CV & LinkedIn", desc: "Optimize your professional profile" },
-        { title: "Productivity & Automation", desc: "Save hours every week" },
-        { title: "Content Creation & Visuals", desc: "ChatGPT, Claude, Canva AI in action" },
-        { title: "Taking Action", desc: "Your personalized AI plan" },
-      ],
-      form: {
-        title: "Join the Free AI Challenge",
-        subtitle: "Free registration. Limited slots to ensure high-quality support.",
-        perks: [
-          "5 live practical sessions with demos",
-          "Active WhatsApp community",
-          "Exercises & replays included",
-          "No credit card required",
-        ],
-        labelName: "First and last name",
-        placeholderName: "Your first and last name",
-        labelEmail: "Email",
-        placeholderEmail: "you@email.com",
-        labelWhatsapp: "WhatsApp",
-        labelCountry: "Country",
-        placeholderCountry: "Select your country",
-        searchCountryPlaceholder: "Search country...",
-        noCountryFound: "No country found",
-        labelProfile: "Profile",
-        placeholderProfile: "I am...",
-        profiles: {
-          student: "Student",
-          jobseeker: "Job Seeker",
-          professional: "Professional",
-          entrepreneur: "Entrepreneur",
-          manager: "Leader or Manager",
-        },
-        cta: "Join the Free Challenge",
-        loading: "Registering...",
-        errors: {
-          name: "Please enter your first and last name.",
-          email: "Please enter your email.",
-          emailInvalid: "Please enter a valid email (e.g. you@email.com).",
-          whatsapp: "Please enter your WhatsApp number.",
-          whatsappInvalid: "Invalid number for dial code {dial}.",
-          country: "Please select your country.",
-          profile: "Please select your profile.",
-          server: "An error occurred. Please try again.",
-          network: "Unable to contact the server. Check your internet connection.",
-          fixFields: "Please correct the fields in red before continuing.",
-        },
-        cardFooterNote: "No credit card required. You will receive practical information after registration.",
-      },
-      success: {
-        title: "Registration Confirmed",
-        desc: "Congratulations {name}, your spot in the Free AI Challenge is reserved. You will receive participation details by email and on WhatsApp ({dial} {whatsapp}).",
-        nextSteps: "Next steps",
-        stepsList: [
-          "Check your inbox ({email})",
-          "Join the WhatsApp community",
-          "See you on June 24, 2026",
-        ],
-        ctaWhatsapp: "Join the WhatsApp Community",
-      },
-    },
-    bonus: {
-      tag: "Your bonuses",
-      title: "What you receive by joining the challenge",
+    differentiators: {
+      tag: "Why Le Guide IA?",
+      title: "What makes us unique",
       items: [
-        "5 live practical sessions",
-        "Concrete demonstrations",
-        "Simple exercises to apply",
-        "Access to the WhatsApp community",
-        "Advice for your CV and LinkedIn",
-        "A clear method to better use AI",
-        "Orientation towards the Bootcamp PRO to go further",
-      ],
+        { title: "100% French Instruction", desc: "No language barrier for French-speaking learners" },
+        { title: "African & Diaspora Case Studies", desc: "Examples drawn from local reality, not Western context" },
+        { title: "Practical Exercises Every Session", desc: "Learn by doing, not just watching" },
+        { title: "Private WhatsApp Group Included", desc: "Active peer support community post-Bootcamp" },
+        { title: "Personalized Support", desc: "Questions answered directly by Alfred Dah" },
+        { title: "Official Le Guide IA Certificate", desc: "Concrete proof of your training" }
+      ]
     },
-    parcours: {
-      tag: "Go Further",
-      title: "After the challenge: take it to the next level",
-      desc: "The free challenge gives you the basics. For those who want to go further, Le Guide IA will offer a premium Bootcamp PRO to turn your knowledge into concrete and lasting results.",
-      bootcampTitle: "Turn your knowledge into results.",
+    process: {
+      tag: "How does it work?",
+      title: "Your learning journey timeline",
+      steps: [
+        { step: "01", title: "Registration", time: "Now", desc: "Secure payment → immediate confirmation" },
+        { step: "02", title: "Welcome", time: "Within 24h", desc: "Access to private WhatsApp group + onboarding kit" },
+        { step: "03", title: "Live Sessions", time: "July 24 – Aug 2", desc: "10 sessions at 7 PM GMT · 1.5 hours each" },
+        { step: "04", title: "Replays", time: "Within 48h", desc: "Replay available if you missed a live session" },
+        { step: "05", title: "Exercises", time: "After each live", desc: "1 practical deliverable per session" },
+        { step: "06", title: "Certification", time: "August 2", desc: "Official Le Guide IA certificate issued" }
+      ]
+    },
+    pricing: {
+      tag: "Pricing",
+      title: "Choose your access to Bootcamp PRO",
+      founderCard: {
+        badge: "🏅 FOUNDER OFFER",
+        priceFcfa: "99,000 FCFA",
+        priceUsd: "$179",
+        expireLabel: "⏳ Offer expires July 11, 2026 at midnight GMT"
+      },
+      standardCard: {
+        badge: "STANDARD PRICE",
+        priceFcfa: "199,000 FCFA",
+        priceUsd: "$349",
+        dateLabel: "Starting July 12, 2026"
+      },
       features: [
-        "10 premium sessions",
-        "2 practical sessions",
-        "PRO coaching",
-        "Practical cases",
-        "Automation",
-        "Applied AI strategy",
-        "Money-back guarantee",
-      ],
-      priceFounder: "Founding price:",
-      surprise: "Surprise",
-      priceStandard: "Standard price:",
-      cta: "I want to be informed",
-      footerNote: "Start with the free challenge. PRO access is offered afterwards.",
+        "10 live premium sessions",
+        "48h replays availability",
+        "Practical exercises after each live",
+        "Private WhatsApp support group",
+        "Official Le Guide IA certificate",
+        "Money-back guarantee (conditions apply)"
+      ]
+    },
+    testimonials: {
+      tag: "Testimonials",
+      title: "What our participants say",
+      desc: "Real feedback from students who attended our previous training courses.",
+      items: [
+        { name: "Moussa", country: "Senegal", role: "Entrepreneur", text: "Le Guide IA changed my perspective on AI. I automated 80% of my customer service on WhatsApp and save hours daily.", image: "/moussa.jpg" },
+        { name: "Fatoumata", country: "Ivory Coast", role: "HR Manager", text: "Thanks to the prompting exercises on Claude and ChatGPT, I rewrote all my job descriptions in one afternoon. Awesome!", image: "/fatoumata.jpg" },
+        { name: "Amadou", country: "Burkina Faso", role: "Consultant", text: "This bootcamp is very different from free theoretical videos. The examples really adapt to our local context and network.", image: "/amadou.jpg" },
+        { name: "Sarah", country: "France (Diaspora)", role: "Job Seeker", text: "I optimized my CV and LinkedIn profile with Alfred's method. I was contacted by two recruiters in less than a week.", image: "/sarah.jpg" },
+        { name: "Jean-Pierre", country: "Cameroon", role: "Business Developer", text: "The module on writing professional emails and reports is gold. My sales proposals are much more impactful now.", image: "/jeanpierre.jpg" },
+        { name: "Awa", country: "Mali", role: "Student", text: "I feel prepared for the job market. The Le Guide IA certificate is already proudly displayed on my LinkedIn profile.", image: "/awa.jpg" }
+      ]
     },
     authority: {
       tag: "The Expert",
       founderTitle: "Founder of Le Guide IA",
-      consultantTitle: "AI & Digital Transformation Consultant",
-      desc1: "With more than 450 registrants from over 21 countries, Le Guide IA has become the reference for French speakers who want to master artificial intelligence.",
-      desc2: "My goal is simple: to make AI practical, accessible, and useful so you can work better, increase productivity, and create more professional opportunities.",
-      quote: "Here, we learn. We practice. We progress.",
+      consultantTitle: "AI & Digital Transformation Expert",
+      cisa: "CISA — Certified Information Systems Auditor",
+      experience: "24+ years of professional experience",
+      mba: "MBA + AI Governance",
+      videoPlaceholder: "Intro Video (60s)",
+      desc1: "Certified expert and seasoned information systems auditor, Alfred Dah helps professionals and companies across French-speaking Africa and the diaspora master future tech.",
+      desc2: "My goal is simple: to make AI practical, accessible, and useful so that you work better, boost productivity, and build more career opportunities.",
+      quote: "Your professional future no longer depends only on your skills. It also depends on your ability to work with AI.",
+      stats: {
+        countries: "21+ countries",
+        countriesLabel: "represented among participants",
+        followers: "6,326",
+        followersLabel: "LinkedIn followers (up to date)",
+        target: "500+",
+        targetLabel: "professionals trained"
+      }
+    },
+    payment: {
+      tag: "Payment",
+      title: "Validate your enrollment",
+      subtitle: "Choose your preferred payment method and send the confirmation form once the transfer is done.",
+      methods: {
+        om: { name: "Orange Money", target: "West Africa", detail: "Transfer to +226 76 00 00 00 (Alfred Dah). Mention your name in the reference." },
+        wave: { name: "Wave", target: "Senegal / Ivory Coast", detail: "Direct transfer via Wave to +221 77 00 00 00 (Alfred Dah)." },
+        zelle: { name: "Zelle", target: "USA / Canada Diaspora", detail: "Send to email: pay@leguideai.com." },
+        bank: { name: "Bank Transfer", target: "Companies & Institutions", detail: "Please contact us on WhatsApp to get our official IBAN/BIC." }
+      },
+      form: {
+        title: "Confirm my payment",
+        subtitle: "Fill out this form after your transfer to receive access within 24 hours.",
+        labelName: "First & Last Name",
+        placeholderName: "Your full name",
+        labelEmail: "Recipient Email",
+        placeholderEmail: "you@email.com",
+        labelWhatsapp: "WhatsApp Number",
+        placeholderWhatsapp: "E.g.: +221 77 123 45 67",
+        labelCountry: "Country of Residence",
+        placeholderCountry: "Select your country",
+        searchCountryPlaceholder: "Search for a country...",
+        noCountryFound: "No country found",
+        warningNote: "Note: Please keep your transfer receipt. Our team will manually validate your information within 24 hours of receipt.",
+        labelMethod: "Payment Method",
+        placeholderMethod: "Select the method used",
+        labelTxCode: "Transaction Code / Reference",
+        placeholderTxCode: "E.g.: OM_123456789 or Wave Ref...",
+        cta: "Send confirmation",
+        loading: "Sending...",
+        successTitle: "Request received!",
+        successDesc: "Thank you {name}. Your information has been sent. Our team will manually validate your payment within 24 hours and you will receive an automatic welcome email with the link to join your WhatsApp Bootcamp PRO group.",
+        errors: {
+          name: "Please enter your name.",
+          email: "Please enter a valid email address.",
+          whatsapp: "Please enter your WhatsApp number.",
+          whatsappInvalid: "Invalid WhatsApp number for the dial code {dial}.",
+          country: "Please select your country of residence.",
+          method: "Please select your payment method.",
+          txCode: "Please enter the transaction reference.",
+          server: "An error occurred. Please try again."
+        }
+      }
+    },
+    faq: {
+      tag: "FAQ",
+      title: "Questions? We have answers",
+      items: [
+        { q: "What makes this Bootcamp different from a free YouTube video?", a: "This Bootcamp is 100% interactive with Alfred Dah. It includes 10 practical exercises mapped to real African and diaspora scenarios, personalized live coaching, and a private WhatsApp support group to consolidate your learning." },
+        { q: "I have never used AI before. Can I attend this Bootcamp?", a: "Yes, absolutely. We start with the professional mindset and prompting basics (Sessions 1 and 2) before moving to advanced topics. The training is progressive and accessible." },
+        { q: "Are the sessions recorded if I miss a live?", a: "Yes. All sessions are recorded and replays are available within 48 hours in your member area." },
+        { q: "What is the time zone?", a: "All live sessions are held at 7:00 PM GMT (Ouagadougou/Abidjan/Dakar time). For Cameroon/Gabon/Congo, it will be 8:00 PM, and for France, it will be 9:00 PM." },
+        { q: "How do I pay from my country?", a: "You can pay easily by Orange Money, Wave, Zelle, or by bank transfer for businesses. Payment details and the confirmation form are available in the Payment section above." },
+        { q: "Is there a money-back guarantee?", a: "Yes, we offer a money-back guarantee based on attendance (having attended lives and submitted the first 3 exercises) within the first 5 days of the Bootcamp." },
+        { q: "Is the certificate recognized by employers?", a: "The Le Guide IA certificate attests to your practical skills and the completion of your deliverables. It is highly valued by local employers and on LinkedIn as proof of operational skills." },
+        { q: "What happens after the Bootcamp? Is there any follow-up?", a: "After the Bootcamp, you keep access to the private Le Guide IA PRO WhatsApp group to continue exchanges, ask questions, and receive exclusive updates." },
+        { q: "Can I enroll my team or my company?", a: "Yes, we offer group rates or in-house sessions. Contact us by email at alfred@leguideai.com." },
+        { q: "What tools are required to follow the lives?", a: "A computer or smartphone and an internet connection. We will use the free versions of ChatGPT, Claude, Gemini, and Canva IA; you don't need paid subscriptions." },
+        { q: "Who is the expert Alfred Dah?", a: "Alfred Dah is a certified CISA systems auditor, holder of an MBA and specialized in AI governance, with over 24 years of experience in digital transformation." },
+        { q: "What is the Founder Price and when does it expire?", a: "The Founder price is 99,000 FCFA ($179). This exclusive offer expires on July 11, 2026 at midnight GMT. The price will then revert to the standard rate of 199,000 FCFA ($349)." },
+        { q: "Does the Bootcamp suit diaspora residents?", a: "Yes, absolutely. The hours (7:00 PM GMT / 9:00 PM in France) and payment methods like Zelle are specifically tailored for diaspora participation." },
+        { q: "Can I get an invoice for my company?", a: "Yes, we can issue a professional invoice under your company's name. Simply send us your invoicing details on WhatsApp." },
+        { q: "How do I join the private WhatsApp group?", a: "Once your payment confirmation is sent via our form, our team validates your access within 24 hours and you receive a direct WhatsApp integration link by email and SMS/WhatsApp." }
+      ]
     },
     ctaFooter: {
-      title: "Ready to get a head start?",
-      desc: "AI is not going to wait until you are ready. But you can decide today to prepare seriously. Join the Free AI Challenge and start using artificial intelligence as a real professional lever.",
-      ctaFree: "Reserve my spot for free",
+      title: "Ready to take the lead?",
+      desc: "AI won't wait until you're ready. But you can decide today to get seriously trained. Join the Bootcamp PRO to master the essential tools for your success.",
+      ctaPro: "Join the Bootcamp PRO",
       ctaContact: "Contact us",
       footerNote: "The future belongs to those who prepare before others.",
       rights: "© {year} Le Guide IA. All rights reserved.",
@@ -560,5 +491,5 @@ export const translations: Record<string, any> = {
     scrollToTop: {
       ariaLabel: "Scroll to top",
     },
-  },
-}
+  }
+};

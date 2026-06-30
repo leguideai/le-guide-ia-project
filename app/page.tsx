@@ -1,39 +1,74 @@
 import { GridBackground } from "@/components/grid-background"
 import { SiteNav } from "@/components/site-nav"
 import { Hero } from "@/components/hero"
-import { Stats } from "@/components/stats"
-import { Problem } from "@/components/problem"
-import { Promise } from "@/components/promise"
+import { WhyBootcamp } from "@/components/why-bootcamp"
+import { Deliverables } from "@/components/deliverables"
 import { Program } from "@/components/program"
+import { Projection } from "@/components/projection"
 import { Audience } from "@/components/audience"
-import { Tools } from "@/components/tools"
-import { Method } from "@/components/method"
-import { Challenge } from "@/components/challenge"
-import { Bonus } from "@/components/bonus"
-import { Parcours } from "@/components/parcours"
+import { Differentiators } from "@/components/differentiators"
+import { Process } from "@/components/process"
+import { Pricing } from "@/components/pricing"
+import { Testimonials } from "@/components/testimonials"
 import { Authority } from "@/components/authority"
+import { Payment } from "@/components/payment"
+import { FAQ } from "@/components/faq"
 import { CtaFooter } from "@/components/cta-footer"
-import { ScrollToTop } from "@/components/whatsapp-float"
+import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
+import { LeadCapture } from "@/components/lead-capture"
 
 export default function Page() {
   return (
-    <main className="relative min-h-screen text-foreground">
+    <main className="relative min-h-screen text-foreground overflow-x-hidden">
       <GridBackground />
       <SiteNav />
+      
+      {/* S1: Héro */}
       <Hero />
-      <Stats />
-      <Problem />
-      <Promise />
+      
+      {/* S2: Pourquoi ce Bootcamp */}
+      <WhyBootcamp />
+      
+      {/* S3: Ce que vous obtenez */}
+      <Deliverables />
+      
+      {/* S4: Programme */}
       <Program />
+      
+      {/* S5: Découvrez votre futur */}
+      <Projection />
+      
+      {/* S6: Pour qui ? */}
       <Audience />
-      <Tools />
-      <Method />
-      <Challenge />
-      <Bonus />
-      <Parcours />
+      
+      {/* S7: Pourquoi Le Guide IA */}
+      <Differentiators />
+      
+      {/* S8: Comment ça se passe */}
+      <Process />
+      
+      {/* S9: Tarifs */}
+      <Pricing />
+      
+      {/* S10: Témoignages */}
+      <Testimonials />
+      
+      {/* S11: Alfred Dah */}
       <Authority />
+      
+      {/* S12: Paiement */}
+      <Payment />
+      
+      {/* S13: FAQ */}
+      <FAQ />
+      
+      {/* S14: CTA Final / Footer */}
       <CtaFooter />
+      
+      {/* Floating Elements */}
       <ScrollToTop />
+      <WhatsAppFloat />
+      <LeadCapture />
     </main>
   )
 }

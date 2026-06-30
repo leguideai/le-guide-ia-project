@@ -15,9 +15,9 @@ export function SiteNav() {
   const links = [
     { label: t("nav.programme"), href: "#programme" },
     { label: t("nav.audience"), href: "#audience" },
-    { label: t("nav.tools"), href: "#outils" },
-    { label: t("nav.bootcamp"), href: "#parcours" },
-    { label: t("nav.register"), href: "#inscription" },
+    { label: t("nav.bootcamp"), href: "#tarifs" },
+    { label: t("nav.testimonials"), href: "#temoignages" },
+    { label: t("nav.faq"), href: "#faq" },
   ]
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export function SiteNav() {
 
         <div className="hidden items-center gap-4 lg:flex">
           {languageToggle}
-          <a href="#inscription" className={cn(buttonVariants({ size: "lg" }), "glow-blue font-semibold")}>
+          <a href="#tarifs" className={cn(buttonVariants({ size: "lg" }), "glow-blue font-semibold")}>
             {t("nav.cta")}
           </a>
         </div>
@@ -129,7 +129,7 @@ export function SiteNav() {
                 </a>
               ))}
               <a
-                href="#inscription"
+                href="#tarifs"
                 onClick={() => setOpen(false)}
                 className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full font-semibold")}
               >
