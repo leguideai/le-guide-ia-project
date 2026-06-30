@@ -314,16 +314,8 @@ export async function POST(request: NextRequest) {
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     if (foundIndex !== -1) {
-      // User found: update columns R (index 17: Attestation Payment), S (index 18: Transaction Code), T (index 19: Bootcamp Interest), V (index 21: Status), W (index 22: Comments)
+      // User found: update columns S (index 18: Transaction Code), T (index 19: Payment Method), U (index 20: Bootcamp Interest), W (index 22: Statut Global)
       const targetRow = 5 + foundIndex;
-      
-      // Update Attestation Payment Status (Column R)
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!R${targetRow}`,
-        valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["En attente"]] },
-      });
 
       // Update Transaction Code (Column S)
       await sheets.spreadsheets.values.update({
@@ -333,28 +325,28 @@ export async function POST(request: NextRequest) {
         requestBody: { values: [[txCode]] },
       });
 
-      // Update Bootcamp Interest (Column T)
+      // Update Payment Method (Column T)
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!T${targetRow}`,
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["Oui"]] },
+        requestBody: { values: [[method]] },
       });
 
-      // Update Status (Column V)
+      // Update Bootcamp Interest (Column U)
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
-        range: `${SHEET_NAME}!V${targetRow}`,
+        range: `${SHEET_NAME}!U${targetRow}`,
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["Chaud Bootcamp"]] },
+        requestBody: { values: [["Chaud"]] },
       });
 
-      // Update Comments (Column W)
+      // Update Status (Column W)
       await sheets.spreadsheets.values.update({
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!W${targetRow}`,
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [["Paiement via " + method]] },
+        requestBody: { values: [["Chaud Bootcamp"]] },
       });
 
       return NextResponse.json({ success: true, message: "Paiement enregistré pour vérification." });
@@ -379,7 +371,7 @@ export async function POST(request: NextRequest) {
       }
 
       const newN = targetRowIndex - 4;
-      const range = `${SHEET_NAME}!A${targetRowIndex}:X${targetRowIndex}`;
+      const range = `${SHEET_NAME}!A${targetRowIndex}:Y${targetRowIndex}`;
       
       const rowValues = [
         newN,                            // A: N°
@@ -388,16 +380,19 @@ export async function POST(request: NextRequest) {
         trimmedEmail,                    // D: Email
         `=IF(C${targetRowIndex}="";"";IFERROR(VLOOKUP(LEFT(SUBSTITUTE(C${targetRowIndex};" ";"");4);Référentiel!A:B;2;FALSE);IFERROR(VLOOKUP(LEFT(SUBSTITUTE(C${targetRowIndex};" ";"");3);Référentiel!A:B;2;FALSE);IFERROR(VLOOKUP(LEFT(SUBSTITUTE(C${targetRowIndex};" ";"");2);Référentiel!A:B;2;FALSE);"Autre"))))`, // E: Pays
         "",                              // F: Ville
-        "Client Direct",                 // G: Profil
-        "Le Guide AI V2",                // H: Source
-        "", "", "", "", "", "", "", "", "", // I-Q
-        "En attente",                    // R: Paiement attestation
+        "",                              // G: Profil (blank to avoid warnings)
+        "Le Guide AI",                   // H: Source d'inscription (valid value)
+        "", "", "",                      // I-K
+        "", "", "", "", "",              // L-P (Presence challenge)
+        "",                              // Q: Attestation demandee
+        "",                              // R: Paiement attestation
         txCode,                          // S: Code transaction
-        "Oui",                           // T: Interet Bootcamp
-        "",                              // U
-        "Chaud Bootcamp",                // V: Statut global
-        "Paiement via " + method,        // W: Commentaires
-        dateStr,                         // X: Date d'inscription
+        method,                          // T: Méthode de paiement (valid values: Orange Money, Wave, Zelle, Virement Bancaire)
+        "Chaud",                         // U: Interet Bootcamp PRO (valid value: Froid, Tiede, Chaud)
+        "",                              // V: Derniere relance
+        "Chaud Bootcamp",                // W: Statut global (valid value: Inscrit, Actif, A relancer, Chaud Bootcamp, Attestation demandee, Inactif)
+        "",                              // X: Commentaires / Observations
+        dateStr,                         // Y: Date d'inscription
       ];
 
       await sheets.spreadsheets.values.update({
