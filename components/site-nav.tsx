@@ -15,7 +15,7 @@ export function SiteNav() {
   const links = [
     { label: t("nav.programme"), href: "#programme" },
     { label: t("nav.audience"), href: "#audience" },
-    { label: t("nav.bootcamp"), href: "#bootcamp" },
+    { label: t("nav.bootcamp"), href: "#tarifs" },
     { label: t("nav.testimonials"), href: "#temoignages" },
     { label: t("nav.faq"), href: "#faq" },
   ]
