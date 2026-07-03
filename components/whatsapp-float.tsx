@@ -5,7 +5,7 @@ import { ArrowUp, MessageCircle } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 
 export function WhatsAppFloat() {
-  const whatsappNumber = "22676000000" // Support number
+  const whatsappNumber = "22675757273" // Support number
   const message = encodeURIComponent("Bonjour Le Guide IA, je souhaite avoir des informations sur le Bootcamp PRO.")
   const url = `https://wa.me/${whatsappNumber}?text=${message}`
 

@@ -13,7 +13,7 @@ export const translations: Record<string, any> = {
       title: "Maîtrisez l'IA. Transformez votre carrière et votre business.",
       subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora",
       ctaPro: "Je rejoins le Bootcamp PRO",
-      ctaProgram: "Télécharger le programme",
+      ctaProgram: "Voir le programme",
       countdownLabel: "L'offre Fondateur expire dans :",
       badges: [
         "📅 24 juil – 2 août 2026",
@@ -162,7 +162,7 @@ export const translations: Record<string, any> = {
       stats: {
         countries: "26+ pays",
         countriesLabel: "représentés parmi les participants",
-        followers: "6 326",
+        followers: "7 261",
         followersLabel: "abonnés LinkedIn (à jour)",
         target: "500+",
         targetLabel: "professionnels formés"
@@ -176,7 +176,7 @@ export const translations: Record<string, any> = {
         om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 76 00 00 00 (Alfred Dah). Indiquer votre nom dans le motif." },
         wave: { name: "Wave", target: "Afrique de l'Ouest", detail: "Transfert direct via Wave au +221 77 00 00 00 (Alfred Dah)." },
         zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer à l'adresse email : pay@leguideai.com." },
-        bank: { name: "Virement Bancaire", target: "", detail: "Veuillez nous contacter sur WhatsApp pour obtenir notre RIB officiel." }
+        // bank: { name: "Virement Bancaire", target: "", detail: "Veuillez nous contacter sur WhatsApp pour obtenir notre RIB officiel." }
       },
       form: {
         title: "Confirmer mon paiement",

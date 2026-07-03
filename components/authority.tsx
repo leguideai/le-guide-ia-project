@@ -31,7 +31,7 @@ export function Authority() {
           </div>
 
           {/* Video Placeholder Slot (60s presentation) */}
-          <div className="group relative overflow-hidden rounded-xl border border-border bg-slate-950 aspect-video flex items-center justify-center cursor-pointer shadow-lg hover:border-primary/40 transition-colors">
+          {/* <div className="group relative overflow-hidden rounded-xl border border-border bg-slate-950 aspect-video flex items-center justify-center cursor-pointer shadow-lg hover:border-primary/40 transition-colors">
             <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/60 transition-colors z-10" />
             <div className="z-20 text-center p-4">
               <span className="inline-flex size-12 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/40 group-hover:scale-110 transition-transform mb-3 shadow-[0_0_15px_oklch(0.62_0.21_252_/_0.3)]">
@@ -44,7 +44,7 @@ export function Authority() {
                 Découvrez notre vision en 60 secondes
               </p>
             </div>
-          </div>
+          </div> */}
         </motion.div>
 
         {/* Right - Profile Info and Authority elements */}
