@@ -92,14 +92,14 @@ export function Payment() {
       detail: t("payment.methods.zelle.detail"),
       priority: "Priorité 1",
     },
-    {
-      id: "bank",
-      logo: "/credit_card.png",
-      title: t("payment.methods.bank.name"),
-      zone: t("payment.methods.bank.target"),
-      detail: t("payment.methods.bank.detail"),
-      priority: "Moyenne",
-    },
+    // {
+    //   id: "bank",
+    //   logo: "/credit_card.png",
+    //   title: t("payment.methods.bank.name"),
+    //   zone: t("payment.methods.bank.target"),
+    //   detail: t("payment.methods.bank.detail"),
+    //   priority: "Moyenne",
+    // },
   ]
 
   const validate = () => {
@@ -422,7 +422,7 @@ export function Payment() {
                       <option value="Orange Money">Orange Money</option>
                       <option value="Wave">Wave</option>
                       <option value="Zelle">Zelle</option>
-                      <option value="Virement Bancaire">Virement Bancaire</option>
+                      {/* <option value="Virement Bancaire">Virement Bancaire</option> */}
                     </select>
                   </div>
 

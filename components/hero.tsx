@@ -192,7 +192,7 @@ export function Hero() {
           </div>
 
           {/* floating badge */}
-          <motion.div
+          {/* <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             className="absolute -bottom-5 -left-3 flex items-center gap-2 rounded-xl border border-border bg-card/90 px-4 py-3 shadow-xl backdrop-blur-md"
@@ -202,7 +202,7 @@ export function Hero() {
               <div className="text-sm font-bold">100% Pratique & Intense</div>
               <div className="text-xs text-muted-foreground">Bootcamp PRO en ligne</div>
             </div>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
       </div>
     </section>
