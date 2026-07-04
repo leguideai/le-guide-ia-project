@@ -237,17 +237,16 @@ function isDialInReferentiel(dial: string, refMap: Record<string, string>): bool
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, dial, whatsapp, country, method, txCode } = body as {
+    const { name, email, dial, whatsapp, country, method } = body as {
       name: string;
       email: string;
       dial: string;
       whatsapp: string;
       country: string;
       method: string;
-      txCode: string;
     };
 
-    if (!name?.trim() || !email?.trim() || !dial || !whatsapp?.trim() || !country || !method || !txCode?.trim()) {
+    if (!name?.trim() || !email?.trim() || !dial || !whatsapp?.trim() || !country || !method) {
       return NextResponse.json({ error: "Tous les champs sont obligatoires." }, { status: 400 });
     }
 
@@ -322,7 +321,7 @@ export async function POST(request: NextRequest) {
         spreadsheetId: SPREADSHEET_ID,
         range: `${SHEET_NAME}!S${targetRow}`,
         valueInputOption: "USER_ENTERED",
-        requestBody: { values: [[txCode]] },
+        requestBody: { values: [[""]] },
       });
 
       // Update Payment Method (Column T)
@@ -386,7 +385,7 @@ export async function POST(request: NextRequest) {
         "", "", "", "", "",              // L-P (Presence challenge)
         "",                              // Q: Attestation demandee
         "",                              // R: Paiement attestation
-        txCode,                          // S: Code transaction
+        "",                              // S: Code transaction (non requis)
         method,                          // T: Méthode de paiement (valid values: Orange Money, Wave, Zelle, Virement Bancaire)
         "Chaud",                         // U: Interet Bootcamp PRO (valid value: Froid, Tiede, Chaud)
         "",                              // V: Derniere relance
