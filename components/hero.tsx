@@ -151,7 +151,9 @@ export function Hero() {
               Je rejoins le Bootcamp PRO
             </a>
             <a
-              href="#programme"
+              href="/Programme_Bootcamp_PRO_LE_GUIDE_IA_1-9_Aout_2026.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
                 "h-12 border-border/80 bg-transparent px-8 text-base hover:bg-card/50 text-foreground"
