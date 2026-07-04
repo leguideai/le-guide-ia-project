@@ -16,10 +16,10 @@ export const translations: Record<string, any> = {
       ctaProgram: "Voir le programme",
       countdownLabel: "L'offre Fondateur expire dans :",
       badges: [
-        "📅 1er – 9 août 2026",
+        "📅 24 juil – 2 août 2026",
         "🕖 19h00 GMT",
         "🌍 100% En ligne",
-        "🎓 9 Sessions intensives"
+        "🎓 10 Sessions intensives"
       ]
     },
     whyBootcamp: {
@@ -50,20 +50,21 @@ export const translations: Record<string, any> = {
     },
     program: {
       tag: "Le Programme",
-      title: "Les 9 sessions intensives du Bootcamp PRO",
+      title: "Les 10 sessions intensives du Bootcamp PRO",
       desc: "Une timeline des sessions clés pour maîtriser l'intelligence artificielle pas à pas.",
       detailsNote: "Chaque session : 1h30 en direct · Replay disponible 48h · Exercice pratique inclus",
       scheduleNote: "Horaire : 19h00 GMT (heure de Ouagadougou) · Plateforme : lien privé envoyé aux inscrits",
       sessions: [
-        { date: "1er août", session: "Session 1", title: "Mindset IA Professionnel & Système de Travail" },
-        { date: "2 août", session: "Session 2", title: "Prompt Engineering Professionnel Avancé" },
-        { date: "3 août", session: "Session 3", title: "Créer et Développer son Business avec l'IA (Business Model Canvas)" },
-        { date: "4 août", session: "Session 4", title: "Construire un Business Plan Professionnel avec l'IA" },
-        { date: "5 août", session: "Session 5", title: "IA pour les Emails, Rapports et la Communication Professionnelle" },
-        { date: "6 août", session: "Session 6", title: "IA pour la Productivité, l'Organisation et l'Automatisation" },
-        { date: "7 août", session: "Session 7", title: "IA pour le CV, LinkedIn et le Positionnement Professionnel" },
-        { date: "8 août", session: "Session 8", title: "IA pour le Marketing, le Contenu, la Visibilité et les Ventes" },
-        { date: "9 août", session: "Session 9", title: "Créer des Opportunités avec l'IA + Roadmap 90 Jours + Certification Officielle" }
+        { date: "24 juillet", session: "Session 1", title: "Mindset IA professionnel + système de travail" },
+        { date: "25 juillet", session: "Session 2", title: "Prompting professionnel avancé" },
+        { date: "26 juillet", session: "Session 3", title: "IA pour emails, rapports et communication" },
+        { date: "27 juillet", session: "Session 4", title: "IA pour productivité et organisation" },
+        { date: "28 juillet", session: "Session 5", title: "IA pour CV, LinkedIn et positionnement" },
+        { date: "29 juillet", session: "Session 6", title: "IA pour présentations et documents pro" },
+        { date: "30 juillet", session: "Session 7", title: "IA pour stratégie, analyse et décision" },
+        { date: "31 juillet", session: "Session 8", title: "IA pour contenu et visibilité" },
+        { date: "1er août", session: "Session 9", title: "IA pour opportunités et offres personnelles" },
+        { date: "2 août", session: "Session 10", title: "Roadmap 90 jours + Certification officielle" }
       ]
     },
     projection: {
@@ -104,10 +105,10 @@ export const translations: Record<string, any> = {
       steps: [
         { step: "01", title: "Inscription", time: "Maintenant", desc: "Paiement sécurisé → confirmation immédiate" },
         { step: "02", title: "Bienvenue", time: "Sous 24h", desc: "Accès WhatsApp groupe privé + kit d'onboarding" },
-        { step: "03", title: "Lives", time: "1er – 9 août", desc: "9 sessions à 19h GMT · 1h30 chacune" },
+        { step: "03", title: "Lives", time: "24 juil – 2 août", desc: "10 sessions à 19h GMT · 1h30 chacune" },
         { step: "04", title: "Replays", time: "Sous 48h", desc: "Replay disponible si vous avez manqué une session" },
         { step: "05", title: "Exercices", time: "Après chaque live", desc: "1 livrable pratique par session" },
-        { step: "06", title: "Certification", time: "9 août", desc: "Certificat officiel Le Guide IA remis" }
+        { step: "06", title: "Certification", time: "2 août", desc: "Certificat officiel Le Guide IA remis" }
       ]
     },
     pricing: {
@@ -172,9 +173,9 @@ export const translations: Record<string, any> = {
       title: "Validez votre inscription",
       subtitle: "Choisissez votre mode de paiement préféré et envoyez le formulaire de confirmation une fois le transfert effectué.",
       methods: {
-        om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 75 75 72 73 (Sanson Alfred Tanguy Dah). Indiquer votre nom dans le motif." },
+        om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
         wave: { name: "Wave", target: "Afrique de l'Ouest", detail: "Transfert direct via Wave au +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
-        zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer via Zelle au numéro : +1 917 903 5628." },
+        zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer via Zelle au numéro : +1 917 903 5628  (Sanson Alfred Tanguy Dah)." },
         // bank: { name: "Virement Bancaire", target: "", detail: "Veuillez nous contacter sur WhatsApp pour obtenir notre RIB officiel." }
       },
       form: {
@@ -262,10 +263,10 @@ export const translations: Record<string, any> = {
       ctaProgram: "Download the Program",
       countdownLabel: "The Founding Offer expires in:",
       badges: [
-        "📅 Aug 1 – 9, 2026",
+        "📅 July 24 – Aug 2, 2026",
         "🕖 7:00 PM GMT",
         "🌍 100% Online",
-        "🎓 9 Intensive Sessions"
+        "🎓 10 Intensive Sessions"
       ]
     },
     whyBootcamp: {
@@ -296,20 +297,21 @@ export const translations: Record<string, any> = {
     },
     program: {
       tag: "The Program",
-      title: "The 9 intensive sessions of the Bootcamp PRO",
+      title: "The 10 intensive sessions of the Bootcamp PRO",
       desc: "A timeline of key sessions to master artificial intelligence step-by-step.",
       detailsNote: "Each session: 1h30 live · Replay available for 48h · Practical exercise included",
       scheduleNote: "Time: 7:00 PM GMT (Ouagadougou time) · Platform: private link sent to registrants",
       sessions: [
-        { date: "August 1", session: "Session 1", title: "Professional AI Mindset & Work System" },
-        { date: "August 2", session: "Session 2", title: "Advanced Professional Prompt Engineering" },
-        { date: "August 3", session: "Session 3", title: "Create & Develop Your Business with AI (Business Model Canvas)" },
-        { date: "August 4", session: "Session 4", title: "Build a Professional Business Plan with AI" },
-        { date: "August 5", session: "Session 5", title: "AI for Emails, Reports & Professional Communication" },
-        { date: "August 6", session: "Session 6", title: "AI for Productivity, Organization & Automation" },
-        { date: "August 7", session: "Session 7", title: "AI for CV, LinkedIn & Professional Positioning" },
-        { date: "August 8", session: "Session 8", title: "AI for Marketing, Content, Visibility & Sales" },
-        { date: "August 9", session: "Session 9", title: "Creating Opportunities with AI + 90-Day Roadmap + Official Certification" }
+        { date: "July 24", session: "Session 1", title: "Professional AI Mindset + Work System" },
+        { date: "July 25", session: "Session 2", title: "Advanced Professional Prompting" },
+        { date: "July 26", session: "Session 3", title: "AI for Emails, Reports & Communication" },
+        { date: "July 27", session: "Session 4", title: "AI for Productivity & Organization" },
+        { date: "July 28", session: "Session 5", title: "AI for CV, LinkedIn & Positioning" },
+        { date: "July 29", session: "Session 6", title: "AI for Presentations & Pro Documents" },
+        { date: "July 30", session: "Session 7", title: "AI for Strategy, Analysis & Decision Making" },
+        { date: "July 31", session: "Session 8", title: "AI for Content & Visibility" },
+        { date: "August 1", session: "Session 9", title: "AI for Personal Offers & Opportunities" },
+        { date: "August 2", session: "Session 10", title: "90-Day Roadmap + Official Certification" }
       ]
     },
     projection: {
@@ -350,10 +352,10 @@ export const translations: Record<string, any> = {
       steps: [
         { step: "01", title: "Registration", time: "Now", desc: "Secure payment → immediate confirmation" },
         { step: "02", title: "Welcome", time: "Within 24h", desc: "Access to private WhatsApp group + onboarding kit" },
-        { step: "03", title: "Live Sessions", time: "Aug 1 – 9", desc: "9 sessions at 7 PM GMT · 1.5 hours each" },
+        { step: "03", title: "Live Sessions", time: "July 24 – Aug 2", desc: "10 sessions at 7 PM GMT · 1.5 hours each" },
         { step: "04", title: "Replays", time: "Within 48h", desc: "Replay available if you missed a live session" },
         { step: "05", title: "Exercises", time: "After each live", desc: "1 practical deliverable per session" },
-        { step: "06", title: "Certification", time: "August 9", desc: "Official Le Guide IA certificate issued" }
+        { step: "06", title: "Certification", time: "August 2", desc: "Official Le Guide IA certificate issued" }
       ]
     },
     pricing: {

@@ -42,7 +42,6 @@ export function Payment() {
     whatsapp: "",
     country: "",
     method: "",
-    txCode: "",
   })
 
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -115,7 +114,6 @@ export function Payment() {
 
     if (!form.country) return t("payment.form.errors.country")
     if (!form.method) return t("payment.form.errors.method")
-    if (!form.txCode.trim()) return t("payment.form.errors.txCode")
     return null
   }
 
@@ -142,7 +140,6 @@ export function Payment() {
           whatsapp: form.whatsapp,
           country: form.country,
           method: form.method,
-          txCode: form.txCode,
         }),
       })
 
@@ -426,20 +423,6 @@ export function Payment() {
                     </select>
                   </div>
 
-                  {/* Transaction Code field */}
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="paymentTxCode" className="text-xs font-bold text-foreground/80">
-                      {t("payment.form.labelTxCode")}
-                    </label>
-                    <input
-                      id="paymentTxCode"
-                      type="text"
-                      value={form.txCode}
-                      onChange={(e) => setForm({ ...form, txCode: e.target.value })}
-                      placeholder={t("payment.form.placeholderTxCode")}
-                      className={inputBase}
-                    />
-                  </div>
 
                   {/* Submit Button */}
                   <button
