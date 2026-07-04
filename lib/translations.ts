@@ -173,9 +173,9 @@ export const translations: Record<string, any> = {
       title: "Validez votre inscription",
       subtitle: "Choisissez votre mode de paiement préféré et envoyez le formulaire de confirmation une fois le transfert effectué.",
       methods: {
-        om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 76 00 00 00 (Alfred Dah). Indiquer votre nom dans le motif." },
-        wave: { name: "Wave", target: "Afrique de l'Ouest", detail: "Transfert direct via Wave au +221 77 00 00 00 (Alfred Dah)." },
-        zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer à l'adresse email : pay@leguideai.com." },
+        om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 75 75 72 73 (Sanson Alfred Tanguy Dah). Indiquer votre nom dans le motif." },
+        wave: { name: "Wave", target: "Afrique de l'Ouest", detail: "Transfert direct via Wave au +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
+        zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer via Zelle au numéro : +1 917 903 5628." },
         // bank: { name: "Virement Bancaire", target: "", detail: "Veuillez nous contacter sur WhatsApp pour obtenir notre RIB officiel." }
       },
       form: {
@@ -191,7 +191,7 @@ export const translations: Record<string, any> = {
         placeholderCountry: "Sélectionnez votre pays",
         searchCountryPlaceholder: "Rechercher un pays...",
         noCountryFound: "Aucun pays trouvé",
-        warningNote: "Note : Veuillez conserver la preuve de votre transfert. Nos équipes valideront manuellement vos informations sous 24h après réception.",
+        warningNote: "Après votre paiement, nous vous contacterons par téléphone pour confirmer les détails de votre inscription.",
         labelMethod: "Moyen de paiement",
         placeholderMethod: "Sélectionnez le moyen utilisé",
         labelTxCode: "Code / Référence de transaction",
@@ -420,9 +420,9 @@ export const translations: Record<string, any> = {
       title: "Validate your enrollment",
       subtitle: "Choose your preferred payment method and send the confirmation form once the transfer is done.",
       methods: {
-        om: { name: "Orange Money", target: "West Africa", detail: "Transfer to +226 76 00 00 00 (Alfred Dah). Mention your name in the reference." },
-        wave: { name: "Wave", target: "Senegal / Ivory Coast", detail: "Direct transfer via Wave to +221 77 00 00 00 (Alfred Dah)." },
-        zelle: { name: "Zelle", target: "USA / Canada Diaspora", detail: "Send to email: pay@leguideai.com." },
+        om: { name: "Orange Money", target: "West Africa", detail: "Transfer to +226 75 75 72 73 (Sanson Alfred Tanguy Dah). Mention your name in the reference." },
+        wave: { name: "Wave", target: "West Africa", detail: "Direct transfer via Wave to +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
+        zelle: { name: "Zelle", target: "USA / Canada Diaspora", detail: "Send via Zelle to number: +1 917 903 5628." },
         bank: { name: "Bank Transfer", target: "Companies & Institutions", detail: "Please contact us on WhatsApp to get our official IBAN/BIC." }
       },
       form: {
@@ -438,7 +438,7 @@ export const translations: Record<string, any> = {
         placeholderCountry: "Select your country",
         searchCountryPlaceholder: "Search for a country...",
         noCountryFound: "No country found",
-        warningNote: "Note: Please keep your transfer receipt. Our team will manually validate your information within 24 hours of receipt.",
+        warningNote: "After your payment, we will contact you by phone to confirm your enrollment details.",
         labelMethod: "Payment Method",
         placeholderMethod: "Select the method used",
         labelTxCode: "Transaction Code / Reference",
