@@ -117,13 +117,13 @@ export const translations: Record<string, any> = {
         badge: "🏅 OFFRE FONDATEUR",
         priceFcfa: "99 000 FCFA",
         priceUsd: "179 $",
-        expireLabel: "⏳ Offre expire le 11 juillet 2026 à minuit GMT"
+        expireLabel: "⏳ Offre expire le 25 juillet 2026 à minuit GMT"
       },
       standardCard: {
         badge: "PRIX STANDARD",
         priceFcfa: "199 000 FCFA",
         priceUsd: "349 $",
-        dateLabel: "À partir du 12 juillet 2026"
+        dateLabel: "À partir du 26 juillet 2026"
       },
       features: [
         "10 sessions premium en direct",
@@ -225,7 +225,7 @@ export const translations: Record<string, any> = {
         { q: "Puis-je inscrire mon équipe ou mon entreprise ?", a: "Oui, nous proposons des tarifs de groupe ou des sessions intra-entreprises. Contactez-nous par email à alfred@leguideai.com." },
         { q: "Quels sont les outils requis pour suivre les lives ?", a: "Un simple ordinateur ou smartphone et une connexion internet. Nous utiliserons des versions gratuites de ChatGPT, Claude, Gemini et Canva IA, vous n'avez pas besoin d'abonnements payants." },
         { q: "Qui est l'expert Alfred Dah ?", a: "Alfred Dah est un expert certifié CISA en audit de systèmes d'information, titulaire d'un MBA et spécialisé en gouvernance de l'IA, fort de plus de 24 ans d'expérience professionnelle dans la transformation digitale." },
-        { q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 99 000 FCFA (179 $). Cette offre exclusive expire le 11 juillet 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 199 000 FCFA (349 $)." },
+        { q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 99 000 FCFA (179 $). Cette offre exclusive expire le 25 juillet 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 199 000 FCFA (349 $)." },
         { q: "Le Bootcamp convient-il aux résidents de la diaspora ?", a: "Oui, tout à fait. Les horaires (19h00 GMT / 21h00 en France) et les moyens de paiement comme Zelle sont spécifiquement adaptés pour faciliter la participation de la diaspora." },
         { q: "Puis-je obtenir une facture pour mon entreprise ?", a: "Oui, nous pouvons vous émettre une facture professionnelle au nom de votre entreprise pour justifier la formation. Envoyez-nous simplement les détails de facturation sur WhatsApp." },
         { q: "Comment puis-je rejoindre le groupe WhatsApp privé ?", a: "Une fois votre confirmation de paiement transmise via notre formulaire, notre équipe valide votre accès sous 24h et vous recevez un lien d'intégration WhatsApp direct par e-mail et SMS/WhatsApp." }
@@ -362,13 +362,13 @@ export const translations: Record<string, any> = {
         badge: "🏅 FOUNDER OFFER",
         priceFcfa: "99,000 FCFA",
         priceUsd: "$179",
-        expireLabel: "⏳ Offer expires July 11, 2026 at midnight GMT"
+        expireLabel: "⏳ Offer expires July 25, 2026 at midnight GMT"
       },
       standardCard: {
         badge: "STANDARD PRICE",
         priceFcfa: "199,000 FCFA",
         priceUsd: "$349",
-        dateLabel: "Starting July 12, 2026"
+        dateLabel: "Starting July 26, 2026"
       },
       features: [
         "10 live premium sessions",
@@ -471,7 +471,7 @@ export const translations: Record<string, any> = {
         { q: "Can I enroll my team or my company?", a: "Yes, we offer group rates or in-house sessions. Contact us by email at alfred@leguideai.com." },
         { q: "What tools are required to follow the lives?", a: "A computer or smartphone and an internet connection. We will use the free versions of ChatGPT, Claude, Gemini, and Canva IA; you don't need paid subscriptions." },
         { q: "Who is the expert Alfred Dah?", a: "Alfred Dah is a certified CISA systems auditor, holder of an MBA and specialized in AI governance, with over 24 years of experience in digital transformation." },
-        { q: "What is the Founder Price and when does it expire?", a: "The Founder price is 99,000 FCFA ($179). This exclusive offer expires on July 11, 2026 at midnight GMT. The price will then revert to the standard rate of 199,000 FCFA ($349)." },
+        { q: "What is the Founder Price and when does it expire?", a: "The Founder price is 99,000 FCFA ($179). This exclusive offer expires on July 25, 2026 at midnight GMT. The price will then revert to the standard rate of 199,000 FCFA ($349)." },
         { q: "Does the Bootcamp suit diaspora residents?", a: "Yes, absolutely. The hours (7:00 PM GMT / 9:00 PM in France) and payment methods like Zelle are specifically tailored for diaspora participation." },
         { q: "Can I get an invoice for my company?", a: "Yes, we can issue a professional invoice under your company's name. Simply send us your invoicing details on WhatsApp." },
         { q: "How do I join the private WhatsApp group?", a: "Once your payment confirmation is sent via our form, our team validates your access within 24 hours and you receive a direct WhatsApp integration link by email and SMS/WhatsApp." }

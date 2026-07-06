@@ -10,7 +10,7 @@ import { useLanguage } from "@/lib/language-context"
 function CountdownTimer() {
   const { t } = useLanguage()
   // Target date is July 11, 2026 at midnight GMT
-  const targetDate = new Date("2026-07-11T00:00:00Z").getTime()
+  const targetDate = new Date("2026-07-25T00:00:00Z").getTime()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
