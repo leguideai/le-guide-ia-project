@@ -6,6 +6,7 @@ export const translations: Record<string, any> = {
       bootcamp: "Bootcamp PRO",
       testimonials: "Témoignages",
       services: "Services",
+      resources: "Ressources",
       faq: "FAQ",
       cta: "Payer maintenant",
       toggleLang: "Switch to English",
@@ -270,6 +271,20 @@ export const translations: Record<string, any> = {
     scrollToTop: {
       ariaLabel: "Remonter en haut de page",
     },
+    resourcesPage: {
+      tag: "Bibliothèque Gratuite",
+      title: "Ressources & Outils IA",
+      desc: "Téléchargez des modèles de Business Plans adaptés aux secteurs porteurs au Burkina Faso et copiez des prompts IA optimisés pour accélérer votre croissance.",
+      searchPlaceholder: "Rechercher un outil, un prompt, un modèle...",
+      filterAll: "Tous",
+      filterPrompts: "Prompts IA",
+      filterPlans: "Business Plans",
+      copyPrompt: "Copier le prompt",
+      copied: "Copié !",
+      downloadPlan: "Télécharger le modèle",
+      sector: "Secteur",
+      type: "Type",
+    },
   },
   en: {
     nav: {
@@ -278,6 +293,7 @@ export const translations: Record<string, any> = {
       bootcamp: "Bootcamp PRO",
       testimonials: "Testimonials",
       services: "Services",
+      resources: "Resources",
       faq: "FAQ",
       cta: "Pay now",
       toggleLang: "Passer en Français",
@@ -541,6 +557,20 @@ export const translations: Record<string, any> = {
     },
     scrollToTop: {
       ariaLabel: "Scroll to top",
+    },
+    resourcesPage: {
+      tag: "Free Library",
+      title: "AI Resources & Tools",
+      desc: "Download Business Plan templates tailored to high-growth sectors in Burkina Faso and copy optimized AI prompts to accelerate your business growth.",
+      searchPlaceholder: "Search for a tool, prompt, template...",
+      filterAll: "All",
+      filterPrompts: "AI Prompts",
+      filterPlans: "Business Plans",
+      copyPrompt: "Copy Prompt",
+      copied: "Copied!",
+      downloadPlan: "Download Template",
+      sector: "Sector",
+      type: "Type",
     },
   }
 };

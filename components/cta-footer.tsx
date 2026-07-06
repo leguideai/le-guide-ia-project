@@ -63,6 +63,15 @@ function InlineCountdown() {
 
 export function CtaFooter() {
   const { t } = useLanguage()
+  const links = [
+    { label: t("nav.programme"), href: "/#programme" },
+    { label: t("nav.audience"), href: "/#audience" },
+    { label: t("nav.bootcamp"), href: "/#tarifs" },
+    { label: t("nav.testimonials"), href: "/#temoignages" },
+    { label: t("nav.services"), href: "/#services" },
+    { label: t("nav.resources"), href: "/ressources" },
+    { label: t("nav.faq"), href: "/#faq" },
+  ]
 
   return (
     <footer className="relative border-t border-border/60 bg-slate-950">
@@ -145,9 +154,10 @@ export function CtaFooter() {
           </div>
         </motion.div>
 
-        {/* Footer info links */}
-        <div className="mt-14 flex flex-col items-center justify-between gap-6 border-t border-border/60 pt-8 sm:flex-row">
-          <div className="flex flex-col items-center gap-2 sm:items-start">
+        {/* Footer info links grid */}
+        <div className="mt-16 grid gap-10 border-t border-border/40 pt-12 sm:grid-cols-2 lg:grid-cols-4 text-left">
+          {/* Column 1 - Brand Info */}
+          <div className="flex flex-col items-center text-center sm:items-start sm:text-left gap-3">
             <a href="#" className="flex items-center gap-2.5">
               <img
                 src="/Logo%20avatar.png"
@@ -158,57 +168,79 @@ export function CtaFooter() {
                 LE GUIDE <span className="text-primary">IA</span>
               </span>
             </a>
-            <span className="text-xs text-muted-foreground">Alfred Dah</span>
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">
+              Prenez de l'avance sur votre temps grâce à la maîtrise pratique de l'Intelligence Artificielle. Formations et prestations de services sur-mesure.
+            </p>
+            <span className="text-xs font-semibold text-muted-foreground mt-2">Alfred Dah</span>
           </div>
 
-          <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground sm:items-end">
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-6">
+          {/* Column 2 - Navigation Links */}
+          <div className="flex flex-col items-center sm:items-start gap-4">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
+              Navigation
+            </span>
+            <ul className="flex flex-col items-center sm:items-start gap-3.5 text-xs font-bold uppercase tracking-wider">
+              {links.map((l) => (
+                <li key={l.href}>
+                  <a
+                    href={l.href}
+                    className="text-muted-foreground transition-colors hover:text-white"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3 - Contact & Socials */}
+          <div className="flex flex-col items-center sm:items-start gap-4 text-sm text-muted-foreground">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
+              Contact & Réseaux
+            </span>
+            <div className="flex flex-col items-center sm:items-start gap-3">
               <a
                 href="mailto:alfred@leguideai.com"
-                className="inline-flex items-center gap-2 transition-colors hover:text-foreground text-xs"
+                className="inline-flex items-center gap-2 transition-colors hover:text-white text-xs font-semibold"
               >
                 <Mail className="size-4 text-primary" />
                 alfred@leguideai.com
               </a>
-            </div>
-            <div className="flex items-center gap-3">
-              {socials.map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={s.label}
-                  className="flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                >
-                  <svg viewBox="0 0 24 24" className="size-4 fill-current" aria-hidden="true">
-                    <path d={s.path} />
-                  </svg>
-                </a>
-              ))}
+              <div className="flex items-center gap-2.5 mt-2">
+                {socials.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={s.label}
+                    className="flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary bg-card/10 hover:bg-card/30"
+                  >
+                    <svg viewBox="0 0 24 24" className="size-4 fill-current" aria-hidden="true">
+                      <path d={s.path} />
+                    </svg>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
 
-        {/* Flag Counter visitor widget */}
-        <div className="mt-12 flex flex-col items-center justify-center gap-2 border-t border-border/30 pt-6">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
-            Statistiques de visites
-          </span>
-          <a href="https://info.flagcounter.com/vace" target="_blank" rel="noopener noreferrer" className="block transition-all hover:scale-[1.02] active:scale-95">
-            <img
-              src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
-              alt="Compteur de Visiteurs"
-              border="0"
-              className="rounded-lg shadow-md border border-border/30"
-              loading="lazy"
-            />
-          </a>
-        </div>    
-
-
+          {/* Column 4 - Visitor Statistics (Flag Counter) */}
+          <div className="flex flex-col items-center sm:items-start gap-4">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
+              Statistiques de visites
+            </span>
+            <a href="https://info.flagcounter.com/vace" target="_blank" rel="noopener noreferrer" className="block transition-all hover:scale-[1.02] active:scale-95">
+              <img
+                src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
+                alt="Compteur de Visiteurs"
+                border="0"
+                className="rounded-lg shadow-md border border-border/30"
+                loading="lazy"
+              />
+            </a>
+          </div>
         </div>
-
-   
 
         <p className="mt-8 text-center text-[10px] text-muted-foreground">
           {t("ctaFooter.rights").replace("{year}", new Date().getFullYear().toString())}
