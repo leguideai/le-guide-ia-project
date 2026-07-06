@@ -5,6 +5,8 @@ export const translations: Record<string, any> = {
       audience: "Pour qui ?",
       bootcamp: "Bootcamp PRO",
       testimonials: "Témoignages",
+      services: "Services",
+      resources: "Ressources",
       faq: "FAQ",
       cta: "Payer maintenant",
       toggleLang: "Switch to English",
@@ -117,13 +119,13 @@ export const translations: Record<string, any> = {
         badge: "🏅 OFFRE FONDATEUR",
         priceFcfa: "99 000 FCFA",
         priceUsd: "179 $",
-        expireLabel: "⏳ Offre expire le 11 juillet 2026 à minuit GMT"
+        expireLabel: "⏳ Offre expire le 25 juillet 2026 à minuit GMT"
       },
       standardCard: {
         badge: "PRIX STANDARD",
         priceFcfa: "199 000 FCFA",
         priceUsd: "349 $",
-        dateLabel: "À partir du 12 juillet 2026"
+        dateLabel: "À partir du 26 juillet 2026"
       },
       features: [
         "10 sessions premium en direct",
@@ -147,13 +149,39 @@ export const translations: Record<string, any> = {
         { name: "Awa", country: "Mali", role: "Étudiante", text: "Je me sens armée pour mon entrée sur le marché du travail. Le certificat Le Guide IA est déjà fièrement affiché sur mon profil LinkedIn.", image: "/awa.jpg" }
       ]
     },
+    services: {
+      tag: "Prestations Sur-Mesure",
+      title: "Des services premium pour accélérer votre croissance",
+      desc: "Au-delà de nos formations, nous vous accompagnons individuellement dans la réalisation de vos projets stratégiques.",
+      cta: "Discuter de mon projet",
+      items: [
+        {
+          title: "Développement de sites web",
+          desc: "Création de sites modernes, ultra-rapides et optimisés pour le SEO et les conversions. Du site vitrine à la plateforme sur-mesure.",
+          features: ["Design unique & responsive", "Optimisation SEO locale", "Intégration de chatbots / outils IA"],
+          message: "Bonjour Le Guide IA, je souhaite discuter d'un projet de création de site web."
+        },
+        {
+          title: "Coaching & Optimisation LinkedIn",
+          desc: "Propulsez votre marque personnelle. Diagnostic complet de votre profil, stratégie de contenu et techniques pour attirer des opportunités.",
+          features: ["Audit de profil individuel", "Ligne éditoriale sur-mesure", "Accompagnement individuel"],
+          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur le coaching et l'optimisation de profil LinkedIn."
+        },
+        {
+          title: "Création de Business Plans",
+          desc: "Conception de plans d'affaires solides et convaincants pour vos demandes de financement et structurer vos projets au Burkina Faso.",
+          features: ["Modélisation financière", "Analyse des secteurs porteurs", "Dossier prêt pour les investisseurs"],
+          message: "Bonjour Le Guide IA, je souhaite échanger sur la création de Business Plan pour mon projet."
+        }
+      ]
+    },
     authority: {
       tag: "L'expert",
       founderTitle: "Fondateur de Le Guide IA",
       consultantTitle: "Expert IA & Transformation Digitale",
       cisa: "CISA — Certified Information Systems Auditor",
       experience: "24+ ans d'expérience professionnelle",
-      mba: "MBA + AI Governance",
+      mba: "MBA en Entrepreneurship et développement durable",
       videoPlaceholder: "Vidéo de présentation (60s)",
       desc1: "Expert certifié et auditeur de systèmes d'information chevronné, Alfred Dah aide les professionnels et entreprises d'Afrique francophone et de la diaspora à s'approprier les technologies d'avenir.",
       desc2: "Mon objectif est simple : rendre l'IA pratique, accessible et utile pour que vous travailliez mieux, gagniez en productivité et créiez plus d'opportunités professionnelles.",
@@ -225,7 +253,7 @@ export const translations: Record<string, any> = {
         { q: "Puis-je inscrire mon équipe ou mon entreprise ?", a: "Oui, nous proposons des tarifs de groupe ou des sessions intra-entreprises. Contactez-nous par email à alfred@leguideai.com." },
         { q: "Quels sont les outils requis pour suivre les lives ?", a: "Un simple ordinateur ou smartphone et une connexion internet. Nous utiliserons des versions gratuites de ChatGPT, Claude, Gemini et Canva IA, vous n'avez pas besoin d'abonnements payants." },
         { q: "Qui est l'expert Alfred Dah ?", a: "Alfred Dah est un expert certifié CISA en audit de systèmes d'information, titulaire d'un MBA et spécialisé en gouvernance de l'IA, fort de plus de 24 ans d'expérience professionnelle dans la transformation digitale." },
-        { q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 99 000 FCFA (179 $). Cette offre exclusive expire le 11 juillet 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 199 000 FCFA (349 $)." },
+        { q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 99 000 FCFA (179 $). Cette offre exclusive expire le 25 juillet 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 199 000 FCFA (349 $)." },
         { q: "Le Bootcamp convient-il aux résidents de la diaspora ?", a: "Oui, tout à fait. Les horaires (19h00 GMT / 21h00 en France) et les moyens de paiement comme Zelle sont spécifiquement adaptés pour faciliter la participation de la diaspora." },
         { q: "Puis-je obtenir une facture pour mon entreprise ?", a: "Oui, nous pouvons vous émettre une facture professionnelle au nom de votre entreprise pour justifier la formation. Envoyez-nous simplement les détails de facturation sur WhatsApp." },
         { q: "Comment puis-je rejoindre le groupe WhatsApp privé ?", a: "Une fois votre confirmation de paiement transmise via notre formulaire, notre équipe valide votre accès sous 24h et vous recevez un lien d'intégration WhatsApp direct par e-mail et SMS/WhatsApp." }
@@ -243,6 +271,20 @@ export const translations: Record<string, any> = {
     scrollToTop: {
       ariaLabel: "Remonter en haut de page",
     },
+    resourcesPage: {
+      tag: "Bibliothèque Gratuite",
+      title: "Ressources & Outils IA",
+      desc: "Téléchargez des modèles de Business Plans adaptés aux secteurs porteurs au Burkina Faso et copiez des prompts IA optimisés pour accélérer votre croissance.",
+      searchPlaceholder: "Rechercher un outil, un prompt, un modèle...",
+      filterAll: "Tous",
+      filterPrompts: "Prompts IA",
+      filterPlans: "Business Plans",
+      copyPrompt: "Copier le prompt",
+      copied: "Copié !",
+      downloadPlan: "Télécharger le modèle",
+      sector: "Secteur",
+      type: "Type",
+    },
   },
   en: {
     nav: {
@@ -250,6 +292,8 @@ export const translations: Record<string, any> = {
       audience: "Who is it for?",
       bootcamp: "Bootcamp PRO",
       testimonials: "Testimonials",
+      services: "Services",
+      resources: "Resources",
       faq: "FAQ",
       cta: "Pay now",
       toggleLang: "Passer en Français",
@@ -362,13 +406,13 @@ export const translations: Record<string, any> = {
         badge: "🏅 FOUNDER OFFER",
         priceFcfa: "99,000 FCFA",
         priceUsd: "$179",
-        expireLabel: "⏳ Offer expires July 11, 2026 at midnight GMT"
+        expireLabel: "⏳ Offer expires July 25, 2026 at midnight GMT"
       },
       standardCard: {
         badge: "STANDARD PRICE",
         priceFcfa: "199,000 FCFA",
         priceUsd: "$349",
-        dateLabel: "Starting July 12, 2026"
+        dateLabel: "Starting July 26, 2026"
       },
       features: [
         "10 live premium sessions",
@@ -392,13 +436,39 @@ export const translations: Record<string, any> = {
         { name: "Awa", country: "Mali", role: "Student", text: "I feel prepared for the job market. The Le Guide IA certificate is already proudly displayed on my LinkedIn profile.", image: "/awa.jpg" }
       ]
     },
+    services: {
+      tag: "Custom Prestations",
+      title: "Premium services to accelerate your growth",
+      desc: "Beyond our training courses, we support you individually in achieving your strategic projects.",
+      cta: "Discuss my project",
+      items: [
+        {
+          title: "Websites Development",
+          desc: "Creation of modern, ultra-fast websites optimized for SEO and conversions. From showcase sites to custom platforms.",
+          features: ["Unique & responsive design", "Local SEO optimization", "Chatbots & AI tools integration"],
+          message: "Hello Le Guide IA, I would like to discuss a website development project."
+        },
+        {
+          title: "LinkedIn Coaching & Optimization",
+          desc: "Boost your personal brand. Comprehensive audit of your profile, content strategy, and methods to attract opportunities.",
+          features: ["Individual profile audit", "Tailored editorial strategy", "One-on-one coaching sessions"],
+          message: "Hello Le Guide IA, I would like more information about LinkedIn coaching and profile optimization."
+        },
+        {
+          title: "Business Plans Creation",
+          desc: "Design of solid and convincing business plans for your funding requests and to structure your projects in Burkina Faso.",
+          features: ["Financial modeling", "Analysis of growth sectors", "Investor-ready documentation"],
+          message: "Hello Le Guide IA, I would like to discuss creating a business plan for my project."
+        }
+      ]
+    },
     authority: {
       tag: "The Expert",
       founderTitle: "Founder of Le Guide IA",
       consultantTitle: "AI & Digital Transformation Expert",
       cisa: "CISA — Certified Information Systems Auditor",
       experience: "24+ years of professional experience",
-      mba: "MBA + AI Governance",
+      mba: "MBA en Entrepreneurship et développement durable",
       videoPlaceholder: "Intro Video (60s)",
       desc1: "Certified expert and seasoned information systems auditor, Alfred Dah helps professionals and companies across French-speaking Africa and the diaspora master future tech.",
       desc2: "My goal is simple: to make AI practical, accessible, and useful so that you work better, boost productivity, and build more career opportunities.",
@@ -471,7 +541,7 @@ export const translations: Record<string, any> = {
         { q: "Can I enroll my team or my company?", a: "Yes, we offer group rates or in-house sessions. Contact us by email at alfred@leguideai.com." },
         { q: "What tools are required to follow the lives?", a: "A computer or smartphone and an internet connection. We will use the free versions of ChatGPT, Claude, Gemini, and Canva IA; you don't need paid subscriptions." },
         { q: "Who is the expert Alfred Dah?", a: "Alfred Dah is a certified CISA systems auditor, holder of an MBA and specialized in AI governance, with over 24 years of experience in digital transformation." },
-        { q: "What is the Founder Price and when does it expire?", a: "The Founder price is 99,000 FCFA ($179). This exclusive offer expires on July 11, 2026 at midnight GMT. The price will then revert to the standard rate of 199,000 FCFA ($349)." },
+        { q: "What is the Founder Price and when does it expire?", a: "The Founder price is 99,000 FCFA ($179). This exclusive offer expires on July 25, 2026 at midnight GMT. The price will then revert to the standard rate of 199,000 FCFA ($349)." },
         { q: "Does the Bootcamp suit diaspora residents?", a: "Yes, absolutely. The hours (7:00 PM GMT / 9:00 PM in France) and payment methods like Zelle are specifically tailored for diaspora participation." },
         { q: "Can I get an invoice for my company?", a: "Yes, we can issue a professional invoice under your company's name. Simply send us your invoicing details on WhatsApp." },
         { q: "How do I join the private WhatsApp group?", a: "Once your payment confirmation is sent via our form, our team validates your access within 24 hours and you receive a direct WhatsApp integration link by email and SMS/WhatsApp." }
@@ -487,6 +557,20 @@ export const translations: Record<string, any> = {
     },
     scrollToTop: {
       ariaLabel: "Scroll to top",
+    },
+    resourcesPage: {
+      tag: "Free Library",
+      title: "AI Resources & Tools",
+      desc: "Download Business Plan templates tailored to high-growth sectors in Burkina Faso and copy optimized AI prompts to accelerate your business growth.",
+      searchPlaceholder: "Search for a tool, prompt, template...",
+      filterAll: "All",
+      filterPrompts: "AI Prompts",
+      filterPlans: "Business Plans",
+      copyPrompt: "Copy Prompt",
+      copied: "Copied!",
+      downloadPlan: "Download Template",
+      sector: "Sector",
+      type: "Type",
     },
   }
 };
