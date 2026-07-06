@@ -5,6 +5,7 @@ export const translations: Record<string, any> = {
       audience: "Pour qui ?",
       bootcamp: "Bootcamp PRO",
       testimonials: "Témoignages",
+      services: "Services",
       faq: "FAQ",
       cta: "Payer maintenant",
       toggleLang: "Switch to English",
@@ -147,13 +148,39 @@ export const translations: Record<string, any> = {
         { name: "Awa", country: "Mali", role: "Étudiante", text: "Je me sens armée pour mon entrée sur le marché du travail. Le certificat Le Guide IA est déjà fièrement affiché sur mon profil LinkedIn.", image: "/awa.jpg" }
       ]
     },
+    services: {
+      tag: "Prestations Sur-Mesure",
+      title: "Des services premium pour accélérer votre croissance",
+      desc: "Au-delà de nos formations, nous vous accompagnons individuellement dans la réalisation de vos projets stratégiques.",
+      cta: "Discuter de mon projet",
+      items: [
+        {
+          title: "Développement de sites web",
+          desc: "Création de sites modernes, ultra-rapides et optimisés pour le SEO et les conversions. Du site vitrine à la plateforme sur-mesure.",
+          features: ["Design unique & responsive", "Optimisation SEO locale", "Intégration de chatbots / outils IA"],
+          message: "Bonjour Le Guide IA, je souhaite discuter d'un projet de création de site web."
+        },
+        {
+          title: "Coaching & Optimisation LinkedIn",
+          desc: "Propulsez votre marque personnelle. Diagnostic complet de votre profil, stratégie de contenu et techniques pour attirer des opportunités.",
+          features: ["Audit de profil individuel", "Ligne éditoriale sur-mesure", "Accompagnement individuel"],
+          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur le coaching et l'optimisation de profil LinkedIn."
+        },
+        {
+          title: "Création de Business Plans",
+          desc: "Conception de plans d'affaires solides et convaincants pour vos demandes de financement et structurer vos projets au Burkina Faso.",
+          features: ["Modélisation financière", "Analyse des secteurs porteurs", "Dossier prêt pour les investisseurs"],
+          message: "Bonjour Le Guide IA, je souhaite échanger sur la création de Business Plan pour mon projet."
+        }
+      ]
+    },
     authority: {
       tag: "L'expert",
       founderTitle: "Fondateur de Le Guide IA",
       consultantTitle: "Expert IA & Transformation Digitale",
       cisa: "CISA — Certified Information Systems Auditor",
       experience: "24+ ans d'expérience professionnelle",
-      mba: "MBA + AI Governance",
+      mba: "MBA en Entrepreneurship et développement durable",
       videoPlaceholder: "Vidéo de présentation (60s)",
       desc1: "Expert certifié et auditeur de systèmes d'information chevronné, Alfred Dah aide les professionnels et entreprises d'Afrique francophone et de la diaspora à s'approprier les technologies d'avenir.",
       desc2: "Mon objectif est simple : rendre l'IA pratique, accessible et utile pour que vous travailliez mieux, gagniez en productivité et créiez plus d'opportunités professionnelles.",
@@ -250,6 +277,7 @@ export const translations: Record<string, any> = {
       audience: "Who is it for?",
       bootcamp: "Bootcamp PRO",
       testimonials: "Testimonials",
+      services: "Services",
       faq: "FAQ",
       cta: "Pay now",
       toggleLang: "Passer en Français",
@@ -392,13 +420,39 @@ export const translations: Record<string, any> = {
         { name: "Awa", country: "Mali", role: "Student", text: "I feel prepared for the job market. The Le Guide IA certificate is already proudly displayed on my LinkedIn profile.", image: "/awa.jpg" }
       ]
     },
+    services: {
+      tag: "Custom Prestations",
+      title: "Premium services to accelerate your growth",
+      desc: "Beyond our training courses, we support you individually in achieving your strategic projects.",
+      cta: "Discuss my project",
+      items: [
+        {
+          title: "Websites Development",
+          desc: "Creation of modern, ultra-fast websites optimized for SEO and conversions. From showcase sites to custom platforms.",
+          features: ["Unique & responsive design", "Local SEO optimization", "Chatbots & AI tools integration"],
+          message: "Hello Le Guide IA, I would like to discuss a website development project."
+        },
+        {
+          title: "LinkedIn Coaching & Optimization",
+          desc: "Boost your personal brand. Comprehensive audit of your profile, content strategy, and methods to attract opportunities.",
+          features: ["Individual profile audit", "Tailored editorial strategy", "One-on-one coaching sessions"],
+          message: "Hello Le Guide IA, I would like more information about LinkedIn coaching and profile optimization."
+        },
+        {
+          title: "Business Plans Creation",
+          desc: "Design of solid and convincing business plans for your funding requests and to structure your projects in Burkina Faso.",
+          features: ["Financial modeling", "Analysis of growth sectors", "Investor-ready documentation"],
+          message: "Hello Le Guide IA, I would like to discuss creating a business plan for my project."
+        }
+      ]
+    },
     authority: {
       tag: "The Expert",
       founderTitle: "Founder of Le Guide IA",
       consultantTitle: "AI & Digital Transformation Expert",
       cisa: "CISA — Certified Information Systems Auditor",
       experience: "24+ years of professional experience",
-      mba: "MBA + AI Governance",
+      mba: "MBA en Entrepreneurship et développement durable",
       videoPlaceholder: "Intro Video (60s)",
       desc1: "Certified expert and seasoned information systems auditor, Alfred Dah helps professionals and companies across French-speaking Africa and the diaspora master future tech.",
       desc2: "My goal is simple: to make AI practical, accessible, and useful so that you work better, boost productivity, and build more career opportunities.",

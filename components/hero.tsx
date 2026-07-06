@@ -184,13 +184,9 @@ export function Hero() {
           <div className="relative overflow-hidden rounded-2xl border border-primary/30 glow-blue">
             <img
               src="/hero_bootcamp.jpg"
-              alt="Alfred Dah, fondateur de Le Guide IA"
-              className="w-full object-cover aspect-[4/3] sm:aspect-auto"
+              alt="Affiche Officielle Le Guide IA - Bootcamp PRO"
+              className="w-full h-auto rounded-2xl"
             />
-            {/* scan line */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute inset-x-0 top-0 h-24 animate-scan bg-gradient-to-b from-primary/25 to-transparent" />
-            </div>
           </div>
 
           {/* floating badge */}

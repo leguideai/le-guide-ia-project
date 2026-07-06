@@ -188,7 +188,27 @@ export function CtaFooter() {
               ))}
             </div>
           </div>
+
+        {/* Flag Counter visitor widget */}
+        <div className="mt-12 flex flex-col items-center justify-center gap-2 border-t border-border/30 pt-6">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">
+            Statistiques de visites
+          </span>
+          <a href="https://info.flagcounter.com/vace" target="_blank" rel="noopener noreferrer" className="block transition-all hover:scale-[1.02] active:scale-95">
+            <img
+              src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
+              alt="Compteur de Visiteurs"
+              border="0"
+              className="rounded-lg shadow-md border border-border/30"
+              loading="lazy"
+            />
+          </a>
+        </div>    
+
+
         </div>
+
+   
 
         <p className="mt-8 text-center text-[10px] text-muted-foreground">
           {t("ctaFooter.rights").replace("{year}", new Date().getFullYear().toString())}

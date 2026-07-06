@@ -17,6 +17,7 @@ export function SiteNav() {
     { label: t("nav.audience"), href: "#audience" },
     { label: t("nav.bootcamp"), href: "#tarifs" },
     { label: t("nav.testimonials"), href: "#temoignages" },
+    { label: t("nav.services"), href: "#services" },
     { label: t("nav.faq"), href: "#faq" },
   ]
 

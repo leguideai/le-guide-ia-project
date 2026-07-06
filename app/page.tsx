@@ -10,6 +10,7 @@ import { Differentiators } from "@/components/differentiators"
 import { Process } from "@/components/process"
 import { Pricing } from "@/components/pricing"
 import { Testimonials } from "@/components/testimonials"
+import { Services } from "@/components/services"
 import { Authority } from "@/components/authority"
 import { Payment } from "@/components/payment"
 import { FAQ } from "@/components/faq"
@@ -53,7 +54,10 @@ export default function Page() {
       {/* S10: Témoignages */}
       <Testimonials />
       
-      {/* S11: Alfred Dah */}
+      {/* S11: Nos Services */}
+      <Services />
+      
+      {/* S12: Alfred Dah */}
       <Authority />
       
       {/* S12: Paiement */}
