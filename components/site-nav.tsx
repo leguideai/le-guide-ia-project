@@ -13,7 +13,7 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false)
 
   const links = [
-    { label: t("nav.programme"), href: "/#programme" },
+    { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA_1-9_Aout_2026.pdf" },
     { label: t("nav.audience"), href: "/#audience" },
     { label: t("nav.bootcamp"), href: "/#tarifs" },
     { label: t("nav.testimonials"), href: "/#temoignages" },
@@ -80,10 +80,12 @@ export function SiteNav() {
         </a>
 
         <div className="hidden items-center gap-7 lg:flex">
-          {links.map((l) => (
+          {links.map((l,i) => (
             <a
               key={l.href}
               href={l.href}
+              target={i === 0 ? "_blank" : undefined}
+              rel={i === 0 ? "noopener noreferrer" : undefined}
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {l.label}
@@ -120,10 +122,12 @@ export function SiteNav() {
             className="overflow-hidden border-t border-border/60 bg-background/95 backdrop-blur-xl lg:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
-              {links.map((l) => (
+              {links.map((l, i) => (
                 <a
                   key={l.href}
                   href={l.href}
+                  target={i === 0 ? "_blank" : undefined}
+                  rel={i === 0 ? "noopener noreferrer" : undefined}
                   onClick={() => setOpen(false)}
                   className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
