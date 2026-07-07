@@ -64,7 +64,7 @@ function InlineCountdown() {
 export function CtaFooter() {
   const { t } = useLanguage()
   const links = [
-    { label: t("nav.programme"), href: "/#programme" },
+    { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA_1-9_Aout_2026.pdf" },
     { label: t("nav.audience"), href: "/#audience" },
     { label: t("nav.bootcamp"), href: "/#tarifs" },
     { label: t("nav.testimonials"), href: "/#temoignages" },
@@ -180,10 +180,12 @@ export function CtaFooter() {
               Navigation
             </span>
             <ul className="flex flex-col items-center sm:items-start gap-3.5 text-xs font-bold uppercase tracking-wider">
-              {links.map((l) => (
+              {links.map((l, i) => (
                 <li key={l.href}>
                   <a
                     href={l.href}
+                    target={i === 0 ? "_blank" : undefined}
+                    rel={i === 0 ? "noopener noreferrer" : undefined}
                     className="text-muted-foreground transition-colors hover:text-white"
                   >
                     {l.label}

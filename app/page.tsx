@@ -26,6 +26,12 @@ export default function Page() {
       
       {/* S1: Héro */}
       <Hero />
+
+      {/* S9: Tarifs */}
+      <Pricing />
+            
+      {/* S12: Paiement */}
+      <Payment />
       
       {/* S2: Pourquoi ce Bootcamp */}
       <WhyBootcamp />
@@ -34,10 +40,10 @@ export default function Page() {
       <Deliverables />
       
       {/* S4: Programme */}
-      <Program />
+      {/* <Program /> */}
       
       {/* S5: Découvrez votre futur */}
-      <Projection />
+      {/* <Projection /> */}
       
       {/* S6: Pour qui ? */}
       <Audience />
@@ -48,8 +54,6 @@ export default function Page() {
       {/* S8: Comment ça se passe */}
       <Process />
       
-      {/* S9: Tarifs */}
-      <Pricing />
       
       {/* S10: Témoignages */}
       <Testimonials />
@@ -59,9 +63,7 @@ export default function Page() {
       
       {/* S12: Alfred Dah */}
       <Authority />
-      
-      {/* S12: Paiement */}
-      <Payment />
+
       
       {/* S13: FAQ */}
       <FAQ />
