@@ -162,10 +162,16 @@ export const translations: Record<string, any> = {
           message: "Bonjour Le Guide IA, je souhaite discuter d'un projet de création de site web."
         },
         {
-          title: "Coaching & Optimisation LinkedIn",
-          desc: "Propulsez votre marque personnelle. Diagnostic complet de votre profil, stratégie de contenu et techniques pour attirer des opportunités.",
-          features: ["Audit de profil individuel", "Ligne éditoriale sur-mesure", "Accompagnement individuel"],
-          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur le coaching et l'optimisation de profil LinkedIn."
+          title: "Coaching recherche d'emploi",
+          desc: "Trouvez l'emploi de vos rêves grâce à l'IA. Préparation intensive aux entretiens, ciblage d'opportunités et simulation de recrutement.",
+          features: ["Accompagnement individuel", "Simulation d'entretien IA", "Stratégie de candidature"],
+          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur le coaching de recherche d'emploi."
+        },
+        {
+          title: "Optimisation de CV et LinkedIn",
+          desc: "Propulsez votre marque personnelle. Diagnostic complet de votre profil LinkedIn et refonte de votre CV pour passer les filtres ATS.",
+          features: ["Audit de profil individuel", "Ligne éditoriale sur-mesure", "Optimisation de CV pour ATS"],
+          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur l'optimisation de CV et de profil LinkedIn."
         },
         {
           title: "Création de Business Plans",
@@ -449,10 +455,16 @@ export const translations: Record<string, any> = {
           message: "Hello Le Guide IA, I would like to discuss a website development project."
         },
         {
-          title: "LinkedIn Coaching & Optimization",
-          desc: "Boost your personal brand. Comprehensive audit of your profile, content strategy, and methods to attract opportunities.",
-          features: ["Individual profile audit", "Tailored editorial strategy", "One-on-one coaching sessions"],
-          message: "Hello Le Guide IA, I would like more information about LinkedIn coaching and profile optimization."
+          title: "Job Search Coaching",
+          desc: "Find your dream job using AI. Intensive interview preparation, targeting opportunities, and recruitment simulation.",
+          features: ["One-on-one coaching", "AI interview simulation", "Application strategy"],
+          message: "Hello Le Guide IA, I would like more information about job search coaching."
+        },
+        {
+          title: "CV & LinkedIn Optimization",
+          desc: "Boost your personal brand. Comprehensive audit of your LinkedIn profile and CV revamp to pass ATS screening.",
+          features: ["Individual profile audit", "Tailored editorial strategy", "ATS-optimized CV writing"],
+          message: "Hello Le Guide IA, I would like more information about CV and LinkedIn optimization."
         },
         {
           title: "Business Plans Creation",

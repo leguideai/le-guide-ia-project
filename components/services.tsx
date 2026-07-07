@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Laptop, Users, TrendingUp, Check } from "lucide-react"
+import { Laptop, Briefcase, FileText, TrendingUp, Check } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -13,7 +13,8 @@ export function Services() {
   // Icons map to match index
   const icons = [
     <Laptop className="size-6 text-primary" key="laptop" />,
-    <Users className="size-6 text-primary" key="users" />,
+    <Briefcase className="size-6 text-primary" key="briefcase" />,
+    <FileText className="size-6 text-primary" key="filetext" />,
     <TrendingUp className="size-6 text-primary" key="trending" />
   ]
 
@@ -58,7 +59,7 @@ export function Services() {
         </div>
 
         {/* Services Grid */}
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {servicesList.map((service: any, i: number) => {
             const encodedMsg = encodeURIComponent(service.message || "")
             const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMsg}`
@@ -82,7 +83,7 @@ export function Services() {
                   <h3 className="font-heading text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-200">
                     {service.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 min-h-[72px]">
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 min-h-[96px]">
                     {service.desc}
                   </p>
 
