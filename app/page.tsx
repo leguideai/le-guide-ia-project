@@ -37,7 +37,7 @@ export default function Page() {
       <WhyBootcamp />
       
       {/* S3: Ce que vous obtenez */}
-      <Deliverables />
+      {/* <Deliverables /> */}
       
       {/* S4: Programme */}
       {/* <Program /> */}
@@ -49,7 +49,7 @@ export default function Page() {
       <Audience />
       
       {/* S7: Pourquoi Le Guide IA */}
-      <Differentiators />
+      {/* <Differentiators /> */}
       
       {/* S8: Comment ça se passe */}
       <Process />
