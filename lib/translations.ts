@@ -128,7 +128,7 @@ export const translations: Record<string, any> = {
         dateLabel: "À partir du 26 juillet 2026"
       },
       features: [
-        "10 sessions premium en direct",
+        "9 sessions premium en direct",
         "Replays disponibles 48h",
         "Exercices pratiques après chaque live",
         "Groupe WhatsApp privé d'entraide",
