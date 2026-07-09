@@ -238,7 +238,6 @@ export function CtaFooter() {
                 alt="Compteur de Visiteurs"
                 border="0"
                 className="rounded-lg shadow-md border border-border/30"
-                loading="lazy"
               />
             </a>
           </div>
