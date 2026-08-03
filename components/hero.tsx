@@ -9,8 +9,8 @@ import { useLanguage } from "@/lib/language-context"
 
 function CountdownTimer() {
   const { t } = useLanguage()
-  // Target date is July 11, 2026 at midnight GMT
-  const targetDate = new Date("2026-07-25T00:00:00Z").getTime()
+  // Target date is August 25, 2026 at 23:59:59 GMT
+  const targetDate = new Date("2026-08-25T23:59:59Z").getTime()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -43,7 +43,7 @@ function CountdownTimer() {
   if (expired) {
     return (
       <div className="mt-6 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center font-heading text-sm font-bold text-destructive">
-        L'offre fondateur à 99 000 FCFA / 179$ est expirée.
+        L'offre fondateur à 149 000 FCFA / 261,99$ est expirée.
       </div>
     )
   }
@@ -142,13 +142,15 @@ export function Hero() {
             className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:items-center"
           >
             <a
-              href="#tarifs"
+              href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 000 FCFA) et procéder au paiement.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
               )}
             >
-              Je rejoins le Bootcamp PRO
+              Je rejoins le Bootcamp PRO 2
             </a>
             <a
               href="/Programme_Bootcamp_PRO_LE_GUIDE_IA_1-9_Aout_2026.pdf"
@@ -184,7 +186,7 @@ export function Hero() {
           <div className="relative overflow-hidden rounded-2xl border border-primary/30 glow-blue">
             <img
               src="/hero_bootcamp.jpg"
-              alt="Affiche Officielle Le Guide IA - Bootcamp PRO"
+              alt="Affiche Officielle Le Guide IA - Bootcamp PRO 2"
               className="w-full h-auto rounded-2xl"
             />
           </div>
@@ -198,7 +200,7 @@ export function Hero() {
             <CheckCircle2 className="size-5 text-emerald-500" />
             <div>
               <div className="text-sm font-bold">100% Pratique & Intense</div>
-              <div className="text-xs text-muted-foreground">Bootcamp PRO en ligne</div>
+              <div className="text-xs text-muted-foreground">Bootcamp PRO 2 en ligne</div>
             </div>
           </motion.div> */}
         </motion.div>

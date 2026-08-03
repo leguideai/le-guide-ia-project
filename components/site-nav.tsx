@@ -95,7 +95,12 @@ export function SiteNav() {
 
         <div className="hidden items-center gap-4 lg:flex">
           {languageToggle}
-          <a href="/#tarifs" className={cn(buttonVariants({ size: "lg" }), "glow-blue font-semibold")}>
+          <a
+            href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(buttonVariants({ size: "lg" }), "glow-blue font-semibold")}
+          >
             {t("nav.cta")}
           </a>
         </div>
@@ -135,7 +140,9 @@ export function SiteNav() {
                 </a>
               ))}
               <a
-                href="/#tarifs"
+                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setOpen(false)}
                 className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full font-semibold")}
               >

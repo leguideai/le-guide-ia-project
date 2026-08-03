@@ -18,7 +18,7 @@ export const metadataBase = new URL('https://leguideai.com')
 export const metadata: Metadata = {
   title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
   description:
-    'Rejoignez le Bootcamp LE GUIDE IA PRO : 9 sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 99 000 FCFA offre fondateur.',
+    'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 149 000 FCFA offre fondateur.',
   keywords: [
     'IA',
     'intelligence artificielle',
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:
-      'Rejoignez le Bootcamp LE GUIDE IA PRO : 9 sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 99 000 FCFA offre fondateur.',
+      'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 149 000 FCFA offre fondateur.',
     url: 'https://leguideai.com',
     siteName: 'Le Guide IA',
     type: 'website',
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:
-      'Rejoignez le Bootcamp LE GUIDE IA PRO : 9 sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 99 000 FCFA offre fondateur.',
+      'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 149 000 FCFA offre fondateur.',
     images: ['https://leguideai.com/Logo%20avatar.png'],
     site: '@leguideia',
     creator: '@leguideia',
@@ -172,7 +172,7 @@ export default function RootLayout({
                   url: 'https://leguideai.com',
                   name: 'Le Guide IA',
                   description:
-                    'Rejoignez le Bootcamp LE GUIDE IA PRO : 9 sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026.',
+                    'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026.',
                   publisher: {
                     '@id': 'https://leguideai.com/#organization',
                   },
@@ -181,7 +181,7 @@ export default function RootLayout({
                   '@type': 'Course',
                   '@id': 'https://leguideai.com/#course',
                   name: 'Bootcamp LE GUIDE IA PRO',
-                  description: '9 sessions intensives en direct pour maîtriser ChatGPT, Claude, Gemini et Canva IA.',
+                  description: '7 Sessions intensives en direct pour maîtriser ChatGPT, Claude, Gemini et Canva IA.',
                   provider: {
                     '@type': 'Organization',
                     name: 'Le Guide IA',

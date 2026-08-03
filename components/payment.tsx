@@ -212,10 +212,20 @@ export function Payment() {
               )
             })}
 
-            {/* Visual payment warning */}
-            <div className="rounded-xl border border-blue-500/10 bg-blue-500/5 p-4 flex gap-3 text-xs leading-relaxed text-muted-foreground">
-              <Info className="size-4.5 text-primary shrink-0 mt-0.5" />
-              <p>{t("payment.form.warningNote")}</p>
+            {/* Visual payment warning & WhatsApp action */}
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs leading-relaxed">
+              <div className="flex gap-3 text-muted-foreground">
+                <Info className="size-4.5 text-emerald-500 shrink-0 mt-0.5" />
+                <p>{t("payment.form.warningNote")}</p>
+              </div>
+              <a
+                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2 et j'ai besoin d'assistance.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs transition-colors shadow-sm"
+              >
+                Payer avec Alfred sur WhatsApp
+              </a>
             </div>
           </div>
 
@@ -238,6 +248,14 @@ export function Payment() {
                   <p className="mt-3 text-xs text-muted-foreground leading-relaxed text-pretty">
                     {t("payment.form.successDesc").replace("{name}", form.name.split(" ")[0])}
                   </p>
+                  <a
+                    href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je viens d'envoyer ma confirmation de paiement pour le Bootcamp PRO 2.\nNom: " + form.name + "\nMoyen: " + form.method)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 text-xs transition-transform active:scale-95 shadow-md"
+                  >
+                    Contacter Alfred sur WhatsApp
+                  </a>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">

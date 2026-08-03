@@ -31,7 +31,7 @@ export default function Page() {
       <Pricing />
             
       {/* S12: Paiement */}
-      <Payment />
+      {/* <Payment /> */}
       
       {/* S2: Pourquoi ce Bootcamp */}
       <WhyBootcamp />

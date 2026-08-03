@@ -111,7 +111,7 @@ export function Program() {
             href="#tarifs"
             className="inline-flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
           >
-            Je rejoins le Bootcamp PRO
+            Je rejoins le Bootcamp PRO 2
           </a>
         </motion.div>
       </div>

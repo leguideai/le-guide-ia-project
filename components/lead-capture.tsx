@@ -156,7 +156,7 @@ export function LeadCapture() {
                     Pas encore prêt ?
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Recevez le programme complet du Bootcamp PRO + un guide de prompts bonus exclusif directement dans votre boîte mail.
+                    Recevez le programme complet du Bootcamp PRO 2 + un guide de prompts bonus exclusif directement dans votre boîte mail.
                   </p>
                 </div>
 

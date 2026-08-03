@@ -53,7 +53,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       if (metaDesc) {
         metaDesc.setAttribute(
           "content",
-          "Le Guide IA aide l’Afrique francophone à maîtriser l’intelligence artificielle : ChatGPT, Claude, Gemini, Canva IA, productivité et business. Rejoignez le Challenge IA gratuit de 5 jours et passez au Bootcamp PRO."
+          "Le Guide IA aide l’Afrique francophone à maîtriser l’intelligence artificielle : ChatGPT, Claude, Gemini, Canva IA, productivité et business. Rejoignez le Challenge IA gratuit de 5 jours et passez au Bootcamp PRO 2."
         )
       }
     }
