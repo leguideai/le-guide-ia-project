@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Le Guide IA', url: 'https://leguideai.com' }],
   metadataBase,
-  publisher: { name: 'Le Guide IA' },
+  publisher: 'Le Guide IA',
   verification: {
     google: 'gyjctmFrz-g1vy-5Mfq5F3ZHC1gxz8q0Bgtaf-mRI20',
   },
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     siteName: 'Le Guide IA',
     type: 'website',
     locale: 'fr_FR',
-    localeAlternates: ['fr'],
+    alternateLocale: ['fr'],
     images: [
       {
         url: 'https://leguideai.com/Logo%20avatar.png',

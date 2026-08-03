@@ -238,7 +238,6 @@ export function CtaFooter() {
               <img
                 src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
                 alt="Compteur de Visiteurs"
-                border="0"
                 className="rounded-lg shadow-md border border-border/30"
               />
             </a>
