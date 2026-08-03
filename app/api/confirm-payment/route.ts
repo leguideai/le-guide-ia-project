@@ -387,7 +387,7 @@ export async function POST(request: NextRequest) {
         "",                              // R: Paiement attestation
         "",                              // S: Code transaction (non requis)
         method,                          // T: Méthode de paiement (valid values: Orange Money, Wave, Zelle, Virement Bancaire)
-        "Chaud",                         // U: Interet Bootcamp PRO (valid value: Froid, Tiede, Chaud)
+        "Chaud",                         // U: Interet Bootcamp PRO 2 (valid value: Froid, Tiede, Chaud)
         "",                              // V: Derniere relance
         "Chaud Bootcamp",                // W: Statut global (valid value: Inscrit, Actif, A relancer, Chaud Bootcamp, Attestation demandee, Inactif)
         "",                              // X: Commentaires / Observations

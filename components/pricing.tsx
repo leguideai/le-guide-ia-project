@@ -6,7 +6,7 @@ import { Check, Sparkles } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 
 function PricingCountdown() {
-  const targetDate = new Date("2026-07-25T00:00:00Z").getTime()
+  const targetDate = new Date("2026-08-25T23:59:59Z").getTime()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -127,7 +127,9 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href="#paiement"
+                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite profiter du Tarif Fondateur (149 000 FCFA / 262$) pour le Bootcamp PRO 2.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 text-sm transition-transform active:scale-95 shadow shadow-amber-500/10"
               >
                 Profiter du Tarif Fondateur
@@ -172,7 +174,9 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href="#paiement"
+                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite réserver l'Accès Standard (249 000 FCFA / 438$) pour le Bootcamp PRO 2.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full flex h-12 items-center justify-center rounded-xl border border-border/80 hover:bg-card/80 text-foreground font-semibold px-6 text-sm transition-colors"
               >
                 Choisir l'accès standard

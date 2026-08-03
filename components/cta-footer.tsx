@@ -26,7 +26,7 @@ const socials = [
 ]
 
 function InlineCountdown() {
-  const targetDate = new Date("2026-07-25T00:00:00Z").getTime()
+  const targetDate = new Date("2026-08-25T23:59:59Z").getTime()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -109,7 +109,9 @@ export function CtaFooter() {
               
               <div className="mt-8">
                 <a
-                  href="#tarifs"
+                  href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 000 FCFA) et valider mon paiement.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
@@ -236,7 +238,6 @@ export function CtaFooter() {
               <img
                 src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
                 alt="Compteur de Visiteurs"
-                border="0"
                 className="rounded-lg shadow-md border border-border/30"
               />
             </a>
