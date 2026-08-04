@@ -18,7 +18,7 @@ export const metadataBase = new URL('https://leguideai.com')
 export const metadata: Metadata = {
   title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
   description:
-    'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 149 000 FCFA offre fondateur.',
+    'Rejoignez le Bootcamp LE GUIDE IA PRO 2 : 7 Sessions intensives en français pour maîtriser l\'IA. 31 Août – 6 Septembre 2026. 149 900 FCFA offre fondateur.',
   keywords: [
     'IA',
     'intelligence artificielle',
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:
-      'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 149 000 FCFA offre fondateur.',
+      'Rejoignez le Bootcamp LE GUIDE IA PRO 2 : 7 Sessions intensives en français pour maîtriser l\'IA. 31 Août – 6 Septembre 2026. 149 900 FCFA offre fondateur.',
     url: 'https://leguideai.com',
     siteName: 'Le Guide IA',
     type: 'website',
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:
-      'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026. 149 000 FCFA offre fondateur.',
+      'Rejoignez le Bootcamp LE GUIDE IA PRO 2 : 7 Sessions intensives en français pour maîtriser l\'IA. 31 Août – 6 Septembre 2026. 149 900 FCFA offre fondateur.',
     images: ['https://leguideai.com/Logo%20avatar.png'],
     site: '@leguideia',
     creator: '@leguideia',
@@ -265,7 +265,7 @@ export default function RootLayout({
                       name: 'Quel est le tarif de l\'offre Fondateur et quand expire-t-elle ?',
                       acceptedAnswer: {
                         '@type': 'Answer',
-                        text: 'Le tarif Fondateur est de 149 000 FCFA (262$). Cette offre exclusive expire le 25 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 249 000 FCFA (438$).',
+                        text: 'Le tarif Fondateur est de 149 900 FCFA (environ 264 $  ). Cette offre exclusive expire le 25 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD).',
                       },
                     },
                   ],

@@ -60,7 +60,7 @@ export function Parcours() {
               </div>
               <div className="flex items-baseline gap-3 whitespace-nowrap">
                 <span className="text-sm font-medium text-muted-foreground">{t("parcours.priceStandard")}</span>
-                <span className="text-sm font-medium text-muted-foreground line-through">249 000 FCFA</span>
+                <span className="text-sm font-medium text-muted-foreground line-through">250 000 FCFA</span>
               </div>
             </div>
             <a

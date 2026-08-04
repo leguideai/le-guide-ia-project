@@ -103,9 +103,9 @@ export function Pricing() {
 
             <div>
               <div className="text-center mt-2 mb-6">
-                <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center justify-center gap-2">
                   <div className="text-4xl font-black text-foreground">{t("pricing.founderCard.priceFcfa")}</div>
-                  <div className="text-xl text-muted-foreground">/ {t("pricing.founderCard.priceUsd")}</div>
+                  <div className="text-sm text-muted-foreground bg-card/60 border border-border/60 rounded-full px-2.5 py-1">≈ {t("pricing.founderCard.priceUsd")}</div>
                 </div>
                 <div className="mt-2 text-xs text-amber-500 font-semibold uppercase tracking-wider">
                   {t("pricing.founderCard.expireLabel")}
@@ -127,7 +127,7 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite profiter du Tarif Fondateur (149 000 FCFA / 262$) pour le Bootcamp PRO 2.")}`}
+                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite profiter du Tarif Fondateur (149 900 FCFA / environ 264 $  ) pour le Bootcamp PRO 2.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 text-sm transition-transform active:scale-95 shadow shadow-amber-500/10"
@@ -151,9 +151,9 @@ export function Pricing() {
               </div>
 
               <div className="text-center mb-6">
-                <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center justify-center gap-2">
                   <div className="text-4xl font-black text-muted-foreground">{t("pricing.standardCard.priceFcfa")}</div>
-                  <div className="text-xl text-muted-foreground">/ {t("pricing.standardCard.priceUsd")}</div>
+                  <div className="text-sm text-muted-foreground bg-card/60 border border-border/60 rounded-full px-2.5 py-1">≈ {t("pricing.standardCard.priceUsd")}</div>
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
                   {t("pricing.standardCard.dateLabel")}
@@ -174,7 +174,7 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite réserver l'Accès Standard (249 000 FCFA / 438$) pour le Bootcamp PRO 2.")}`}
+                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite réserver l'Accès Standard (250 000 FCFA / environ 438 USD) pour le Bootcamp PRO 2.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex h-12 items-center justify-center rounded-xl border border-border/80 hover:bg-card/80 text-foreground font-semibold px-6 text-sm transition-colors"

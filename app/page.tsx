@@ -30,6 +30,9 @@ export default function Page() {
       {/* S9: Tarifs */}
       <Pricing />
             
+      {/* S12: Alfred Dah — remonté pour établir la crédibilité avant les témoignages */}
+      <Authority />
+      
       {/* S12: Paiement */}
       {/* <Payment /> */}
       
@@ -56,13 +59,12 @@ export default function Page() {
       
       
       {/* S10: Témoignages */}
-      <Testimonials />
+      {/* <Testimonials /> */}
       
       {/* S11: Nos Services */}
       <Services />
       
-      {/* S12: Alfred Dah */}
-      <Authority />
+      {/* S12: Alfred Dah (ancienne position — déplacé plus haut) */}
 
       
       {/* S13: FAQ */}
