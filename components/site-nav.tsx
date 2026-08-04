@@ -13,7 +13,7 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false)
 
   const links = [
-    { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA_1-9_Aout_2026.pdf" },
+    { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf" },
     { label: t("nav.audience"), href: "/#audience" },
     { label: t("nav.bootcamp"), href: "/#tarifs" },
     { label: t("nav.testimonials"), href: "/#temoignages" },

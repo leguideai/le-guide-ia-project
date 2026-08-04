@@ -153,7 +153,7 @@ export function Hero() {
               Je rejoins le Bootcamp PRO 2
             </a>
             <a
-              href="/Programme_Bootcamp_PRO_LE_GUIDE_IA_1-9_Aout_2026.pdf"
+              href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
