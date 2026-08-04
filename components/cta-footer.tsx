@@ -68,7 +68,7 @@ export function CtaFooter() {
     { label: t("nav.audience"), href: "/#audience" },
     { label: t("nav.bootcamp"), href: "/#tarifs" },
     { label: t("nav.testimonials"), href: "/#temoignages" },
-    { label: t("nav.services"), href: "/#services" },
+    { label: t("nav.services"), href: "/services" },
     { label: t("nav.resources"), href: "/ressources" },
     { label: t("nav.faq"), href: "/#faq" },
   ]
@@ -86,7 +86,7 @@ export function CtaFooter() {
           className="relative overflow-hidden rounded-3xl bg-[#0D1B3E] border border-primary/20 p-8 sm:p-12 shadow-2xl"
         >
           {/* Logo en haut à gauche */}
-          <div className="absolute top-6 left-6 flex items-center gap-2.5 z-20">
+          <a href="/" className="absolute top-6 left-6 flex items-center gap-2.5 z-20 hover:opacity-90 transition-opacity">
             <img
               src="/Logo%20avatar.png"
               alt="Logo Le Guide IA"
@@ -95,7 +95,7 @@ export function CtaFooter() {
             <span className="font-heading text-base font-extrabold tracking-tight text-white">
               LE GUIDE <span className="text-primary">IA</span>
             </span>
-          </div>
+          </a>
 
           <div className="grid gap-8 lg:grid-cols-12 items-center relative z-10 pt-8 lg:pt-0">
             {/* Left Content */}
@@ -109,7 +109,7 @@ export function CtaFooter() {
               
               <div className="mt-8">
                 <a
-                  href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 000 FCFA) et valider mon paiement.")}`}
+                  href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 900 FCFA) et valider mon paiement.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
@@ -145,13 +145,25 @@ export function CtaFooter() {
 
             {/* Right Image (Alfred Dah Portrait) */}
             <div className="lg:col-span-4 hidden lg:block relative">
-              <div className="relative overflow-hidden rounded-2xl border border-primary/20 glow-blue bg-slate-950/20 max-w-[280px] ml-auto">
+              <a
+                href="https://www.linkedin.com/in/alfreddah/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative block overflow-hidden rounded-2xl border border-primary/20 glow-blue bg-slate-950/20 max-w-[280px] ml-auto group cursor-pointer"
+                title="Profil LinkedIn d'Alfred Dah"
+              >
                 <img
                   src="/profile_alfred.jpg"
-                  alt="Alfred Dah, fondateur de Le Guide IA"
-                  className="w-full object-cover aspect-[4/5] object-top grayscale hover:grayscale-0 transition-all duration-500"
+                  alt="Alfred Dah - Expert IA & Fondateur de Le Guide IA"
+                  className="w-full object-cover aspect-[4/5] object-top grayscale group-hover:grayscale-0 transition-all duration-500"
                 />
-              </div>
+                <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-950/90 border border-sky-500/40 px-2.5 py-1 text-[11px] font-bold text-sky-400 backdrop-blur-md group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                  <svg viewBox="0 0 24 24" className="size-3.5 fill-current">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                  <span>LinkedIn</span>
+                </div>
+              </a>
             </div>
           </div>
         </motion.div>
@@ -160,7 +172,7 @@ export function CtaFooter() {
         <div className="mt-16 grid gap-10 border-t border-border/40 pt-12 sm:grid-cols-2 lg:grid-cols-4 text-left">
           {/* Column 1 - Brand Info */}
           <div className="flex flex-col items-center text-center sm:items-start sm:text-left gap-3">
-            <a href="#" className="flex items-center gap-2.5">
+            <a href="/" className="flex items-center gap-2.5">
               <img
                 src="/Logo%20avatar.png"
                 alt="Logo Le Guide IA"
@@ -229,18 +241,44 @@ export function CtaFooter() {
             </div>
           </div>
 
-          {/* Column 4 - Visitor Statistics (Flag Counter) */}
+          {/* Column 4 - Trust & Legal */}
           <div className="flex flex-col items-center sm:items-start gap-4">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
-              Statistiques de visites
+              Confiance &amp; Légal
             </span>
-            <a href="https://info.flagcounter.com/vace" target="_blank" rel="noopener noreferrer" className="block transition-all hover:scale-[1.02] active:scale-95">
-              <img
-                src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
-                alt="Compteur de Visiteurs"
-                className="rounded-lg shadow-md border border-border/30"
-              />
-            </a>
+            {/* Internal trust stats */}
+            <div className="flex flex-col gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white">500+</span>
+                <span>professionnels formés</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white">26+</span>
+                <span>pays représentés</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white">8 000</span>
+                <span>abonnés LinkedIn</span>
+              </div>
+            </div>
+            {/* Legal links */}
+            <ul className="flex flex-col items-center sm:items-start gap-2.5 text-xs font-semibold mt-1">
+              <li>
+                <a href="/mentions-legales" className="text-muted-foreground transition-colors hover:text-white">
+                  Mentions légales
+                </a>
+              </li>
+              <li>
+                <a href="/politique-confidentialite" className="text-muted-foreground transition-colors hover:text-white">
+                  Politique de confidentialité
+                </a>
+              </li>
+              <li>
+                <a href="/conditions-generales" className="text-muted-foreground transition-colors hover:text-white">
+                  Conditions générales de vente
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
