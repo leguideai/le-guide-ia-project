@@ -16,10 +16,17 @@ const geistMono = Geist_Mono({
 export const metadataBase = new URL('https://leguideai.com')
 
 export const metadata: Metadata = {
-  title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
+  title: 'Bootcamp IA par Alfred Dah – Formation Intelligence Artificielle | Le Guide IA',
   description:
-    'Rejoignez le Bootcamp LE GUIDE IA PRO 2 : 7 Sessions intensives en français pour maîtriser l\'IA. 31 Août – 6 Septembre 2026. 149 900 FCFA offre fondateur.',
+    'Maîtrisez l\'IA pratique avec Alfred Dah, expert certifié CISA & Fondateur de Le Guide IA. Bootcamp PRO 2 : 7 sessions intensives du 31 Août au 6 Septembre 2026.',
   keywords: [
+    'Alfred Dah',
+    'Alfred Dah IA',
+    'Alfred Dah Le Guide IA',
+    'Alfred Dah CISA',
+    'Alfred Dah Burkina Faso',
+    'Sanson Alfred Tanguy Dah',
+    'Le Guide IA',
     'IA',
     'intelligence artificielle',
     'Afrique francophone',
@@ -33,7 +40,7 @@ export const metadata: Metadata = {
     'formation en ligne',
     'productivité',
   ],
-  authors: [{ name: 'Le Guide IA', url: 'https://leguideai.com' }],
+  authors: [{ name: 'Alfred Dah - Le Guide IA', url: 'https://leguideai.com' }],
   metadataBase,
   publisher: 'Le Guide IA',
   verification: {
@@ -175,9 +182,24 @@ export default function RootLayout({
                   '@type': 'Person',
                   '@id': 'https://leguideai.com/#person',
                   name: 'Alfred Dah',
-                  jobTitle: 'Expert IA & Auditeur CISA de Systèmes d\'Information',
-                  description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale et gouvernance IA.',
+                  givenName: 'Alfred',
+                  familyName: 'Dah',
+                  alternateName: ['Sanson Alfred Tanguy Dah', 'Alfred Dah IA', 'Alfred Dah Le Guide IA'],
+                  jobTitle: 'Expert IA, Auditeur CISA & Fondateur de Le Guide IA',
+                  description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale, audit de systèmes d\'information (CISA) et gouvernance IA.',
+                  image: 'https://leguideai.com/profile_alfred.jpg',
+                  url: 'https://leguideai.com',
                   sameAs: ['https://www.linkedin.com/in/alfreddah/'],
+                  knowsAbout: [
+                    'Intelligence Artificielle',
+                    'Prompt Engineering',
+                    'ChatGPT',
+                    'Claude',
+                    'Gemini',
+                    'Transformation Digitale',
+                    'Audit CISA',
+                    'Gouvernance des Systèmes d\'Information'
+                  ],
                   worksFor: {
                     '@id': 'https://leguideai.com/#organization',
                   },

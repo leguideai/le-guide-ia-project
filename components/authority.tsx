@@ -22,13 +22,41 @@ export function Authority() {
           <div className="relative overflow-hidden p-6 rounded-2xl border border-primary/30 glow-blue bg-black/5">
             <img
               src="/profile_alfred.jpg"
-              alt="Alfred Dah, fondateur de Le Guide IA, consultant IA & Transformation Digitale"
+              alt="Alfred Dah - Expert IA, CISA & Fondateur de Le Guide IA"
               className="w-full object-cover rounded-full bg-white border border-primary"
             />
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               <div className="absolute inset-x-0 top-0 h-24 animate-scan bg-gradient-to-b from-primary/25 to-transparent" />
             </div>
+
+            {/* LinkedIn Badge overlay */}
+            <a
+              href="https://www.linkedin.com/in/alfreddah/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute bottom-8 right-8 flex items-center gap-1.5 rounded-full bg-slate-950/90 border border-sky-500/50 px-3 py-1.5 text-xs font-bold text-sky-400 backdrop-blur-md hover:bg-sky-600 hover:text-white transition-all shadow-xl hover:scale-105 active:scale-95 z-20"
+              title="Voir le profil LinkedIn d'Alfred Dah"
+            >
+              <svg viewBox="0 0 24 24" className="size-4 fill-current">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
           </div>
+
+          {/* Direct LinkedIn Profile Call To Action */}
+          <a
+            href="https://www.linkedin.com/in/alfreddah/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-sky-500/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold px-4 py-3 text-xs shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-95 group cursor-pointer"
+          >
+            <svg viewBox="0 0 24 24" className="size-4.5 fill-current shrink-0">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            <span>Voir le profil LinkedIn officiel d'Alfred Dah</span>
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </a>
 
           {/* Video Placeholder Slot (60s presentation) */}
           {/* <div className="group relative overflow-hidden rounded-xl border border-border bg-slate-950 aspect-video flex items-center justify-center cursor-pointer shadow-lg hover:border-primary/40 transition-colors">

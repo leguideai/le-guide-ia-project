@@ -58,8 +58,8 @@ export function Services() {
           </motion.p>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Services Grid (2 per row) */}
+        <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto">
           {servicesList.map((service: any, i: number) => {
             const encodedMsg = encodeURIComponent(service.message || "")
             const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMsg}`
@@ -83,7 +83,7 @@ export function Services() {
                   <h3 className="font-heading text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-200">
                     {service.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 min-h-[96px]">
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-6 sm:min-h-[56px]">
                     {service.desc}
                   </p>
 

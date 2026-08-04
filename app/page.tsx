@@ -61,10 +61,27 @@ export default function Page() {
       {/* S10: Témoignages */}
       {/* <Testimonials /> */}
       
-      {/* S11: Nos Services */}
-      <Services />
-      
-      {/* S12: Alfred Dah (ancienne position — déplacé plus haut) */}
+      {/* S11: Lien discret vers les Services Sur-Mesure */}
+      <section className="py-12 border-y border-border/40 bg-card/10 backdrop-blur-sm">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
+            Prestations Sur-Mesure
+          </span>
+          <h3 className="mt-3 font-heading text-lg font-bold text-foreground sm:text-xl">
+            Besoin d'un accompagnement individuel ou de services spécifiques ?
+          </h3>
+          <p className="mt-2 text-xs text-muted-foreground max-w-2xl mx-auto">
+            Développement web, coaching recherche d'emploi, refonte CV &amp; LinkedIn, ou création de Business Plans.
+          </p>
+          <a
+            href="/services"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-extrabold text-primary hover:underline group"
+          >
+            <span>Découvrir nos services sur-mesure</span>
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+        </div>
+      </section>
 
       
       {/* S13: FAQ */}

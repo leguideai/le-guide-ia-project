@@ -17,7 +17,7 @@ export function SiteNav() {
     { label: t("nav.audience"), href: "/#audience" },
     { label: t("nav.bootcamp"), href: "/#tarifs" },
     { label: t("nav.testimonials"), href: "/#temoignages" },
-    { label: t("nav.services"), href: "/#services" },
+    { label: t("nav.services"), href: "/services" },
     { label: t("nav.resources"), href: "/ressources" },
     { label: t("nav.faq"), href: "/#faq" },
   ]
@@ -68,7 +68,7 @@ export function SiteNav() {
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 md:px-8">
-        <a href="#" className="flex items-center gap-2.5">
+        <a href="/" className="flex items-center gap-2.5">
           <img
             src="/Logo%20avatar.png"
             alt="Logo Le Guide IA"
