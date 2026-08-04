@@ -149,7 +149,7 @@ export default function RootLayout({
           </noscript>
         )}
 
-        {/* Schema.org Event/Course JSON-LD */}
+        {/* Schema.org Event/Course/FAQ JSON-LD */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -165,6 +165,22 @@ export default function RootLayout({
                     '@type': 'ImageObject',
                     url: 'https://leguideai.com/Logo%20avatar.png',
                   },
+                  sameAs: [
+                    'https://www.linkedin.com/in/alfreddah/',
+                    'https://www.youtube.com/@leguideai',
+                    'https://www.facebook.com/share/1crb38psK1/?mibextid=wwXIfr',
+                  ],
+                },
+                {
+                  '@type': 'Person',
+                  '@id': 'https://leguideai.com/#person',
+                  name: 'Alfred Dah',
+                  jobTitle: 'Expert IA & Auditeur CISA de Systèmes d\'Information',
+                  description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale et gouvernance IA.',
+                  sameAs: ['https://www.linkedin.com/in/alfreddah/'],
+                  worksFor: {
+                    '@id': 'https://leguideai.com/#organization',
+                  },
                 },
                 {
                   '@type': 'WebSite',
@@ -172,7 +188,7 @@ export default function RootLayout({
                   url: 'https://leguideai.com',
                   name: 'Le Guide IA',
                   description:
-                    'Rejoignez le Bootcamp LE GUIDE IA PRO : 7 Sessions intensives en français pour maîtriser l\'IA. 24 juillet – 2 août 2026.',
+                    'Bootcamp IA en ligne 100% en français pour professionnels, entrepreneurs et la diaspora. 7 Sessions intensives.',
                   publisher: {
                     '@id': 'https://leguideai.com/#organization',
                   },
@@ -180,24 +196,79 @@ export default function RootLayout({
                 {
                   '@type': 'Course',
                   '@id': 'https://leguideai.com/#course',
-                  name: 'Bootcamp LE GUIDE IA PRO',
-                  description: '7 Sessions intensives en direct pour maîtriser ChatGPT, Claude, Gemini et Canva IA.',
+                  name: 'Bootcamp LE GUIDE IA PRO 2',
+                  description:
+                    'Formation pratique et intensive en direct pour maîtriser ChatGPT, Claude, Gemini et Canva IA avec des cas professionnels africains et diaspora.',
                   provider: {
-                    '@type': 'Organization',
-                    name: 'Le Guide IA',
-                    url: 'https://leguideai.com',
+                    '@id': 'https://leguideai.com/#organization',
                   },
+                  hasCourseInstance: {
+                    '@type': 'CourseInstance',
+                    courseMode: 'online',
+                    startDate: '2026-08-31',
+                    endDate: '2026-09-06',
+                    courseWorkload: 'PT15H',
+                    instructor: {
+                      '@id': 'https://leguideai.com/#person',
+                    },
+                  },
+                  offers: [
+                    {
+                      '@type': 'Offer',
+                      name: 'Offre Fondateur',
+                      price: '149000',
+                      priceCurrency: 'XOF',
+                      priceValidUntil: '2026-08-25',
+                      availability: 'https://schema.org/InStock',
+                      url: 'https://leguideai.com/#tarifs',
+                    },
+                    {
+                      '@type': 'Offer',
+                      name: 'Prix Standard',
+                      price: '249000',
+                      priceCurrency: 'XOF',
+                      availability: 'https://schema.org/InStock',
+                      url: 'https://leguideai.com/#tarifs',
+                    },
+                  ],
                 },
                 {
-                  '@type': 'CourseInstance',
-                  courseMode: 'online',
-                  startDate: '2026-07-24',
-                  endDate: '2026-08-02',
-                  courseWorkload: 'PT15H',
-                  instructor: {
-                    '@type': 'Person',
-                    name: 'Alfred Dah',
-                  },
+                  '@type': 'FAQPage',
+                  '@id': 'https://leguideai.com/#faq',
+                  mainEntity: [
+                    {
+                      '@type': 'Question',
+                      name: 'Qu\'est-ce qui différencie ce Bootcamp d\'une formation YouTube gratuite ?',
+                      acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: 'Ce Bootcamp est 100% interactif avec Alfred Dah. Il inclut des exercices pratiques modélisés pour des cas réels africains et de la diaspora, un accompagnement personnalisé en direct, et un groupe d\'entraide privé WhatsApp pour pérenniser vos acquis.',
+                      },
+                    },
+                    {
+                      '@type': 'Question',
+                      name: 'Je n\'ai jamais utilisé l\'IA. Est-ce que je peux suivre le Bootcamp ?',
+                      acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: 'Oui, tout à fait. Nous démarrons avec le mindset et les bases professionnelles du prompting avant d\'aborder des cas avancés. La formation est conçue pour être progressive et accessible.',
+                      },
+                    },
+                    {
+                      '@type': 'Question',
+                      name: 'Est-ce que les sessions sont enregistrées si je rate un live ?',
+                      acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: 'Oui. Toutes les sessions sont enregistrées et les replays sont disponibles sous 48h dans votre espace membre.',
+                      },
+                    },
+                    {
+                      '@type': 'Question',
+                      name: 'Quel est le tarif de l\'offre Fondateur et quand expire-t-elle ?',
+                      acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: 'Le tarif Fondateur est de 149 000 FCFA (262$). Cette offre exclusive expire le 25 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 249 000 FCFA (438$).',
+                      },
+                    },
+                  ],
                 },
               ],
             }),
