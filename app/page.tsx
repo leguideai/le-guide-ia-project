@@ -93,7 +93,7 @@ export default function Page() {
       {/* Floating Elements */}
       <ScrollToTop />
       <WhatsAppFloat />
-      <LeadCapture />
+      {/* <LeadCapture /> */}
     </main>
   )
 }

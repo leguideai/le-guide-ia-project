@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, ExternalLink } from "lucide-react"
+import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { SiteNav } from "@/components/site-nav"
 import { CtaFooter } from "@/components/cta-footer"
@@ -11,6 +11,7 @@ import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
 import { resourcesData, ResourceItem } from "@/lib/resources-data"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ResourceOptinModal } from "@/components/resource-optin-modal"
 
 export default function RessourcesPage() {
   const { t, language } = useLanguage()
@@ -18,12 +19,63 @@ export default function RessourcesPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'prompt' | 'business-plan'>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
+  // Lead opt-in unlock state
+  const [isUnlocked, setIsUnlocked] = useState(false)
+  const [isOptinOpen, setIsOptinOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<{
+    type: 'copy' | 'download'
+    id: string
+    title: string
+    content?: string
+    waUrl?: string
+  } | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const unlocked = localStorage.getItem("leguideia_resources_unlocked") === "true"
+      if (unlocked) {
+        setIsUnlocked(true)
+      }
+    }
+  }, [])
+
   // Copy handler
-  const handleCopy = (id: string, text: string) => {
+  const executeCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedId(id)
-      setTimeout(() => setCopiedId(null), 2000)
+      setTimeout(() => setCopiedId(null), 2500)
     })
+  }
+
+  const handleAction = (item: ResourceItem, title: string, content: string) => {
+    if (item.type === 'prompt') {
+      if (isUnlocked) {
+        executeCopy(item.id, content)
+      } else {
+        setPendingAction({ type: 'copy', id: item.id, title, content })
+        setIsOptinOpen(true)
+      }
+    } else {
+      const waUrl = `https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le modèle de Business Plan complet pour le projet : " + title)}`
+      if (isUnlocked) {
+        window.open(waUrl, "_blank", "noopener,noreferrer")
+      } else {
+        setPendingAction({ type: 'download', id: item.id, title, waUrl })
+        setIsOptinOpen(true)
+      }
+    }
+  }
+
+  const handleOptinSuccess = () => {
+    setIsUnlocked(true)
+    if (pendingAction) {
+      if (pendingAction.type === 'copy' && pendingAction.content) {
+        executeCopy(pendingAction.id, pendingAction.content)
+      } else if (pendingAction.type === 'download' && pendingAction.waUrl) {
+        window.open(pendingAction.waUrl, "_blank", "noopener,noreferrer")
+      }
+      setPendingAction(null)
+    }
   }
 
   // Filter & Search logic
@@ -191,47 +243,76 @@ export default function RessourcesPage() {
                       </p>
 
                       {/* Display content preview */}
-                      <div className="relative rounded-lg bg-slate-950/40 border border-border/40 p-4 mb-6 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-300 font-mono whitespace-pre-wrap select-all scrollbar-thin">
-                        {content}
+                      <div className="relative mb-6">
+                        <div
+                          className={cn(
+                            "rounded-lg bg-slate-950/40 border border-border/40 p-4 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-300 font-mono whitespace-pre-wrap transition-all duration-300 scrollbar-thin",
+                            !isUnlocked ? "select-none pointer-events-none blur-[4px] opacity-60" : "select-all"
+                          )}
+                        >
+                          {content}
+                        </div>
+
+                        {!isUnlocked && (
+                          <div
+                            onClick={() => handleAction(item, title, content)}
+                            className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 rounded-lg bg-slate-950/60 backdrop-blur-[2px] p-3 text-center cursor-pointer transition-colors hover:bg-slate-950/75 border border-primary/30 group"
+                          >
+                            <div className="flex size-9 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/40 shadow-md group-hover:scale-110 transition-transform">
+                              <Lock className="size-4" />
+                            </div>
+                            <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">
+                              Contenu verrouillé
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              Débloquez gratuitement pour afficher &amp; copier
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Action button */}
                     <div>
-                      {item.type === 'prompt' ? (
-                        <button
-                          onClick={() => handleCopy(item.id, content)}
-                          className={cn(
-                            buttonVariants({ variant: copiedId === item.id ? "default" : "outline" }),
-                            "w-full font-bold transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
-                          )}
-                        >
-                          {copiedId === item.id ? (
+                      <button
+                        onClick={() => handleAction(item, title, content)}
+                        className={cn(
+                          buttonVariants({
+                            variant: copiedId === item.id ? "default" : item.type === 'prompt' ? "outline" : "default"
+                          }),
+                          "w-full font-bold transition-all duration-300 cursor-pointer flex items-center justify-center gap-2",
+                          item.type !== 'prompt' && "glow-blue"
+                        )}
+                      >
+                        {item.type === 'prompt' ? (
+                          copiedId === item.id ? (
                             <>
                               <Check className="size-4 stroke-[3]" />
                               <span>{t("resourcesPage.copied")}</span>
+                            </>
+                          ) : !isUnlocked ? (
+                            <>
+                              <Lock className="size-4 text-primary" />
+                              <span>Débloquer &amp; Copier</span>
                             </>
                           ) : (
                             <>
                               <Copy className="size-4" />
                               <span>{t("resourcesPage.copyPrompt")}</span>
                             </>
-                          )}
-                        </button>
-                      ) : (
-                        <a
-                          href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le modèle de Business Plan complet pour le projet : " + title)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={cn(
-                            buttonVariants({ variant: "default" }),
-                            "w-full font-bold glow-blue transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
-                          )}
-                        >
-                          <Download className="size-4" />
-                          <span>{t("resourcesPage.downloadPlan")}</span>
-                        </a>
-                      )}
+                          )
+                        ) : !isUnlocked ? (
+                          <>
+                            <Lock className="size-4" />
+                            <span>Débloquer &amp; Télécharger</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download className="size-4" />
+                            <span>{t("resourcesPage.downloadPlan")}</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </motion.div>
                 )
@@ -248,6 +329,14 @@ export default function RessourcesPage() {
 
         </div>
       </section>
+
+      {/* Opt-in Modal */}
+      <ResourceOptinModal
+        isOpen={isOptinOpen}
+        onClose={() => setIsOptinOpen(false)}
+        onSuccess={handleOptinSuccess}
+        resourceTitle={pendingAction?.title}
+      />
 
       {/* Footer & floats */}
       <CtaFooter />
