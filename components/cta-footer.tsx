@@ -241,28 +241,20 @@ export function CtaFooter() {
             </div>
           </div>
 
-          {/* Column 4 - Trust & Legal */}
+          {/* Column 4 - Visitor Statistics (Flag Counter) & Legal */}
           <div className="flex flex-col items-center sm:items-start gap-4">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
-              Confiance &amp; Légal
+              Statistiques de visites
             </span>
-            {/* Internal trust stats */}
-            <div className="flex flex-col gap-3 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-white">500+</span>
-                <span>professionnels formés</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-white">26+</span>
-                <span>pays représentés</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-white">8 000</span>
-                <span>abonnés LinkedIn</span>
-              </div>
-            </div>
+            <a href="https://info.flagcounter.com/vace" target="_blank" rel="noopener noreferrer" className="block transition-all hover:scale-[1.02] active:scale-95">
+              <img
+                src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
+                alt="Compteur de Visiteurs"
+                className="rounded-lg shadow-md border border-border/30"
+              />
+            </a>
             {/* Legal links */}
-            <ul className="flex flex-col items-center sm:items-start gap-2.5 text-xs font-semibold mt-1">
+            <ul className="flex flex-col items-center sm:items-start gap-2 text-xs font-semibold mt-1">
               <li>
                 <a href="/mentions-legales" className="text-muted-foreground transition-colors hover:text-white">
                   Mentions légales
