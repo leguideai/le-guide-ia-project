@@ -233,27 +233,27 @@ export default function RootLayout({
                     instructor: {
                       '@id': 'https://leguideai.com/#person',
                     },
-                  },
                   offers: [
                     {
                       '@type': 'Offer',
                       name: 'Offre Fondateur',
-                      price: '149000',
+                      price: '149900',
                       priceCurrency: 'XOF',
-                      priceValidUntil: '2026-08-25',
+                      priceValidUntil: '2026-08-20',
                       availability: 'https://schema.org/InStock',
                       url: 'https://leguideai.com/#tarifs',
                     },
                     {
                       '@type': 'Offer',
                       name: 'Prix Standard',
-                      price: '249000',
+                      price: '250000',
                       priceCurrency: 'XOF',
                       availability: 'https://schema.org/InStock',
                       url: 'https://leguideai.com/#tarifs',
                     },
                   ],
                 },
+              },
                 {
                   '@type': 'FAQPage',
                   '@id': 'https://leguideai.com/#faq',
@@ -287,7 +287,7 @@ export default function RootLayout({
                       name: 'Quel est le tarif de l\'offre Fondateur et quand expire-t-elle ?',
                       acceptedAnswer: {
                         '@type': 'Answer',
-                        text: 'Le tarif Fondateur est de 149 900 FCFA (environ 264 $  ). Cette offre exclusive expire le 25 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD).',
+                        text: 'Le tarif Fondateur est de 149 900 FCFA (environ 262 USD). Cette offre exclusive expire le 20 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD).',
                       },
                     },
                   ],

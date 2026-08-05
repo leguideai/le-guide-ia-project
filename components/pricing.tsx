@@ -6,7 +6,7 @@ import { Check, Sparkles } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 
 function PricingCountdown() {
-  const targetDate = new Date("2026-08-25T23:59:59Z").getTime()
+  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)

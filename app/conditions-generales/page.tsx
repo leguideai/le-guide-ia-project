@@ -34,8 +34,8 @@ export default function ConditionsGeneralesPage() {
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">3. Tarifs</h2>
             <ul className="space-y-2 list-disc list-inside">
-              <li><strong className="text-foreground">Offre Fondateur :</strong> 149 900 FCFA (environ 264 $  ) — jusqu au 25 août 2026</li>
-              <li><strong className="text-foreground">Prix Standard :</strong> 250 000 FCFA (environ 440 USD) — à partir du 26 août 2026</li>
+              <li><strong className="text-foreground">Offre Fondateur :</strong> 149 900 FCFA (environ 262 USD) — jusqu au 20 août 2026</li>
+              <li><strong className="text-foreground">Prix Standard :</strong> 250 000 FCFA (environ 440 USD) — à partir du 21 août 2026</li>
             </ul>
             <p className="mt-3">Les prix sont en Francs CFA (XOF). Le montant USD est indicatif et peut varier selon le taux de change.</p>
           </section>
