@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, UserCheck, LayoutDashboard } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
+import { supabase } from "@/lib/supabase"
 
 export function SiteNav() {
   const { language, setLanguage, t } = useLanguage()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<any>(null)
 
   const links = [
     { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf" },
@@ -25,7 +27,20 @@ export function SiteNav() {
     const onScroll = () => setScrolled(window.scrollY > 24)
     onScroll()
     window.addEventListener("scroll", onScroll)
-    return () => window.removeEventListener("scroll", onScroll)
+
+    // Detect Supabase user session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const languageToggle = (
@@ -94,12 +109,24 @@ export function SiteNav() {
 
         <div className="hidden items-center gap-4 lg:flex">
           {languageToggle}
-          <a
-            href="/login"
-            className="text-xs font-bold text-foreground bg-secondary/80 hover:bg-secondary border border-border px-3.5 py-2 rounded-xl transition-all"
-          >
-            Espace Membre
-          </a>
+
+          {user ? (
+            <a
+              href="/dashboard"
+              className="flex items-center gap-2 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl transition-all shadow-md"
+            >
+              <LayoutDashboard className="size-3.5" />
+              <span>Mon Dashboard</span>
+            </a>
+          ) : (
+            <a
+              href="/login"
+              className="text-xs font-bold text-foreground bg-secondary/80 hover:bg-secondary border border-border px-3.5 py-2 rounded-xl transition-all"
+            >
+              Espace Membre
+            </a>
+          )}
+
           <a
             href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
             target="_blank"
@@ -144,13 +171,26 @@ export function SiteNav() {
                   {l.label}
                 </a>
               ))}
-              <a
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary"
-              >
-                Espace Membre
-              </a>
+              
+              {user ? (
+                <a
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary"
+                >
+                  <LayoutDashboard className="size-4" />
+                  <span>Mon Dashboard</span>
+                </a>
+              ) : (
+                <a
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary"
+                >
+                  Espace Membre
+                </a>
+              )}
+
               <a
                 href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
                 target="_blank"
