@@ -142,7 +142,7 @@ export function Hero() {
             className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:items-center"
           >
             <a
-              href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 900 FCFA / environ 264 $  ) et procéder au paiement.")}`}
+              href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 900 FCFA / environ 264 $  ) et procéder au paiement.")}`}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(

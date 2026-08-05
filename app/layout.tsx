@@ -279,7 +279,7 @@ export default function RootLayout({
                       name: 'Est-ce que les sessions sont enregistrées si je rate un live ?',
                       acceptedAnswer: {
                         '@type': 'Answer',
-                        text: 'Oui. Toutes les sessions sont enregistrées et les replays sont disponibles sous 48h dans votre espace membre.',
+                        text: 'Oui. Toutes les sessions sont enregistrées et les replays sont disponibles sous 12h dans votre espace membre.',
                       },
                     },
                     {

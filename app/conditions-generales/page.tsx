@@ -27,7 +27,7 @@ export default function ConditionsGeneralesPage() {
               <li><strong className="text-foreground">Format :</strong> 7 sessions en direct</li>
               <li><strong className="text-foreground">Dates :</strong> 31 Août – 6 Septembre 2026</li>
               <li><strong className="text-foreground">Horaire :</strong> 19h00 GMT (heure de Ouagadougou)</li>
-              <li><strong className="text-foreground">Durée :</strong> 1h30 par session</li>
+              <li><strong className="text-foreground">Durée :</strong> 2h par session</li>
               <li><strong className="text-foreground">Modalité :</strong> 100% en ligne</li>
             </ul>
           </section>
@@ -59,7 +59,7 @@ export default function ConditionsGeneralesPage() {
           </section>
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">6. Accès et replays</h2>
-            <p>Replays disponibles sous 48h après chaque live. Accès au groupe WhatsApp maintenu après le Bootcamp.</p>
+            <p>Replays disponibles sous 12h après chaque live. Accès au groupe WhatsApp maintenu après le Bootcamp.</p>
           </section>
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">7. Propriété intellectuelle</h2>
@@ -67,7 +67,7 @@ export default function ConditionsGeneralesPage() {
           </section>
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">8. Contact</h2>
-            <p><a href="mailto:alfred@leguideai.com" className="text-primary hover:underline">alfred@leguideai.com</a> — WhatsApp : +226 75 75 72 73</p>
+            <p><a href="mailto:alfred@leguideai.com" className="text-primary hover:underline">alfred@leguideai.com</a> — WhatsApp : +226 05 05 05 77</p>
           </section>
         </div>
         <div className="mt-12 pt-8 border-t border-border/40 flex flex-wrap gap-4 text-xs text-muted-foreground">
