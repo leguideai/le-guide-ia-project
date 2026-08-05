@@ -34,32 +34,31 @@ export default function Page() {
       <Authority />
       
       {/* S12: Paiement */}
-      {/* <Payment /> */}
+      <Payment />
       
       {/* S2: Pourquoi ce Bootcamp */}
       <WhyBootcamp />
       
       {/* S3: Ce que vous obtenez */}
-      {/* <Deliverables /> */}
+      <Deliverables />
       
       {/* S4: Programme */}
-      {/* <Program /> */}
+      <Program />
       
       {/* S5: Découvrez votre futur */}
-      {/* <Projection /> */}
+      <Projection />
       
       {/* S6: Pour qui ? */}
       <Audience />
       
       {/* S7: Pourquoi Le Guide IA */}
-      {/* <Differentiators /> */}
+      <Differentiators />
       
       {/* S8: Comment ça se passe */}
       <Process />
       
-      
       {/* S10: Témoignages */}
-      {/* <Testimonials /> */}
+      <Testimonials />
       
       {/* S11: Lien discret vers les Services Sur-Mesure */}
       <section className="py-12 border-y border-border/40 bg-card/10 backdrop-blur-sm">

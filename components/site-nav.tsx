@@ -16,7 +16,6 @@ export function SiteNav() {
     { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf" },
     { label: t("nav.audience"), href: "/#audience" },
     { label: t("nav.bootcamp"), href: "/#tarifs" },
-    // { label: t("nav.testimonials"), href: "/#temoignages" },
     { label: t("nav.services"), href: "/services" },
     { label: t("nav.resources"), href: "/ressources" },
     { label: t("nav.faq"), href: "/#faq" },
@@ -96,6 +95,12 @@ export function SiteNav() {
         <div className="hidden items-center gap-4 lg:flex">
           {languageToggle}
           <a
+            href="/login"
+            className="text-xs font-bold text-foreground bg-secondary/80 hover:bg-secondary border border-border px-3.5 py-2 rounded-xl transition-all"
+          >
+            Espace Membre
+          </a>
+          <a
             href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -139,6 +144,13 @@ export function SiteNav() {
                   {l.label}
                 </a>
               ))}
+              <a
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary"
+              >
+                Espace Membre
+              </a>
               <a
                 href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
                 target="_blank"
