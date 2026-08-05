@@ -1,10 +1,23 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    return null
+  }
+  return new Resend(apiKey)
+}
+
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'Le Guide IA <onboarding@resend.dev>'
 
 export async function sendRegistrationEmail(name: string, email: string) {
   try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
     const firstName = name.split(' ')[0]
     const data = await resend.emails.send({
       from: fromEmail,
@@ -68,6 +81,12 @@ export async function sendRegistrationEmail(name: string, email: string) {
 
 export async function sendPaymentConfirmationEmail(name: string, email: string, method: string) {
   try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
     const firstName = name.split(' ')[0]
     const data = await resend.emails.send({
       from: fromEmail,
