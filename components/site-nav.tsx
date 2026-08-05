@@ -16,7 +16,7 @@ export function SiteNav() {
     { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf" },
     { label: t("nav.audience"), href: "/#audience" },
     { label: t("nav.bootcamp"), href: "/#tarifs" },
-    { label: t("nav.testimonials"), href: "/#temoignages" },
+    // { label: t("nav.testimonials"), href: "/#temoignages" },
     { label: t("nav.services"), href: "/services" },
     { label: t("nav.resources"), href: "/ressources" },
     { label: t("nav.faq"), href: "/#faq" },
