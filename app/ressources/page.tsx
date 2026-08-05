@@ -56,7 +56,7 @@ export default function RessourcesPage() {
         setIsOptinOpen(true)
       }
     } else {
-      const waUrl = `https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le modèle de Business Plan complet pour le projet : " + title)}`
+      const waUrl = `https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le modèle de Business Plan complet pour le projet : " + title)}`
       if (isUnlocked) {
         window.open(waUrl, "_blank", "noopener,noreferrer")
       } else {

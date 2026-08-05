@@ -54,7 +54,7 @@ export const translations: Record<string, any> = {
       tag: "Le Programme",
       title: "Les 7 Sessions intensives du Bootcamp PRO 2",
       desc: "Une timeline des sessions clés pour maîtriser l'intelligence artificielle pas à pas.",
-      detailsNote: "Chaque session : 1h30 en direct · Replay disponible 48h · Exercice pratique inclus",
+      detailsNote: "Chaque session : 2h en direct · Replay disponible 12h · Exercice pratique inclus",
       scheduleNote: "Horaire : 19h00 GMT (heure de Ouagadougou) · Plateforme : lien privé envoyé aux inscrits",
       sessions: [
         { date: "31 août", session: "Session 1", title: "Mindset IA Professionnel & Système de Travail" },
@@ -104,8 +104,8 @@ export const translations: Record<string, any> = {
       steps: [
         { step: "01", title: "Inscription", time: "Maintenant", desc: "Paiement sécurisé → confirmation immédiate" },
         { step: "02", title: "Bienvenue", time: "Sous 24h", desc: "Accès WhatsApp groupe privé + kit d'onboarding" },
-        { step: "03", title: "Lives", time: "31 Août - 6 Septembre", desc: "7 sessions à 19h GMT · 1h30 chacune" },
-        { step: "04", title: "Replays", time: "Sous 48h", desc: "Replay disponible si vous avez manqué une session" },
+        { step: "03", title: "Lives", time: "31 Août - 6 Septembre", desc: "7 sessions à 19h GMT · 2h chacune" },
+        { step: "04", title: "Replays", time: "Sous 12h", desc: "Replay disponible si vous avez manqué une session" },
         { step: "05", title: "Exercices", time: "Après chaque live", desc: "1 livrable pratique par session" },
         { step: "06", title: "Certification", time: "6 Septembre", desc: "Certificat officiel Le Guide IA remis" }
       ]
@@ -127,7 +127,7 @@ export const translations: Record<string, any> = {
       },
       features: [
         "7 sessions premium en direct",
-        "Replays disponibles 48h",
+        "Replays disponibles 12h",
         "Exercices pratiques après chaque live",
         "Groupe WhatsApp privé d'entraide",
         "Certificat officiel Le Guide IA",
@@ -256,7 +256,7 @@ export const translations: Record<string, any> = {
       items: [
         { category: "program", q: "Qu'est-ce qui différencie ce Bootcamp d'une formation YouTube gratuite ?", a: "Ce Bootcamp est 100% interactif avec Alfred Dah. Il inclut 10 exercices pratiques modélisés pour des cas réels africains et de la diaspora, un accompagnement personnalisé en direct, et un groupe d'entraide privé WhatsApp pour pérenniser vos acquis." },
         { category: "program", q: "Je n'ai jamais utilisé l'IA. Est-ce que je peux suivre le Bootcamp ?", a: "Oui, tout à fait. Nous démarrons avec le mindset et les bases professionnelles du prompting (sessions 1 et 2) avant d'aborder des cas avancés. La formation est conçue pour être progressive et accessible." },
-        { category: "logistics", q: "Est-ce que les sessions sont enregistrées si je rate un live ?", a: "Oui. Toutes les sessions sont enregistrées et les replays sont disponibles sous 48h dans votre espace membre." },
+        { category: "logistics", q: "Est-ce que les sessions sont enregistrées si je rate un live ?", a: "Oui. Toutes les sessions sont enregistrées et les replays sont disponibles sous 12h dans votre espace membre." },
         { category: "logistics", q: "Quel est le fuseau horaire ?", a: "Toutes les sessions en direct se déroulent à 19h00 GMT (heure de Ouagadougou/Abidjan/Dakar). Pour le Cameroun/Gabon/Congo il sera 20h00, et pour la France il sera 21h00." },
         { category: "pricing", q: "Comment s'effectue le paiement depuis mon pays ?", a: "Vous pouvez payer facilement par Orange Money, Wave, Zelle ou par virement bancaire pour les entreprises. Les détails de paiement et le formulaire de confirmation sont disponibles dans la section Paiement ci-dessus." },
         { category: "guarantee", q: "Y a-t-il une garantie satisfait ou remboursé ?", a: "Oui, nous offrons une garantie satisfait ou remboursé sous conditions d'assiduité (avoir assisté aux lives et soumis les 3 premiers exercices) dans les 5 premiers jours du Bootcamp." },
@@ -351,7 +351,7 @@ export const translations: Record<string, any> = {
       tag: "The Program",
       title: "The 9 intensive sessions of the Bootcamp PRO 2",
       desc: "A timeline of key sessions to master artificial intelligence step-by-step.",
-      detailsNote: "Each session: 1h30 live · Replay available for 48h · Practical exercise included",
+      detailsNote: "Each session: 2h live · Replay available for 12h · Practical exercise included",
       scheduleNote: "Time: 7:00 PM GMT (Ouagadougou time) · Platform: private link sent to registrants",
       sessions: [
         { date: "August 1", session: "Session 1", title: "Professional AI Mindset & Work System" },
@@ -404,7 +404,7 @@ export const translations: Record<string, any> = {
         { step: "01", title: "Registration", time: "Now", desc: "Secure payment → immediate confirmation" },
         { step: "02", title: "Welcome", time: "Within 24h", desc: "Access to private WhatsApp group + onboarding kit" },
         { step: "03", title: "Live Sessions", time: "Aug 31 – Sep 6", desc: "7 sessions at 7 PM GMT · 1.5 hours each" },
-        { step: "04", title: "Replays", time: "Within 48h", desc: "Replay available if you missed a live session" },
+        { step: "04", title: "Replays", time: "Within 12h", desc: "Replay available if you missed a live session" },
         { step: "05", title: "Exercises", time: "After each live", desc: "1 practical deliverable per session" },
         { step: "06", title: "Certification", time: "September 6", desc: "Official Le Guide IA certificate issued" }
       ]
@@ -426,7 +426,7 @@ export const translations: Record<string, any> = {
       },
       features: [
         "10 live premium sessions",
-        "48h replays availability",
+        "12h replays availability",
         "Practical exercises after each live",
         "Private WhatsApp support group",
         "Official Le Guide IA certificate",

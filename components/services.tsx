@@ -18,7 +18,7 @@ export function Services() {
     <TrendingUp className="size-6 text-primary" key="trending" />
   ]
 
-  const whatsappNumber = "22675757273"
+  const whatsappNumber = "22605050577"
 
   return (
     <section className="py-24 bg-card/5 border-y border-border/50 relative overflow-hidden" id="services">

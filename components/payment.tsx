@@ -219,7 +219,7 @@ export function Payment() {
                 <p>{t("payment.form.warningNote")}</p>
               </div>
               <a
-                href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2 et j'ai besoin d'assistance.")}`}
+                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2 et j'ai besoin d'assistance.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs transition-colors shadow-sm"
@@ -249,7 +249,7 @@ export function Payment() {
                     {t("payment.form.successDesc").replace("{name}", form.name.split(" ")[0])}
                   </p>
                   <a
-                    href={`https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Alfred, je viens d'envoyer ma confirmation de paiement pour le Bootcamp PRO 2.\nNom: " + form.name + "\nMoyen: " + form.method)}`}
+                    href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je viens d'envoyer ma confirmation de paiement pour le Bootcamp PRO 2.\nNom: " + form.name + "\nMoyen: " + form.method)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 text-xs transition-transform active:scale-95 shadow-md"
