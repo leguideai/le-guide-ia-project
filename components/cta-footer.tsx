@@ -26,7 +26,7 @@ const socials = [
 ]
 
 function InlineCountdown() {
-  const targetDate = new Date("2026-08-25T23:59:59Z").getTime()
+  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)

@@ -9,8 +9,8 @@ import { useLanguage } from "@/lib/language-context"
 
 function CountdownTimer() {
   const { t } = useLanguage()
-  // Target date is August 25, 2026 at 23:59:59 GMT
-  const targetDate = new Date("2026-08-25T23:59:59Z").getTime()
+  // Target date is August 20, 2026 at 23:59:59 GMT
+  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -43,7 +43,7 @@ function CountdownTimer() {
   if (expired) {
     return (
       <div className="mt-6 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center font-heading text-sm font-bold text-destructive">
-        L'offre fondateur à 149 900 FCFA / 264 $   est expirée.
+        L'offre fondateur à 149 900 FCFA / 262 USD est expirée.
       </div>
     )
   }

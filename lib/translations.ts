@@ -117,13 +117,13 @@ export const translations: Record<string, any> = {
         badge: "🏅 OFFRE FONDATEUR",
         priceFcfa: "149 900 FCFA",
         priceUsd: "264 $",
-        expireLabel: "⏳ Offre expire le 25 août 2026 à minuit GMT"
+        expireLabel: "⏳ Offre expire le 20 août 2026 à minuit GMT"
       },
       standardCard: {
         badge: "PRIX STANDARD",
         priceFcfa: "250 000 FCFA",
         priceUsd: "440 $",
-        dateLabel: "À partir du 26 Août 2026"
+        dateLabel: "À partir du 21 Août 2026"
       },
       features: [
         "7 sessions premium en direct",
@@ -263,7 +263,7 @@ export const translations: Record<string, any> = {
         { category: "guarantee", q: "Qu'est-ce qui se passe après le Bootcamp ? Y a-t-il un suivi ?", a: "Après le Bootcamp, vous conservez l'accès au groupe privé WhatsApp Le Guide IA PRO pour continuer à échanger, poser des questions et recevoir nos partages exclusifs." },
         { category: "pricing", q: "Puis-je inscrire mon équipe ou mon entreprise ?", a: "Oui, nous proposons des tarifs de groupe ou des sessions intra-entreprises. Contactez-nous par email à alfred@leguideai.com." },
         { category: "program", q: "Quels sont les outils requis pour suivre les lives ?", a: "Un simple ordinateur ou smartphone et une connexion internet. Nous utiliserons des versions gratuites de ChatGPT, Claude, Gemini et Canva IA, vous n'avez pas besoin d'abonnements payants." },
-        { category: "pricing", q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 149 900 FCFA (environ 262 USD). Cette offre exclusive expire le 25 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD)." },
+        { category: "pricing", q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 149 900 FCFA (environ 262 USD). Cette offre exclusive expire le 20 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD)." },
         { category: "logistics", q: "Le Bootcamp convient-il aux résidents de la diaspora ?", a: "Oui, tout à fait. Les horaires (19h00 GMT / 21h00 en France) et les moyens de paiement comme Zelle sont spécifiquement adaptés pour faciliter la participation de la diaspora." },
         { category: "pricing", q: "Puis-je obtenir une facture pour mon entreprise ?", a: "Oui, nous pouvons vous émettre une facture professionnelle au nom de votre entreprise pour justifier la formation. Envoyez-nous simplement les détails de facturation sur WhatsApp." },
         { category: "logistics", q: "Comment puis-je rejoindre le groupe WhatsApp privé ?", a: "Une fois votre confirmation de paiement transmise via notre formulaire, notre équipe valide votre accès sous 24h et vous recevez un lien d'intégration WhatsApp direct par e-mail et SMS/WhatsApp." }
@@ -354,15 +354,13 @@ export const translations: Record<string, any> = {
       detailsNote: "Each session: 2h live · Replay available for 12h · Practical exercise included",
       scheduleNote: "Time: 7:00 PM GMT (Ouagadougou time) · Platform: private link sent to registrants",
       sessions: [
-        { date: "August 1", session: "Session 1", title: "Professional AI Mindset & Work System" },
-        { date: "August 2", session: "Session 2", title: "Advanced Professional Prompt Engineering" },
-        { date: "August 3", session: "Session 3", title: "Create & Develop Your Business with AI (Business Model Canvas)" },
-        { date: "August 4", session: "Session 4", title: "Build a Professional Business Plan with AI" },
-        { date: "August 5", session: "Session 5", title: "AI for Emails, Reports & Professional Communication" },
-        { date: "August 6", session: "Session 6", title: "AI for Productivity, Organization & Automation" },
-        { date: "August 7", session: "Session 7", title: "AI for CV, LinkedIn & Professional Positioning" },
-        { date: "August 8", session: "Session 8", title: "AI for Marketing, Content, Visibility & Sales" },
-        { date: "August 9", session: "Session 9", title: "Creating Opportunities with AI + 90-Day Roadmap + Official Certification" }
+        { date: "Aug 31", session: "Session 1", title: "Professional AI Mindset & Work System" },
+        { date: "Sep 1", session: "Session 2", title: "Advanced Professional Prompt Engineering" },
+        { date: "Sep 2", session: "Session 3", title: "Create & Develop Your Business with AI (Business Model Canvas)" },
+        { date: "Sep 3", session: "Session 4", title: "Build a Professional Business Plan with AI" },
+        { date: "Sep 4", session: "Session 5", title: "AI for Emails, Reports & Professional Communication" },
+        { date: "Sep 5", session: "Session 6", title: "AI for Productivity, Organization & Automation" },
+        { date: "Sep 6", session: "Session 7", title: "Creating Opportunities with AI + 90-Day Roadmap + Official Certification" }
       ]
     },
     projection: {
@@ -416,13 +414,13 @@ export const translations: Record<string, any> = {
         badge: "🏅 FOUNDER OFFER",
         priceFcfa: "149,900 FCFA",
         priceUsd: "262",
-        expireLabel: "⏳ Offer expires August 25, 2026 at midnight GMT"
+        expireLabel: "⏳ Offer expires August 20, 2026 at midnight GMT"
       },
       standardCard: {
         badge: "STANDARD PRICE",
         priceFcfa: "250,000 FCFA",
         priceUsd: "440",
-        dateLabel: "Starting August 26, 2026"
+        dateLabel: "Starting August 21, 2026"
       },
       features: [
         "10 live premium sessions",
@@ -564,7 +562,7 @@ export const translations: Record<string, any> = {
         { category: "pricing", q: "Can I enroll my team or my company?", a: "Yes, we offer group rates or in-house sessions. Contact us by email at alfred@leguideai.com." },
         { category: "program", q: "What tools are required to follow the lives?", a: "A computer or smartphone and an internet connection. We will use the free versions of ChatGPT, Claude, Gemini, and Canva IA; you don't need paid subscriptions." },
         { category: "program", q: "Who is the expert Alfred Dah?", a: "Alfred Dah is a certified CISA systems auditor, holder of an MBA and specialized in AI governance, with over 24 years of experience in digital transformation." },
-        { category: "pricing", q: "What is the Founder Price and when does it expire?", a: "The Founder price is 149,900 FCFA (approximately $262 USD). This exclusive offer expires on August 25, 2026 at midnight GMT. The price will then revert to the standard rate of 250,000 FCFA (approximately $440 USD)." },
+        { category: "pricing", q: "What is the Founder Price and when does it expire?", a: "The Founder price is 149,900 FCFA (approximately $262 USD). This exclusive offer expires on August 20, 2026 at midnight GMT. The price will then revert to the standard rate of 250,000 FCFA (approximately $440 USD)." },
         { category: "logistics", q: "Does the Bootcamp suit diaspora residents?", a: "Yes, absolutely. The hours (7:00 PM GMT / 9:00 PM in France) and payment methods like Zelle are specifically tailored for diaspora participation." },
         { category: "pricing", q: "Can I get an invoice for my company?", a: "Yes, we can issue a professional invoice under your company's name. Simply send us your invoicing details on WhatsApp." },
         { category: "logistics", q: "How do I join the private WhatsApp group?", a: "Once your payment confirmation is sent via our form, our team validates your access within 24 hours and you receive a direct WhatsApp integration link by email and SMS/WhatsApp." }
