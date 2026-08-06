@@ -6,6 +6,10 @@ import { CtaFooter } from "@/components/cta-footer"
 import { GridBackground } from "@/components/grid-background"
 import { Cpu, Calculator, Sparkles, HelpCircle, Copy, Check, ArrowRight } from "lucide-react"
 
+function formatNumber(num: number) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+}
+
 export default function OutilsIAPage() {
   const [activeTool, setActiveTool] = useState<"roi" | "prompt" | "quiz">("roi")
 
@@ -109,7 +113,7 @@ Recommandations à suivre :
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-bold">
                   <span>Valeur de votre heure de travail (FCFA)</span>
-                  <span className="text-primary font-mono">{hourlyRate.toLocaleString()} FCFA / h</span>
+                  <span className="text-primary font-mono">{formatNumber(hourlyRate)} FCFA / h</span>
                 </div>
                 <input
                   type="range"
@@ -131,7 +135,7 @@ Recommandations à suivre :
               </div>
               <div className="space-y-1">
                 <span className="text-[10px] text-muted-foreground uppercase font-extrabold">Valeur économisée</span>
-                <p className="font-heading text-2xl md:text-3xl font-extrabold text-emerald-400">{monthlyMoneySaved.toLocaleString()} FCFA</p>
+                <p className="font-heading text-2xl md:text-3xl font-extrabold text-emerald-400">{formatNumber(monthlyMoneySaved)} FCFA</p>
               </div>
             </div>
 
