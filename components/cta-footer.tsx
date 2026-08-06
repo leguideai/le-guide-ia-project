@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { motion } from "motion/react"
 import { Mail, CheckCircle2 } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
@@ -62,15 +63,14 @@ function InlineCountdown() {
 }
 
 export function CtaFooter() {
+  const pathname = usePathname()
   const { t } = useLanguage()
   const links = [
-    { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf" },
-    { label: t("nav.audience"), href: "/#audience" },
-    { label: t("nav.bootcamp"), href: "/#tarifs" },
-    // { label: t("nav.testimonials"), href: "/#temoignages" },
-    { label: t("nav.services"), href: "/services" },
-    { label: t("nav.resources"), href: "/ressources" },
-    { label: t("nav.faq"), href: "/#faq" },
+    { label: "Bootcamp PRO", href: "/bootcamp" },
+    { label: "Bibliothèque", href: "/ressources" },
+    { label: "Entreprises (B2B)", href: "/entreprises" },
+    { label: "Outils IA", href: "/outils-ia" },
+    { label: "Blog & Média", href: "/blog" },
   ]
 
   return (
@@ -194,18 +194,25 @@ export function CtaFooter() {
               Navigation
             </span>
             <ul className="flex flex-col items-center sm:items-start gap-3.5 text-xs font-bold uppercase tracking-wider">
-              {links.map((l, i) => (
-                <li key={l.href}>
-                  <a
-                    href={l.href}
-                    target={i === 0 ? "_blank" : undefined}
-                    rel={i === 0 ? "noopener noreferrer" : undefined}
-                    className="text-muted-foreground transition-colors hover:text-white"
-                  >
-                    {l.label}
-                  </a>
-                </li>
-              ))}
+              {links.map((l) => {
+                const isActive = pathname === l.href || (l.href !== "/" && pathname?.startsWith(l.href))
+                return (
+                  <li key={l.href}>
+                    <a
+                      href={l.href}
+                      className={cn(
+                        "transition-all duration-200 flex items-center gap-1.5",
+                        isActive
+                          ? "text-primary font-black scale-105"
+                          : "text-muted-foreground hover:text-white font-semibold"
+                      )}
+                    >
+                      {isActive && <span className="size-1.5 rounded-full bg-primary animate-pulse" />}
+                      <span>{l.label}</span>
+                    </a>
+                  </li>
+                )
+              })}
             </ul>
           </div>
 
