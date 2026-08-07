@@ -25,14 +25,14 @@ export default function Page() {
       {/* 2. Hero Banner Style Udemy (Bandeau avec carte flottante de promotion) */}
       <UdemyHeroBanner />
 
-      {/* 3. Bandeau des Technologies & Outils Enseignés */}
-      <UdemyTrustLogos />
-
-      {/* 4. Les 3 Parcours d'Apprentissage (Cartes 3D HD) */}
+      {/* 3. Les 3 Parcours d'Apprentissage (Cartes 3D HD) */}
       <UdemySkillPathways />
 
-      {/* 5. Section "Des compétences pour révolutionner votre carrière" (Onglets & Cartes Cours Udemy) */}
+      {/* 4. Section Parcours d'Apprentissage & Formations (Onglets & Cartes Vidéos) */}
       <UdemyTabbedCourses />
+
+      {/* 5. Bandeau Écosystème & Stack Technologique Officielle */}
+      <UdemyTrustLogos />
 
       {/* 6. Banner Le Guide IA Business (Réplique Udemy Business Box) */}
       <UdemyBusinessBanner />

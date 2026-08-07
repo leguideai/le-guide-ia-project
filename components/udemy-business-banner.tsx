@@ -10,10 +10,17 @@ export function UdemyBusinessBanner() {
         
         <div className="rounded-3xl border border-primary/30 bg-[#1c1d1f] p-8 md:p-12 shadow-2xl relative overflow-hidden text-white">
           
-          <div className="grid gap-8 lg:grid-cols-12 items-center relative z-10">
+          <div className="grid gap-8 lg:grid-cols-12 items-stretch relative z-10">
             
-            {/* Left Info Column */}
-            <div className="lg:col-span-7 space-y-6 text-left">
+            {/* Left Media Preview (Masqué sur mobile, affiché uniquement sur desktop lg:flex) */}
+            <div className="hidden lg:flex lg:col-span-5 relative justify-center h-full order-2 lg:order-1">
+              <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 glow-emerald shadow-2xl w-full h-full min-h-[340px]">
+                <img src="/images/b2b_enterprise_thumb.jpg" alt="Transformation IA d'Entreprise Le Guide IA B2B" className="w-full h-full object-cover rounded-2xl" />
+              </div>
+            </div>
+
+            {/* Right Info Column (Contenu Texte B2B à droite) */}
+            <div className="lg:col-span-7 space-y-6 text-left order-1 lg:order-2">
               
               <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
                 <Building2 className="size-3.5 text-emerald-400" />
@@ -53,18 +60,6 @@ export function UdemyBusinessBanner() {
                 </Link>
               </div>
 
-            </div>
-
-            {/* Right Media Preview */}
-            <div className="lg:col-span-5 relative flex justify-center">
-              <div className="relative overflow-hidden rounded-2xl border border-border/80 shadow-2xl max-w-sm">
-                <img src="/profile_alfred.jpg" alt="Alfred Dah B2B" className="w-full h-auto object-cover grayscale" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-70" />
-                <div className="absolute bottom-4 left-4 right-4 bg-slate-950/90 backdrop-blur-md p-3 rounded-xl border border-border/60 text-xs">
-                  <span className="font-bold text-white block">Alfred Dah — Expert CISA</span>
-                  <span className="text-[10px] text-slate-400">Conseil en gouvernance & IA d'Entreprise</span>
-                </div>
-              </div>
             </div>
 
           </div>

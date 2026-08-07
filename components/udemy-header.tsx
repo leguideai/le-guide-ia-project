@@ -1,13 +1,43 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Search, Globe, ShoppingCart, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, UserCheck, Building2, User } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut } from "lucide-react"
 
 export function UdemyHeader() {
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    // Check initial user session
+    async function checkUser() {
+      const { data } = await supabase.auth.getUser()
+      setUser(data?.user || null)
+    }
+    checkUser()
+
+    // Subscribe to auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => {
+      authListener?.subscription?.unsubscribe()
+    }
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    if (typeof window !== "undefined") {
+      localStorage.clear()
+      window.location.href = "/login"
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-slate-950/95 border-b border-border/80 backdrop-blur-xl">
@@ -46,7 +76,7 @@ export function UdemyHeader() {
             <div className="absolute top-full left-0 mt-2 w-64 rounded-2xl border border-border bg-card p-3 shadow-2xl space-y-1 z-50 backdrop-blur-2xl">
               <Link href="/bootcamp" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
                 <GraduationCap className="size-4 text-primary" />
-                <span>Bootcamps IA Live (15h)</span>
+                <span>Bootcamps IA Live</span>
               </Link>
               <Link href="/ressources" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
                 <BookOpen className="size-4 text-purple-400" />
@@ -61,9 +91,9 @@ export function UdemyHeader() {
         </div>
 
         {/* Search Bar (Udemy Style) */}
-        <div className="flex-1 max-w-lg hidden sm:block relative">
-          <div className="relative flex items-center w-full">
-            <Search className="absolute left-3.5 size-4 text-muted-foreground" />
+        <div className="flex-1 max-w-md hidden md:block">
+          <div className="relative">
+            <Search className="size-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
               type="text"
               value={searchQuery}
@@ -81,24 +111,38 @@ export function UdemyHeader() {
             Le Guide IA Business
           </Link>
 
-          <Link href="/dashboard" className="hidden md:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
-            Mon Espace Membre
-          </Link>
+          {user ? (
+            <>
+              <Link href="/dashboard" className="hidden md:inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-3.5 py-2 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all">
+                <User className="size-3.5" />
+                <span>Mon Espace</span>
+              </Link>
 
-          {/* Auth CTA Buttons */}
-          <Link
-            href="/login"
-            className="text-xs font-bold text-white border border-border hover:bg-secondary px-4 py-2 rounded-xl transition-all"
-          >
-            Se connecter
-          </Link>
+              <button
+                onClick={handleLogout}
+                className="text-xs font-bold text-rose-400 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white px-3.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <LogOut className="size-3.5" />
+                <span className="hidden sm:inline">Déconnexion</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-xs font-bold text-white border border-border hover:bg-secondary px-4 py-2 rounded-xl transition-all"
+              >
+                Se connecter
+              </Link>
 
-          <Link
-            href="/register-account"
-            className="text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl shadow-lg transition-all"
-          >
-            S'inscrire
-          </Link>
+              <Link
+                href="/register-account"
+                className="text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl shadow-lg transition-all"
+              >
+                S'inscrire
+              </Link>
+            </>
+          )}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -124,9 +168,32 @@ export function UdemyHeader() {
           <Link href="/entreprises" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-foreground">
             Espace Entreprises (B2B)
           </Link>
-          <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-foreground">
-            Mon Espace Membre
-          </Link>
+
+          {user ? (
+            <>
+              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-primary">
+                Mon Espace
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  handleLogout()
+                }}
+                className="block w-full text-left py-2 text-xs font-bold text-rose-400"
+              >
+                Déconnexion
+              </button>
+            </>
+          ) : (
+            <div className="pt-2 flex flex-col gap-2">
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block text-center py-2 text-xs font-bold text-white border border-border rounded-xl">
+                Se connecter
+              </Link>
+              <Link href="/register-account" onClick={() => setMobileMenuOpen(false)} className="block text-center py-2 text-xs font-bold text-primary-foreground bg-primary rounded-xl">
+                S'inscrire
+              </Link>
+            </div>
+          )}
         </div>
       )}
 

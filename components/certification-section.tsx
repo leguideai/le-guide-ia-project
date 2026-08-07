@@ -1,7 +1,7 @@
 "use client"
 
-import Link from "next/link"
-import { Award, ShieldCheck, CheckCircle2, ArrowRight, Sparkles, QrCode } from "lucide-react"
+import { motion } from "motion/react"
+import { Award, ShieldCheck, CheckCircle2, Sparkles, QrCode } from "lucide-react"
 
 export function CertificationSection() {
   return (
@@ -10,44 +10,14 @@ export function CertificationSection() {
         
         <div className="grid gap-12 lg:grid-cols-12 items-center">
           
-          {/* Left Visual Badge Card */}
-          <div className="lg:col-span-5 order-2 lg:order-1 flex justify-center">
-            <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-card p-8 shadow-2xl backdrop-blur-xl max-w-md w-full space-y-6 relative overflow-hidden">
-              <div className="flex items-center justify-between border-b border-border/60 pb-4">
-                <div className="flex items-center gap-2">
-                  <img src="/Logo%20avatar.png" alt="Logo" className="size-8 rounded-lg object-cover" />
-                  <span className="font-heading text-sm font-extrabold text-white">LE GUIDE <span className="text-primary">IA</span></span>
-                </div>
-                <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full font-bold uppercase">
-                  Officiel & Vérifiable
-                </span>
-              </div>
-
-              <div className="text-center space-y-3 py-4">
-                <div className="inline-flex size-20 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-inner mx-auto">
-                  <Award className="size-10" />
-                </div>
-
-                <h3 className="font-heading text-xl font-extrabold text-foreground">
-                  Certificat d'Accomplissement IA
-                </h3>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  Délivré à l'issue de la complétion du Bootcamp IA Pro ou Business sous la supervision d'Alfred Dah.
-                </p>
-              </div>
-
-              <div className="rounded-2xl bg-secondary/50 p-3.5 border border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <QrCode className="size-5 text-primary" />
-                  <span>Vérification par QR Code & URL sécurisée</span>
-                </div>
-                <ShieldCheck className="size-4 text-emerald-400" />
-              </div>
-            </div>
-          </div>
-
-          {/* Right Explanatory Content */}
-          <div className="lg:col-span-7 order-1 lg:order-2 space-y-6 text-left">
+          {/* Left Explanatory Content (Animated Entrance) */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.6 }}
+            className="lg:col-span-7 order-1 lg:order-1 space-y-6 text-left"
+          >
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/20">
               <Sparkles className="size-3.5 text-amber-400" />
               Valorisez votre Profil Professionnel
@@ -76,17 +46,55 @@ export function CertificationSection() {
               </div>
             </div>
 
-            <div className="pt-4">
-              <Link
-                href="/checkout/bootcamp-ia-pro"
-                className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 py-3.5 text-xs md:text-sm shadow-xl transition-all cursor-pointer"
-              >
-                <span>Obtenir ma certification au Bootcamp IA</span>
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
+          </motion.div>
 
-          </div>
+          {/* Right Illustrative Symbol Card (Masqué sur mobile, affiché uniquement sur desktop lg:flex) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="hidden lg:flex lg:col-span-5 order-2 lg:order-2 justify-center"
+          >
+            <div className="rounded-3xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-slate-950 p-8 shadow-2xl backdrop-blur-2xl max-w-md w-full space-y-6 relative overflow-hidden group hover:border-amber-500/60 transition-colors">
+              <div className="flex items-center justify-between border-b border-border/60 pb-4">
+                <div className="flex items-center gap-2">
+                  <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
+                  <span className="font-heading text-sm font-extrabold text-white">LE GUIDE <span className="text-primary">IA</span></span>
+                </div>
+                <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full font-bold uppercase">
+                  Officiel & Dégagé
+                </span>
+              </div>
+
+              <div className="text-center space-y-4 py-4 relative z-10">
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="inline-flex size-24 items-center justify-center rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.25)] mx-auto group-hover:scale-110 transition-transform duration-500"
+                >
+                  <Award className="size-12 text-amber-400" />
+                </motion.div>
+
+                <div className="space-y-1.5">
+                  <h3 className="font-heading text-xl font-extrabold text-white">
+                    Certificat d'Accomplissement IA
+                  </h3>
+                  <p className="text-xs text-slate-300 max-w-xs mx-auto leading-relaxed">
+                    Attestation numérique certifiée signée par Alfred Dah, délivrée exclusivement dans l'Espace Membre après validation de votre parcours.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-slate-950/80 p-3.5 border border-amber-500/30 flex items-center justify-between text-xs text-slate-200 backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <QrCode className="size-5 text-amber-400" />
+                  <span className="font-bold text-[11px]">Vérification par QR Code & URL Sécurisée</span>
+                </div>
+                <ShieldCheck className="size-4 text-emerald-400" />
+              </div>
+            </div>
+          </motion.div>
 
         </div>
 

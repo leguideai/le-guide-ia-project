@@ -1,13 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { GraduationCap, UserCheck, Gift, ArrowRight, Sparkles } from "lucide-react"
+import { motion } from "motion/react"
+import { GraduationCap, UserCheck, Gift, ArrowRight } from "lucide-react"
 
 export function UdemySkillPathways() {
   const pathways = [
     {
       id: "pro",
-      title: "Bootcamp IA Pro (15h Live)",
+      title: "Bootcamp IA Pro",
       desc: "7 Sessions intensives en direct pour salariés, managers et professionnels.",
       price: "99 000 FCFA",
       badge: "Formule Salariés & Pro",
@@ -33,7 +34,7 @@ export function UdemySkillPathways() {
       id: "free",
       title: "Initiation IA & ChatGPT (Offert)",
       desc: "Cours d'introduction offert pour découvrir les règles du Prompting.",
-      price: "0 FCFA (GRATUIT)",
+      price: "GRATUIT",
       badge: "100% Free",
       icon: Gift,
       href: "/register-account",
@@ -47,23 +48,28 @@ export function UdemySkillPathways() {
     <section className="py-14 bg-background border-t border-border/50">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
-        <div className="space-y-2">
+        <div className="space-y-2 text-left">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-            Parcours d'Apprentissage
+            BOOTCAMP PRO IA & BUSINESS
           </span>
           <h2 className="font-heading text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
-            Apprenez des compétences essentielles pour votre carrière et votre quotidien
+            Nos Formations d'Excellence
           </h2>
         </div>
 
-        {/* 3 Pathway Cards Grid (Udemy Style) */}
-        <div className="grid gap-6 md:grid-cols-3">
-          {pathways.map((item) => {
+        {/* 3 Pathway Cards Grid (Scrollable on Mobile, Grid on Desktop) */}
+        <div className="flex overflow-x-auto snap-x no-scrollbar pb-4 gap-4 md:grid md:grid-cols-3 md:pb-0">
+          {pathways.map((item, idx) => {
             const Icon = item.icon
             return (
-              <div
+              <motion.div
                 key={item.id}
-                className={`rounded-2xl border ${item.borderColor} bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary transition-all duration-300 shadow-xl group backdrop-blur-xl p-5 space-y-4`}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: idx * 0.12 }}
+                whileHover={{ y: -6 }}
+                className={`rounded-2xl border ${item.borderColor} bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary transition-all duration-300 shadow-xl group backdrop-blur-xl p-5 space-y-4 shrink-0 w-[280px] sm:w-[320px] md:w-auto snap-center`}
               >
                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900">
                   <img
@@ -90,13 +96,13 @@ export function UdemySkillPathways() {
                   <span className="font-heading text-base font-black text-primary">{item.price}</span>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-md ${item.btnColor}`}
+                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-md group-hover:scale-105 ${item.btnColor}`}
                   >
                     <span>Explorer</span>
                     <ArrowRight className="size-3.5" />
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             )
           })}
         </div>

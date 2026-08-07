@@ -1,5 +1,6 @@
 "use client"
 
+import { motion } from "motion/react"
 import { Quote, Star } from "lucide-react"
 
 export function Testimonials() {
@@ -37,22 +38,27 @@ export function Testimonials() {
         {/* Left-Aligned Section Header (Udemy Style) */}
         <div className="space-y-3 text-left">
           <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
-            Témoignages & Retour d'Expérience
+            BOOTCAMP PRO · AVIS APPRENANTS
           </span>
           <h2 className="font-heading text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">
-            Ce que disent nos apprenants et professionnels formés
+            Témoignages & REX Apprenants
           </h2>
           <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
             Découvrez comment nos Bootcamps et ressources impactent quotidiennement la carrière de nos membres.
           </p>
         </div>
 
-        {/* 4 Cards on 1 Line (Udemy Style Grid) */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 4 Cards Grid — Scrollable on Mobile, Grid on Desktop */}
+        <div className="flex overflow-x-auto snap-x no-scrollbar pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:pb-0">
           {testimonials.map((item, i) => (
-            <div
+            <motion.div
               key={i}
-              className="rounded-2xl border border-border/80 bg-card/60 p-6 backdrop-blur-xl shadow-xl hover:border-primary/50 transition-all flex flex-col justify-between space-y-6 relative group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.45, delay: i * 0.1 }}
+              whileHover={{ y: -5 }}
+              className="rounded-2xl border border-border/80 bg-card/60 p-6 backdrop-blur-xl shadow-xl hover:border-primary/50 transition-all flex flex-col justify-between space-y-6 relative group shrink-0 w-[270px] sm:w-auto snap-center"
             >
               <Quote className="size-8 text-primary/20 absolute top-5 right-5 group-hover:text-primary/40 transition-colors" />
 
@@ -79,7 +85,7 @@ export function Testimonials() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 

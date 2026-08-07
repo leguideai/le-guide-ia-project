@@ -14,11 +14,23 @@ export function WhatsAppFloat() {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Contactez-nous sur WhatsApp"
-      className="fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xl shadow-emerald-500/10 hover:bg-emerald-600 hover:-translate-y-1 active:scale-95 transition-all cursor-pointer"
+      aria-label="Discuter avec nous sur WhatsApp"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-1 group hover:-translate-y-1 transition-all duration-300 cursor-pointer drop-shadow-2xl"
     >
-      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" aria-hidden="true" />
-      <img src="/whatsapp_logo.png" alt="WhatsApp Support" className="size-8 object-contain" />
+      {/* Speech Bubble with 2-line Text */}
+      <div className="bg-[#25D366] text-white px-4 py-2.5 rounded-2xl font-bold text-xs md:text-sm text-center leading-snug shadow-xl border border-white/20 whitespace-nowrap">
+        <span>Discuter avec nous sur</span>
+        <span className="block font-black">WhatsApp</span>
+      </div>
+
+      {/* Pointer Triangle */}
+      <div className="w-0 h-0 border-y-[6px] border-y-transparent border-l-[8px] border-l-[#25D366] -ml-1 shrink-0" />
+
+      {/* Circle Icon Button */}
+      <div className="relative size-12 md:size-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl border border-white/20 shrink-0 group-hover:scale-105 transition-transform">
+        <span className="absolute inset-0 animate-ping rounded-full bg-[#25D366]/30" aria-hidden="true" />
+        <img src="/whatsapp_logo.png" alt="WhatsApp Support" className="size-6 md:size-7 object-contain" />
+      </div>
     </a>
   )
 }

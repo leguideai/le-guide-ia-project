@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Sparkles, CheckCircle2, PlayCircle, Star } from "lucide-react"
+import { motion } from "motion/react"
+import { ArrowRight, Sparkles } from "lucide-react"
 
 export function UdemyHeroBanner() {
   return (
@@ -14,12 +15,16 @@ export function UdemyHeroBanner() {
           
           <div className="grid gap-6 lg:grid-cols-12 items-stretch relative z-10">
             
-            {/* Udemy-Style Floating White/Dark Card Container (Compact & Adapted) */}
-            <div className="lg:col-span-6 rounded-3xl border border-primary/30 bg-card/90 p-5 md:p-7 shadow-2xl backdrop-blur-2xl flex flex-col justify-between space-y-4 lg:space-y-6">
-              
+            {/* Desktop Left Text Card (Hidden on Mobile) */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="hidden lg:flex lg:col-span-6 rounded-3xl border border-primary/30 bg-card/90 p-5 md:p-7 shadow-2xl backdrop-blur-2xl flex-col justify-between space-y-4 lg:space-y-6"
+            >
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                  <Sparkles className="size-3 text-primary" />
+                  <Sparkles className="size-3 text-primary animate-pulse" />
                   <span>Co-créez votre avenir professionnel</span>
                 </div>
 
@@ -28,7 +33,7 @@ export function UdemyHeroBanner() {
                 </h1>
 
                 <p className="text-xs lg:text-sm text-muted-foreground leading-relaxed">
-                  Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude 3.5, Midjourney, Canva IA et l'automatisation Make avec Alfred Dah.
+                  Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.
                 </p>
 
                 {/* Informative Badges */}
@@ -48,11 +53,50 @@ export function UdemyHeroBanner() {
                 </div>
               </div>
 
-              {/* Each Button on its own separate line */}
+              {/* Desktop Action Buttons */}
               <div className="pt-2 flex flex-col gap-2.5 w-full">
                 <Link
                   href="/checkout/bootcamp-ia-pro"
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-amber-500/20 transition-all cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                >
+                  <span>Rejoindre le Bootcamp</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+
+                <a
+                  href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-secondary/60 hover:bg-secondary text-foreground font-bold px-5 py-3 text-xs text-muted-foreground hover:text-foreground transition-all hover:scale-[1.01]"
+                >
+                  <span>Télécharger le programme</span>
+                </a>
+              </div>
+
+            </motion.div>
+
+            {/* Poster Graphic & Mobile Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
+              className="lg:col-span-6 relative flex flex-col justify-center items-center h-full space-y-4"
+            >
+              <div className="rounded-3xl border border-primary/30 bg-card/90 p-3 sm:p-5 md:p-6 shadow-2xl backdrop-blur-2xl flex items-center justify-center w-full max-w-[440px]">
+                <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-border/40 shadow-xl bg-slate-900 group">
+                  <img
+                    src="/hero_bootcamp.jpg"
+                    alt="Affiche Officielle Le Guide IA - Bootcamp PRO 2"
+                    className="w-full h-full object-cover block group-hover:scale-105 transition-transform duration-500 rounded-2xl"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile Action Buttons (Visible only on < lg screens) */}
+              <div className="flex flex-col gap-2.5 w-full max-w-[480px] lg:hidden">
+                <Link
+                  href="/checkout/bootcamp-ia-pro"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-xl shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
                 >
                   <span>Rejoindre le Bootcamp</span>
                   <ArrowRight className="size-4" />
@@ -67,19 +111,7 @@ export function UdemyHeroBanner() {
                   <span>Télécharger le programme</span>
                 </a>
               </div>
-
-            </div>
-
-            {/* Right Media Graphic - Dark Card Container with Horizontal Padding */}
-            <div className="lg:col-span-6 relative flex justify-center items-center h-full">
-              <div className="rounded-3xl border border-primary/30 bg-card/90 p-4 md:p-6 shadow-2xl backdrop-blur-2xl flex items-center justify-center w-full max-w-[480px]">
-                <img
-                  src="/hero_bootcamp.jpg"
-                  alt="Affiche Officielle Le Guide IA - Bootcamp PRO 2"
-                  className="w-full h-auto max-h-[calc(100vh-240px)] object-contain rounded-2xl shadow-xl block"
-                />
-              </div>
-            </div>
+            </motion.div>
 
           </div>
 

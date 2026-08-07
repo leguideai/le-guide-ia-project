@@ -80,7 +80,10 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    router.push("/login")
+    if (typeof window !== "undefined") {
+      localStorage.clear()
+      window.location.href = "/login"
+    }
   }
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -313,7 +316,7 @@ export default function DashboardPage() {
                       <span className="text-xs font-black text-primary">99 000 FCFA</span>
                     </div>
                     <h4 className="font-heading text-base font-bold text-foreground">
-                      Bootcamp IA Pro (15h Intensives)
+                      Bootcamp IA Pro
                     </h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       Maîtrisez ChatGPT, Claude 3.5, Midjourney, Canva IA et l'automatisation Make pour décupler votre efficacité professionnelle.
