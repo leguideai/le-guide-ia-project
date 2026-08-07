@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
-import { SiteNav } from "@/components/site-nav"
+import { UdemyHeader } from "@/components/udemy-header"
 import { CtaFooter } from "@/components/cta-footer"
 import { GridBackground } from "@/components/grid-background"
 import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
@@ -96,7 +96,7 @@ export default function RessourcesPage() {
   return (
     <main className="relative min-h-screen text-foreground overflow-x-hidden bg-background">
       <GridBackground />
-      <SiteNav />
+      <UdemyHeader />
 
       {/* Hero Header */}
       <section className="relative pt-32 pb-16 md:pt-40 md:pb-20 overflow-hidden">

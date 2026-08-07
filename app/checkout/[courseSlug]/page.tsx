@@ -2,6 +2,7 @@
 
 import { useState, use } from "react"
 import Link from "next/link"
+import { UdemyHeader } from "@/components/udemy-header"
 import { ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, Sparkles, GraduationCap, UserCheck } from "lucide-react"
 
 interface PageProps {
@@ -19,69 +20,82 @@ export default function CheckoutPage({ params }: PageProps) {
     ? "Lun-Ven 19h-21h GMT + Dimanche 16h-21h GMT" 
     : "Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT"
 
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [whatsapp, setWhatsapp] = useState("")
-  const [country, setCountry] = useState("Sénégal")
   const [paymentMethod, setPaymentMethod] = useState<"paytech" | "stripe">("paytech")
+  const [email, setEmail] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [whatsapp, setWhatsapp] = useState("")
+  const [country, setCountry] = useState("Côte d'Ivoire")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [zelleSubmitted, setZelleSubmitted] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleStripeCheckout = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      if (paymentMethod === "paytech") {
-        const res = await fetch("/api/payment/paytech", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            courseSlug,
-            courseTitle,
-            price: isBusiness ? 199000 : 99000,
-            fullName,
-            email,
-            whatsapp,
-            country,
-          }),
-        })
+      const res = await fetch("/api/payment/stripe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseSlug, email, fullName, whatsapp, country }),
+      })
+      const data = await res.json()
 
-        const data = await res.json()
-        if (!res.ok || !data.redirectUrl) {
-          throw new Error(data.message || "Erreur lors de l'initialisation du paiement PayTech.")
-        }
-        window.location.href = data.redirectUrl
-      } else {
-        const res = await fetch("/api/payment/stripe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            courseSlug,
-            courseTitle,
-            price: isBusiness ? 199000 : 99000,
-            fullName,
-            email,
-            whatsapp,
-            country,
-          }),
-        })
-
-        const data = await res.json()
-        if (!res.ok || !data.url) {
-          throw new Error(data.message || "Erreur lors de l'initialisation de Stripe.")
-        }
+      if (data.url) {
         window.location.href = data.url
+      } else {
+        setError(data.error || "Une erreur est survenue lors de l'initialisation du paiement Stripe.")
+        setLoading(false)
       }
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue lors du traitement de la commande.")
+      setError("Erreur réseau. Veuillez réessayer.")
       setLoading(false)
     }
   }
 
+  const handleMobileCheckout = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch("/api/payment/paytech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseSlug, email, fullName, whatsapp, country }),
+      })
+      const data = await res.json()
+
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url
+      } else {
+        setError(data.error || "Paiement Mobile Money indisponible actuellement. Utilisez la méthode Zelle/Virement.")
+        setLoading(false)
+      }
+    } catch (err: any) {
+      setError("Erreur de connexion au serveur de paiement.")
+      setLoading(false)
+    }
+  }
+
+  const handleZelleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setZelleSubmitted(true)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    if (paymentMethod === "paytech") {
+      handleMobileCheckout(e)
+    } else {
+      handleStripeCheckout(e)
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-background text-foreground py-12 px-4 md:px-8 relative overflow-hidden">
+    <main className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col">
+      <UdemyHeader />
+      <div className="py-12 px-4 md:px-8">
       <div className="mx-auto max-w-4xl space-y-8">
         
         {/* Header */}
@@ -300,8 +314,8 @@ export default function CheckoutPage({ params }: PageProps) {
           </div>
 
         </div>
-
       </div>
-    </main>
-  )
+    </div>
+  </main>
+)
 }

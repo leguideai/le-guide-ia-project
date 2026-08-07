@@ -4,25 +4,30 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import {
-  BookOpen,
-  Download,
-  Award,
-  FileText,
-  User,
-  LogOut,
-  Bell,
+import { UdemyHeader } from "@/components/udemy-header"
+import { 
+  LayoutDashboard, 
+  BookOpen, 
+  Download, 
+  Award, 
+  FileText, 
+  User, 
+  LogOut, 
+  ExternalLink,
   Sparkles,
+  Lock,
+  Play,
+  Check,
+  Building2,
   ChevronRight,
   PlayCircle,
   CheckCircle2,
   Clock,
   ShieldCheck,
   Zap,
-  LayoutDashboard,
   Save,
   Loader2,
-  ExternalLink
+  Bell
 } from "lucide-react"
 
 type TabType = "overview" | "courses" | "resources" | "certificates" | "invoices" | "profile"
@@ -45,32 +50,27 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadUserData() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        // Fallback for preview/testing if no active auth session
-        setUser({ email: "membre@leguideai.com", user_metadata: { full_name: "Apprenant Le Guide IA" } })
-        setFullName("Apprenant Le Guide IA")
-        setLoading(false)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        // Redirection vers login si non-connecté
+        router.push("/login")
         return
       }
+      setUser(user)
 
-      setUser(session.user)
-      const { data: userProfile } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", session.user.id)
-        .maybeSingle()
+        .eq("id", user.id)
+        .single()
 
-      if (userProfile) {
-        setProfile(userProfile)
-        setFullName(userProfile.full_name || session.user.user_metadata?.full_name || "")
-        setWhatsapp(userProfile.whatsapp || session.user.user_metadata?.whatsapp || "")
-        setCountry(userProfile.country || "")
-        setCity(userProfile.city || "")
-        setSector(userProfile.sector || "")
-      } else {
-        setFullName(session.user.user_metadata?.full_name || "")
-        setWhatsapp(session.user.user_metadata?.whatsapp || "")
+      if (data) {
+        setProfile(data)
+        setFullName(data.full_name || "")
+        setWhatsapp(data.whatsapp || "")
+        setCountry(data.country || "")
+        setCity(data.city || "")
+        setSector(data.sector || "")
       }
       setLoading(false)
     }
@@ -114,14 +114,17 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
+          <Sparkles className="size-5 text-primary animate-spin" />
+          <span>Chargement de votre Espace Membre...</span>
+        </div>
       </div>
     )
   }
 
   const navItems = [
-    { id: "overview", label: "Vue globale", icon: LayoutDashboard },
+    { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
     { id: "courses", label: "Mes Formations", icon: BookOpen, badge: "1" },
     { id: "resources", label: "Mes Ressources", icon: Download, badge: "12" },
     { id: "certificates", label: "Mes Certificats", icon: Award },
@@ -130,7 +133,9 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <UdemyHeader />
+      <div className="flex-1 flex flex-col md:flex-row">
       {/* Sidebar Navigation */}
       <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-card/40 backdrop-blur-xl p-4 flex flex-col justify-between shrink-0">
         <div className="space-y-6">
@@ -643,5 +648,6 @@ export default function DashboardPage() {
 
       </main>
     </div>
-  )
+  </div>
+)
 }
