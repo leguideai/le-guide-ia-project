@@ -276,17 +276,27 @@ export function UdemyTabbedCourses() {
     <section className="py-16 bg-slate-950/60 border-t border-border/50" id="parcours">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
-        {/* Left-Aligned Header (Udemy Style) */}
-        <div className="space-y-3 text-left">
-          <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
-            TUTORIELS VIDÉOS PRATIQUES
-          </span>
-          <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-            Tutoriels & Extraits Vidéos Bootcamp
-          </h2>
-          <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
-            Découvrez nos cours et petits tutoriels vidéo pour prendre en main l'Intelligence Artificielle.
-          </p>
+        {/* Header with Arrow Link (Udemy Style) */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-3 text-left">
+            <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
+              TUTORIELS VIDÉOS PRATIQUES
+            </span>
+            <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
+              Tutoriels & Extraits Vidéos Bootcamp
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
+              Découvrez nos cours et petits tutoriels vidéo pour prendre en main l'Intelligence Artificielle.
+            </p>
+          </div>
+
+          <Link
+            href="/ressources"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
+          >
+            <span>Voir la bibliothèque</span>
+            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
 
         {/* Tabbar Navigation (Horizontal scroll on mobile) */}

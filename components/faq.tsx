@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
-import { ChevronDown, HelpCircle, CreditCard, BookOpen, Clock, ShieldCheck, Layers } from "lucide-react"
+import { ChevronDown, HelpCircle, CreditCard, BookOpen, Clock, ShieldCheck, Layers, ArrowRight } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { cn } from "@/lib/utils"
 
@@ -41,14 +42,24 @@ export function FAQ() {
     <section className="py-24 bg-card/5 relative overflow-hidden" id="faq">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
-        {/* Left-Aligned Section Header (Udemy Style) */}
-        <div className="text-left space-y-3">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
-            {t("faq.tag")}
-          </span>
-          <h2 className="font-heading text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">
-            {t("faq.title")}
-          </h2>
+        {/* Header with Arrow Link (Udemy Style) */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="text-left space-y-3">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
+              {t("faq.tag")}
+            </span>
+            <h2 className="font-heading text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">
+              {t("faq.title")}
+            </h2>
+          </div>
+
+          <Link
+            href="/faq"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
+          >
+            <span>Toutes les réponses</span>
+            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
 
         {/* Category Filter Tabs (Single Horizontal Row Scroll on Mobile) */}

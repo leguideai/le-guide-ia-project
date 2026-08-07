@@ -48,13 +48,23 @@ export function UdemySkillPathways() {
     <section className="py-14 bg-background border-t border-border/50">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
-        <div className="space-y-2 text-left">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-            BOOTCAMP PRO IA & BUSINESS
-          </span>
-          <h2 className="font-heading text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
-            Nos Formations d'Excellence
-          </h2>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-2 text-left">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+              BOOTCAMP PRO IA & BUSINESS
+            </span>
+            <h2 className="font-heading text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
+              Nos Formations d'Excellence
+            </h2>
+          </div>
+
+          <Link
+            href="/bootcamp"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
+          >
+            <span>Voir tous les parcours</span>
+            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
 
         {/* 3 Pathway Cards Grid (Scrollable on Mobile, Grid on Desktop) */}

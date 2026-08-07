@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { motion } from "motion/react"
-import { Cpu, Briefcase, Sparkles } from "lucide-react"
+import { Cpu, Briefcase, Sparkles, ArrowRight } from "lucide-react"
 
 export function UdemyTrustLogos() {
   const [activePillar, setActivePillar] = useState("all")
@@ -91,17 +92,27 @@ export function UdemyTrustLogos() {
     <section className="py-16 bg-slate-950/80 border-y border-border/60 relative overflow-hidden" id="outils">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8 relative z-10">
         
-        {/* Left-Aligned Section Header (Udemy Style) */}
-        <div className="space-y-3 text-left">
-          <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
-            BOOTCAMP PRO · OUTILS IA
-          </span>
-          <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-            Nos Outils IA Officiels
-          </h2>
-          <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
-            Une architecture complète structurée pour transformer votre productivité au quotidien.
-          </p>
+        {/* Header with Arrow Link (Udemy Style) */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-3 text-left">
+            <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
+              BOOTCAMP PRO · OUTILS IA
+            </span>
+            <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
+              Nos Outils IA Officiels
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
+              Une architecture complète structurée pour transformer votre productivité au quotidien.
+            </p>
+          </div>
+
+          <Link
+            href="/bootcamp"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
+          >
+            <span>Explorer les outils</span>
+            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
 
         {/* Pillar Filter Tabs */}
