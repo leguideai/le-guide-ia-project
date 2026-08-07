@@ -236,17 +236,16 @@ export default function RootLayout({
                   offers: [
                     {
                       '@type': 'Offer',
-                      name: 'Offre Fondateur',
-                      price: '149900',
+                      name: 'Bootcamp IA Pro',
+                      price: '99000',
                       priceCurrency: 'XOF',
-                      priceValidUntil: '2026-08-20',
                       availability: 'https://schema.org/InStock',
                       url: 'https://leguideai.com/#tarifs',
                     },
                     {
                       '@type': 'Offer',
-                      name: 'Prix Standard',
-                      price: '250000',
+                      name: 'Bootcamp IA Business',
+                      price: '199000',
                       priceCurrency: 'XOF',
                       availability: 'https://schema.org/InStock',
                       url: 'https://leguideai.com/#tarifs',

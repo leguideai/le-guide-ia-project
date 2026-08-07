@@ -17,11 +17,9 @@ export function SiteNav() {
   const [user, setUser] = useState<any>(null)
 
   const links = [
-    { label: "Bootcamp PRO", href: "/bootcamp" },
-    { label: "Bibliothèque", href: "/ressources" },
+    { label: "Bootcamps IA", href: "/bootcamp" },
+    { label: "Bibliothèque Premium", href: "/ressources" },
     { label: "Entreprises (B2B)", href: "/entreprises" },
-    { label: "Outils IA", href: "/outils-ia" },
-    { label: "Blog & Média", href: "/blog" },
   ]
 
   useEffect(() => {
@@ -137,12 +135,10 @@ export function SiteNav() {
           )}
 
           <a
-            href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ size: "lg" }), "glow-blue font-semibold")}
+            href="/checkout/bootcamp-ia-pro"
+            className={cn(buttonVariants({ size: "lg" }), "font-semibold shadow-md")}
           >
-            {t("nav.cta")}
+            S'inscrire au Bootcamp
           </a>
         </div>
 
@@ -208,13 +204,11 @@ export function SiteNav() {
               )}
 
               <a
-                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/checkout/bootcamp-ia-pro"
                 onClick={() => setOpen(false)}
                 className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full font-semibold")}
               >
-                {t("nav.cta")}
+                S'inscrire au Bootcamp
               </a>
             </div>
           </motion.div>

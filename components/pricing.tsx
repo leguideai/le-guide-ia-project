@@ -1,123 +1,75 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "motion/react"
-import { Check, Sparkles } from "lucide-react"
-import { useLanguage } from "@/lib/language-context"
-
-function PricingCountdown() {
-  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-  const [expired, setExpired] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-    const updateCountdown = () => {
-      const now = new Date().getTime()
-      const distance = targetDate - now
-
-      if (distance < 0) {
-        setExpired(true)
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-      } else {
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000)
-        setTimeLeft({ days, hours, minutes, seconds })
-      }
-    }
-
-    updateCountdown()
-    const timer = setInterval(updateCountdown, 1000)
-    return () => clearInterval(timer)
-  }, [targetDate])
-
-  if (!mounted) return null
-
-  if (expired) {
-    return (
-      <div className="text-xs font-bold text-rose-500 uppercase tracking-wider text-center mt-2">
-        Offre expirée
-      </div>
-    )
-  }
-
-  return (
-    <div className="mt-4 rounded-lg bg-slate-900/60 p-3 border border-border flex justify-center gap-3">
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.days}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">J</span>
-      </div>
-      <div className="text-sm font-bold text-border/60 mt-1">:</div>
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.hours}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">H</span>
-      </div>
-      <div className="text-sm font-bold text-border/60 mt-1">:</div>
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.minutes}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">M</span>
-      </div>
-      <div className="text-sm font-bold text-border/60 mt-1">:</div>
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.seconds}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">S</span>
-      </div>
-    </div>
-  )
-}
+import { Check, Sparkles, UserCheck, GraduationCap, ArrowRight } from "lucide-react"
 
 export function Pricing() {
-  const { t } = useLanguage()
-  const features = t("pricing.features") || []
+  const proFeatures = [
+    "15h de sessions immersives en direct",
+    "Créneaux : Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT",
+    "Accès centralisé à l'Espace Membre",
+    "Replays vidéo HD & Fiches PDF téléchargeables",
+    "Exercices pratiques & Ateliers en direct",
+    "Certificat d'accomplissement officiel vérifiable",
+    "Facture d'achat automatique"
+  ]
+
+  const businessFeatures = [
+    "15h de sessions orientées Business & Automation",
+    "Créneaux : Lun-Ven 19h-21h GMT + Dimanche 16h-21h GMT",
+    "Accès Espace Membre & Bibliothèque Premium",
+    "Modèles de Business Plans & Workflows IA",
+    "Stratégies d'E-marketing & Offres automatisées",
+    "Certificat IA Business vérifiable",
+    "Facture d'achat automatique conformes"
+  ]
 
   return (
     <section className="py-24 bg-background relative overflow-hidden" id="tarifs">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         
-        <div className="text-center mb-16">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
-            {t("pricing.tag")}
+        <div className="text-center mb-16 space-y-4 max-w-3xl mx-auto">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20">
+            Tarifs Officiels V1
           </span>
-          <h2 className="mt-4 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            {t("pricing.title")}
+          <h2 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            Inscrivez-vous au prochain Bootcamp
           </h2>
+          <p className="text-sm md:text-base text-muted-foreground">
+            Choisissez la formule adaptée à vos objectifs professionnels ou entrepreneuriaux.
+          </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto items-stretch">
+        <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto items-stretch">
           
-          {/* Offre Fondateur */}
+          {/* Bootcamp IA Pro */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative rounded-3xl border-2 border-amber-500 bg-card p-8 shadow-xl shadow-amber-500/5 flex flex-col justify-between"
+            className="relative rounded-3xl border-2 border-primary/60 bg-gradient-to-b from-primary/10 via-card to-card p-8 shadow-2xl flex flex-col justify-between"
           >
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-4 py-1 text-xs font-extrabold text-slate-950 uppercase tracking-widest flex items-center gap-1.5 shadow">
-              <Sparkles className="size-3.5 fill-slate-950" />
-              {t("pricing.founderCard.badge")}
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-xs font-extrabold text-primary-foreground uppercase tracking-widest flex items-center gap-1.5 shadow">
+              <GraduationCap className="size-3.5" />
+              1ère Semaine du Mois
             </div>
 
             <div>
-              <div className="text-center mt-2 mb-6">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="text-4xl font-black text-foreground">{t("pricing.founderCard.priceFcfa")}</div>
-                  <div className="text-sm text-muted-foreground bg-card/60 border border-border/60 rounded-full px-2.5 py-1">≈ {t("pricing.founderCard.priceUsd")}</div>
+              <div className="text-center mt-2 mb-6 space-y-2">
+                <h3 className="font-heading text-2xl font-extrabold text-foreground">Bootcamp IA Pro</h3>
+                <p className="text-xs font-semibold text-primary">Pour Salariés & Professionnels</p>
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <div className="text-4xl font-black text-foreground">99 000 FCFA</div>
+                  <div className="text-xs text-muted-foreground bg-card/80 border border-border/60 rounded-full px-2.5 py-1">≈ 150 € / $165</div>
                 </div>
-                <div className="mt-2 text-xs text-amber-500 font-semibold uppercase tracking-wider">
-                  {t("pricing.founderCard.expireLabel")}
-                </div>
-                <PricingCountdown />
               </div>
 
               <div className="border-t border-border/80 pt-6">
                 <ul className="space-y-3.5">
-                  {features.map((f: string, index: number) => (
-                    <li key={index} className="flex items-start gap-3 text-sm text-foreground/95">
-                      <Check className="size-4.5 text-amber-500 shrink-0 mt-0.5" />
+                  {proFeatures.map((f: string, index: number) => (
+                    <li key={index} className="flex items-start gap-3 text-xs md:text-sm text-foreground/95">
+                      <Check className="size-4 text-primary shrink-0 mt-0.5" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -127,44 +79,43 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite profiter du Tarif Fondateur (149 900 FCFA / environ 264 $  ) pour le Bootcamp PRO 2.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 text-sm transition-transform active:scale-95 shadow shadow-amber-500/10"
+                href="/checkout/bootcamp-ia-pro"
+                className="w-full flex h-12 items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-6 text-sm transition-transform active:scale-95 shadow-lg"
               >
-                Profiter du Tarif Fondateur
+                <span>S'inscrire au Bootcamp IA Pro (99 000 FCFA)</span>
+                <ArrowRight className="size-4" />
               </a>
             </div>
           </motion.div>
 
-          {/* Prix Standard */}
+          {/* Bootcamp IA Business */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="rounded-3xl border border-border bg-card/60 p-8 flex flex-col justify-between backdrop-blur-sm"
+            className="relative rounded-3xl border-2 border-amber-500/60 bg-gradient-to-b from-amber-500/10 via-card to-card p-8 shadow-2xl flex flex-col justify-between"
           >
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-4 py-1 text-xs font-extrabold text-slate-950 uppercase tracking-widest flex items-center gap-1.5 shadow">
+              <UserCheck className="size-3.5" />
+              3ème Semaine du Mois
+            </div>
+
             <div>
-              <div className="text-xs font-extrabold text-muted-foreground uppercase tracking-widest text-center mb-2">
-                {t("pricing.standardCard.badge")}
-              </div>
-
-              <div className="text-center mb-6">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="text-4xl font-black text-muted-foreground">{t("pricing.standardCard.priceFcfa")}</div>
-                  <div className="text-sm text-muted-foreground bg-card/60 border border-border/60 rounded-full px-2.5 py-1">≈ {t("pricing.standardCard.priceUsd")}</div>
-                </div>
-                <div className="mt-2 text-xs text-muted-foreground">
-                  {t("pricing.standardCard.dateLabel")}
+              <div className="text-center mt-2 mb-6 space-y-2">
+                <h3 className="font-heading text-2xl font-extrabold text-foreground">Bootcamp IA Business</h3>
+                <p className="text-xs font-semibold text-amber-400">Pour Entrepreneurs & Indépendants</p>
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <div className="text-4xl font-black text-foreground">199 000 FCFA</div>
+                  <div className="text-xs text-muted-foreground bg-card/80 border border-border/60 rounded-full px-2.5 py-1">≈ 300 € / $330</div>
                 </div>
               </div>
 
-              <div className="border-t border-border/60 pt-6">
+              <div className="border-t border-border/80 pt-6">
                 <ul className="space-y-3.5">
-                  {features.map((f: string, index: number) => (
-                    <li key={index} className="flex items-start gap-3 text-sm text-muted-foreground/80">
-                      <Check className="size-4.5 text-muted-foreground/60 shrink-0 mt-0.5" />
+                  {businessFeatures.map((f: string, index: number) => (
+                    <li key={index} className="flex items-start gap-3 text-xs md:text-sm text-foreground/95">
+                      <Check className="size-4 text-amber-500 shrink-0 mt-0.5" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -174,12 +125,11 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite réserver l'Accès Standard (250 000 FCFA / environ 438 USD) pour le Bootcamp PRO 2.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full flex h-12 items-center justify-center rounded-xl border border-border/80 hover:bg-card/80 text-foreground font-semibold px-6 text-sm transition-colors"
+                href="/checkout/bootcamp-ia-business"
+                className="w-full flex h-12 items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 text-sm transition-transform active:scale-95 shadow-lg"
               >
-                Choisir l'accès standard
+                <span>S'inscrire au Bootcamp Business (199 000 FCFA)</span>
+                <ArrowRight className="size-4" />
               </a>
             </div>
           </motion.div>

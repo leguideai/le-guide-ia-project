@@ -41,11 +41,11 @@ export function FAQ() {
     <section className="py-24 bg-card/5 relative overflow-hidden" id="faq">
       <div className="mx-auto max-w-4xl px-4 md:px-8">
         
-        <div className="text-center mb-12">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
+        <div className="text-left mb-10 space-y-3">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
             {t("faq.tag")}
           </span>
-          <h2 className="mt-4 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="font-heading text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">
             {t("faq.title")}
           </h2>
         </div>

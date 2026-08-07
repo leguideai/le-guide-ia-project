@@ -66,11 +66,9 @@ export function CtaFooter() {
   const pathname = usePathname()
   const { t } = useLanguage()
   const links = [
-    { label: "Bootcamp PRO", href: "/bootcamp" },
-    { label: "Bibliothèque", href: "/ressources" },
+    { label: "Bootcamps IA", href: "/bootcamp" },
+    { label: "Bibliothèque Premium", href: "/ressources" },
     { label: "Entreprises (B2B)", href: "/entreprises" },
-    { label: "Outils IA", href: "/outils-ia" },
-    { label: "Blog & Média", href: "/blog" },
   ]
 
   return (
@@ -109,15 +107,13 @@ export function CtaFooter() {
               
               <div className="mt-8">
                 <a
-                  href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 900 FCFA) et valider mon paiement.")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/checkout/bootcamp-ia-pro"
                   className={cn(
                     buttonVariants({ size: "lg" }),
-                    "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
+                    "h-12 bg-primary hover:opacity-90 text-primary-foreground font-bold border-none px-8 text-base shadow-lg active:scale-95 transition-transform inline-flex items-center justify-center gap-2"
                   )}
                 >
-                  {t("ctaFooter.ctaPro")}
+                  S'inscrire au Bootcamp IA Pro (99 000 FCFA)
                 </a>
                 
                 <div className="mt-4 text-xs text-slate-300 flex flex-wrap gap-2 items-center">

@@ -142,15 +142,14 @@ export function Hero() {
             className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:items-center"
           >
             <a
-              href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 900 FCFA / environ 264 $  ) et procéder au paiement.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/checkout/bootcamp-ia-pro"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
+                "h-12 bg-primary hover:opacity-90 text-primary-foreground font-bold border-none px-8 text-base shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
               )}
             >
-              Je rejoins le Bootcamp PRO 2
+              <span>S'inscrire au Bootcamp IA Pro (99 000 FCFA)</span>
+              <ArrowRight className="size-4" />
             </a>
             <a
               href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"

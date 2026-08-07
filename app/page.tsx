@@ -1,9 +1,14 @@
+"use client"
+
 import { GridBackground } from "@/components/grid-background"
-import { SiteNav } from "@/components/site-nav"
-import { Hero } from "@/components/hero"
-import { EcosystemHub } from "@/components/ecosystem-hub"
+import { UdemyHeader } from "@/components/udemy-header"
+import { UdemyHeroBanner } from "@/components/udemy-hero-banner"
+import { UdemyTrustLogos } from "@/components/udemy-trust-logos"
+import { UdemySkillPathways } from "@/components/udemy-skill-pathways"
+import { UdemyTabbedCourses } from "@/components/udemy-tabbed-courses"
+import { UdemyBusinessBanner } from "@/components/udemy-business-banner"
+import { CertificationSection } from "@/components/certification-section"
 import { Authority } from "@/components/authority"
-import { Pricing } from "@/components/pricing"
 import { Testimonials } from "@/components/testimonials"
 import { FAQ } from "@/components/faq"
 import { CtaFooter } from "@/components/cta-footer"
@@ -11,34 +16,48 @@ import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
 
 export default function Page() {
   return (
-    <main className="relative min-h-screen text-foreground overflow-x-hidden">
+    <main className="relative min-h-screen text-foreground overflow-x-hidden bg-[#090d16]">
       <GridBackground />
-      <SiteNav />
       
-      {/* S1: Héro — Prochaine Offre / Événement Majeur (Bootcamp PRO 2) */}
-      <Hero />
+      {/* 1. Header Style Udemy (Top bar, Barre de recherche, Catégories & Auth) */}
+      <UdemyHeader />
 
-      {/* S2: L'Écosystème LE GUIDE IA (Les 5 Espaces thématiques) */}
-      <EcosystemHub />
-            
-      {/* S3: Formateur & Crédibilité (Alfred Dah) */}
+      {/* 2. Hero Banner Style Udemy (Bandeau avec carte flottante de promotion) */}
+      <UdemyHeroBanner />
+
+      {/* 3. Bandeau des Technologies & Outils Enseignés */}
+      <UdemyTrustLogos />
+
+      {/* 4. Les 3 Parcours d'Apprentissage (Cartes 3D HD) */}
+      <UdemySkillPathways />
+
+      {/* 5. Section "Des compétences pour révolutionner votre carrière" (Onglets & Cartes Cours Udemy) */}
+      <UdemyTabbedCourses />
+
+      {/* 6. Banner Le Guide IA Business (Réplique Udemy Business Box) */}
+      <UdemyBusinessBanner />
+
+      {/* 7. Certifications & Diplômes Officiels */}
+      <CertificationSection />
+
+      {/* 8. Expertise & Autorité (Alfred Dah) */}
       <Authority />
 
-      {/* S4: Tarifs & Offre Fondateur */}
-      <Pricing />
-      
-      {/* S5: Témoignages & Avis */}
+      {/* 9. Avis & Témoignages Apprenants */}
       <Testimonials />
-      
-      {/* S7: FAQ */}
+
+      {/* 10. FAQ */}
       <FAQ />
-      
-      {/* S8: CTA Final / Footer */}
+
+      {/* 11. Pied de Page Riche Dark */}
       <CtaFooter />
-      
-      {/* Floating Elements */}
+
+      {/* Éléments Flottants */}
       <ScrollToTop />
       <WhatsAppFloat />
     </main>
   )
 }
+
+
+

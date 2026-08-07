@@ -271,13 +271,13 @@ export default function DashboardPage() {
             <div className="rounded-3xl border border-primary/30 bg-gradient-to-r from-primary/10 via-card to-card p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
               <div className="space-y-3 max-w-xl">
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/20 px-3 py-1 rounded-full border border-primary/30">
-                  Bootcamp PRO 2
+                  Formation Active
                 </span>
                 <h2 className="font-heading text-xl font-bold text-foreground">
-                  Formation Intelligence Artificielle Pratique
+                  Bootcamp IA Pro — Sessions Intensives & Replays
                 </h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  7 Sessions intensives avec Alfred Dah. Du 31 Août au 6 Septembre 2026. Préparez-vous à transformer votre productivité.
+                  15h de formation pratique en direct avec Alfred Dah. Du 31 Août au 6 Septembre 2026. Préparez-vous à transformer votre productivité.
                 </p>
               </div>
               <button
@@ -285,8 +285,84 @@ export default function DashboardPage() {
                 className="shrink-0 flex items-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-5 py-3 text-xs shadow-lg transition-all cursor-pointer"
               >
                 <PlayCircle className="size-4" />
-                <span>Accéder au cours</span>
+                <span>Accéder à mes cours</span>
               </button>
+            </div>
+
+            {/* Upcoming Bootcamps & Payment Hub Section */}
+            <div className="space-y-4 pt-4 border-t border-border/60">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-foreground">
+                    Bootcamps à venir & Formules d'Inscription
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Inscrivez-vous directement ou faites évoluer votre formule avec paiement immédiat par Mobile Money ou Carte.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Card 1: Bootcamp IA Pro */}
+                <div className="rounded-2xl border border-primary/30 bg-card/60 p-6 space-y-4 flex flex-col justify-between hover:border-primary transition-all shadow-lg">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
+                        Formule Pro
+                      </span>
+                      <span className="text-xs font-black text-primary">99 000 FCFA</span>
+                    </div>
+                    <h4 className="font-heading text-base font-bold text-foreground">
+                      Bootcamp IA Pro (15h Intensives)
+                    </h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Maîtrisez ChatGPT, Claude 3.5, Midjourney, Canva IA et l'automatisation Make pour décupler votre efficacité professionnelle.
+                    </p>
+                    <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
+                      <div>📅 <strong>Dates :</strong> Lun-Ven 19h-21h + Sam 8h-13h GMT</div>
+                      <div>🎓 <strong>Contenu :</strong> Replays HD, Prompts & Certificat</div>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/checkout/bootcamp-ia-pro"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all"
+                  >
+                    <Zap className="size-4" />
+                    <span>Payer 99 000 FCFA (PayTech / Stripe)</span>
+                  </Link>
+                </div>
+
+                {/* Card 2: Bootcamp IA Business */}
+                <div className="rounded-2xl border border-amber-500/40 bg-card/60 p-6 space-y-4 flex flex-col justify-between hover:border-amber-500 transition-all shadow-lg">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                        Formule Business & Exec
+                      </span>
+                      <span className="text-xs font-black text-amber-400">199 000 FCFA</span>
+                    </div>
+                    <h4 className="font-heading text-base font-bold text-foreground">
+                      Bootcamp IA Business & Dirigeants
+                    </h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Inclus tout le programme Pro + Coaching stratégique individuel, intégration d'agents IA métiers et audit de gouvernance.
+                    </p>
+                    <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
+                      <div>📅 <strong>Dates :</strong> Lun-Ven 19h-21h + Dim 16h-21h GMT</div>
+                      <div>💼 <strong>Bonus :</strong> 1h Coaching individuel avec Alfred Dah</div>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/checkout/bootcamp-ia-business"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 text-xs shadow-md transition-all"
+                  >
+                    <Zap className="size-4" />
+                    <span>Payer 199 000 FCFA (PayTech / Stripe)</span>
+                  </Link>
+                </div>
+              </div>
             </div>
 
             {/* Resources Teaser */}
