@@ -317,11 +317,11 @@ export function UdemyTabbedCourses() {
         </div>
 
         {/* 3 Video Cards Grid (Scrollable on Mobile, Grid on Desktop) */}
-        <div className="flex overflow-x-auto snap-x no-scrollbar pb-4 gap-4 md:grid md:grid-cols-3 md:pb-0">
+        <div className="flex overflow-x-auto md:overflow-visible snap-x no-scrollbar pt-3 pb-4 gap-4 md:grid md:grid-cols-3 md:pb-0">
           {currentCards.map((card) => (
             <div
               key={card.id}
-              className="rounded-2xl border border-border/80 bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary/50 transition-all shadow-xl backdrop-blur-xl group shrink-0 w-[280px] sm:w-[320px] md:w-auto snap-center"
+              className="relative z-10 hover:z-20 rounded-2xl border border-border/80 bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary/50 transition-all shadow-xl backdrop-blur-xl group shrink-0 w-[280px] sm:w-[320px] md:w-auto snap-center"
             >
               {/* Card Image Container with Play Overlay */}
               <div className="relative aspect-video overflow-hidden bg-slate-900 cursor-pointer" onClick={() => setSelectedVideo(card)}>

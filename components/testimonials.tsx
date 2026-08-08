@@ -60,16 +60,16 @@ export function Testimonials() {
         </div>
 
         {/* 4 Cards Grid — Scrollable on Mobile, Grid on Desktop */}
-        <div className="flex overflow-x-auto snap-x no-scrollbar pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:pb-0">
+        <div className="flex overflow-x-auto sm:overflow-visible snap-x no-scrollbar pt-3 pb-4 gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:pb-0">
           {testimonials.map((item, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.45, delay: i * 0.1 }}
-              whileHover={{ y: -5 }}
-              className="rounded-2xl border border-border/80 bg-card/60 p-6 backdrop-blur-xl shadow-xl hover:border-primary/50 transition-all flex flex-col justify-between space-y-6 relative group shrink-0 w-[270px] sm:w-auto snap-center"
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              whileHover={{ y: -6 }}
+              className="rounded-2xl border border-border/80 bg-card/60 p-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-primary/50 transition-all space-y-4 shrink-0 w-[260px] sm:w-auto snap-center relative z-10 hover:z-20"
             >
               <Quote className="size-8 text-primary/20 absolute top-5 right-5 group-hover:text-primary/40 transition-colors" />
 

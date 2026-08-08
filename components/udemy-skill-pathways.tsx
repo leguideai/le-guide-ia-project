@@ -68,7 +68,7 @@ export function UdemySkillPathways() {
         </div>
 
         {/* 3 Pathway Cards Grid (Scrollable on Mobile, Grid on Desktop) */}
-        <div className="flex overflow-x-auto snap-x no-scrollbar pb-4 gap-4 md:grid md:grid-cols-3 md:pb-0">
+        <div className="flex overflow-x-auto md:overflow-visible snap-x no-scrollbar pt-3 pb-4 gap-4 md:grid md:grid-cols-3 md:pb-0">
           {pathways.map((item, idx) => {
             const Icon = item.icon
             return (
@@ -79,7 +79,7 @@ export function UdemySkillPathways() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: idx * 0.12 }}
                 whileHover={{ y: -6 }}
-                className={`rounded-2xl border ${item.borderColor} bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary transition-all duration-300 shadow-xl group backdrop-blur-xl p-5 space-y-4 shrink-0 w-[280px] sm:w-[320px] md:w-auto snap-center`}
+                className={`relative z-10 hover:z-20 rounded-2xl border ${item.borderColor} bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary transition-all duration-300 shadow-xl group backdrop-blur-xl p-5 space-y-4 shrink-0 w-[280px] sm:w-[320px] md:w-auto snap-center`}
               >
                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900">
                   <img

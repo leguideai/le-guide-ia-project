@@ -62,7 +62,11 @@ function InlineCountdown() {
   )
 }
 
-export function CtaFooter() {
+interface CtaFooterProps {
+  hideCta?: boolean
+}
+
+export function CtaFooter({ hideCta = false }: CtaFooterProps) {
   const pathname = usePathname()
   const { t } = useLanguage()
   const links = [
@@ -76,8 +80,9 @@ export function CtaFooter() {
       <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         
         {/* Section de Clôture Premium */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
+        {!hideCta && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
@@ -163,6 +168,7 @@ export function CtaFooter() {
             </div>
           </div>
         </motion.div>
+        )}
 
         {/* Footer info links grid */}
         <div className="mt-16 grid gap-10 border-t border-border/40 pt-12 sm:grid-cols-2 lg:grid-cols-4 text-left">

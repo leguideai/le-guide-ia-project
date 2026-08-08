@@ -141,7 +141,7 @@ export function UdemyTrustLogos() {
         </div>
 
         {/* Tools Grid — Scrollable on Mobile, Grid on Desktop */}
-        <div className="flex overflow-x-auto snap-x no-scrollbar pb-4 gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:pb-0">
+        <div className="flex overflow-x-auto md:overflow-visible snap-x no-scrollbar pt-3 pb-4 gap-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:pb-0">
           {filteredTools.map((tool, idx) => (
             <motion.div
               key={idx}
@@ -150,7 +150,7 @@ export function UdemyTrustLogos() {
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.45, delay: idx * 0.08 }}
               whileHover={{ y: -5 }}
-              className="rounded-2xl border border-border/80 bg-card/60 p-5 backdrop-blur-xl shadow-xl hover:border-primary/50 transition-all flex flex-col justify-between space-y-4 group relative overflow-hidden shrink-0 w-[260px] sm:w-[300px] md:w-auto snap-center"
+              className="rounded-2xl border border-border/80 bg-card/60 p-5 backdrop-blur-xl shadow-xl hover:border-primary/50 transition-all flex flex-col justify-between space-y-4 group relative z-10 hover:z-20 overflow-hidden shrink-0 w-[260px] sm:w-[300px] md:w-auto snap-center"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none`} />
 
