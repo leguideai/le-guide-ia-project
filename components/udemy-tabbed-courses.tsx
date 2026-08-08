@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Play, Star, Clock, ArrowRight, Sparkles, X, Tv, ShieldCheck, CheckCircle2 } from "lucide-react"
 
 interface CourseCard {
@@ -21,8 +22,20 @@ interface CourseCard {
 }
 
 export function UdemyTabbedCourses() {
+  const pathname = usePathname()
   const [activeTab, setActiveTab] = useState("initiation")
   const [selectedVideo, setSelectedVideo] = useState<CourseCard | null>(null)
+  const [inlinePlayingId, setInlinePlayingId] = useState<string | null>(null)
+
+  const getMediaThumbnail = (card: CourseCard) => {
+    if (card.videoUrl) {
+      const match = card.videoUrl.match(/(?:embed\/|watch\?v=|v\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+      if (match && match[1]) {
+        return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
+      }
+    }
+    return card.thumbnail
+  }
 
   const tabs = [
     { id: "initiation", label: "Initiation IA & Productivité" },
@@ -273,7 +286,7 @@ export function UdemyTabbedCourses() {
   const currentCards = tabContent[activeTab] || tabContent["initiation"]
 
   return (
-    <section className="py-16 bg-slate-950/60 border-t border-border/50" id="parcours">
+    <section className="py-10 md:py-12 bg-slate-950/60 border-t border-border/50" id="parcours">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
         {/* Header with Arrow Link (Udemy Style) */}
@@ -290,13 +303,15 @@ export function UdemyTabbedCourses() {
             </p>
           </div>
 
-          <Link
-            href="/ressources"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
-          >
-            <span>Voir la bibliothèque</span>
-            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          {pathname !== "/ressources" && (
+            <Link
+              href="/ressources"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
+            >
+              <span>Voir la bibliothèque</span>
+              <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          )}
         </div>
 
         {/* Tabbar Navigation (Horizontal scroll on mobile) */}
@@ -323,18 +338,36 @@ export function UdemyTabbedCourses() {
               key={card.id}
               className="relative z-10 hover:z-20 rounded-2xl border border-border/80 bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary/50 transition-all shadow-xl backdrop-blur-xl group shrink-0 w-[280px] sm:w-[320px] md:w-auto snap-center"
             >
-              {/* Card Image Container with Play Overlay */}
-              <div className="relative aspect-video overflow-hidden bg-slate-900 cursor-pointer" onClick={() => setSelectedVideo(card)}>
-                <img
-                  src={card.thumbnail}
-                  alt={card.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-slate-950/40 group-hover:bg-slate-950/20 transition-colors flex items-center justify-center">
-                  <div className="size-12 rounded-full bg-primary/90 text-primary-foreground flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform border border-white/20">
-                    <Play className="size-5 fill-primary-foreground ml-0.5" />
+              {/* Card Media Container (Real YouTube Thumbnail & Inline Playable Frame) */}
+              <div className="relative aspect-video overflow-hidden bg-slate-900 group/video">
+                {inlinePlayingId === card.id ? (
+                  <iframe
+                    src={`${card.videoUrl}?autoplay=1`}
+                    title={card.title}
+                    className="w-full h-full border-none"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="relative w-full h-full cursor-pointer" onClick={() => setInlinePlayingId(card.id)}>
+                    <img
+                      src={getMediaThumbnail(card)}
+                      alt={card.title}
+                      className="w-full h-full object-cover group-hover/video:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/40 group-hover/video:bg-slate-950/20 transition-colors flex items-center justify-center">
+                      <div className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-2xl group-hover/video:scale-110 transition-transform border border-white/20">
+                        <Play className="size-5 fill-primary-foreground ml-0.5" />
+                      </div>
+                    </div>
+                    
+                    {/* Video Duration Badge */}
+                    <div className="absolute bottom-2.5 right-2.5 bg-slate-950/85 backdrop-blur-md border border-white/10 rounded-md px-2 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-md">
+                      <Clock className="size-3 text-primary" />
+                      <span>{card.duration}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Card Details */}
@@ -355,10 +388,10 @@ export function UdemyTabbedCourses() {
                   </div>
 
                   <button
-                    onClick={() => setSelectedVideo(card)}
-                    className="flex items-center gap-1.5 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground font-bold px-3 py-1.5 text-xs transition-all border border-primary/20 cursor-pointer"
+                    onClick={() => setInlinePlayingId(card.id)}
+                    className="flex items-center gap-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-3 py-1.5 text-xs transition-all shadow-md cursor-pointer"
                   >
-                    <span>Aperçu vidéo</span>
+                    <span>Regarder la vidéo</span>
                     <Play className="size-3.5 fill-current" />
                   </button>
                 </div>

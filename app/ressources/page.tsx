@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
-import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock } from "lucide-react"
+import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { UdemyHeader } from "@/components/udemy-header"
+import { UdemyTabbedCourses } from "@/components/udemy-tabbed-courses"
 import { CtaFooter } from "@/components/cta-footer"
 import { GridBackground } from "@/components/grid-background"
 import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
@@ -12,14 +14,16 @@ import { resourcesData, ResourceItem } from "@/lib/resources-data"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ResourceOptinModal } from "@/components/resource-optin-modal"
+import { supabase } from "@/lib/supabase"
 
 export default function RessourcesPage() {
+  const router = useRouter()
   const { t, language } = useLanguage()
   const [search, setSearch] = useState("")
   const [activeFilter, setActiveFilter] = useState<'all' | 'prompt' | 'business-plan'>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  // Lead opt-in unlock state
+  // Auth unlock state
   const [isUnlocked, setIsUnlocked] = useState(false)
   const [isOptinOpen, setIsOptinOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<{
@@ -36,6 +40,22 @@ export default function RessourcesPage() {
       if (unlocked) {
         setIsUnlocked(true)
       }
+
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          setIsUnlocked(true)
+          localStorage.setItem("leguideia_resources_unlocked", "true")
+        }
+      })
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          setIsUnlocked(true)
+          localStorage.setItem("leguideia_resources_unlocked", "true")
+        }
+      })
+
+      return () => subscription.unsubscribe()
     }
   }, [])
 
@@ -48,26 +68,23 @@ export default function RessourcesPage() {
   }
 
   const handleAction = (item: ResourceItem, title: string, content: string) => {
+    if (!isUnlocked) {
+      // Redirige directement vers la page de connexion
+      router.push("/login?redirect=/ressources")
+      return
+    }
+
     if (item.type === 'prompt') {
-      if (isUnlocked) {
-        executeCopy(item.id, content)
-      } else {
-        setPendingAction({ type: 'copy', id: item.id, title, content })
-        setIsOptinOpen(true)
-      }
+      executeCopy(item.id, content)
     } else {
       const waUrl = `https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le modèle de Business Plan complet pour le projet : " + title)}`
-      if (isUnlocked) {
-        window.open(waUrl, "_blank", "noopener,noreferrer")
-      } else {
-        setPendingAction({ type: 'download', id: item.id, title, waUrl })
-        setIsOptinOpen(true)
-      }
+      window.open(waUrl, "_blank", "noopener,noreferrer")
     }
   }
 
   const handleOptinSuccess = () => {
     setIsUnlocked(true)
+    localStorage.setItem("leguideia_resources_unlocked", "true")
     if (pendingAction) {
       if (pendingAction.type === 'copy' && pendingAction.content) {
         executeCopy(pendingAction.id, pendingAction.content)
@@ -98,104 +115,88 @@ export default function RessourcesPage() {
       <GridBackground />
       <UdemyHeader />
 
-      {/* Hero Header */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-20 overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 md:px-8 text-center relative z-10">
-          <motion.span 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full"
-          >
-            {t("resourcesPage.tag")}
-          </motion.span>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mt-6 font-heading text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
-          >
-            {t("resourcesPage.title")}
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-6 mx-auto max-w-3xl text-base md:text-lg text-muted-foreground leading-relaxed"
-          >
-            {t("resourcesPage.desc")}
-          </motion.p>
-        </div>
-      </section>
+      {/* 1. Section Tutoriels Vidéos Pratiques */}
+      <UdemyTabbedCourses />
 
-      {/* Main Controls Section (Search & Filter) */}
-      <section className="py-6 border-y border-border/40 bg-card/10 backdrop-blur-md sticky top-[68px] z-30">
-        <div className="mx-auto max-w-7xl px-4 md:px-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+      {/* 2. Section Prompts Métiers & Business Plans IA (Search & Filter) */}
+      <section className="py-12 bg-background border-t border-border/50" id="prompts-templates">
+        <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
           
-          {/* Categories Filters */}
-          <div className="flex flex-wrap gap-2 order-2 md:order-1">
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={cn(
-                "px-4 py-2 text-xs font-extrabold rounded-lg uppercase tracking-wider transition-all cursor-pointer border",
-                activeFilter === 'all'
-                  ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                  : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
-              )}
-            >
-              {t("resourcesPage.filterAll")}
-            </button>
-            <button
-              onClick={() => setActiveFilter('prompt')}
-              className={cn(
-                "px-4 py-2 text-xs font-extrabold rounded-lg uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
-                activeFilter === 'prompt'
-                  ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                  : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
-              )}
-            >
-              <Sparkles className="size-3.5" />
-              {t("resourcesPage.filterPrompts")}
-            </button>
-            <button
-              onClick={() => setActiveFilter('business-plan')}
-              className={cn(
-                "px-4 py-2 text-xs font-extrabold rounded-lg uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
-                activeFilter === 'business-plan'
-                  ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                  : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
-              )}
-            >
-              <FileText className="size-3.5" />
-              {t("resourcesPage.filterPlans")}
-            </button>
+          <div className="space-y-3 text-left">
+            <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-3.5 py-1.5 rounded-full border border-purple-500/20">
+              <Sparkles className="size-3.5 text-purple-400" />
+              PROMPTS &amp; BUSINESS PLANS TÉLÉCHARGEABLES
+            </span>
+            <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
+              Bibliothèque de Prompts &amp; Modèles IA
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
+              Connectez-vous pour débloquer, copier et télécharger nos prompts métiers et modèles de projets d'entreprise.
+            </p>
           </div>
 
-          {/* Search Box */}
-          <div className="relative w-full max-w-md order-1 md:order-2">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Search className="size-4 text-muted-foreground" />
+          {/* Controls Bar */}
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-y border-border/40 py-4 bg-card/10 backdrop-blur-md rounded-2xl px-4">
+            
+            {/* Categories Filters */}
+            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={cn(
+                  "px-4 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border",
+                  activeFilter === 'all'
+                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                )}
+              >
+                {t("resourcesPage.filterAll")}
+              </button>
+              <button
+                onClick={() => setActiveFilter('prompt')}
+                className={cn(
+                  "px-4 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
+                  activeFilter === 'prompt'
+                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                )}
+              >
+                <Sparkles className="size-3.5" />
+                {t("resourcesPage.filterPrompts")}
+              </button>
+              <button
+                onClick={() => setActiveFilter('business-plan')}
+                className={cn(
+                  "px-4 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
+                  activeFilter === 'business-plan'
+                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                )}
+              >
+                <FileText className="size-3.5" />
+                {t("resourcesPage.filterPlans")}
+              </button>
             </div>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("resourcesPage.searchPlaceholder")}
-              className="w-full rounded-lg border border-border/80 bg-card/30 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder-muted-foreground outline-none transition-all focus:border-primary/50 focus:bg-card/50"
-            />
+
+            {/* Search Box */}
+            <div className="relative w-full max-w-md">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                <Search className="size-4 text-muted-foreground" />
+              </div>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("resourcesPage.searchPlaceholder")}
+                className="w-full rounded-xl border border-border/80 bg-card/40 py-2.5 pl-10 pr-4 text-xs text-foreground placeholder-muted-foreground outline-none transition-all focus:border-primary/50 focus:bg-card/60"
+              />
+            </div>
+
           </div>
 
-        </div>
-      </section>
-
-      {/* Grid of cards */}
-      <section className="py-20 relative">
-        <div className="mx-auto max-w-7xl px-4 md:px-8">
-          
+          {/* Grid of Prompts & Business Plan cards */}
           <motion.div 
             layout
-            className="grid gap-8 md:grid-cols-2"
+            className="grid gap-8 md:grid-cols-2 pt-2"
           >
             <AnimatePresence mode="popLayout">
               {filteredResources.map((item) => {
@@ -212,13 +213,13 @@ export default function RessourcesPage() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3 }}
                     key={item.id}
-                    className="flex flex-col justify-between rounded-2xl border border-border/80 bg-card/25 p-8 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card/35 shadow-sm"
+                    className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card/30 p-6 md:p-8 backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:bg-card/50 shadow-xl text-left"
                   >
                     <div>
                       {/* Header Badge */}
                       <div className="flex items-center justify-between mb-4">
                         <span className={cn(
-                          "px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider",
+                          "px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider",
                           item.type === 'prompt' 
                             ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" 
                             : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
@@ -227,93 +228,95 @@ export default function RessourcesPage() {
                         </span>
                         
                         {sector && (
-                          <span className="text-[10px] text-muted-foreground font-semibold">
+                          <span className="text-[10px] text-muted-foreground font-semibold bg-card/60 border border-border/60 rounded-full px-2.5 py-1">
                             {t("resourcesPage.sector")} : {sector}
                           </span>
                         )}
                       </div>
 
                       {/* Title & Desc */}
-                      <h3 className="font-heading text-xl font-bold text-white mb-3">
+                      <h3 className="font-heading text-xl font-bold text-white mb-2 text-left">
                         {title}
                       </h3>
                       
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                      <p className="text-xs text-muted-foreground leading-relaxed mb-5 text-left">
                         {desc}
                       </p>
 
                       {/* Display content preview */}
                       <div className="relative mb-6">
-                        <div
-                          className={cn(
-                            "rounded-lg bg-slate-950/40 border border-border/40 p-4 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-300 font-mono whitespace-pre-wrap transition-all duration-300 scrollbar-thin",
-                            !isUnlocked ? "select-none pointer-events-none blur-[4px] opacity-60" : "select-all"
-                          )}
-                        >
-                          {content}
-                        </div>
+                        {!isUnlocked ? (
+                          <div className="rounded-xl bg-slate-950 border border-primary/30 p-4 max-h-60 overflow-hidden text-xs md:text-sm leading-relaxed font-mono whitespace-pre-wrap select-none pointer-events-none text-left relative">
+                            {/* Teaser Header Badge */}
+                            <div className="text-[10px] font-extrabold uppercase tracking-widest text-primary mb-1.5 flex items-center gap-1">
+                              <Sparkles className="size-3 text-amber-400" />
+                              <span>Aperçu en clair (Avant-goût) :</span>
+                            </div>
+                            {/* Crystal Clear Unblurred Teaser Snippet */}
+                            <div className="text-white font-bold opacity-100 pb-1 leading-snug">
+                              {content.slice(0, 150)}...
+                            </div>
+                            {/* Blurred Rest of Prompt (Uncopyable) */}
+                            <div className="blur-[7px] opacity-30 select-none pointer-events-none text-slate-400 mt-1">
+                              {content.slice(150)}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="rounded-xl bg-slate-950/60 border border-border/60 p-4 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-300 font-mono whitespace-pre-wrap transition-all duration-300 scrollbar-thin text-left select-all">
+                            {content}
+                          </div>
+                        )}
 
                         {!isUnlocked && (
                           <div
                             onClick={() => handleAction(item, title, content)}
-                            className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 rounded-lg bg-slate-950/60 backdrop-blur-[2px] p-3 text-center cursor-pointer transition-colors hover:bg-slate-950/75 border border-primary/30 group"
+                            className="absolute inset-0 flex flex-col items-center justify-end pb-4 rounded-xl bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent text-center cursor-pointer transition-colors group"
                           >
-                            <div className="flex size-9 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/40 shadow-md group-hover:scale-110 transition-transform">
-                              <Lock className="size-4" />
+                            <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl shadow-xl border border-white/20 group-hover:scale-105 transition-transform">
+                              <LogIn className="size-4" />
+                              <span className="text-xs font-extrabold">
+                                Se connecter pour débloquer
+                              </span>
                             </div>
-                            <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">
-                              Contenu verrouillé
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              Débloquez gratuitement pour afficher &amp; copier
-                            </span>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Action button */}
-                    <div>
-                      <button
-                        onClick={() => handleAction(item, title, content)}
-                        className={cn(
-                          buttonVariants({
-                            variant: copiedId === item.id ? "default" : item.type === 'prompt' ? "outline" : "default"
-                          }),
-                          "w-full font-bold transition-all duration-300 cursor-pointer flex items-center justify-center gap-2",
-                          item.type !== 'prompt' && "glow-blue"
-                        )}
-                      >
-                        {item.type === 'prompt' ? (
-                          copiedId === item.id ? (
-                            <>
-                              <Check className="size-4 stroke-[3]" />
-                              <span>{t("resourcesPage.copied")}</span>
-                            </>
-                          ) : !isUnlocked ? (
-                            <>
-                              <Lock className="size-4 text-primary" />
-                              <span>Débloquer &amp; Copier</span>
-                            </>
+                    {/* Action button (Displayed ONLY when unlocked / connected) */}
+                    {isUnlocked && (
+                      <div>
+                        <button
+                          onClick={() => handleAction(item, title, content)}
+                          className={cn(
+                            buttonVariants({
+                              variant: copiedId === item.id ? "default" : item.type === 'prompt' ? "outline" : "default"
+                            }),
+                            "w-full rounded-xl font-extrabold text-xs py-3 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2",
+                            item.type !== 'prompt' && "glow-blue"
+                          )}
+                        >
+                          {item.type === 'prompt' ? (
+                            copiedId === item.id ? (
+                              <>
+                                <Check className="size-4 stroke-[3]" />
+                                <span>{t("resourcesPage.copied")}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="size-4" />
+                                <span>{t("resourcesPage.copyPrompt")}</span>
+                              </>
+                            )
                           ) : (
                             <>
-                              <Copy className="size-4" />
-                              <span>{t("resourcesPage.copyPrompt")}</span>
+                              <Download className="size-4" />
+                              <span>{t("resourcesPage.downloadPlan")}</span>
                             </>
-                          )
-                        ) : !isUnlocked ? (
-                          <>
-                            <Lock className="size-4" />
-                            <span>Débloquer &amp; Télécharger</span>
-                          </>
-                        ) : (
-                          <>
-                            <Download className="size-4" />
-                            <span>{t("resourcesPage.downloadPlan")}</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </motion.div>
                 )
               })}
@@ -330,7 +333,7 @@ export default function RessourcesPage() {
         </div>
       </section>
 
-      {/* Opt-in Modal */}
+      {/* Opt-in Modal fallback */}
       <ResourceOptinModal
         isOpen={isOptinOpen}
         onClose={() => setIsOptinOpen(false)}
@@ -339,7 +342,7 @@ export default function RessourcesPage() {
       />
 
       {/* Footer & floats */}
-      <CtaFooter />
+      <CtaFooter hideCta={true} />
       <ScrollToTop />
       <WhatsAppFloat />
     </main>

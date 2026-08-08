@@ -63,29 +63,35 @@ export function UdemyHeader() {
         </Link>
 
         {/* Categories Dropdown */}
-        <div className="relative hidden md:block">
+        <div
+          className="relative hidden md:block group"
+          onMouseEnter={() => setCategoriesOpen(true)}
+          onMouseLeave={() => setCategoriesOpen(false)}
+        >
           <button
             onClick={() => setCategoriesOpen(!categoriesOpen)}
             className="flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-secondary/60 transition-colors"
           >
             <span>Catégories</span>
-            <ChevronDown className="size-3.5 text-muted-foreground" />
+            <ChevronDown className="size-3.5 text-muted-foreground group-hover:rotate-180 transition-transform" />
           </button>
 
           {categoriesOpen && (
-            <div className="absolute top-full left-0 mt-2 w-64 rounded-2xl border border-border bg-card p-3 shadow-2xl space-y-1 z-50 backdrop-blur-2xl">
-              <Link href="/bootcamp" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
-                <GraduationCap className="size-4 text-primary" />
-                <span>Bootcamps IA Live</span>
-              </Link>
-              <Link href="/ressources" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
-                <BookOpen className="size-4 text-purple-400" />
-                <span>Bibliothèque de Prompts</span>
-              </Link>
-              <Link href="/entreprises" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
-                <Building2 className="size-4 text-emerald-400" />
-                <span>Espace Entreprises (B2B)</span>
-              </Link>
+            <div className="absolute top-full left-0 pt-2 w-64 z-50">
+              <div className="rounded-2xl border border-border bg-card p-3 shadow-2xl space-y-1 backdrop-blur-2xl">
+                <Link href="/bootcamp" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
+                  <GraduationCap className="size-4 text-primary" />
+                  <span>Bootcamps IA Live</span>
+                </Link>
+                <Link href="/ressources" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
+                  <BookOpen className="size-4 text-purple-400" />
+                  <span>Bibliothèque de Prompts</span>
+                </Link>
+                <Link href="/entreprises" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
+                  <Building2 className="size-4 text-emerald-400" />
+                  <span>Espace Entreprises (B2B)</span>
+                </Link>
+              </div>
             </div>
           )}
         </div>

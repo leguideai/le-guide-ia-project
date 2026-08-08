@@ -21,11 +21,13 @@ export default function LoginPage() {
     setError(null)
     setMessage(null)
 
+    const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
+
     if (isMagicLink) {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}${redirectTarget}`,
         },
       })
       if (error) {
@@ -46,16 +48,17 @@ export default function LoginPage() {
       setError(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect." : error.message)
       setLoading(false)
     } else if (data.session) {
-      router.push("/dashboard")
+      router.push(redirectTarget)
     }
   }
 
   const handleGoogleLogin = async () => {
     setError(null)
+    const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}${redirectTarget}`,
       },
     })
     if (error) setError(error.message)
