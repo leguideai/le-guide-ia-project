@@ -94,7 +94,7 @@ export default function EntreprisesPage() {
                 </button>
 
                 <a
-                  href="https://wa.me/22605050577?text=Bonjour,%20nous%20souhaitons%20un%20devis%20de%20formation%20IA%20pour%20notre%20entreprise."
+                  href="https://wa.me/22675757273?text=Bonjour,%20nous%20souhaitons%20un%20devis%20de%20formation%20IA%20pour%20notre%20entreprise."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/40 hover:bg-card text-foreground font-bold px-6 py-3.5 text-xs text-muted-foreground hover:text-foreground transition-all hover:scale-[1.01]"
@@ -280,7 +280,7 @@ export default function EntreprisesPage() {
                   <PhoneCall className="size-4 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
                     <div className="font-bold text-foreground">Ligne WhatsApp Officielle</div>
-                    <div>+226 05 05 05 77</div>
+                    <div>+226 75 75 72 73</div>
                   </div>
                 </div>
               </div>

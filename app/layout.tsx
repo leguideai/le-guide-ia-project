@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
@@ -14,6 +14,11 @@ const geistMono = Geist_Mono({
 })
 
 export const metadataBase = new URL('https://leguideai.com')
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export const metadata: Metadata = {
   title: 'Bootcamp IA par Alfred Dah – Formation Intelligence Artificielle | Le Guide IA',
@@ -53,7 +58,6 @@ export const metadata: Metadata = {
       fr: 'https://leguideai.com',
     },
   },
-  viewport: 'width=device-width, initial-scale=1',
   openGraph: {
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:

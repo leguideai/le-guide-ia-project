@@ -3,11 +3,14 @@
 import { useState, use } from "react"
 import Link from "next/link"
 import { UdemyHeader } from "@/components/udemy-header"
-import { ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, Sparkles, GraduationCap, UserCheck } from "lucide-react"
+import { ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check } from "lucide-react"
 
 interface PageProps {
   params: Promise<{ courseSlug: string }>
 }
+
+// Mettre à true pour réactiver PayTech quand vous aurez les documents NINEA / RC
+const ENABLE_PAYTECH = false
 
 export default function CheckoutPage({ params }: PageProps) {
   const { courseSlug } = use(params)
@@ -20,16 +23,24 @@ export default function CheckoutPage({ params }: PageProps) {
     ? "Lun-Ven 19h-21h GMT + Dimanche 16h-21h GMT" 
     : "Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT"
 
-  const [paymentMethod, setPaymentMethod] = useState<"paytech" | "stripe">("paytech")
+  const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe" | "paytech">("mobile_direct")
+  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov" | "mtn">("wave")
+  const [transactionRef, setTransactionRef] = useState("")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
   const [whatsapp, setWhatsapp] = useState("")
   const [country, setCountry] = useState("Côte d'Ivoire")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [zelleSubmitted, setZelleSubmitted] = useState(false)
+  const [copiedNum, setCopiedNum] = useState<string | null>(null)
 
   const price = isBusiness ? 199000 : 99000
+
+  const copyToClipboard = (num: string) => {
+    navigator.clipboard.writeText(num)
+    setCopiedNum(num)
+    setTimeout(() => setCopiedNum(null), 2000)
+  }
 
   const handleStripeCheckout = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,7 +67,39 @@ export default function CheckoutPage({ params }: PageProps) {
     }
   }
 
-  const handleMobileCheckout = async (e: React.FormEvent) => {
+  const handleDirectMobileCheckout = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    if (!transactionRef.trim()) {
+      setError("Veuillez saisir la référence ou le N° de dépôt Mobile Money.")
+      setLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch("/api/payment/direct-mobile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseSlug, courseTitle, price, email, fullName, whatsapp, country, transactionRef, mobileOperator }),
+      })
+      const data = await res.json()
+
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+      } else {
+        setError(data.message || "Erreur lors de la validation du paiement Mobile Money.")
+        setLoading(false)
+      }
+    } catch (err: any) {
+      setError("Erreur de connexion au serveur.")
+      setLoading(false)
+    }
+  }
+
+  // Conservé pour réactivation immédiate PayTech dès obtention des papiers d'entreprise
+  const handlePayTechCheckout = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -73,25 +116,22 @@ export default function CheckoutPage({ params }: PageProps) {
       if (targetUrl) {
         window.location.href = targetUrl
       } else {
-        setError(data.message || data.error || "Paiement Mobile Money indisponible actuellement. Utilisez la méthode Zelle/Virement.")
+        setError(data.message || data.error || "Paiement PayTech indisponible.")
         setLoading(false)
       }
     } catch (err: any) {
-      setError("Erreur de connexion au serveur de paiement.")
+      setError("Erreur de connexion au serveur PayTech.")
       setLoading(false)
     }
   }
 
-  const handleZelleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setZelleSubmitted(true)
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
-    if (paymentMethod === "paytech") {
-      handleMobileCheckout(e)
-    } else {
+    if (paymentMethod === "mobile_direct") {
+      handleDirectMobileCheckout(e)
+    } else if (paymentMethod === "stripe") {
       handleStripeCheckout(e)
+    } else if (paymentMethod === "paytech") {
+      handlePayTechCheckout(e)
     }
   }
 
@@ -171,7 +211,7 @@ export default function CheckoutPage({ params }: PageProps) {
                     required
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="+226 05 05 05 77"
+                    placeholder="+226 75 75 72 73"
                     className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                   />
                 </div>
@@ -205,9 +245,9 @@ export default function CheckoutPage({ params }: PageProps) {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod("paytech")}
+                    onClick={() => setPaymentMethod("mobile_direct")}
                     className={`flex flex-col items-start gap-2 p-3.5 rounded-2xl border text-left transition-all ${
-                      paymentMethod === "paytech"
+                      paymentMethod === "mobile_direct"
                         ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary"
                         : "border-border bg-card/50 hover:bg-secondary/60"
                     }`}
@@ -216,11 +256,11 @@ export default function CheckoutPage({ params }: PageProps) {
                       <div className="size-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
                         <Smartphone className="size-4" />
                       </div>
-                      {paymentMethod === "paytech" && <CheckCircle2 className="size-4 text-primary" />}
+                      {paymentMethod === "mobile_direct" && <CheckCircle2 className="size-4 text-primary" />}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-foreground">Mobile Money (Afrique)</div>
-                      <div className="text-[10px] text-muted-foreground">Wave, Orange Money, Free</div>
+                      <div className="text-xs font-bold text-foreground">Mobile Money Direct</div>
+                      <div className="text-[10px] text-muted-foreground">Wave, Orange Money, Moov, MTN</div>
                     </div>
                   </button>
 
@@ -244,8 +284,85 @@ export default function CheckoutPage({ params }: PageProps) {
                       <div className="text-[10px] text-muted-foreground">Visa, MasterCard, Amex</div>
                     </div>
                   </button>
+
+                  {ENABLE_PAYTECH && (
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("paytech")}
+                      className={`flex flex-col items-start gap-2 p-3.5 rounded-2xl border text-left transition-all ${
+                        paymentMethod === "paytech"
+                          ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary"
+                          : "border-border bg-card/50 hover:bg-secondary/60"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="size-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                          <Smartphone className="size-4" />
+                        </div>
+                        {paymentMethod === "paytech" && <CheckCircle2 className="size-4 text-primary" />}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-foreground">PayTech Guichet</div>
+                        <div className="text-[10px] text-muted-foreground">Paiement automatisé</div>
+                      </div>
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* Mobile Money Direct Info Box & Ref Field */}
+              {paymentMethod === "mobile_direct" && (
+                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-4">
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                      <Smartphone className="size-4" />
+                      <span>Instructions de dépôt Mobile Money</span>
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Effectuez le transfert de <strong className="text-foreground font-extrabold">{coursePriceFcfa}</strong> sur le numéro officiel unique ci-dessous (Wave, Orange Money, Moov, MTN) :
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-emerald-500/30 shadow-md">
+                    <div>
+                      <div className="font-mono text-base text-emerald-400 font-extrabold tracking-wider mt-0.5">+226 75 75 72 73</div>
+                      <div className="text-[11px] text-muted-foreground font-medium">Nom du destinataire : Sanson Alfred Dah</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard("+22675757273")}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 font-bold text-xs transition-all cursor-pointer border border-emerald-500/30"
+                      title="Copier le numéro"
+                    >
+                      {copiedNum === "+22675757273" ? (
+                        <>
+                          <Check className="size-4" />
+                          <span>Copié !</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-4" />
+                          <span>Copier</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <label className="text-xs font-bold text-foreground/90">
+                      ID de Transaction / N° du dépôt Mobile Money *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={transactionRef}
+                      onChange={(e) => setTransactionRef(e.target.value)}
+                      placeholder="Ex: REF-WAVE-8921 ou N° de téléphone expéditeur"
+                      className="w-full rounded-xl border border-emerald-500/40 bg-input/60 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Submit CTA */}
               <button
@@ -256,14 +373,16 @@ export default function CheckoutPage({ params }: PageProps) {
                 <Lock className="size-4" />
                 <span>
                   {loading 
-                    ? "Redirection vers le guichet de paiement..." 
-                    : `Payer maintenant`}
+                    ? "Traitement de votre inscription..." 
+                    : paymentMethod === "mobile_direct"
+                    ? "Valider mon paiement Mobile Money"
+                    : "Payer par Carte Internationale"}
                 </span>
               </button>
 
               <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground text-center pt-2">
                 <ShieldCheck className="size-3.5 text-emerald-400" />
-                <span>Cryptage SSL 256-bit — Accès et facture instantanés après confirmation</span>
+                <span>Cryptage SSL 256-bit — Accès et confirmation immédiats</span>
               </div>
             </form>
           </div>

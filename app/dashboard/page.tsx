@@ -606,7 +606,7 @@ export default function DashboardPage() {
                     <span>Rejoindre le Google Meet Live</span>
                   </a>
                   <a
-                    href="https://wa.me/22605050577?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20inscrit%20au%20Bootcamp%20et%20souhaite%20rejoindre%20le%20groupe%20WhatsApp"
+                    href="https://wa.me/22675757273?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20inscrit%20au%20Bootcamp%20et%20souhaite%20rejoindre%20le%20groupe%20WhatsApp"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 font-bold px-4 py-3 text-xs transition-all"
@@ -1165,7 +1165,7 @@ export default function DashboardPage() {
 
                       {item.type === 'business-plan' && (
                         <a
-                          href={`https://wa.me/22605050577?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20membre%20et%20souhaite%20recevoir%20le%20modele%20de%20Business%20Plan%20complet%20pour%20:%20${encodeURIComponent(item.title.fr)}`}
+                          href={`https://wa.me/22675757273?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20membre%20et%20souhaite%20recevoir%20le%20modele%20de%20Business%20Plan%20complet%20pour%20:%20${encodeURIComponent(item.title.fr)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs shadow-md transition-all"
@@ -1337,7 +1337,7 @@ export default function DashboardPage() {
                   type="tel"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="+226 05 05 05 77"
+                  placeholder="+226 75 75 72 73"
                   className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>

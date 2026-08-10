@@ -26,7 +26,7 @@ export default function MentionsLegalesPage() {
               <li><strong className="text-foreground">Responsable de publication :</strong> Alfred Dah</li>
               <li><strong className="text-foreground">Dénomination :</strong> Le Guide IA</li>
               <li><strong className="text-foreground">Email :</strong> <a href="mailto:alfred@leguideai.com" className="text-primary hover:underline">alfred@leguideai.com</a></li>
-              <li><strong className="text-foreground">WhatsApp :</strong> +226 05 05 05 77</li>
+              <li><strong className="text-foreground">WhatsApp :</strong> +226 75 75 72 73</li>
               <li><strong className="text-foreground">Pays établissement :</strong> Burkina Faso</li>
             </ul>
           </section>

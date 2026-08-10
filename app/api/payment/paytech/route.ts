@@ -37,8 +37,8 @@ export async function POST(req: Request) {
       .select("id")
       .single()
 
-    const apiKey = process.env.PAYTECH_API_KEY
-    const apiSecret = process.env.PAYTECH_API_SECRET
+    const apiKey = process.env.PAYTECH_API_KEY?.trim()
+    const apiSecret = process.env.PAYTECH_API_SECRET?.trim()
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideai.com")
 
     if (!apiKey || !apiSecret) {
@@ -49,41 +49,76 @@ export async function POST(req: Request) {
       })
     }
 
-    const paytechRes = await fetch("https://paytech.sn/api/payment/request-payment", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        API_KEY: apiKey,
-        API_SECRET: apiSecret,
-      },
-      body: JSON.stringify({
-        item_name: courseTitle,
-        item_price: price,
-        currency: "XOF",
-        ref_command: refCommand,
-        command_name: `Inscription ${courseTitle} - Le Guide IA`,
-        ipn_url: `${baseUrl}/api/webhooks/paytech`,
-        success_url: `${baseUrl}/checkout/success?ref=${refCommand}`,
-        cancel_url: `${baseUrl}/checkout/${courseSlug}`,
-        custom_field: JSON.stringify({
-          fullName,
-          email: email.toLowerCase(),
-          whatsapp,
-          country,
-          courseSlug,
-          paymentId: payment?.id,
-        }),
+    const paytechEnv = process.env.PAYTECH_ENV?.trim() || "test"
+
+    const ipnUrl = baseUrl.startsWith("https://")
+      ? `${baseUrl}/api/webhooks/paytech`
+      : "https://leguideai.com/api/webhooks/paytech"
+
+    const createPaytechRequest = (envMode: string) => JSON.stringify({
+      item_name: courseTitle,
+      item_price: price,
+      currency: "XOF",
+      ref_command: refCommand,
+      command_name: `Inscription ${courseTitle} - Le Guide IA`,
+      env: envMode,
+      ipn_url: ipnUrl,
+      success_url: `${baseUrl}/checkout/success?ref=${refCommand}`,
+      cancel_url: `${baseUrl}/checkout/${courseSlug}`,
+      api_key: apiKey,
+      api_secret: apiSecret,
+      custom_field: JSON.stringify({
+        fullName,
+        email: email.toLowerCase(),
+        whatsapp,
+        country,
+        courseSlug,
+        paymentId: payment?.id,
       }),
     })
 
-    const paytechData = await paytechRes.json()
-
-    if (paytechData.success === 1 && paytechData.redirect_url) {
-      return NextResponse.json({ redirectUrl: paytechData.redirect_url, ref: refCommand })
+    const requestHeaders = {
+      "Content-Type": "application/json",
+      API_KEY: apiKey,
+      API_SECRET: apiSecret,
+      api_key: apiKey,
+      api_secret: apiSecret,
     }
 
+    let paytechRes = await fetch("https://paytech.sn/api/payment/request-payment", {
+      method: "POST",
+      headers: requestHeaders,
+      body: createPaytechRequest(paytechEnv),
+    })
+
+    let paytechData = await paytechRes.json()
+    console.log(`PayTech API Raw Response (env: ${paytechEnv}):`, paytechData)
+
+    // Fallback attempt with alternate env mode if vendor/key validation fails
+    if (paytechData.success === -1 && (paytechData.message?.includes("vendeur") || paytechData.message?.includes("cle"))) {
+      const fallbackEnv = paytechEnv === "prod" ? "test" : "prod"
+      console.log(`Retrying PayTech API with fallback env: ${fallbackEnv}`)
+
+      paytechRes = await fetch("https://paytech.sn/api/payment/request-payment", {
+        method: "POST",
+        headers: requestHeaders,
+        body: createPaytechRequest(fallbackEnv),
+      })
+      paytechData = await paytechRes.json()
+      console.log(`PayTech API Raw Response (fallback env: ${fallbackEnv}):`, paytechData)
+    }
+
+    const redirectUrl = paytechData.redirect_url || paytechData.redirectUrl || paytechData.url
+    if (redirectUrl) {
+      return NextResponse.json({ redirectUrl, ref: refCommand })
+    }
+
+    const errMsg = typeof paytechData.message === "string"
+      ? paytechData.message
+      : (typeof paytechData.error === "string" ? paytechData.error : JSON.stringify(paytechData))
+
     return NextResponse.json({
-      message: paytechData.message || "Erreur de communication avec le serveur PayTech.",
+      message: errMsg || "Erreur de communication avec le serveur PayTech.",
     }, { status: 500 })
 
   } catch (error: any) {

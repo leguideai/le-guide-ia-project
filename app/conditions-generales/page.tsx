@@ -69,7 +69,7 @@ export default function ConditionsGeneralesPage() {
           </section>
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">8. Contact</h2>
-            <p><a href="mailto:alfred@leguideai.com" className="text-primary hover:underline">alfred@leguideai.com</a> — WhatsApp : +226 05 05 05 77</p>
+            <p><a href="mailto:alfred@leguideai.com" className="text-primary hover:underline">alfred@leguideai.com</a> — WhatsApp : +226 75 75 72 73</p>
           </section>
         </div>
         <div className="mt-12 pt-8 border-t border-border/40 flex flex-wrap gap-4 text-xs text-muted-foreground">
