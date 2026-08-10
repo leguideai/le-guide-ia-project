@@ -86,13 +86,6 @@ export function CertificationSection() {
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-slate-950/80 p-3.5 border border-amber-500/30 flex items-center justify-between text-xs text-slate-200 backdrop-blur-md">
-                <div className="flex items-center gap-2">
-                  <QrCode className="size-5 text-amber-400" />
-                  <span className="font-bold text-[11px]">Vérification par QR Code & URL Sécurisée</span>
-                </div>
-                <ShieldCheck className="size-4 text-emerald-400" />
-              </div>
             </div>
           </motion.div>
 

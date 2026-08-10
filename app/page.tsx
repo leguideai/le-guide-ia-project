@@ -3,6 +3,7 @@
 import { GridBackground } from "@/components/grid-background"
 import { UdemyHeader } from "@/components/udemy-header"
 import { UdemyHeroBanner } from "@/components/udemy-hero-banner"
+import { VslHeroVideo } from "@/components/vsl-hero-video"
 import { UdemyTrustLogos } from "@/components/udemy-trust-logos"
 import { UdemySkillPathways } from "@/components/udemy-skill-pathways"
 import { UdemyTabbedCourses } from "@/components/udemy-tabbed-courses"
@@ -22,13 +23,16 @@ export default function Page() {
       {/* 1. Header Style Udemy (Top bar, Barre de recherche, Catégories & Auth) */}
       <UdemyHeader />
 
-      {/* 2. Hero Banner Style Udemy (Bandeau avec carte flottante de promotion) */}
+      {/* 2. Vidéo VSL Haute Conversion (Style Révolution IA / VIP) */}
+      <VslHeroVideo />
+
+      {/* 3. Hero Banner Style Udemy (Bandeau avec carte flottante de promotion) */}
       <UdemyHeroBanner />
 
-      {/* 3. Les 3 Parcours d'Apprentissage (Cartes 3D HD) */}
+      {/* 4. Les 3 Parcours d'Apprentissage (Cartes 3D HD) */}
       <UdemySkillPathways />
 
-      {/* 4. Section Parcours d'Apprentissage & Formations (Onglets & Cartes Vidéos) */}
+      {/* 5. Section Parcours d'Apprentissage & Formations (Onglets & Cartes Vidéos) */}
       <UdemyTabbedCourses />
 
       {/* 5. Bandeau Écosystème & Stack Technologique Officielle */}

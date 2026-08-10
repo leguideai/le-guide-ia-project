@@ -197,7 +197,7 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
     subtitle: "Maîtrisez ChatGPT, Claude 3.5, Canva IA, Midjourney v6 et Make pour décupler votre productivité.",
     status: "active",
     dates: "31 Août - 6 Septembre 2026",
-    instructor: "Alfred Dah (Auditeur CISA & Expert IA)",
+    instructor: "Alfred Dah",
     poster: "/images/bootcamp_pro_thumb.jpg",
     lessons: BOOTCAMP_LESSONS
   },
@@ -206,7 +206,7 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
     title: "Initiation IA & ChatGPT Pratique",
     subtitle: "Prise en main des bases de l'IA générative, écriture des premiers prompts et cas d'usage quotidiens.",
     status: "completed",
-    dates: "Accès Replay Illimité",
+    dates: "Accès Illimité",
     instructor: "Alfred Dah",
     poster: "/images/initiation_free_poster.jpg",
     lessons: [
@@ -238,7 +238,7 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
     subtitle: "Gouvernance IA, intégration d'agents IA métiers, sécurité des données et coaching stratégique 1:1.",
     status: "upcoming",
     dates: "15 Septembre - 21 Septembre 2026",
-    instructor: "Alfred Dah & Consultants B2B",
+    instructor: "Alfred Dah",
     poster: "/images/bootcamp_business_poster.jpg",
     lessons: [
       {
@@ -639,7 +639,7 @@ export default function DashboardPage() {
                           ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
                           : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                       }`}>
-                        {bootcamp.status === "active" ? "Session Active" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
+                        {bootcamp.status === "active" ? "Active" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
                       </span>
                       <h4 className="font-heading text-xs font-bold text-foreground line-clamp-2">{bootcamp.title}</h4>
                       <p className="text-[10px] text-muted-foreground">{bootcamp.dates}</p>
@@ -683,7 +683,7 @@ export default function DashboardPage() {
                       </span>
                       <div>
                         <h4 className="text-xs font-bold text-foreground">{lesson.title}</h4>
-                        <span className="text-[10px] text-muted-foreground">Durée : {lesson.duration} · {lesson.isUpcoming ? "⏳ Session à venir" : "✓ Replay disponible"}</span>
+                        <span className="text-[10px] text-muted-foreground">Durée : {lesson.duration} · {lesson.isUpcoming ? "Session à venir" : "✓ Replay disponible"}</span>
                       </div>
                     </div>
 
@@ -715,7 +715,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
                   <div>
                     <h1 className="font-heading text-2xl font-bold text-foreground">Mes Formations & Bootcamps Inscrits</h1>
-                    <p className="text-xs text-muted-foreground mt-1">Sélectionnez une formation pour accéder aux replays, supports PDF et exercices pratiques.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Sélectionnez une formation pour accéder au lien, supports PDF et exercices pratiques.</p>
                   </div>
                   <span className="text-xs font-extrabold text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
                     {ENROLLED_BOOTCAMPS.length} Formations enregistrées
@@ -744,7 +744,7 @@ export default function DashboardPage() {
                                 ? "bg-blue-600 text-white border-blue-400"
                                 : "bg-amber-500 text-slate-950 border-amber-400"
                             }`}>
-                              {bootcamp.status === "active" ? "● Session Active" : bootcamp.status === "completed" ? "✓ Replays HD" : "⏳ À venir"}
+                              {bootcamp.status === "active" ? "Active" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
                             </span>
                           </div>
                         </div>
@@ -759,8 +759,8 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
-                          <div>📅 <strong>Dates :</strong> {bootcamp.dates}</div>
-                          <div>👨‍🏫 <strong>Formateur :</strong> {bootcamp.instructor}</div>
+                          <div><strong>Dates :</strong> {bootcamp.dates}</div>
+                          <div><strong>Formateur :</strong> {bootcamp.instructor}</div>
                         </div>
                       </div>
 
@@ -773,8 +773,7 @@ export default function DashboardPage() {
                           }}
                           className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all cursor-pointer"
                         >
-                          <PlayCircle className="size-4" />
-                          <span>Accéder aux cours ({bootcamp.lessons.length} leçons)</span>
+                          <span>Accéder à la formation</span>
                         </button>
                       </div>
                     </div>
@@ -893,7 +892,7 @@ export default function DashboardPage() {
                             ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                             : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                         }`}>
-                          {selectedLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? "⏳ Session à venir" : "✓ Replay Disponible"}
+                          {selectedLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? "Session à venir" : "Replay Disponible"}
                         </span>
                       </div>
 
@@ -1008,7 +1007,7 @@ export default function DashboardPage() {
                                 <span>{lesson.duration}</span>
                                 <span>·</span>
                                 <span className={isUpcoming ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
-                                  {isUpcoming ? "⏳ À venir" : "✓ Replay HD"}
+                                  {isUpcoming ? "À venir" : "Replay HD"}
                                 </span>
                               </div>
                               {lesson.scheduledDate && (

@@ -26,7 +26,7 @@ export function UdemySkillPathways() {
       badge: "Formule Dirigeants & Exec",
       icon: UserCheck,
       href: "/checkout/bootcamp-ia-business",
-      image: "/images/bootcamp_business_thumb.jpg",
+      image: "/images/bootcamp_business_poster.jpg",
       borderColor: "border-amber-500/40",
       btnColor: "bg-amber-500 text-slate-950"
     },
@@ -97,9 +97,6 @@ export function UdemySkillPathways() {
                     <Icon className="size-4 text-primary" />
                     <h3 className="font-heading text-base font-bold text-foreground">{item.title}</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {item.desc}
-                  </p>
                 </div>
 
                 <div className="pt-3 border-t border-border/60 flex items-center justify-between">

@@ -40,9 +40,7 @@ export function UdemyTabbedCourses() {
   const tabs = [
     { id: "initiation", label: "Initiation IA & Productivité" },
     { id: "business", label: "Business Model & Plan" },
-    { id: "automation", label: "Automatisation Make & n8n" },
     { id: "career", label: "CV, LinkedIn & Emploi" },
-    { id: "replays", label: "Replays Bootcamps Live" },
   ]
 
   const tabContent: Record<string, CourseCard[]> = {
@@ -140,53 +138,6 @@ export function UdemyTabbedCourses() {
         href: "/register-account"
       }
     ],
-    automation: [
-      {
-        id: "auto-1",
-        title: "Initiation à l'Automatisation No-Code avec Make & n8n",
-        subtitle: "Construire son premier workflow automatisé pour réduire les tâches répétitives.",
-        duration: "1h 15m",
-        rating: "4.9",
-        reviews: "210 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_pro_thumb.jpg",
-        badge: "Module 6 · Intensive",
-        price: "99 000 FCFA",
-        href: "/checkout/bootcamp-ia-pro"
-      },
-      {
-        id: "auto-2",
-        title: "Automatisation de la Gestion des Emails & Rapports Métiers",
-        subtitle: "Produire automatiquement vos comptes rendus et réponses clients.",
-        duration: "55 min",
-        rating: "4.9",
-        reviews: "175 avis",
-        instructor: "Alfred Dah",
-        source: "youtube",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/initiation_free_thumb.jpg",
-        badge: "Session 5 Live",
-        price: "Accès Membre",
-        href: "/dashboard"
-      },
-      {
-        id: "auto-3",
-        title: "Connecter vos Outils IA à Google Sheets et WhatsApp",
-        subtitle: "Workflow de messagerie et de données sans aucune ligne de code.",
-        duration: "50 min",
-        rating: "5.0",
-        reviews: "130 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_business_thumb.jpg",
-        badge: "Cas Pratique",
-        price: "199 000 FCFA",
-        href: "/checkout/bootcamp-ia-business"
-      }
-    ],
     career: [
       {
         id: "car-1",
@@ -234,53 +185,6 @@ export function UdemyTabbedCourses() {
         href: "/dashboard"
       }
     ],
-    replays: [
-      {
-        id: "rep-1",
-        title: "Replay Intégral — Bootcamp IA Pro Session 1 & 2",
-        subtitle: "Les 4 heures de cours en direct live enregistrées en Haute Définition.",
-        duration: "4h 00m",
-        rating: "5.0",
-        reviews: "480 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_pro_thumb.jpg",
-        badge: "Replay HD Live",
-        price: "Inclus Bootcamp",
-        href: "/checkout/bootcamp-ia-pro"
-      },
-      {
-        id: "rep-2",
-        title: "Replay Intégral — Session Intensive Week-end (Modules 6 à 9)",
-        subtitle: "Les 8h d'immersion du samedi et dimanche avec ateliers et livrables.",
-        duration: "8h 00m",
-        rating: "5.0",
-        reviews: "220 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_business_thumb.jpg",
-        badge: "Masterclass Exec",
-        price: "Inclus Bootcamp",
-        href: "/checkout/bootcamp-ia-business"
-      },
-      {
-        id: "rep-3",
-        title: "Clôture, Roadmap 90 Jours & Remise du Certificat Officiel",
-        subtitle: "Construire son plan d'exécution personnalisé et faire valider ses acquis.",
-        duration: "1h 30m",
-        rating: "4.9",
-        reviews: "195 avis",
-        instructor: "Alfred Dah",
-        source: "youtube",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/initiation_free_thumb.jpg",
-        badge: "Module 9",
-        price: "Offert Membres",
-        href: "/register-account"
-      }
-    ]
   }
 
   const currentCards = tabContent[activeTab] || tabContent["initiation"]
@@ -362,7 +266,7 @@ export function UdemyTabbedCourses() {
                     </div>
                     
                     {/* Video Duration Badge */}
-                    <div className="absolute bottom-2.5 right-2.5 bg-slate-950/85 backdrop-blur-md border border-white/10 rounded-md px-2 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-md">
+                    <div className="absolute top-2.5 right-2.5 bg-slate-950/85 backdrop-blur-md border border-white/10 rounded-md px-2 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-md">
                       <Clock className="size-3 text-primary" />
                       <span>{card.duration}</span>
                     </div>
@@ -381,7 +285,7 @@ export function UdemyTabbedCourses() {
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-border/60 flex items-center justify-between">
+                {/* <div className="pt-3 border-t border-border/60 flex items-center justify-between">
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-muted-foreground block font-medium">Formateur</span>
                     <span className="text-xs font-bold text-foreground">{card.instructor}</span>
@@ -394,7 +298,7 @@ export function UdemyTabbedCourses() {
                     <span>Regarder la vidéo</span>
                     <Play className="size-3.5 fill-current" />
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}

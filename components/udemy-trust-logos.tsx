@@ -17,13 +17,13 @@ export function UdemyTrustLogos() {
     },
     {
       id: "models",
-      label: "Pilier 1 · Modèles IA & Recherche",
+      label: "Pilier · Modèles IA & Recherche",
       icon: Cpu,
       count: "5 Technologies"
     },
     {
       id: "career",
-      label: "Pilier 2 · Employabilité & ATS",
+      label: "Pilier · Employabilité & ATS",
       icon: Briefcase,
       count: "1 Plateforme"
     }
@@ -132,9 +132,7 @@ export function UdemyTrustLogos() {
               >
                 <Icon className="size-3.5" />
                 <span>{p.label}</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-md ${isActive ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"}`}>
-                  {p.count}
-                </span>
+              
               </button>
             )
           })}
