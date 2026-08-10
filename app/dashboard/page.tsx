@@ -208,7 +208,7 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
     status: "completed",
     dates: "Accès Illimité",
     instructor: "Alfred Dah",
-    poster: "/images/initiation_free_poster.jpg",
+    poster: "/images/initiation_free_thumb.jpg",
     lessons: [
       {
         id: "init-01",
@@ -239,7 +239,7 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
     status: "upcoming",
     dates: "15 Septembre - 21 Septembre 2026",
     instructor: "Alfred Dah",
-    poster: "/images/bootcamp_business_poster.jpg",
+    poster: "/images/bootcamp_business_thumb.png",
     lessons: [
       {
         id: "biz-01",
