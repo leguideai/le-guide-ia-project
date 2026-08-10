@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       .single()
 
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://leguideai.com"
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideai.com")
 
     if (!stripeSecretKey) {
       console.warn("Stripe Secret Key not configured. Simulating Stripe redirect URL.")
@@ -60,7 +60,9 @@ export async function POST(req: Request) {
     params.append("line_items[0][price_data][currency]", "eur")
     params.append("line_items[0][price_data][unit_amount]", priceInEurCents.toString())
     params.append("line_items[0][price_data][product_data][name]", `Inscription ${courseTitle} - Le Guide IA`)
+    params.append("line_items[0][price_data][product_data][tax_code]", "txcd_10000000")
     params.append("line_items[0][quantity]", "1")
+    params.append("managed_payments[enabled]", "false")
 
     params.append("metadata[fullName]", fullName)
     params.append("metadata[email]", email.toLowerCase())

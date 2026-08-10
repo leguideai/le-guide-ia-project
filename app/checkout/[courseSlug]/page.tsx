@@ -29,6 +29,8 @@ export default function CheckoutPage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null)
   const [zelleSubmitted, setZelleSubmitted] = useState(false)
 
+  const price = isBusiness ? 199000 : 99000
+
   const handleStripeCheckout = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -38,14 +40,14 @@ export default function CheckoutPage({ params }: PageProps) {
       const res = await fetch("/api/payment/stripe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseSlug, email, fullName, whatsapp, country }),
+        body: JSON.stringify({ courseSlug, courseTitle, price, email, fullName, whatsapp, country }),
       })
       const data = await res.json()
 
       if (data.url) {
         window.location.href = data.url
       } else {
-        setError(data.error || "Une erreur est survenue lors de l'initialisation du paiement Stripe.")
+        setError(data.message || data.error || "Une erreur est survenue lors de l'initialisation du paiement Stripe.")
         setLoading(false)
       }
     } catch (err: any) {
@@ -63,14 +65,15 @@ export default function CheckoutPage({ params }: PageProps) {
       const res = await fetch("/api/payment/paytech", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseSlug, email, fullName, whatsapp, country }),
+        body: JSON.stringify({ courseSlug, courseTitle, price, email, fullName, whatsapp, country }),
       })
       const data = await res.json()
 
-      if (data.redirect_url) {
-        window.location.href = data.redirect_url
+      const targetUrl = data.redirectUrl || data.redirect_url
+      if (targetUrl) {
+        window.location.href = targetUrl
       } else {
-        setError(data.error || "Paiement Mobile Money indisponible actuellement. Utilisez la méthode Zelle/Virement.")
+        setError(data.message || data.error || "Paiement Mobile Money indisponible actuellement. Utilisez la méthode Zelle/Virement.")
         setLoading(false)
       }
     } catch (err: any) {
@@ -123,7 +126,7 @@ export default function CheckoutPage({ params }: PageProps) {
                 Informations & Règlement
               </h1>
               <p className="text-xs text-muted-foreground mt-1">
-                Remplissez vos coordonnées pour recevoir l'accès immédiat à votre espace membre.
+                Remplissez vos coordonnées pour accéder à ce bootcamp.
               </p>
             </div>
 
@@ -254,7 +257,7 @@ export default function CheckoutPage({ params }: PageProps) {
                 <span>
                   {loading 
                     ? "Redirection vers le guichet de paiement..." 
-                    : `Payer ${coursePriceFcfa} (${paymentMethod === "paytech" ? "Mobile Money" : "Carte Bancaire"})`}
+                    : `Payer maintenant`}
                 </span>
               </button>
 
@@ -277,7 +280,7 @@ export default function CheckoutPage({ params }: PageProps) {
                 <h3 className="font-heading text-lg font-bold text-foreground">{courseTitle}</h3>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                15h de formation intensive en direct avec Alfred Dah, accès permanent à l'Espace Membre, replays et certificat officiel.
+                15h de formation intensive en direct avec Alfred Dah.
               </p>
             </div>
 
@@ -297,19 +300,6 @@ export default function CheckoutPage({ params }: PageProps) {
                   <div className="text-[10px] text-muted-foreground">≈ {coursePriceUsd}</div>
                 </div>
               </div>
-            </div>
-
-            <div className="rounded-2xl bg-secondary/50 p-4 space-y-2 border border-border/60">
-              <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-                <Sparkles className="size-4 text-amber-400" />
-                <span>Inclus avec votre inscription :</span>
-              </div>
-              <ul className="space-y-1.5 text-[11px] text-muted-foreground pl-2">
-                <li>• Espace membre personnel débloqué</li>
-                <li>• Replays vidéo HD & Fiches PDF</li>
-                <li>• Groupe privé WhatsApp avec Alfred Dah</li>
-                <li>• Certificat officiel & Facture téléchargeable</li>
-              </ul>
             </div>
           </div>
 
