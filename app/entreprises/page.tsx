@@ -59,10 +59,6 @@ export default function EntreprisesPage() {
                 SOLUTIONS ENTREPRISES & INSTITUTIONS
               </span>
 
-              <h1 className="font-heading text-3xl md:text-5xl font-black text-foreground tracking-tight leading-tight">
-                Accélérez la transformation IA de vos équipes et de vos processus
-              </h1>
-
               <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl">
                 Formations intra-entreprise sur-mesure, audits de maturité IA et gouvernance des systèmes d'information menés par Alfred Dah, auditeur certifié CISA.
               </p>
@@ -142,9 +138,6 @@ export default function EntreprisesPage() {
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
               NOS PILIERS D'INTERVENTION B2B
             </span>
-            <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-              Des offres adaptées aux défis de votre organisation
-            </h2>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
               Choisissez l'accompagnement le plus adapté pour déployer l'Intelligence Artificielle de manière sécurisée et rentable.
             </p>
@@ -259,12 +252,8 @@ export default function EntreprisesPage() {
                 DEVIS GRATUIT & RECTIFICATIF SOUS 24H
               </span>
 
-              <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-                Demandez un devis sur-mesure pour votre entreprise
-              </h2>
-
               <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                Remplissez ce formulaire court. Alfred Dah et notre équipe d'experts analyseront vos besoins et vous recontacteront sous 24 heures ouvrées.
+                Remplissez ce formulaire court. Notre équipe analyseront vos besoins et vous recontacteront sous 24 heures ouvrées.
               </p>
 
               <div className="space-y-4 pt-2">

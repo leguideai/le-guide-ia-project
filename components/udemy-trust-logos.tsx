@@ -98,21 +98,10 @@ export function UdemyTrustLogos() {
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
               BOOTCAMP PRO · OUTILS IA
             </span>
-            <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-              Nos Outils IA Officiels
-            </h2>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
               Une architecture complète structurée pour transformer votre productivité au quotidien.
             </p>
           </div>
-
-          <Link
-            href="/bootcamp"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
-          >
-            <span>Explorer les outils</span>
-            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
         {/* Pillar Filter Tabs */}

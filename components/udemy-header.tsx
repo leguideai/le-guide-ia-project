@@ -47,7 +47,7 @@ export function UdemyHeader() {
         <Sparkles className="size-3.5 animate-pulse" />
         <span>BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !</span>
         <Link href="/checkout/bootcamp-ia-pro" className="underline font-black hover:opacity-90 ml-1">
-          Réserver ma place (99 000 FCFA) →
+          Réserver ma place (149 000 FCFA) →
         </Link>
       </div>
 

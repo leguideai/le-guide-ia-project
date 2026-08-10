@@ -199,9 +199,6 @@ export function UdemyTabbedCourses() {
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
               TUTORIELS VIDÉOS PRATIQUES
             </span>
-            <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-              Tutoriels & Extraits Vidéos Bootcamp
-            </h2>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
               Découvrez nos cours et petits tutoriels vidéo pour prendre en main l'Intelligence Artificielle.
             </p>

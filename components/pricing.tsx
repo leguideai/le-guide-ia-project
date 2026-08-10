@@ -10,40 +10,17 @@ interface PricingProps {
 }
 
 export function Pricing({ selectedFormula = "pro" }: PricingProps) {
-  // Live Countdown Timer to August 20, 2026 23:59:59 GMT
-  const [timeLeft, setTimeLeft] = useState({ days: 12, hours: 8, minutes: 31, seconds: 32 })
-
-  useEffect(() => {
-    const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
-
-    const updateTimer = () => {
-      const now = new Date().getTime()
-      const difference = targetDate - now
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000)
-        setTimeLeft({ days, hours, minutes, seconds })
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-      }
-    }
-
-    updateTimer()
-    const timer = setInterval(updateTimer, 1000)
-    return () => clearInterval(timer)
-  }, [])
-
   const content = {
     pro: {
       title: "Bootcamp IA Pro",
       subtitle: "Pour Salariés, Cadres & Professionnels",
-      founderPrice: "99 000 FCFA",
+      founderPrice: "149 000 FCFA",
       founderApprox: "≈ 150 € / $165",
-      standardPrice: "149 900 FCFA",
+      standardPrice: "250 000 FCFA",
       standardApprox: "≈ 228 € / $250",
+      expireText: "OFFRE EXPIRE LE 20 AOÛT 2026 À MINUIT GMT",
+      targetDateIso: "2026-08-20T23:59:59Z",
+      standardDateText: "À partir du 21 Août 2026",
       checkoutHref: "/checkout/bootcamp-ia-pro",
       features: [
         "7 sessions premium en direct live avec Alfred Dah",
@@ -60,8 +37,11 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
       subtitle: "Pour Dirigeants, Consultants & Entrepreneurs",
       founderPrice: "199 000 FCFA",
       founderApprox: "≈ 300 € / $330",
-      standardPrice: "250 000 FCFA",
+      standardPrice: "299 000 FCFA",
       standardApprox: "≈ 380 € / $420",
+      expireText: "OFFRE EXPIRE LE 10 SEPTEMBRE 2026 À MINUIT GMT",
+      targetDateIso: "2026-09-10T23:59:59Z",
+      standardDateText: "À partir du 11 Septembre 2026",
       checkoutHref: "/checkout/bootcamp-ia-business",
       features: [
         "15h de sessions orientées Business & Automation",
@@ -80,6 +60,9 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
       founderApprox: "Libre accès",
       standardPrice: "0 FCFA",
       standardApprox: "Libre accès",
+      expireText: "",
+      targetDateIso: "",
+      standardDateText: "Accès Libre & permanent 24h/7j",
       checkoutHref: "/register-account",
       features: [
         "Cours d'introduction pratique en accès immédiat dans l'Espace Membre",
@@ -94,6 +77,32 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
   const activeKey = selectedFormula === "free" ? "free" : selectedFormula === "business" ? "business" : "pro"
   const current = content[activeKey]
 
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+
+  useEffect(() => {
+    if (!current.targetDateIso) return
+
+    const updateTimer = () => {
+      const targetDate = new Date(current.targetDateIso).getTime()
+      const now = new Date().getTime()
+      const difference = targetDate - now
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000)
+        setTimeLeft({ days, hours, minutes, seconds })
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      }
+    }
+
+    updateTimer()
+    const timer = setInterval(updateTimer, 1000)
+    return () => clearInterval(timer)
+  }, [activeKey, current.targetDateIso])
+
   return (
     <section className="py-16 bg-background relative overflow-hidden border-t border-border/50" id="tarifs">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
@@ -103,9 +112,7 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
           <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
             TARIFS OFFICIELS · {current.title.toUpperCase()}
           </span>
-          <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-            Choisissez votre accès au {current.title}
-          </h2>
+      
           <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
             Profitez du Tarif Fondateur avantageux avant l'expiration du décompte et le passage au tarif standard.
           </p>
@@ -141,7 +148,7 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
                   <>
                     <div className="text-xs font-extrabold text-amber-400 uppercase tracking-wide flex items-center justify-center gap-1.5 pt-1">
                       <Clock className="size-3.5 animate-pulse" />
-                      <span>OFFRE EXPIRE LE 20 AOÛT 2026 À MINUIT GMT</span>
+                      <span>{current.expireText}</span>
                     </div>
 
                     {/* Live Countdown Timer Grid */}
@@ -210,7 +217,7 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground font-semibold pt-1">
-                  {activeKey === "free" ? "Accès Libre & permanent" : "À partir du 21 Août 2026"}
+                  {current.standardDateText}
                 </div>
               </div>
 

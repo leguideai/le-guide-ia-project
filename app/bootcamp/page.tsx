@@ -18,15 +18,14 @@ export default function BootcampPage() {
     pro: {
       title: "Bootcamp IA Pro",
       subtitle: "Pour Salariés, Cadres & Professionnels",
-      price: "99 000 FCFA",
+      price: "149 000 FCFA",
       approx: "≈ 150 € / $165",
-      badge: "Formule Pro · 1ère Semaine du Mois",
       icon: GraduationCap,
       href: "/checkout/bootcamp-ia-pro",
-      btnText: "Réserver le Bootcamp IA Pro (99 000 FCFA)",
       btnColor: "bg-primary text-primary-foreground hover:opacity-90",
       borderColor: "border-primary/50",
       poster: "/hero_bootcamp.jpg",
+      date: "31 Août au 6 Septembre 2026",
       features: [
         "7 Sessions intensives en direct live avec Alfred Dah",
         "Créneaux : Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT",
@@ -42,13 +41,12 @@ export default function BootcampPage() {
       subtitle: "Pour Dirigeants, Consultants & Entrepreneurs",
       price: "199 000 FCFA",
       approx: "≈ 300 € / $330",
-      badge: "Formule Exec · 3ème Semaine du Mois",
       icon: UserCheck,
       href: "/checkout/bootcamp-ia-business",
-      btnText: "Réserver le Bootcamp Business (199 000 FCFA)",
       btnColor: "bg-amber-500 hover:bg-amber-400 text-slate-950",
       borderColor: "border-amber-500/50",
-      poster: "/images/bootcamp_business_poster.jpg",
+      poster: "/images/bootcamp_business_poster_2.png",
+      date: "15 Septembre au 20 Décembre 2026",
       features: [
         "15h de sessions orientées Business Model, Offres & Sales IA",
         "Inclus l'intégralité du programme Bootcamp IA Pro",
@@ -71,6 +69,7 @@ export default function BootcampPage() {
       btnColor: "bg-emerald-500 hover:bg-emerald-400 text-slate-950",
       borderColor: "border-emerald-500/50",
       poster: "/images/initiation_free_poster.jpg",
+      date: "Accès Immédiat 24h/7j",
       features: [
         "Cours d'introduction pratique en accès immédiat dans l'Espace Membre",
         "Découverte des fondamentaux du Prompt Engineering",
@@ -99,12 +98,8 @@ export default function BootcampPage() {
               CATALOGUE OFFICIEL DES BOOTCAMPS LE GUIDE IA
             </span>
 
-            <h1 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-              Choisissez le Bootcamp adapté à votre profil et vos objectifs
-            </h1>
-
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl leading-relaxed">
-              Sessions intensives en direct avec Alfred Dah (Auditeur CISA & Expert IA). Apprenez à intégrer l'IA dans votre quotidien professionnel.
+               Choisissez le Bootcamp adapté à votre profil et vos objectifs.
             </p>
           </div>
 
@@ -119,7 +114,7 @@ export default function BootcampPage() {
               }`}
             >
               <GraduationCap className="size-4" />
-              <span>Bootcamp IA Pro (99 000 FCFA)</span>
+              <span>Bootcamp IA Pro ({formulas.pro.price})</span>
             </button>
 
             <button
@@ -131,7 +126,7 @@ export default function BootcampPage() {
               }`}
             >
               <UserCheck className="size-4" />
-              <span>Bootcamp Business Exec (199 000 FCFA)</span>
+              <span>Bootcamp Business Exec ({formulas.business.price})</span>
             </button>
 
             <button
@@ -143,7 +138,7 @@ export default function BootcampPage() {
               }`}
             >
               <Gift className="size-4" />
-              <span>Initiation Offerte (GRATUIT)</span>
+              <span>Initiation Offerte ({formulas.free.price})</span>
             </button>
           </div>
 
@@ -164,9 +159,7 @@ export default function BootcampPage() {
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-5">
                     <div className="space-y-1 text-left">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                        {active.badge}
-                      </span>
+                
                       <h2 className="font-heading text-2xl md:text-3xl font-black text-foreground pt-1">
                         {active.title}
                       </h2>
@@ -185,7 +178,7 @@ export default function BootcampPage() {
                   <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-semibold text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5 bg-card border border-border/80 rounded-lg px-3 py-1.5 text-foreground/90">
                       <Calendar className="size-3.5 text-primary" />
-                      Session : 31 Août 2026
+                      Session : {active.date}
                     </span>
                     <span className="inline-flex items-center gap-1.5 bg-card border border-border/80 rounded-lg px-3 py-1.5 text-foreground/90">
                       <Globe className="size-3.5 text-emerald-400" />
@@ -217,7 +210,7 @@ export default function BootcampPage() {
                     href={active.href}
                     className={`w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl font-extrabold px-6 py-3.5 text-xs md:text-sm shadow-xl transition-all hover:scale-[1.01] active:scale-95 ${active.btnColor}`}
                   >
-                    <span>{active.btnText}</span>
+                    <span>Réserver ma place maintenant</span>
                     <ArrowRight className="size-4" />
                   </Link>
 

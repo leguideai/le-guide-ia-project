@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, use } from "react"
+import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import { UdemyHeader } from "@/components/udemy-header"
+import { supabase } from "@/lib/supabase"
 import { ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check } from "lucide-react"
 
 interface PageProps {
@@ -30,11 +31,38 @@ export default function CheckoutPage({ params }: PageProps) {
   const [fullName, setFullName] = useState("")
   const [whatsapp, setWhatsapp] = useState("")
   const [country, setCountry] = useState("Côte d'Ivoire")
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copiedNum, setCopiedNum] = useState<string | null>(null)
 
   const price = isBusiness ? 199000 : 99000
+
+  useEffect(() => {
+    async function loadUserData() {
+      try {
+        const { data } = await supabase.auth.getUser()
+        if (data?.user) {
+          setIsLoggedIn(true)
+          if (data.user.email) setEmail(data.user.email)
+          const name = data.user.user_metadata?.full_name || data.user.user_metadata?.name
+          if (name) setFullName(name)
+          if (data.user.user_metadata?.whatsapp) setWhatsapp(data.user.user_metadata.whatsapp)
+        } else {
+          const savedEmail = localStorage.getItem("user_email")
+          const savedName = localStorage.getItem("user_name")
+          if (savedEmail) {
+            setEmail(savedEmail)
+            setIsLoggedIn(true)
+          }
+          if (savedName) setFullName(savedName)
+        }
+      } catch (err) {
+        console.warn("Could not auto-fetch user:", err)
+      }
+    }
+    loadUserData()
+  }, [])
 
   const copyToClipboard = (num: string) => {
     navigator.clipboard.writeText(num)
@@ -169,6 +197,16 @@ export default function CheckoutPage({ params }: PageProps) {
                 Remplissez vos coordonnées pour accéder à ce bootcamp.
               </p>
             </div>
+
+            {isLoggedIn && (
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center gap-3 text-xs text-emerald-300 shadow-lg shadow-emerald-500/5">
+                <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
+                <div>
+                  <span className="font-extrabold block text-foreground">Compte connecté : {fullName || email}</span>
+                  <span className="text-[11px] text-muted-foreground">Vos coordonnées sont automatiquement récupérées. Vous n'avez rien à ressaisir !</span>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-400">

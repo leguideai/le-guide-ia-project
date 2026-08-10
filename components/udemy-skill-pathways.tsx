@@ -8,7 +8,7 @@ export function UdemySkillPathways() {
   const pathways = [
     {
       id: "pro",
-      title: "Bootcamp IA Pro",
+      title: "Bootcamp IA Pro 2",
       desc: "7 Sessions intensives en direct pour salariés, managers et professionnels.",
       price: "99 000 FCFA",
       badge: "Formule Salariés & Pro",
@@ -53,16 +53,13 @@ export function UdemySkillPathways() {
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
               BOOTCAMP PRO IA & BUSINESS
             </span>
-            <h2 className="font-heading text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
-              Nos Formations d'Excellence
-            </h2>
           </div>
 
           <Link
             href="/bootcamp"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
           >
-            <span>Voir tous les parcours</span>
+            <span>Voir tous les bootcamps</span>
             <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>

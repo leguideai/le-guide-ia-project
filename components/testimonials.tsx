@@ -42,21 +42,10 @@ export function Testimonials() {
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
               BOOTCAMP PRO · AVIS APPRENANTS
             </span>
-            <h2 className="font-heading text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">
-              Témoignages & REX Apprenants
-            </h2>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
               Découvrez comment nos Bootcamps et ressources impactent quotidiennement la carrière de nos membres.
             </p>
           </div>
-
-          <Link
-            href="/bootcamp#temoignages"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
-          >
-            <span>Voir tous les avis</span>
-            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
         {/* 4 Cards Grid — Scrollable on Mobile, Grid on Desktop */}

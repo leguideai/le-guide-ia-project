@@ -52,14 +52,6 @@ export function FAQ() {
               {t("faq.title")}
             </h2>
           </div>
-
-          <Link
-            href="/faq"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
-          >
-            <span>Toutes les réponses</span>
-            <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
 
         {/* Category Filter Tabs (Single Horizontal Row Scroll on Mobile) */}
