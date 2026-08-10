@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
@@ -45,12 +45,75 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect." : error.message)
+      setError(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect. Si ce compte n'a pas encore été créé, cliquez sur 'Créer un compte'." : error.message)
       setLoading(false)
-    } else if (data.session) {
-      router.push(redirectTarget)
+    } else if (data?.session) {
+      // Check user role for smart redirection
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.session.user.id)
+        .maybeSingle()
+
+      if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
+        router.push("/admin")
+      } else {
+        router.push(redirectTarget)
+      }
     }
   }
+
+  useEffect(() => {
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        // Ensure profile exists for first-time Google users
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle()
+
+        if (!profile) {
+          await supabase.from("profiles").upsert({
+            id: session.user.id,
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0],
+            email: session.user.email,
+            avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
+            role: "student"
+          })
+        }
+
+        const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
+        if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
+          router.push("/admin")
+        } else {
+          router.push(redirectTarget)
+        }
+      }
+    }
+
+    checkSession()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle()
+
+        if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
+          router.push("/admin")
+        } else {
+          router.push(redirectTarget)
+        }
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router])
 
   const handleGoogleLogin = async () => {
     setError(null)
@@ -188,6 +251,7 @@ export default function LoginPage() {
                 </Link>
               </span>
             )}
+
           </div>
         </div>
       </div>

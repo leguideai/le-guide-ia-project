@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { LanguageProvider } from '@/lib/language-context'
+import { PerformancePatch } from '@/components/performance-patch'
 
 const jakarta = Plus_Jakarta_Sans({
   variable: '--font-geist-sans',
@@ -300,6 +301,7 @@ export default function RootLayout({
           }}
         />
         <LanguageProvider>
+          <PerformancePatch />
           {children}
         </LanguageProvider>
       </body>

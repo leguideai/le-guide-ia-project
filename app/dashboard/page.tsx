@@ -201,38 +201,7 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
     poster: "/images/bootcamp_pro_thumb.jpg",
     lessons: BOOTCAMP_LESSONS
   },
-  {
-    id: "initiation-free",
-    title: "Initiation IA & ChatGPT Pratique",
-    subtitle: "Prise en main des bases de l'IA générative, écriture des premiers prompts et cas d'usage quotidiens.",
-    status: "completed",
-    dates: "Accès Illimité",
-    instructor: "Alfred Dah",
-    poster: "/images/initiation_free_thumb.jpg",
-    lessons: [
-      {
-        id: "init-01",
-        num: "01",
-        title: "Introduction à l'IA Générative & ChatGPT",
-        duration: "1h 15m",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        pdfUrl: "/images/initiation_free_poster.jpg",
-        pdfName: "Guide_Initiation_IA_Gratuit.pdf",
-        description: "Comprendre le fonctionnement des modèles de langage et créer votre premier compte ChatGPT."
-      },
-      {
-        id: "init-02",
-        num: "02",
-        title: "Structure d'un Prompt Parfait & Rédaction",
-        duration: "1h 30m",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        pdfUrl: "/images/initiation_free_thumb.jpg",
-        pdfName: "Prompts_Essentiels_Bureautique.pdf",
-        description: "Formuler des requêtes efficaces pour synthétiser des documents et rédiger vos emails."
-      }
-    ]
-  },
-  {
+    {
     id: "bootcamp-business-exec",
     title: "Bootcamp IA Business & Dirigeants (Exec)",
     subtitle: "Gouvernance IA, intégration d'agents IA métiers, sécurité des données et coaching stratégique 1:1.",
@@ -262,6 +231,37 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
         pdfName: "Plan_Deploiement_Agents_IA.pdf",
         description: "Créer des agents virtuels spécialisés pour vos départements RH, Marketing, Ventes et Finances.",
         isUpcoming: true
+      }
+    ]
+  },
+  {
+    id: "initiation-free",
+    title: "Initiation IA & ChatGPT Pratique",
+    subtitle: "Prise en main des bases de l'IA générative, écriture des premiers prompts et cas d'usage quotidiens.",
+    status: "completed",
+    dates: "Accès Illimité",
+    instructor: "Alfred Dah",
+    poster: "/images/initiation_free_thumb.jpg",
+    lessons: [
+      {
+        id: "init-01",
+        num: "01",
+        title: "Introduction à l'IA Générative & ChatGPT",
+        duration: "1h 15m",
+        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
+        pdfUrl: "/images/initiation_free_poster.jpg",
+        pdfName: "Guide_Initiation_IA_Gratuit.pdf",
+        description: "Comprendre le fonctionnement des modèles de langage et créer votre premier compte ChatGPT."
+      },
+      {
+        id: "init-02",
+        num: "02",
+        title: "Structure d'un Prompt Parfait & Rédaction",
+        duration: "1h 30m",
+        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
+        pdfUrl: "/images/initiation_free_thumb.jpg",
+        pdfName: "Prompts_Essentiels_Bureautique.pdf",
+        description: "Formuler des requêtes efficaces pour synthétiser des documents et rédiger vos emails."
       }
     ]
   }
@@ -373,6 +373,15 @@ export default function DashboardPage() {
         setCountry(data.country || "")
         setCity(data.city || "")
         setSector(data.sector || "")
+
+        // Redirection automatique 0-clic vers le Portail Super Admin pour les comptes Admin
+        if (data.role === "admin" || data.role === "super_admin") {
+          const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
+          if (params?.get("view") !== "student") {
+            router.push("/admin")
+            return
+          }
+        }
       } else {
         setFullName(user.user_metadata?.full_name || "")
       }
@@ -511,6 +520,18 @@ export default function DashboardPage() {
         </div>
 
         <div className="pt-4 border-t border-border/60 space-y-2">
+          {(profile?.role === "admin" || profile?.role === "super_admin") && (
+            <Link
+              href="/admin"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-primary hover:opacity-90 shadow-md transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="size-4" />
+                <span>Portail Super Admin</span>
+              </div>
+              <ChevronRight className="size-3.5" />
+            </Link>
+          )}
           <Link
             href="/"
             className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
@@ -530,6 +551,27 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 p-4 md:p-8 space-y-8 overflow-y-auto max-w-6xl mx-auto w-full text-left">
+        
+        {/* Admin Quick Banner */}
+        {(profile?.role === "admin" || profile?.role === "super_admin") && (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-blue-500/10 border border-primary/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-xl bg-primary text-slate-950 flex items-center justify-center font-black shrink-0 shadow-md">
+                👑
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-white">Privilèges Administrateur Détectés ({profile.role})</h4>
+                <p className="text-xs text-slate-300">Vous êtes connecté en tant que gestionnaire. Ouvrez la console pour gérer les étudiants, cours et paiements.</p>
+              </div>
+            </div>
+            <Link
+              href="/admin"
+              className="px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 transition-opacity whitespace-nowrap shadow-lg shadow-primary/20"
+            >
+              Ouvrir le Portail Super Admin →
+            </Link>
+          </div>
+        )}
         
         {/* TAB 1: OVERVIEW */}
         {activeTab === "overview" && (
