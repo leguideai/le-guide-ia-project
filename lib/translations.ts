@@ -3,7 +3,7 @@ export const translations: Record<string, any> = {
     nav: {
       programme: "Programme",
       audience: "Pour qui ?",
-      bootcamp: "Bootcamp PRO 2",
+      bootcamp: "Bootcamp IA & Carrière",
       testimonials: "Témoignages",
       services: "Services",
       resources: "Ressources",
@@ -14,14 +14,14 @@ export const translations: Record<string, any> = {
     hero: {
       title: "Maîtrisez l'IA. Transformez votre carrière et votre business.",
       subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora",
-      ctaPro: "Je rejoins le Bootcamp PRO 2",
+      ctaPro: "Je rejoins le Bootcamp IA & Carrière",
       ctaProgram: "Voir le programme",
-      countdownLabel: "L'offre Fondateur expire dans :",
+      countdownLabel: "L'offre Promo expire dans :",
       badges: [
-        "📅 31 Août au 6 Septembre 2026",
+        "📅 31 Août au 5 Septembre 2026",
         "🕖 19h00 GMT",
         "🌍 100% En ligne",
-        "🎓 7 Sessions intensives"
+        "🎓 6 Sessions pratiques"
       ]
     },
     whyBootcamp: {
@@ -52,7 +52,7 @@ export const translations: Record<string, any> = {
     },
     program: {
       tag: "Le Programme",
-      title: "Les 7 Sessions intensives du Bootcamp PRO 2",
+      title: "Les 6 Sessions pratiques du Bootcamp IA & Carrière",
       desc: "Une timeline des sessions clés pour maîtriser l'intelligence artificielle pas à pas.",
       detailsNote: "Chaque session : 2h en direct · Replay disponible 12h · Exercice pratique inclus",
       scheduleNote: "Horaire : 19h00 GMT (heure de Ouagadougou) · Plateforme : lien privé envoyé aux inscrits",
@@ -62,8 +62,7 @@ export const translations: Record<string, any> = {
         { date: "2 sept.", session: "Session 3", title: "Créer et Développer son Business avec l'IA (Business Model Canvas)" },
         { date: "3 sept.", session: "Session 4", title: "Construire un Business Plan Professionnel avec l'IA" },
         { date: "4 sept.", session: "Session 5", title: "IA pour les Emails, Rapports et la Communication Professionnelle" },
-        { date: "5 sept.", session: "Session 6", title: "IA pour la Productivité, l'Organisation et l'Automatisation" },
-        { date: "6 sept.", session: "Session 7", title: "Créer des Opportunités avec l'IA + Roadmap 90 Jours + Certification Officielle" }
+        { date: "5 sept.", session: "Session 6", title: "IA pour la Productivité, l'Automatisation, Roadmap 90 Jours & Certification Officielle" }
       ]
     },
     projection: {
@@ -78,12 +77,13 @@ export const translations: Record<string, any> = {
     },
     audience: {
       tag: "Pour qui ?",
-      title: "Le Bootcamp PRO 2 s'adresse aux profils ambitieux",
+      title: "À qui s'adresse ce Bootcamp ?",
       profiles: [
-        { title: "Professionnel", desc: "Devenez la référence IA de votre organisation" },
-        { title: "Entrepreneur", desc: "Automatisez, scalez, libérez-vous des tâches répétitives" },
-        { title: "Consultant / Freelance", desc: "Différenciez-vous et vendez plus de missions" },
-        { title: "Chercheur d'emploi", desc: "CV, LinkedIn, ATS — prenez une longueur d'avance" }
+        { title: "Salariés & Cadres", desc: "Salariés et cadres de tous secteurs souhaitant démultiplier leur productivité et leur impact" },
+        { title: "Consultants & Indépendants", desc: "Consultants et professionnels indépendants en mission pour automatiser leurs livrables" },
+        { title: "Chercheurs d'emploi", desc: "Chercheurs d'emploi et professionnels en reconversion pour décrocher des opportunités" },
+        { title: "Enseignants & Formateurs", desc: "Préparation de cours, supports pédagogiques, correction et recherche documentaire" },
+        { title: "Étudiants en fin de parcours", desc: "Étudiants préparant leur entrée sur le marché du travail" }
       ]
     },
     differentiators: {
@@ -104,29 +104,29 @@ export const translations: Record<string, any> = {
       steps: [
         { step: "01", title: "Inscription", time: "Maintenant", desc: "Paiement sécurisé → confirmation immédiate" },
         { step: "02", title: "Bienvenue", time: "Sous 24h", desc: "Accès WhatsApp groupe privé + kit d'onboarding" },
-        { step: "03", title: "Lives", time: "31 Août - 6 Septembre", desc: "7 sessions à 19h GMT · 2h chacune" },
+        { step: "03", title: "Lives", time: "31 Août - 5 Septembre", desc: "6 sessions à 19h GMT · 2h chacune" },
         { step: "04", title: "Replays", time: "Sous 12h", desc: "Replay disponible si vous avez manqué une session" },
         { step: "05", title: "Exercices", time: "Après chaque live", desc: "1 livrable pratique par session" },
-        { step: "06", title: "Certification", time: "6 Septembre", desc: "Certificat officiel Le Guide IA remis" }
+        { step: "06", title: "Certification", time: "5 Septembre", desc: "Certificat officiel Le Guide IA remis" }
       ]
     },
     pricing: {
       tag: "Tarifs",
-      title: "Choisissez votre accès au Bootcamp PRO 2",
+      title: "Choisissez votre accès au Bootcamp IA & Carrière",
       founderCard: {
-        badge: "🏅 OFFRE FONDATEUR",
-        priceFcfa: "149 900 FCFA",
-        priceUsd: "264 $",
-        expireLabel: "⏳ Offre expire le 20 août 2026 à minuit GMT"
+        badge: "🏅 OFFRE PROMO",
+        priceFcfa: "99 000 FCFA",
+        priceUsd: "174 $",
+        expireLabel: "⏳ Offre promo expire le 20 août 2026 à minuit GMT"
       },
       standardCard: {
-        badge: "PRIX STANDARD",
-        priceFcfa: "250 000 FCFA",
-        priceUsd: "440 $",
+        badge: "PRIX NORMAL",
+        priceFcfa: "149 000 FCFA",
+        priceUsd: "262 $",
         dateLabel: "À partir du 21 Août 2026"
       },
       features: [
-        "7 sessions premium en direct",
+        "6 sessions pratiques en direct",
         "Replays disponibles 12h",
         "Exercices pratiques après chaque live",
         "Groupe WhatsApp privé d'entraide",
@@ -230,7 +230,7 @@ export const translations: Record<string, any> = {
         cta: "Envoyer la confirmation",
         loading: "Envoi en cours...",
         successTitle: "Demande reçue !",
-        successDesc: "Merci {name}. Vos informations ont bien été transmises. Notre équipe va valider votre paiement manuellement sous 24 heures et vous recevrez un e-mail de bienvenue automatique contenant le lien de votre groupe WhatsApp Bootcamp PRO 2.",
+        successDesc: "Merci {name}. Vos informations ont bien été transmises. Notre équipe va valider votre paiement manuellement sous 24 heures et vous recevrez un e-mail de bienvenue automatique contenant le lien de votre groupe WhatsApp Bootcamp IA & Carrière.",
         errors: {
           name: "Veuillez entrer votre prénom et nom.",
           email: "Veuillez entrer une adresse e-mail valide.",
@@ -263,7 +263,7 @@ export const translations: Record<string, any> = {
         { category: "guarantee", q: "Qu'est-ce qui se passe après le Bootcamp ? Y a-t-il un suivi ?", a: "Après le Bootcamp, vous conservez l'accès au groupe privé WhatsApp Le Guide IA PRO pour continuer à échanger, poser des questions et recevoir nos partages exclusifs." },
         { category: "pricing", q: "Puis-je inscrire mon équipe ou mon entreprise ?", a: "Oui, nous proposons des tarifs de groupe ou des sessions intra-entreprises. Contactez-nous par email à alfred@leguideai.com." },
         { category: "program", q: "Quels sont les outils requis pour suivre les lives ?", a: "Un simple ordinateur ou smartphone et une connexion internet. Nous utiliserons des versions gratuites de ChatGPT, Claude, Gemini et Canva IA, vous n'avez pas besoin d'abonnements payants." },
-        { category: "pricing", q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 149 900 FCFA (environ 262 USD). Cette offre exclusive expire le 20 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD)." },
+        { category: "pricing", q: "Quel est le tarif de l'offre Promo et quand expire-t-elle ?", a: "Le tarif Promo est de 99 000 FCFA (environ 174 USD). Cette offre exclusive expire le 20 août 2026 à minuit GMT. Le tarif passera ensuite au prix normal de 149 000 FCFA (environ 262 USD)." },
         { category: "logistics", q: "Le Bootcamp convient-il aux résidents de la diaspora ?", a: "Oui, tout à fait. Les horaires (19h00 GMT / 21h00 en France) et les moyens de paiement comme Zelle sont spécifiquement adaptés pour faciliter la participation de la diaspora." },
         { category: "pricing", q: "Puis-je obtenir une facture pour mon entreprise ?", a: "Oui, nous pouvons vous émettre une facture professionnelle au nom de votre entreprise pour justifier la formation. Envoyez-nous simplement les détails de facturation sur WhatsApp." },
         { category: "logistics", q: "Comment puis-je rejoindre le groupe WhatsApp privé ?", a: "Une fois votre confirmation de paiement transmise via notre formulaire, notre équipe valide votre accès sous 24h et vous recevez un lien d'intégration WhatsApp direct par e-mail et SMS/WhatsApp." }
@@ -271,12 +271,121 @@ export const translations: Record<string, any> = {
     },
     ctaFooter: {
       title: "Prêt à prendre une longueur d'avance ?",
-      desc: "L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le Bootcamp PRO 2 pour maîtriser les outils indispensables à votre réussite.",
-      ctaPro: "Je rejoins le Bootcamp PRO 2",
+      desc: "L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le Bootcamp IA & Carrière pour maîtriser les outils indispensables à votre réussite.",
+      ctaPro: "Je rejoins le Bootcamp IA & Carrière",
       ctaContact: "Nous contacter",
-      founderPrice: "149 900 FCFA · Offre Fondateur",
+      founderPrice: "99 000 FCFA · Offre Promo",
       footerNote: "Le futur appartient à ceux qui se préparent avant les autres.",
       rights: "© {year} Le Guide IA. Tous droits réservés.",
+    },
+    testimonials: {
+      tag: "Témoignages",
+      title: "Ce qu'en disent les participants",
+      desc: "Des retours d'expérience concrets d'élèves ayant suivi nos formations précédentes.",
+      items: [
+        { name: "Moussa", country: "Sénégal", role: "Entrepreneur", text: "Le Guide IA a changé ma perception de l'IA. J'ai automatisé 80% de mon service client sur WhatsApp et économisé des heures de travail quotidien.", image: "/moussa.jpg" },
+        { name: "Fatoumata", country: "Côte d'Ivoire", role: "Responsable RH", text: "Grâce aux exercices de prompting sur Claude et ChatGPT, j'ai réécrit toutes les fiches de poste de mon service en une après-midi. Impressionnant !", image: "/fatoumata.jpg" },
+        { name: "Amadou", country: "Burkina Faso", role: "Consultant", text: "Ce bootcamp est très différent des formations théoriques gratuites. Les exemples s'adaptent réellement à nos connexions, nos cas locaux et notre environnement professionnel.", image: "/amadou.jpg" },
+        { name: "Sarah", country: "France (Diaspora)", role: "Chercheuse d'emploi", text: "J'ai optimisé mon CV et mon profil LinkedIn avec la méthode d'Alfred. J'ai été contactée par deux recruteurs en moins d'une semaine après la mise à jour.", image: "/sarah.jpg" },
+        { name: "Jean-Pierre", country: "Cameroun", role: "Développeur d'affaires", text: "Le module sur la rédaction d'e-mails et de rapports professionnels est une pépite. Mes propositions commerciales sont plus percutantes.", image: "/jeanpierre.jpg" },
+        { name: "Awa", country: "Mali", role: "Étudiante", text: "Je me sens armée pour mon entrée sur le marché du travail. Le certificat Le Guide IA est déjà fièrement affiché sur mon profil LinkedIn.", image: "/awa.jpg" }
+      ]
+    },
+    services: {
+      tag: "Prestations Sur-Mesure",
+      title: "Des services premium pour accélérer votre croissance",
+      desc: "Au-delà de nos formations, nous vous accompagnons individuellement dans la réalisation de vos projets stratégiques.",
+      cta: "Discuter de mon projet",
+      items: [
+        {
+          title: "Développement de sites web",
+          desc: "Création de sites modernes, ultra-rapides et optimisés pour le SEO et les conversions. Du site vitrine à la plateforme sur-mesure.",
+          features: ["Design unique & responsive", "Optimisation SEO locale", "Intégration de chatbots / outils IA"],
+          message: "Bonjour Le Guide IA, je souhaite discuter d'un projet de création de site web."
+        },
+        {
+          title: "Coaching recherche d'emploi",
+          desc: "Trouvez l'emploi de vos rêves grâce à l'IA. Préparation intensive aux entretiens, ciblage d'opportunités et simulation de recrutement.",
+          features: ["Accompagnement individuel", "Simulation d'entretien IA", "Stratégie de candidature"],
+          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur le coaching de recherche d'emploi."
+        },
+        {
+          title: "Optimisation de CV et LinkedIn",
+          desc: "Propulsez votre marque personnelle. Diagnostic complet de votre profil LinkedIn et refonte de votre CV pour passer les filtres ATS.",
+          features: ["Audit de profil individuel", "Ligne éditoriale sur-mesure", "Optimisation de CV pour ATS"],
+          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur l'optimisation de CV et de profil LinkedIn."
+        },
+        {
+          title: "Création de Business Plans",
+          desc: "Conception de plans d'affaires solides et convaincants pour vos demandes de financement et structurer vos projets au Burkina Faso.",
+          features: ["Modélisation financière", "Analyse des secteurs porteurs", "Dossier prêt pour les investisseurs"],
+          message: "Bonjour Le Guide IA, je souhaite échanger sur la création de Business Plan pour mon projet."
+        }
+      ]
+    },
+    authority: {
+      tag: "L'expert",
+      founderTitle: "Fondateur de Le Guide IA",
+      consultantTitle: "Expert IA & Transformation Digitale",
+      cisa: "CISA — Certified Information Systems Auditor",
+      experience: "24+ ans d'expérience professionnelle",
+      mba: "MBA en Entrepreneurship et développement durable",
+      videoPlaceholder: "Vidéo de présentation (60s)",
+      desc1: "Expert certifié et auditeur de systèmes d'information chevronné, Alfred Dah aide les professionnels et entreprises d'Afrique francophone et de la diaspora à s'approprier les technologies d'avenir.",
+      desc2: "Mon objectif est simple : rendre l'IA pratique, accessible et utile pour que vous travailliez mieux, gagniez en productivité et créiez plus d'opportunités professionnelles.",
+      quote: "Votre avenir professionnel ne dépend plus seulement de vos compétences. Il dépend aussi de votre capacité à travailler avec l'IA.",
+      stats: {
+        countries: "26+ pays",
+        countriesLabel: "représentés parmi les participants",
+        followers: "8 000",
+        followersLabel: "abonnés LinkedIn (à jour)",
+        target: "500+",
+        targetLabel: "professionnels formés"
+      }
+    },
+    payment: {
+      tag: "Paiement",
+      title: "Validez votre inscription",
+      subtitle: "Choisissez votre mode de paiement préféré et envoyez le formulaire de confirmation une fois le transfert effectué.",
+      methods: {
+        om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
+        wave: { name: "Wave", target: "Afrique de l'Ouest", detail: "Transfert direct via Wave au +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
+        zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer via Zelle au numéro : +1 917 903 5628  (Sanson Alfred Tanguy Dah)." },
+        // bank: { name: "Virement Bancaire", target: "", detail: "Veuillez nous contacter sur WhatsApp pour obtenir notre RIB officiel." }
+      },
+      form: {
+        title: "Confirmer mon paiement",
+        subtitle: "Remplissez ce formulaire après votre transfert pour recevoir vos accès sous 24h.",
+        labelName: "Nom et Prénom",
+        placeholderName: "Votre nom complet",
+        labelEmail: "Email de réception",
+        placeholderEmail: "vous@email.com",
+        labelWhatsapp: "Numéro WhatsApp",
+        placeholderWhatsapp: "Ex : +221 77 123 45 67",
+        labelCountry: "Pays de résidence",
+        placeholderCountry: "Sélectionnez votre pays",
+        searchCountryPlaceholder: "Rechercher un pays...",
+        noCountryFound: "Aucun pays trouvé",
+        warningNote: "Après votre paiement, nous vous contacterons par téléphone pour confirmer les détails de votre inscription.",
+        labelMethod: "Moyen de paiement",
+        placeholderMethod: "Sélectionnez le moyen utilisé",
+        labelTxCode: "Code / Référence de transaction",
+        placeholderTxCode: "Ex: OM_123456789 ou Wave Ref...",
+        cta: "Envoyer la confirmation",
+        loading: "Envoi en cours...",
+        successTitle: "Demande reçue !",
+        successDesc: "Merci {name}. Vos informations ont bien été transmises. Notre équipe va valider votre paiement manuellement sous 24 heures et vous recevrez un e-mail de bienvenue automatique contenant le lien de votre groupe WhatsApp Bootcamp IA & Carrière.",
+        errors: {
+          name: "Veuillez entrer votre prénom et nom.",
+          email: "Veuillez entrer une adresse e-mail valide.",
+          whatsapp: "Veuillez entrer votre numéro WhatsApp.",
+          whatsappInvalid: "Numéro WhatsApp invalide pour l'indicatif {dial}.",
+          country: "Veuillez sélectionner votre pays de résidence.",
+          method: "Veuillez sélectionner votre moyen de paiement.",
+          txCode: "Veuillez indiquer la référence de votre transaction.",
+          server: "Une erreur est survenue lors de l'envoi. Veuillez réessayer."
+        }
+      }
     },
     scrollToTop: {
       ariaLabel: "Remonter en haut de page",
@@ -300,7 +409,7 @@ export const translations: Record<string, any> = {
     nav: {
       programme: "Program",
       audience: "Who is it for?",
-      bootcamp: "Bootcamp PRO 2",
+      bootcamp: "Bootcamp IA & Carrière",
       testimonials: "Testimonials",
       services: "Services",
       resources: "Resources",
@@ -311,14 +420,14 @@ export const translations: Record<string, any> = {
     hero: {
       title: "Master AI. Transform your career and your business.",
       subtitle: "Intensive online training · 100% in French · African & diaspora cases",
-      ctaPro: "Join the Bootcamp PRO 2",
+      ctaPro: "Join the Bootcamp IA & Carrière",
       ctaProgram: "Download the Program",
-      countdownLabel: "The Founding Offer expires in:",
+      countdownLabel: "The Promo Offer expires in:",
       badges: [
-        "📅 Aug 1 – 9, 2026",
+        "📅 Aug 31 – Sep 5, 2026",
         "🕖 7:00 PM GMT",
         "🌍 100% Online",
-        "🎓 9 Intensive Sessions"
+        "🎓 6 Practical Sessions"
       ]
     },
     whyBootcamp: {
@@ -349,7 +458,7 @@ export const translations: Record<string, any> = {
     },
     program: {
       tag: "The Program",
-      title: "The 9 intensive sessions of the Bootcamp PRO 2",
+      title: "The 6 practical sessions of Bootcamp IA & Carrière",
       desc: "A timeline of key sessions to master artificial intelligence step-by-step.",
       detailsNote: "Each session: 2h live · Replay available for 12h · Practical exercise included",
       scheduleNote: "Time: 7:00 PM GMT (Ouagadougou time) · Platform: private link sent to registrants",
@@ -359,8 +468,7 @@ export const translations: Record<string, any> = {
         { date: "Sep 2", session: "Session 3", title: "Create & Develop Your Business with AI (Business Model Canvas)" },
         { date: "Sep 3", session: "Session 4", title: "Build a Professional Business Plan with AI" },
         { date: "Sep 4", session: "Session 5", title: "AI for Emails, Reports & Professional Communication" },
-        { date: "Sep 5", session: "Session 6", title: "AI for Productivity, Organization & Automation" },
-        { date: "Sep 6", session: "Session 7", title: "Creating Opportunities with AI + 90-Day Roadmap + Official Certification" }
+        { date: "Sep 5", session: "Session 6", title: "AI for Productivity, Automation, 90-Day Roadmap & Official Certification" }
       ]
     },
     projection: {
@@ -375,12 +483,13 @@ export const translations: Record<string, any> = {
     },
     audience: {
       tag: "Who is it for?",
-      title: "The Bootcamp PRO 2 targets ambitious profiles",
+      title: "Who is this Bootcamp for?",
       profiles: [
-        { title: "Professional", desc: "Become the AI reference within your organization" },
-        { title: "Entrepreneur", desc: "Automate, scale, and free yourself from repetitive tasks" },
-        { title: "Consultant / Freelancer", desc: "Stand out and sell more consulting projects" },
-        { title: "Job Seeker", desc: "CV, LinkedIn, ATS — take a head start" }
+        { title: "Employees & Managers", desc: "Salaried employees and managers from all sectors seeking to boost productivity" },
+        { title: "Consultants & Freelancers", desc: "Consultants and independent professionals seeking to automate deliverables" },
+        { title: "Job Seekers", desc: "Job seekers and professionals changing careers to land new opportunities" },
+        { title: "Teachers & Trainers", desc: "Course preparation, educational materials, grading & research" },
+        { title: "Graduating Students", desc: "Students preparing effectively for entry into the job market" }
       ]
     },
     differentiators: {
@@ -401,29 +510,29 @@ export const translations: Record<string, any> = {
       steps: [
         { step: "01", title: "Registration", time: "Now", desc: "Secure payment → immediate confirmation" },
         { step: "02", title: "Welcome", time: "Within 24h", desc: "Access to private WhatsApp group + onboarding kit" },
-        { step: "03", title: "Live Sessions", time: "Aug 31 – Sep 6", desc: "7 sessions at 7 PM GMT · 1.5 hours each" },
+        { step: "03", title: "Live Sessions", time: "Aug 31 – Sep 5", desc: "6 sessions at 7 PM GMT · 2 hours each" },
         { step: "04", title: "Replays", time: "Within 12h", desc: "Replay available if you missed a live session" },
         { step: "05", title: "Exercises", time: "After each live", desc: "1 practical deliverable per session" },
-        { step: "06", title: "Certification", time: "September 6", desc: "Official Le Guide IA certificate issued" }
+        { step: "06", title: "Certification", time: "September 5", desc: "Official Le Guide IA certificate issued" }
       ]
     },
     pricing: {
       tag: "Pricing",
-      title: "Choose your access to Bootcamp PRO 2",
+      title: "Choose your access to Bootcamp IA & Carrière",
       founderCard: {
-        badge: "🏅 FOUNDER OFFER",
-        priceFcfa: "149,900 FCFA",
-        priceUsd: "262",
-        expireLabel: "⏳ Offer expires August 20, 2026 at midnight GMT"
+        badge: "🏅 PROMO OFFER",
+        priceFcfa: "99,000 FCFA",
+        priceUsd: "174 $",
+        expireLabel: "⏳ Promo offer expires August 20, 2026 at midnight GMT"
       },
       standardCard: {
-        badge: "STANDARD PRICE",
-        priceFcfa: "250,000 FCFA",
-        priceUsd: "440",
+        badge: "NORMAL PRICE",
+        priceFcfa: "149,000 FCFA",
+        priceUsd: "262 $",
         dateLabel: "Starting August 21, 2026"
       },
       features: [
-        "10 live premium sessions",
+        "6 live practical sessions",
         "12h replays availability",
         "Practical exercises after each live",
         "Private WhatsApp support group",
@@ -527,7 +636,7 @@ export const translations: Record<string, any> = {
         cta: "Send confirmation",
         loading: "Sending...",
         successTitle: "Request received!",
-        successDesc: "Thank you {name}. Your information has been sent. Our team will manually validate your payment within 24 hours and you will receive an automatic welcome email with the link to join your WhatsApp Bootcamp PRO 2 group.",
+        successDesc: "Thank you {name}. Your information has been sent. Our team will manually validate your payment within 24 hours and you will receive an automatic welcome email with the link to join your WhatsApp Bootcamp IA & Carrière group.",
         errors: {
           name: "Please enter your name.",
           email: "Please enter a valid email address.",
@@ -562,7 +671,7 @@ export const translations: Record<string, any> = {
         { category: "pricing", q: "Can I enroll my team or my company?", a: "Yes, we offer group rates or in-house sessions. Contact us by email at alfred@leguideai.com." },
         { category: "program", q: "What tools are required to follow the lives?", a: "A computer or smartphone and an internet connection. We will use the free versions of ChatGPT, Claude, Gemini, and Canva IA; you don't need paid subscriptions." },
         { category: "program", q: "Who is the expert Alfred Dah?", a: "Alfred Dah is a certified CISA systems auditor, holder of an MBA and specialized in AI governance, with over 24 years of experience in digital transformation." },
-        { category: "pricing", q: "What is the Founder Price and when does it expire?", a: "The Founder price is 149,900 FCFA (approximately $262 USD). This exclusive offer expires on August 20, 2026 at midnight GMT. The price will then revert to the standard rate of 250,000 FCFA (approximately $440 USD)." },
+        { category: "pricing", q: "What is the Promo Price and when does it expire?", a: "The Promo price is 99,000 FCFA (approximately $174 USD). This exclusive offer expires on August 20, 2026 at midnight GMT. The price will then revert to the normal rate of 149,000 FCFA (approximately $262 USD)." },
         { category: "logistics", q: "Does the Bootcamp suit diaspora residents?", a: "Yes, absolutely. The hours (7:00 PM GMT / 9:00 PM in France) and payment methods like Zelle are specifically tailored for diaspora participation." },
         { category: "pricing", q: "Can I get an invoice for my company?", a: "Yes, we can issue a professional invoice under your company's name. Simply send us your invoicing details on WhatsApp." },
         { category: "logistics", q: "How do I join the private WhatsApp group?", a: "Once your payment confirmation is sent via our form, our team validates your access within 24 hours and you receive a direct WhatsApp integration link by email and SMS/WhatsApp." }
@@ -570,8 +679,8 @@ export const translations: Record<string, any> = {
     },
     ctaFooter: {
       title: "Ready to take the lead?",
-      desc: "AI won't wait until you're ready. But you can decide today to get seriously trained. Join the Bootcamp PRO 2 to master the essential tools for your success.",
-      ctaPro: "Join the Bootcamp PRO 2",
+      desc: "AI won't wait until you're ready. But you can decide today to get seriously trained. Join the Bootcamp IA & Carrière to master the essential tools for your success.",
+      ctaPro: "Join the Bootcamp IA & Carrière",
       ctaContact: "Contact us",
       footerNote: "The future belongs to those who prepare before others.",
       rights: "© {year} Le Guide IA. All rights reserved.",

@@ -28,7 +28,7 @@ export default function PolitiqueConfidentialitePage() {
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">3. Finalités</h2>
             <ul className="space-y-1 list-disc list-inside">
-              <li>Gestion des inscriptions au Bootcamp PRO 2</li>
+              <li>Gestion des inscriptions au Bootcamp IA & Carrière</li>
               <li>Confirmation et suivi du paiement</li>
               <li>Accès au groupe WhatsApp et ressources</li>
               <li>Communication formation et suivi</li>

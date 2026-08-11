@@ -37,7 +37,7 @@ export function Parcours() {
         <div className="relative grid gap-8 p-8 sm:p-12 md:grid-cols-2 md:items-center">
           <div>
             <span className="inline-flex rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
-              Bootcamp PRO 2
+              Bootcamp IA & Carrière
             </span>
             <h3 className="mt-4 font-heading text-2xl font-bold">{t("parcours.bootcampTitle")}</h3>
             <ul className="mt-6 flex flex-col gap-3">
@@ -60,7 +60,7 @@ export function Parcours() {
               </div>
               <div className="flex items-baseline gap-3 whitespace-nowrap">
                 <span className="text-sm font-medium text-muted-foreground">{t("parcours.priceStandard")}</span>
-                <span className="text-sm font-medium text-muted-foreground line-through">250 000 FCFA</span>
+                <span className="text-sm font-medium text-muted-foreground line-through">149 000 FCFA</span>
               </div>
             </div>
             <a

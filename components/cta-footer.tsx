@@ -109,7 +109,7 @@ export function CtaFooter() {
               
               <div className="mt-8">
                 <a
-                  href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 900 FCFA) et valider mon paiement.")}`}
+                  href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (Offre Promo - 99 000 FCFA) et valider mon paiement.")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(

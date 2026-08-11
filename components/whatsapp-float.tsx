@@ -6,7 +6,7 @@ import { useLanguage } from "@/lib/language-context"
 
 export function WhatsAppFloat() {
   const whatsappNumber = "22605050577" // Support number
-  const message = encodeURIComponent("Bonjour Le Guide IA, je souhaite avoir des informations sur le Bootcamp PRO 2.")
+  const message = encodeURIComponent("Bonjour Le Guide IA, je souhaite avoir des informations sur le Bootcamp IA & Carrière.")
   const url = `https://wa.me/${whatsappNumber}?text=${message}`
 
   return (
