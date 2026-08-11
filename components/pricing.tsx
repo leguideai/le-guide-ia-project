@@ -127,12 +127,12 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite profiter du Tarif Fondateur (149 900 FCFA / environ 264 $  ) pour le Bootcamp PRO 2.")}`}
+                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite profiter du Tarif Promo (99 000 FCFA / environ 174 $  ) pour le Bootcamp IA & Carrière.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 text-sm transition-transform active:scale-95 shadow shadow-amber-500/10"
               >
-                Profiter du Tarif Fondateur
+                Profiter du Tarif Promo
               </a>
             </div>
           </motion.div>
@@ -174,12 +174,12 @@ export function Pricing() {
 
             <div className="mt-8">
               <a
-                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite réserver l'Accès Standard (250 000 FCFA / environ 438 USD) pour le Bootcamp PRO 2.")}`}
+                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite réserver l'Accès Normal (149 000 FCFA / environ 262 USD) pour le Bootcamp IA & Carrière.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex h-12 items-center justify-center rounded-xl border border-border/80 hover:bg-card/80 text-foreground font-semibold px-6 text-sm transition-colors"
               >
-                Choisir l'accès standard
+                Choisir l'accès normal
               </a>
             </div>
           </motion.div>

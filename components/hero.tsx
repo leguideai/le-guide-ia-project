@@ -43,7 +43,7 @@ function CountdownTimer() {
   if (expired) {
     return (
       <div className="mt-6 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center font-heading text-sm font-bold text-destructive">
-        L'offre fondateur à 149 900 FCFA / 262 USD est expirée.
+        L'offre promo à 99 000 FCFA / 174 USD est expirée.
       </div>
     )
   }
@@ -84,16 +84,44 @@ export function Hero() {
 
   const badges = t("hero.badges") || []
 
+  const ctaButtons = (
+    <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center w-full justify-center">
+      <a
+        href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (Offre Promo - 99 000 FCFA / environ 174 $  ) et procéder au paiement.")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          buttonVariants({ size: "lg" }),
+          "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform text-center justify-center"
+        )}
+      >
+        Je rejoins le Bootcamp IA & Carrière
+      </a>
+      <a
+        href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "lg" }),
+          "h-12 border-border/80 bg-transparent px-8 text-base hover:bg-card/50 text-foreground text-center justify-center"
+        )}
+      >
+        {t("hero.ctaProgram")}
+        <ArrowRight className="size-4 ml-1" />
+      </a>
+    </div>
+  )
+
   return (
-    <section className="relative overflow-hidden pt-32 pb-20 md:pt-40" id="accueil">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 md:px-8 lg:grid-cols-2">
-        {/* Left */}
-        <div className="order-2 lg:order-1">
+    <section className="relative overflow-hidden pt-24 pb-12 md:pt-28 md:pb-16" id="accueil">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 md:px-8 lg:grid-cols-2 lg:items-stretch">
+        {/* Left (Desktop only text content) */}
+        <div className="order-2 lg:order-1 hidden lg:flex flex-col justify-center">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2.5 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary"
+            className="inline-flex items-center gap-2.5 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary w-fit"
           >
             <Sparkles className="size-3.5" />
             <span>Co-créez votre avenir professionnel</span>
@@ -134,36 +162,14 @@ export function Hero() {
             ))}
           </motion.div>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Desktop */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:items-center"
           >
-            <a
-              href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp PRO 2 (Offre Fondateur - 149 900 FCFA / environ 264 $  ) et procéder au paiement.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
-              )}
-            >
-              Je rejoins le Bootcamp PRO 2
-            </a>
-            <a
-              href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "h-12 border-border/80 bg-transparent px-8 text-base hover:bg-card/50 text-foreground"
-              )}
-            >
-              {t("hero.ctaProgram")}
-              <ArrowRight className="size-4 ml-1" />
-            </a>
+            {ctaButtons}
           </motion.div>
 
           {/* Countdown timer */}
@@ -176,33 +182,25 @@ export function Hero() {
           </motion.div>
         </div>
 
-        {/* Right - image */}
+        {/* Right - image & Mobile CTAs */}
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="relative order-1 lg:order-2"
+          className="relative order-1 lg:order-2 flex flex-col justify-center items-center h-full w-full"
         >
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 glow-blue">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/30 glow-blue h-full w-full flex items-center justify-center bg-card/20 p-1">
             <img
               src="/hero_bootcamp.jpg"
-              alt="Affiche Officielle Le Guide IA - Bootcamp PRO 2"
-              className="w-full h-auto rounded-2xl"
+              alt="Affiche Officielle Le Guide IA - Bootcamp IA & Carrière"
+              className="w-auto h-auto max-h-[75vh] lg:max-h-full max-w-full object-contain rounded-2xl"
             />
           </div>
 
-          {/* floating badge */}
-          {/* <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-            className="absolute -bottom-5 -left-3 flex items-center gap-2 rounded-xl border border-border bg-card/90 px-4 py-3 shadow-xl backdrop-blur-md"
-          >
-            <CheckCircle2 className="size-5 text-emerald-500" />
-            <div>
-              <div className="text-sm font-bold">100% Pratique & Intense</div>
-              <div className="text-xs text-muted-foreground">Bootcamp PRO 2 en ligne</div>
-            </div>
-          </motion.div> */}
+          {/* Mobile CTA Buttons below Poster Image */}
+          <div className="mt-6 w-full lg:hidden">
+            {ctaButtons}
+          </div>
         </motion.div>
       </div>
     </section>
