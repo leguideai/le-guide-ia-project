@@ -146,7 +146,7 @@ export function UdemyTrustLogos() {
                 {/* Official Brand Image Header */}
                 <div className="w-full h-36 rounded-xl overflow-hidden border border-border/60 bg-white flex items-center justify-center relative group-hover:border-primary/40 transition-colors p-3 shadow-inner">
                   <img
-                    src={tool.image}
+                    src={tool.image || "/images/bootcamp_pro_thumb.jpg"}
                     alt={tool.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 rounded-lg"
                   />

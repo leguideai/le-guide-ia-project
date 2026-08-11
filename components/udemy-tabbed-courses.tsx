@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Play, Star, Clock, ArrowRight, Sparkles, X, Tv, ShieldCheck, CheckCircle2 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 interface CourseCard {
   id: string
@@ -26,6 +27,15 @@ export function UdemyTabbedCourses() {
   const [activeTab, setActiveTab] = useState("initiation")
   const [selectedVideo, setSelectedVideo] = useState<CourseCard | null>(null)
   const [inlinePlayingId, setInlinePlayingId] = useState<string | null>(null)
+  const [dbLessonsData, setDbLessonsData] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadLessons() {
+      const { data } = await supabase.from("lessons").select("*").order("sequence_order", { ascending: true })
+      if (data && data.length > 0) setDbLessonsData(data)
+    }
+    loadLessons()
+  }, [])
 
   const getMediaThumbnail = (card: CourseCard) => {
     if (card.videoUrl) {
@@ -43,8 +53,24 @@ export function UdemyTabbedCourses() {
     { id: "career", label: "CV, LinkedIn & Emploi" },
   ]
 
+  const dynamicLessonsMap = dbLessonsData.length > 0 ? dbLessonsData.map((les, idx) => ({
+    id: les.id,
+    title: les.title,
+    subtitle: les.module_name || "Module de cours interactif",
+    duration: les.duration || "1h 30m",
+    rating: "4.9",
+    reviews: `${100 + idx * 45} avis`,
+    instructor: "Alfred Dah",
+    source: "supabase" as const,
+    videoUrl: les.video_url || "https://www.youtube.com/embed/L_LUpnjgPso",
+    thumbnail: les.pdf_url || "/images/bootcamp_pro_thumb.jpg",
+    badge: les.module_name || `Module ${idx + 1}`,
+    price: "Accès Membre",
+    href: "/dashboard"
+  })) : []
+
   const tabContent: Record<string, CourseCard[]> = {
-    initiation: [
+    initiation: dynamicLessonsMap.length > 0 ? dynamicLessonsMap.slice(0, 3) : [
       {
         id: "init-1",
         title: "Mindset IA & Configuration de ChatGPT, Claude et Gemini",
@@ -74,24 +100,9 @@ export function UdemyTabbedCourses() {
         badge: "Module 2 · Tutoriel",
         price: "Gratuit (0 FCFA)",
         href: "/register-account"
-      },
-      {
-        id: "init-3",
-        title: "Recherche & Synthèse Instantanée avec Perplexity et NotebookLM",
-        subtitle: "Analyser des dizaines de PDF et documents stratégiques sans perte de temps.",
-        duration: "40 min",
-        rating: "4.8",
-        reviews: "190 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_business_thumb.jpg",
-        badge: "Session 1 Replay",
-        price: "Accès Membre",
-        href: "/dashboard"
       }
     ],
-    business: [
+    business: dynamicLessonsMap.length > 0 ? dynamicLessonsMap.slice(1, 4) : [
       {
         id: "biz-1",
         title: "Créer son Business Model Canvas assisté par l'IA",
@@ -106,39 +117,9 @@ export function UdemyTabbedCourses() {
         badge: "Session 3 Live",
         price: "99 000 FCFA",
         href: "/checkout/bootcamp-ia-pro"
-      },
-      {
-        id: "biz-2",
-        title: "Construire un Business Plan Professionnel pour Investisseurs",
-        subtitle: "Étude de marché, prévisions financières et analyse des risques avec l'IA.",
-        duration: "1h 50m",
-        rating: "4.9",
-        reviews: "115 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_pro_thumb.jpg",
-        badge: "Session 4 Live",
-        price: "99 000 FCFA",
-        href: "/checkout/bootcamp-ia-pro"
-      },
-      {
-        id: "biz-3",
-        title: "Valider ses Segments Clients & Offre Commerciale",
-        subtitle: "Définir la proposition de valeur et tester les hypothèses sur le marché.",
-        duration: "45 min",
-        rating: "4.8",
-        reviews: "88 avis",
-        instructor: "Alfred Dah",
-        source: "youtube",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/initiation_free_thumb.jpg",
-        badge: "Extrait Atelier",
-        price: "Offert",
-        href: "/register-account"
       }
     ],
-    career: [
+    career: dynamicLessonsMap.length > 0 ? dynamicLessonsMap.slice(2, 5) : [
       {
         id: "car-1",
         title: "Refonte du CV Moderne & Optimisation pour Filtres ATS",
@@ -184,7 +165,7 @@ export function UdemyTabbedCourses() {
         price: "Accès Membre",
         href: "/dashboard"
       }
-    ],
+    ]
   }
 
   const currentCards = tabContent[activeTab] || tabContent["initiation"]

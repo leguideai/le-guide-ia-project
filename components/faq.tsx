@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
 import { ChevronDown, HelpCircle, CreditCard, BookOpen, Clock, ShieldCheck, Layers, ArrowRight } from "lucide-react"
@@ -9,7 +9,28 @@ import { cn } from "@/lib/utils"
 
 export function FAQ() {
   const { t } = useLanguage()
-  const items = (t("faq.items") as any[]) || []
+  const [dbFaqs, setDbFaqs] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadFaqs() {
+      try {
+        const res = await fetch("/api/faqs")
+        const data = await res.json()
+        if (data?.faqs) {
+          setDbFaqs(data.faqs)
+        }
+      } catch (e) {}
+    }
+    loadFaqs()
+  }, [])
+
+  const langItems = (t("faq.items") as any[]) || []
+  const items = dbFaqs.length > 0 ? dbFaqs.map(f => ({
+    category: f.category,
+    question: f.question,
+    answer: f.answer
+  })) : langItems
+
   const categories = (t("faq.categories") as Record<string, string>) || {
     all: "Toutes",
     pricing: "Paiement & Tarifs",
@@ -92,7 +113,7 @@ export function FAQ() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  key={item.q}
+                  key={item.question || i}
                   className="rounded-xl border border-border bg-card/40 backdrop-blur-sm overflow-hidden transition-colors hover:border-primary/20"
                 >
                   <button

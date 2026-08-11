@@ -39,15 +39,32 @@ export function UdemyHeader() {
     }
   }
 
+  const [announcementText, setAnnouncementText] = useState("BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !")
+  const [announcementCta, setAnnouncementCta] = useState("Réserver ma place (149 000 FCFA) →")
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch("/api/admin/settings")
+        const data = await res.json()
+        if (data?.settings) {
+          if (data.settings.announcement_text) setAnnouncementText(data.settings.announcement_text)
+          if (data.settings.announcement_cta) setAnnouncementCta(data.settings.announcement_cta)
+        }
+      } catch (e) {}
+    }
+    loadSettings()
+  }, [])
+
   return (
     <header className="sticky top-0 z-50 w-full bg-slate-950/95 border-b border-border/80 backdrop-blur-xl">
       
       {/* Top Announcement Bar */}
       <div className="bg-gradient-to-r from-primary/80 via-primary to-amber-500 text-primary-foreground text-[11px] font-extrabold py-1.5 px-4 text-center flex items-center justify-center gap-2">
         <Sparkles className="size-3.5 animate-pulse" />
-        <span>BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !</span>
+        <span>{announcementText}</span>
         <Link href="/checkout/bootcamp-ia-pro" className="underline font-black hover:opacity-90 ml-1">
-          Réserver ma place (149 000 FCFA) →
+          {announcementCta}
         </Link>
       </div>
 

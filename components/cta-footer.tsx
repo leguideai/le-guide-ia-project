@@ -27,16 +27,31 @@ const socials = [
 ]
 
 function InlineCountdown() {
-  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
+  const [targetTime, setTargetTime] = useState<number>(new Date("2026-08-31T19:00:00Z").getTime())
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    async function loadDate() {
+      try {
+        const res = await fetch("/api/admin/settings")
+        const data = await res.json()
+        if (data?.settings?.hero_dates) {
+          // If hero_dates or live session date exists
+          const parsed = Date.parse(data.settings.hero_dates)
+          if (!isNaN(parsed)) setTargetTime(parsed)
+        }
+      } catch (e) {}
+    }
+    loadDate()
+  }, [])
+
+  useEffect(() => {
     setMounted(true)
     const updateCountdown = () => {
       const now = new Date().getTime()
-      const distance = targetDate - now
+      const distance = targetTime - now
 
       if (distance < 0) {
         setExpired(true)
@@ -51,7 +66,7 @@ function InlineCountdown() {
     updateCountdown()
     const timer = setInterval(updateCountdown, 1000)
     return () => clearInterval(timer)
-  }, [targetDate])
+  }, [targetTime])
 
   if (!mounted || expired) return null
 

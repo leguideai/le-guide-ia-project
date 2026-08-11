@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { UdemyHeader } from "@/components/udemy-header"
@@ -11,20 +11,35 @@ import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
 import { GridBackground } from "@/components/grid-background"
 import { GraduationCap, UserCheck, Gift, ArrowRight, Sparkles, CheckCircle2, Calendar, Globe, Download } from "lucide-react"
 
+import { supabase } from "@/lib/supabase"
+
 export default function BootcampPage() {
   const [selectedFormula, setSelectedFormula] = useState<"pro" | "business" | "free">("pro")
+  const [dbCourses, setDbCourses] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadCourses() {
+      const { data } = await supabase.from("courses").select("*")
+      if (data && data.length > 0) setDbCourses(data)
+    }
+    loadCourses()
+  }, [])
+
+  const proCourse = dbCourses.find(c => c.slug === "bootcamp-pro-2")
+  const bizCourse = dbCourses.find(c => c.slug === "bootcamp-business-exec")
+  const freeCourse = dbCourses.find(c => c.slug === "initiation-free")
 
   const formulas = {
     pro: {
-      title: "Bootcamp IA Pro",
-      subtitle: "Pour Salariés, Cadres & Professionnels",
-      price: "149 000 FCFA",
+      title: proCourse?.title || "Bootcamp IA Pro",
+      subtitle: proCourse?.description || "Pour Salariés, Cadres & Professionnels",
+      price: proCourse ? `${proCourse.price.toLocaleString("fr-FR")} ${proCourse.currency || "FCFA"}` : "149 000 FCFA",
       approx: "≈ 150 € / $165",
       icon: GraduationCap,
       href: "/checkout/bootcamp-ia-pro",
       btnColor: "bg-primary text-primary-foreground hover:opacity-90",
       borderColor: "border-primary/50",
-      poster: "/hero_bootcamp.jpg",
+      poster: proCourse?.thumbnail || "/hero_bootcamp.jpg",
       date: "31 Août au 6 Septembre 2026",
       features: [
         "7 Sessions intensives en direct live avec Alfred Dah",
@@ -37,15 +52,15 @@ export default function BootcampPage() {
       ]
     },
     business: {
-      title: "Bootcamp IA Business Exec",
-      subtitle: "Pour Dirigeants, Consultants & Entrepreneurs",
-      price: "199 000 FCFA",
+      title: bizCourse?.title || "Bootcamp IA Business Exec",
+      subtitle: bizCourse?.description || "Pour Dirigeants, Consultants & Entrepreneurs",
+      price: bizCourse ? `${bizCourse.price.toLocaleString("fr-FR")} ${bizCourse.currency || "FCFA"}` : "199 000 FCFA",
       approx: "≈ 300 € / $330",
       icon: UserCheck,
       href: "/checkout/bootcamp-ia-business",
       btnColor: "bg-amber-500 hover:bg-amber-400 text-slate-950",
       borderColor: "border-amber-500/50",
-      poster: "/images/bootcamp_business_poster_2.png",
+      poster: bizCourse?.thumbnail || "/images/bootcamp_business_poster.jpg",
       date: "15 Septembre au 20 Décembre 2026",
       features: [
         "15h de sessions orientées Business Model, Offres & Sales IA",
@@ -58,8 +73,8 @@ export default function BootcampPage() {
       ]
     },
     free: {
-      title: "Initiation IA & ChatGPT",
-      subtitle: "Pour Découvrir les Règles du Prompting",
+      title: freeCourse?.title || "Initiation IA & ChatGPT",
+      subtitle: freeCourse?.description || "Pour Découvrir les Règles du Prompting",
       price: "GRATUIT",
       approx: "Libre accès",
       badge: "Cours Offert · 100% Gratuit",
@@ -68,7 +83,7 @@ export default function BootcampPage() {
       btnText: "Créer mon compte & Accéder gratuitement",
       btnColor: "bg-emerald-500 hover:bg-emerald-400 text-slate-950",
       borderColor: "border-emerald-500/50",
-      poster: "/images/initiation_free_poster.jpg",
+      poster: freeCourse?.thumbnail || "/images/initiation_free_thumb.jpg",
       date: "Accès Immédiat 24h/7j",
       features: [
         "Cours d'introduction pratique en accès immédiat dans l'Espace Membre",

@@ -95,8 +95,28 @@ export default function RessourcesPage() {
     }
   }
 
+  const [dbResources, setDbResources] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadResources() {
+      const { data } = await supabase.from("resources").select("*").order("created_at", { ascending: false })
+      if (data && data.length > 0) setDbResources(data)
+    }
+    loadResources()
+  }, [])
+
+  const currentResourcesMap: ResourceItem[] = dbResources.length > 0 ? dbResources.map((r: any) => ({
+    id: r.id,
+    type: r.type === "Prompt" ? "prompt" : "business-plan",
+    title: { fr: r.title, en: r.title },
+    desc: { fr: r.category || "Ressource certifiée Le Guide IA", en: r.category || "Ressource certifiée" },
+    content: { fr: r.prompt_text || "", en: r.prompt_text || "" },
+    fileUrl: r.file_url || undefined,
+    tier: r.tier || "Membre Premium"
+  })) : resourcesData
+
   // Filter & Search logic
-  const filteredResources = resourcesData.filter((item) => {
+  const filteredResources = currentResourcesMap.filter((item) => {
     const matchesFilter = activeFilter === 'all' || item.type === activeFilter
     
     const titleText = item.title[language] || item.title.fr

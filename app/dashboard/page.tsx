@@ -351,6 +351,12 @@ export default function DashboardPage() {
     return () => clearInterval(timer)
   }, [selectedLesson])
 
+  const [dbCourses, setDbCourses] = useState<any[]>([])
+  const [dbLessons, setDbLessons] = useState<any[]>([])
+  const [dbResources, setDbResources] = useState<any[]>([])
+  const [dbLiveSession, setDbLiveSession] = useState<any>(null)
+  const [userEnrollments, setUserEnrollments] = useState<string[]>(["initiation-free"])
+
   useEffect(() => {
     async function loadUserData() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -360,22 +366,23 @@ export default function DashboardPage() {
       }
       setUser(user)
 
-      const { data } = await supabase
+      // 1. Fetch user profile
+      const { data: profData } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single()
+        .maybeSingle()
 
-      if (data) {
-        setProfile(data)
-        setFullName(data.full_name || "")
-        setWhatsapp(data.whatsapp || "")
-        setCountry(data.country || "")
-        setCity(data.city || "")
-        setSector(data.sector || "")
+      if (profData) {
+        setProfile(profData)
+        setFullName(profData.full_name || "")
+        setWhatsapp(profData.whatsapp || "")
+        setCountry(profData.country || "")
+        setCity(profData.city || "")
+        setSector(profData.sector || "")
 
         // Redirection automatique 0-clic vers le Portail Super Admin pour les comptes Admin
-        if (data.role === "admin" || data.role === "super_admin") {
+        if (profData.role === "admin" || profData.role === "super_admin") {
           const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
           if (params?.get("view") !== "student") {
             router.push("/admin")
@@ -385,6 +392,36 @@ export default function DashboardPage() {
       } else {
         setFullName(user.user_metadata?.full_name || "")
       }
+
+      // 2. Fetch dynamic courses from Supabase
+      const { data: cData } = await supabase.from("courses").select("*").order("created_at", { ascending: true })
+      if (cData && cData.length > 0) setDbCourses(cData)
+
+      // 3. Fetch dynamic lessons from Supabase
+      const { data: lData } = await supabase.from("lessons").select("*").order("sequence_order", { ascending: true })
+      if (lData && lData.length > 0) setDbLessons(lData)
+
+      // 4. Fetch dynamic resources/prompts from Supabase
+      const { data: rData } = await supabase.from("resources").select("*").order("created_at", { ascending: false })
+      if (rData && rData.length > 0) setDbResources(rData)
+
+      // 5. Fetch dynamic live session from Supabase
+      const { data: liveData } = await supabase.from("live_sessions").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle()
+      if (liveData) setDbLiveSession(liveData)
+
+      // 6. Check student enrollments and confirmed payments
+      const { data: pData } = await supabase
+        .from("payments")
+        .select("status, registration_id, registrations(email)")
+        .eq("status", "confirmed")
+
+      const isPaidConfirmed = pData?.some((p: any) => p.registrations?.email?.toLowerCase() === user.email?.toLowerCase())
+      if (isPaidConfirmed || profData?.role === "admin" || profData?.role === "super_admin") {
+        setUserEnrollments(["bootcamp-pro-2", "bootcamp-business-exec", "initiation-free"])
+      } else {
+        setUserEnrollments(["initiation-free"])
+      }
+
       setLoading(false)
     }
 
@@ -452,13 +489,50 @@ export default function DashboardPage() {
     { id: "profile", label: "Mon Profil", icon: User },
   ]
 
-  const filteredResources = resourcesData.filter((r) => {
+  const allResources = dbResources.length > 0 ? dbResources.map((r: any) => ({
+    id: r.id,
+    bootcampId: "bootcamp-pro-2",
+    bootcampName: "Bootcamp IA Pro 2",
+    type: r.type === "Prompt" ? "prompt" : r.type === "Blueprint" ? "business-plan" : "exercise",
+    title: { fr: r.title, en: r.title },
+    desc: { fr: r.category || "Ressource certifiée Le Guide IA", en: r.category || "Ressource certifiée" },
+    content: { fr: r.prompt_text || "", en: r.prompt_text || "" },
+    fileUrl: r.file_url || undefined,
+    downloadUrl: r.file_url || undefined,
+    videoUrl: undefined,
+    exerciseType: undefined,
+    fileSize: "PDF / Fichier Supabase",
+    deadline: "Permanent",
+    tier: r.tier || "Membre Premium"
+  })) : []
+
+  const filteredResources = allResources.filter((r) => {
     const search = resourceSearch.toLowerCase()
     const matchesSearch = r.title.fr.toLowerCase().includes(search) || r.desc.fr.toLowerCase().includes(search)
     const matchesBootcamp = selectedBootcampFilter === "all" || r.bootcampId === selectedBootcampFilter
     const matchesType = selectedResourceTypeFilter === "all" || r.type === selectedResourceTypeFilter
     return matchesSearch && matchesBootcamp && matchesType
   })
+
+  const displayedBootcamps: BootcampCourse[] = dbCourses.length > 0 ? dbCourses.map(c => ({
+    id: c.slug || c.id,
+    title: c.title,
+    subtitle: c.description,
+    status: c.status || "active",
+    dates: c.price === 0 ? "Accès Illimité" : "Session Intensive Live",
+    instructor: "Alfred Dah",
+    poster: c.thumbnail || "/images/bootcamp_pro_thumb.jpg",
+    lessons: dbLessons.filter((l: any) => l.course_id === c.id).map((l: any, idx: number) => ({
+      id: l.id,
+      num: String(l.sequence_order || idx + 1).padStart(2, "0"),
+      title: l.title,
+      duration: l.duration || "2h 00m",
+      videoUrl: l.video_url || "https://www.youtube.com/embed/L_LUpnjgPso",
+      pdfUrl: l.pdf_url,
+      pdfName: l.pdf_url ? `Document_Support_${l.sequence_order || 1}.pdf` : undefined,
+      description: l.module_name || "Module de cours interactif"
+    }))
+  })) : []
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
@@ -639,19 +713,19 @@ export default function DashboardPage() {
 
                 <div className="flex flex-col sm:flex-row gap-3 shrink-0">
                   <a
-                    href="https://meet.google.com"
+                    href={dbLiveSession?.meet_url || "https://meet.google.com/leguideai-bootcamp-live"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-black px-5 py-3 text-xs shadow-lg transition-all"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-5 py-3 text-xs shadow-lg transition-all"
                   >
                     <Video className="size-4" />
                     <span>Rejoindre le Google Meet Live</span>
                   </a>
                   <a
-                    href="https://wa.me/22675757273?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20inscrit%20au%20Bootcamp%20et%20souhaite%20rejoindre%20le%20groupe%20WhatsApp"
+                    href={dbLiveSession?.whatsapp_url || "https://chat.whatsapp.com/leguideai-bootcamp"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 font-bold px-4 py-3 text-xs transition-all"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold px-5 py-3 text-xs transition-all"
                   >
                     <MessageCircle className="size-4" />
                     <span>Groupe WhatsApp</span>
@@ -668,7 +742,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                {ENROLLED_BOOTCAMPS.map((bootcamp) => (
+                {displayedBootcamps.map((bootcamp) => (
                   <div 
                     key={bootcamp.id} 
                     className="rounded-2xl border border-border bg-card/40 p-4 flex flex-col justify-between space-y-3 hover:border-primary/40 transition-colors text-left"
@@ -760,12 +834,12 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground mt-1">Sélectionnez une formation pour accéder au lien, supports PDF et exercices pratiques.</p>
                   </div>
                   <span className="text-xs font-extrabold text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
-                    {ENROLLED_BOOTCAMPS.length} Formations enregistrées
+                    {displayedBootcamps.length} Formations enregistrées
                   </span>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {ENROLLED_BOOTCAMPS.map((bootcamp) => (
+                  {displayedBootcamps.map((bootcamp) => (
                     <div
                       key={bootcamp.id}
                       className="rounded-3xl border border-border/80 bg-card/40 overflow-hidden flex flex-col justify-between hover:border-primary/40 transition-all shadow-xl group text-left"

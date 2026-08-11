@@ -1,0 +1,301 @@
+import { NextResponse } from "next/server"
+import { supabaseServer } from "@/lib/supabase-server"
+
+export const dynamic = "force-dynamic"
+
+export async function GET() {
+  return seedDatabase()
+}
+
+export async function POST() {
+  return seedDatabase()
+}
+
+async function seedDatabase() {
+  try {
+    // 1. Seed Bootcamps (courses)
+    const initialCourses = [
+      {
+        slug: "bootcamp-pro-2",
+        title: "Bootcamp IA Pro 2 — Session Intensive & Live",
+        description: "Formation de 4 semaines en direct sur Google Meet avec Alfred Dah. Maîtrisez ChatGPT, Claude, Midjourney v6 et l'automatisation Make.com.",
+        price: 99000,
+        currency: "FCFA",
+        badge: "INTENSIF & LIVE",
+        thumbnail: "/images/bootcamp_pro_thumb.jpg",
+        status: "active"
+      },
+      {
+        slug: "bootcamp-business-exec",
+        title: "Bootcamp IA Business & Dirigeants (Exec)",
+        description: "Accompagnement VIP sur-mesure pour chefs d'entreprise et cadres. Audit de processus, intégration Copilot & Gemini et automatisation.",
+        price: 199000,
+        currency: "FCFA",
+        badge: "EXECUTIF VIP",
+        thumbnail: "/images/bootcamp_business_thumb.jpg",
+        status: "active"
+      },
+      {
+        slug: "initiation-free",
+        title: "Initiation IA & ChatGPT Pratique (Gratuit)",
+        description: "Module de découverte pour acquérir les fondations du prompting, configurer vos outils et décupler votre productivité au quotidien.",
+        price: 0,
+        currency: "FCFA",
+        badge: "ACCÈS GRATUIT",
+        thumbnail: "/images/initiation_free_thumb.jpg",
+        status: "active"
+      }
+    ]
+
+    for (const course of initialCourses) {
+      const { data: existing } = await supabaseServer
+        .from("courses")
+        .select("id")
+        .eq("slug", course.slug)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabaseServer.from("courses").insert(course)
+      }
+    }
+
+    // Fetch created courses to get IDs
+    const { data: courses } = await supabaseServer.from("courses").select("id, slug")
+    const proCourseId = courses?.find(c => c.slug === "bootcamp-pro-2")?.id
+    const freeCourseId = courses?.find(c => c.slug === "initiation-free")?.id
+
+    // 2. Seed Lessons
+    if (proCourseId) {
+      const proLessons = [
+        {
+          course_id: proCourseId,
+          title: "Mindset IA & Fondations du Prompting",
+          duration: "2h 30m",
+          video_url: "https://www.youtube.com/embed/L_LUpnjgPso",
+          pdf_url: "/images/bootcamp_business_poster.jpg",
+          sequence_order: 1,
+          module_name: "Module 01 — Les Bases du Prompting"
+        },
+        {
+          course_id: proCourseId,
+          title: "Maîtrise de ChatGPT & Claude 3.5 pour la Rédaction",
+          duration: "2h 15m",
+          video_url: "https://www.youtube.com/embed/L_LUpnjgPso",
+          pdf_url: "/images/initiation_free_poster.jpg",
+          sequence_order: 2,
+          module_name: "Module 02 — Rédaction & Ingestion de Documents"
+        },
+        {
+          course_id: proCourseId,
+          title: "Création Visuelle avec Canva IA & Midjourney v6",
+          duration: "2h 45m",
+          video_url: "https://www.youtube.com/embed/L_LUpnjgPso",
+          pdf_url: "/images/bootcamp_pro_thumb.jpg",
+          sequence_order: 3,
+          module_name: "Module 03 — Génération d'Images & Design"
+        },
+        {
+          course_id: proCourseId,
+          title: "Automatisation & Workflows IA avec Make.com",
+          duration: "2h 30m",
+          video_url: "https://www.youtube.com/embed/L_LUpnjgPso",
+          pdf_url: "/images/bootcamp_business_thumb.jpg",
+          sequence_order: 4,
+          module_name: "Module 04 — Automatisation No-Code"
+        }
+      ]
+
+      for (const les of proLessons) {
+        const { data: existing } = await supabaseServer
+          .from("lessons")
+          .select("id")
+          .eq("course_id", proCourseId)
+          .eq("sequence_order", les.sequence_order)
+          .maybeSingle()
+
+        if (!existing) {
+          await supabaseServer.from("lessons").insert(les)
+        }
+      }
+    }
+
+    if (freeCourseId) {
+      const freeLessons = [
+        {
+          course_id: freeCourseId,
+          title: "Configuration de ChatGPT & Premiers Pas",
+          duration: "25m",
+          video_url: "https://www.youtube.com/embed/L_LUpnjgPso",
+          pdf_url: "/images/initiation_free_thumb.jpg",
+          sequence_order: 1,
+          module_name: "Module Gratuit — Découverte"
+        }
+      ]
+
+      for (const les of freeLessons) {
+        const { data: existing } = await supabaseServer
+          .from("lessons")
+          .select("id")
+          .eq("course_id", freeCourseId)
+          .eq("sequence_order", les.sequence_order)
+          .maybeSingle()
+
+        if (!existing) {
+          await supabaseServer.from("lessons").insert(les)
+        }
+      }
+    }
+
+    // 3. Seed Resources (Prompts)
+    const initialResources = [
+      {
+        title: "Prompt Ultime de Rédaction de Rapports & Synthèses B2B",
+        category: "Productivité & Rédaction",
+        type: "Prompt",
+        tier: "Membre Premium",
+        prompt_text: `Tu es un expert en rédaction exécutive. Analyse le texte ci-joint et génère un rapport structuré comprenant : 1. Résumé exécutif en 3 puces, 2. Analyse d'impact stratégique, 3. Recommandations concrètes d'actions prioritaires.`
+      },
+      {
+        title: "Kit d'Ingénierie de Prompt pour Génération d'Images Midjourney v6",
+        category: "Génération Visuelle",
+        type: "Blueprint",
+        tier: "Gratuit",
+        prompt_text: `/imagine prompt: professional corporate portrait of an African entrepreneur working with AI tech interface, cinematic lighting, 8k resolution, photorealistic, shot on 85mm lens --ar 16:9 --v 6.0`
+      },
+      {
+        title: "Workflow Blueprint Make.com : Synchro Gmail -> ChatGPT -> WhatsApp",
+        category: "Automatisation",
+        type: "Automation Blueprint",
+        tier: "Membre Premium",
+        prompt_text: `JSON Blueprint d'automatisation Make.com permettant d'analyser chaque email entrant avec ChatGPT et d'envoyer un résumé instantané sur WhatsApp.`
+      }
+    ]
+
+    for (const res of initialResources) {
+      const { data: existing } = await supabaseServer
+        .from("resources")
+        .select("id")
+        .eq("title", res.title)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabaseServer.from("resources").insert(res)
+      }
+    }
+
+    // 4. Seed Live Session
+    const { data: existingLive } = await supabaseServer.from("live_sessions").select("id").limit(1)
+    if (!existingLive || existingLive.length === 0) {
+      await supabaseServer.from("live_sessions").insert({
+        title: "Bootcamp IA Pro 2 — Session Directe Quotidienne",
+        scheduled_at: "2026-08-22T19:00:00Z",
+        meet_url: "https://meet.google.com/leguideai-bootcamp-live",
+        whatsapp_url: "https://chat.whatsapp.com/leguideai-bootcamp",
+        status: "upcoming"
+      })
+    }
+
+    // 5. Seed Site Settings
+    const defaultSettings = [
+      { key: "announcement_text", value: "BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !" },
+      { key: "announcement_cta", value: "Réserver ma place (149 000 FCFA) →" },
+      { key: "vsl_youtube_url", value: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1" },
+      { key: "hero_badge", value: "CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL" },
+      { key: "hero_title", value: "Maîtrisez l'IA. Transformez votre carrière et votre business." },
+      { key: "hero_subtitle", value: "Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah." },
+      { key: "hero_dates", value: "31 Août – 6 Sept 2026" },
+      { key: "hero_time", value: "19h00 GMT" },
+      { key: "hero_promo_price", value: "149,900 F CFA" },
+      { key: "hero_normal_price", value: "250,000 F CFA" },
+      { key: "whatsapp_number", value: "+226 0505 0577" },
+      { key: "hero_poster_url", value: "/images/bootcamp_pro_poster.jpg" }
+    ]
+
+    for (const setting of defaultSettings) {
+      await supabaseServer.from("site_settings").upsert(setting, { onConflict: "key" })
+    }
+
+    // 6. Seed Testimonials
+    const initialTestimonials = [
+      {
+        name: "Sanson Alfred Dah",
+        role: "Auditeur CISA & Expert IA",
+        country: "Burkina Faso",
+        text: "Le Bootcamp m'a permis d'automatiser 60% des tâches répétitives de mon cabinet. Un gain de temps inestimable pour mes audits."
+      },
+      {
+        name: "Khadija Sy",
+        role: "Directrice E-Marketing",
+        country: "Sénégal",
+        text: "Grâce aux fiches de prompts et à la maîtrise de ChatGPT & Midjourney, nous avons multiplié notre création de contenu par 4 en 1 mois."
+      },
+      {
+        name: "Marc-Aurèle Kouassi",
+        role: "Consultant & Formateur",
+        country: "Côte d'Ivoire",
+        text: "Une formation 100% pratique ! Les replays et l'accès à l'Espace Membre me permettent de réviser chaque atelier à mon rythme."
+      },
+      {
+        name: "Amadou Sow",
+        role: "Entrepreneur Tech",
+        country: "Mali",
+        text: "L'intégration des agents IA métiers avec Make m'a aidé à structurer l'assistance client de ma startup en moins de 48 heures."
+      }
+    ]
+
+    for (const t of initialTestimonials) {
+      const { data: existing } = await supabaseServer
+        .from("testimonials")
+        .select("id")
+        .eq("name", t.name)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabaseServer.from("testimonials").insert(t)
+      }
+    }
+
+    // 7. Seed FAQs
+    const initialFaqs = [
+      {
+        category: "pricing",
+        question: "Quels sont les moyens de paiement acceptés pour s'inscrire ?",
+        answer: "Nous acceptons les paiements Mobile Money (Orange Money, Wave, Moov, MTN), les cartes bancaires (Visa, Mastercard) ainsi que les virements bancaires B2B."
+      },
+      {
+        category: "program",
+        question: "Dois-je avoir des connaissances en programmation pour suivre le Bootcamp ?",
+        answer: "Aucun prérequis technique n'est nécessaire ! Le Bootcamp est 100% axé sur l'utilisation des outils No-Code et d'IA générative prêts à l'emploi (ChatGPT, Claude, Canva IA, Midjourney, Make)."
+      },
+      {
+        category: "logistics",
+        question: "Que se passe-t-il si je rate une session en direct sur Google Meet ?",
+        answer: "Toutes les sessions en direct sont enregistrées en Haute Définition et rendues disponibles dans votre Espace Membre sous 2 heures avec accès illimité."
+      },
+      {
+        category: "guarantee",
+        question: "Est-ce qu'un certificat officiel est délivré à la fin du Bootcamp ?",
+        answer: "Oui, un Certificat Officiel d'Aptitude IA & Automatisation signé par Alfred Dah est délivré à chaque apprenant ayant validé ses travaux pratiques."
+      }
+    ]
+
+    for (const faq of initialFaqs) {
+      const { data: existing } = await supabaseServer
+        .from("faqs")
+        .select("id")
+        .eq("question", faq.question)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabaseServer.from("faqs").insert(faq)
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Base de données Supabase initialisée et alimentée à 100% avec les Bootcamps, Leçons, Prompts, Paramètres, Témoignages et FAQ !"
+    })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || "Erreur de seeding Supabase" }, { status: 500 })
+  }
+}

@@ -1,36 +1,25 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { Quote, Star, ArrowRight } from "lucide-react"
 
 export function Testimonials() {
-  const testimonials = [
-    {
-      name: "Sanson Alfred Dah",
-      role: "Auditeur CISA & Expert IA",
-      country: "Burkina Faso",
-      text: "Le Bootcamp m'a permis d'automatiser 60% des tâches répétitives de mon cabinet. Un gain de temps inestimable pour mes audits.",
-    },
-    {
-      name: "Khadija Sy",
-      role: "Directrice E-Marketing",
-      country: "Sénégal",
-      text: "Grâce aux fiches de prompts et à la maîtrise de ChatGPT & Midjourney, nous avons multiplié notre création de contenu par 4 en 1 mois.",
-    },
-    {
-      name: "Marc-Aurèle Kouassi",
-      role: "Consultant & Formateur",
-      country: "Côte d'Ivoire",
-      text: "Une formation 100% pratique ! Les replays et l'accès à l'Espace Membre me permettent de réviser chaque atelier à mon rythme.",
-    },
-    {
-      name: "Amadou Sow",
-      role: "Entrepreneur Tech",
-      country: "Mali",
-      text: "L'intégration des agents IA métiers avec Make m'a aidé à structurer l'assistance client de ma startup en moins de 48 heures.",
+  const [testimonials, setTestimonials] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadTestimonials() {
+      try {
+        const res = await fetch("/api/testimonials")
+        const data = await res.json()
+        if (data?.testimonials) {
+          setTestimonials(data.testimonials)
+        }
+      } catch (e) {}
     }
-  ]
+    loadTestimonials()
+  }, [])
 
   return (
     <section className="py-20 bg-slate-950/60 relative overflow-hidden border-t border-border/50" id="temoignages">

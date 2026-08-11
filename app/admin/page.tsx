@@ -99,7 +99,7 @@ interface B2BRecord {
 }
 
 export default function SuperAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "resources" | "lives" | "payments" | "users" | "submissions" | "b2b" | "export">("kpi")
+  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "resources" | "lives" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
@@ -181,10 +181,49 @@ export default function SuperAdminDashboard() {
   const [gradeScore, setGradeScore] = useState<number>(18)
   const [gradeFeedback, setGradeFeedback] = useState("")
 
+  // Site Settings state
+  const [siteSettings, setSiteSettings] = useState({
+    announcement_text: "BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !",
+    announcement_cta: "Réserver ma place (149 000 FCFA) →",
+    vsl_youtube_url: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1",
+    hero_badge: "CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL",
+    hero_title: "Maîtrisez l'IA. Transformez votre carrière et votre business.",
+    hero_subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.",
+    hero_dates: "31 Août – 6 Sept 2026",
+    hero_time: "19h00 GMT",
+    hero_promo_price: "149,900 F CFA",
+    hero_normal_price: "250,000 F CFA",
+    whatsapp_number: "+226 0505 0577",
+    hero_poster_url: "/images/bootcamp_pro_poster.jpg"
+  })
+  const [savingSettings, setSavingSettings] = useState(false)
+
   useEffect(() => {
     checkAdminAccess()
     fetchAllData()
   }, [])
+
+  async function handleSaveSettings(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingSettings(true)
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: siteSettings })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Configuration du site enregistrée et immédiatement active sur la landing page !")
+      } else {
+        alert("Erreur lors de l'enregistrement : " + (data.error || ""))
+      }
+    } catch (err) {
+      alert("Erreur réseau lors de l'enregistrement des paramètres")
+    } finally {
+      setSavingSettings(false)
+    }
+  }
 
   async function checkAdminAccess() {
     try {
@@ -254,6 +293,11 @@ export default function SuperAdminDashboard() {
       const resB2b = await fetch("/api/admin/b2b")
       const dataB2b = await resB2b.json()
       if (dataB2b.requests) setB2bRequests(dataB2b.requests)
+
+      // 9. Site Settings
+      const resSettings = await fetch("/api/admin/settings")
+      const dataSettings = await resSettings.json()
+      if (dataSettings.settings) setSiteSettings(dataSettings.settings)
     } catch (err) {
       console.error("Fetch admin data error:", err)
     } finally {
@@ -547,9 +591,6 @@ export default function SuperAdminDashboard() {
             <span className="font-heading font-black text-xl text-white tracking-wider">
               LE GUIDE <span className="text-primary">IA</span>
             </span>
-            <span className="text-[9px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full">
-              SUPER ADMIN
-            </span>
           </Link>
 
           {/* Admin Profile Summary Card */}
@@ -690,9 +731,21 @@ export default function SuperAdminDashboard() {
               </button>
             </div>
 
-            {/* Section 4: OUTILS & FICHIERS */}
+            {/* Section 4: OUTILS & CONFIGURATION */}
             <div className="space-y-1">
-              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Outils & Exports</p>
+              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Outils & Configuration</p>
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="size-4 shrink-0" />
+                  <span>Configuration Site & Hero</span>
+                </div>
+              </button>
+
               <button
                 onClick={() => setActiveTab("export")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -728,7 +781,7 @@ export default function SuperAdminDashboard() {
         </div>
       </aside>
 
-      {/* Main Workspace Workspace */}
+      {/* Main Workspace */}
       <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto max-w-7xl mx-auto w-full text-left">
         {/* Workspace Top Header Bar */}
         <div className="flex items-center justify-between pb-6 border-b border-slate-800/80">
@@ -742,6 +795,7 @@ export default function SuperAdminDashboard() {
               {activeTab === "users" && "Gestion des Membres & Rôles RBAC"}
               {activeTab === "submissions" && "Correction des Devoirs sur 20"}
               {activeTab === "b2b" && "Demandes de Devis B2B Entreprises"}
+              {activeTab === "settings" && "Configuration du Site & Hero Landing Page"}
               {activeTab === "export" && "Exportation des Données CSV"}
             </h1>
             <p className="text-xs text-slate-400 mt-1">
@@ -1684,7 +1738,176 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* TAB 9: EXPORT CSV */}
+        {/* TAB 9: SITE & HERO LANDING SETTINGS */}
+        {activeTab === "settings" && (
+          <div className="space-y-6 animate-fadeIn">
+            <form onSubmit={handleSaveSettings} className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+                    <Sparkles className="size-5 text-primary" />
+                    Éditeur CMS de la Landing Page d'Accueil
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Modifiez le texte du bandeau supérieur, l'URL de la vidéo VSL YouTube, les titres du Hero et les prix promos. Les modifications s'appliquent immédiatement sur le site !
+                  </p>
+                </div>
+                <button
+                  type="submit"
+                  disabled={savingSettings}
+                  className="px-6 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 transition-opacity shadow-lg"
+                >
+                  {savingSettings ? "Enregistrement..." : "💾 Enregistrer les Modifications du Site"}
+                </button>
+              </div>
+
+              {/* Section 1: Top Announcement Bar */}
+              <div className="space-y-4 pt-2">
+                <h4 className="text-xs font-black uppercase tracking-wider text-primary border-b border-slate-800/60 pb-2">
+                  1. Bandeau Supérieur d'Annonce (Header Top Bar)
+                </h4>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Texte d'Annonce Principal</label>
+                    <input
+                      type="text"
+                      value={siteSettings.announcement_text}
+                      onChange={e => setSiteSettings({ ...siteSettings, announcement_text: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Texte du Bouton CTA d'Annonce</label>
+                    <input
+                      type="text"
+                      value={siteSettings.announcement_cta}
+                      onChange={e => setSiteSettings({ ...siteSettings, announcement_cta: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: VSL Hero Video */}
+              <div className="space-y-4 pt-4 border-t border-slate-800/80">
+                <h4 className="text-xs font-black uppercase tracking-wider text-purple-400 border-b border-slate-800/60 pb-2">
+                  2. Vidéo VSL de Présentation (YouTube Embed URL)
+                </h4>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">URL d'Intégration YouTube Embed</label>
+                  <input
+                    type="url"
+                    value={siteSettings.vsl_youtube_url}
+                    onChange={e => setSiteSettings({ ...siteSettings, vsl_youtube_url: e.target.value })}
+                    placeholder="https://www.youtube.com/embed/..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none font-mono"
+                  />
+                  <p className="text-[10px] text-slate-500">Exemple : https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1</p>
+                </div>
+              </div>
+
+              {/* Section 3: Hero Banner Main Content */}
+              <div className="space-y-4 pt-4 border-t border-slate-800/80">
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 border-b border-slate-800/60 pb-2">
+                  3. Hero Banner Principal (Titres, Dates, Tarifs & Affiche)
+                </h4>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Badge du Hero Banner</label>
+                    <input
+                      type="text"
+                      value={siteSettings.hero_badge}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_badge: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Titre Principal du Hero (H1)</label>
+                    <input
+                      type="text"
+                      value={siteSettings.hero_title}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_title: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Sous-titre explicatif</label>
+                  <textarea
+                    rows={3}
+                    value={siteSettings.hero_subtitle}
+                    onChange={e => setSiteSettings({ ...siteSettings, hero_subtitle: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-primary outline-none"
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Dates des Directs GMT</label>
+                    <input
+                      type="text"
+                      value={siteSettings.hero_dates}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_dates: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Heure GMT</label>
+                    <input
+                      type="text"
+                      value={siteSettings.hero_time}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_time: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Prix Promo Affiche (FCFA)</label>
+                    <input
+                      type="text"
+                      value={siteSettings.hero_promo_price}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_promo_price: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 pt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Numéro WhatsApp Support</label>
+                    <input
+                      type="text"
+                      value={siteSettings.whatsapp_number}
+                      onChange={e => setSiteSettings({ ...siteSettings, whatsapp_number: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">URL Affiche Officielle Hero</label>
+                    <input
+                      type="text"
+                      value={siteSettings.hero_poster_url}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_poster_url: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={savingSettings}
+                  className="px-8 py-3 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity shadow-xl"
+                >
+                  {savingSettings ? "Enregistrement en cours..." : "💾 Enregistrer & Mettre à jour la Landing Page"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* TAB 10: EXPORT CSV */}
         {activeTab === "export" && (
           <div className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800 text-center space-y-6 animate-fadeIn">
             <div className="size-16 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">

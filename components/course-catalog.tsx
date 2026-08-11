@@ -1,14 +1,26 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Star, Clock, Award, ArrowRight, Zap, CheckCircle2, ShieldCheck, User, Users, PlayCircle, Sparkles, Lock } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 interface CourseCatalogProps {
   activeCategory: string
 }
 
 export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
-  const courses = [
+  const [dbCourses, setDbCourses] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadCourses() {
+      const { data } = await supabase.from("courses").select("*").order("price", { ascending: false })
+      if (data && data.length > 0) setDbCourses(data)
+    }
+    loadCourses()
+  }, [])
+
+  const defaultCourses = [
     {
       id: "bootcamp-ia-pro",
       category: "pro",
@@ -48,46 +60,45 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
       studentsCount: "120+ entrepreneurs",
       badge: "🏆 FORMULE EXEC & B2B",
       badgeColor: "bg-primary/20 text-primary border-primary/30",
-      hours: "15h Live + 1h Coaching VIP",
-      schedule: "Lun-Ven 19h-21h + Dim 16h-21h GMT",
-      oldPriceFcfa: "280 000 FCFA",
+      hours: "Coaching 1:1 + Direct Live",
+      schedule: "Horaires flexibles + Sessions Direct",
+      oldPriceFcfa: "250 000 FCFA",
       priceFcfa: "199 000 FCFA",
       priceEur: "300 € / $330",
       isFree: false,
-      image: "/images/bootcamp_business_thumb.jpg",
+      image: "/images/bootcamp_business_poster.jpg",
       href: "/checkout/bootcamp-ia-business",
       highlights: [
-        "Tout le programme IA Pro + Coaching individuel 1h",
-        "Création d'agents IA autonomes pour vos processus métiers",
-        "Audit de maturité digitale & Gouvernance IA",
-        "Certificat IA Business Exécutif vérifiable par QR Code"
+        "Inclus l'intégralité du Bootcamp Pro + Diagnostic d'entreprise 1h",
+        "Déploiement d'agents virtuels sur-mesure avec Make & GPTs",
+        "Optimisation de la gestion d'équipe et workflows automatisés",
+        "Accès illimité aux replays HD et support VIP direct avec Alfred Dah"
       ]
     },
     {
-      id: "initiation-ia-gratuit",
+      id: "initiation-free",
       category: "free",
-      title: "Initiation Pratique à l'IA & ChatGPT",
-      subtitle: "Découvrez les principes fondamentaux du prompting pour gagner 2h de productivité par jour dès aujourd'hui.",
+      title: "Initiation IA & ChatGPT Pratique (Offert)",
+      subtitle: "Comprendre les règles fondamentales du Prompting et configurer ses premiers outils d'IA.",
       instructor: "Alfred Dah",
-      instructorRole: "Expert IA & Formateur",
+      instructorRole: "Fondateur Le Guide IA",
       rating: "4.8",
-      reviewsCount: "520+ apprenants",
-      studentsCount: "1 250+ membres",
+      reviewsCount: "620+ membres",
+      studentsCount: "1200+ inscrits",
       badge: "🎁 100% GRATUIT",
       badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-      hours: "1h 30m de formation vidéo HD",
-      schedule: "Accès immédiat 24h/7j",
+      hours: "1h30 de cours vidéo",
+      schedule: "Accès immédiat et autonome",
       oldPriceFcfa: "25 000 FCFA",
-      priceFcfa: "OFFERT (0 FCFA)",
-      priceEur: "Gratuit sans carte bancaire",
+      priceFcfa: "GRATUIT",
+      priceEur: "0 € / $0",
       isFree: true,
       image: "/images/initiation_free_thumb.jpg",
       href: "/register-account",
       highlights: [
-        "Les 5 règles d'or du Prompting efficace",
-        "5 Prompts prêts à copier-coller pour vos emails et synthèses",
-        "Création immédiate de votre Espace Membre Gratuit",
-        "Accès au catalogue des ressources d'initiation"
+        "Création de compte ChatGPT & Réglages optimaux",
+        "Les 5 erreurs de débutant à éviter absolument",
+        "Fiches de prompts réutilisables immédiatement"
       ]
     },
     {
@@ -118,6 +129,34 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
       ]
     }
   ]
+
+  const courses = dbCourses.length > 0 ? dbCourses.map(c => ({
+    id: c.slug || c.id,
+    category: c.price === 0 ? "free" : c.price > 100000 ? "business" : "pro",
+    title: c.title,
+    subtitle: c.description,
+    instructor: "Alfred Dah",
+    instructorRole: "Auditeur CISA & Expert IA",
+    rating: "4.9",
+    reviewsCount: "Avis apprenants certifiés",
+    studentsCount: "Apprenants inscrits",
+    badge: c.badge || "FORMULE OFFICIELLE",
+    badgeColor: c.price === 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : c.price > 100000 ? "bg-primary/20 text-primary border-primary/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    hours: c.price === 0 ? "Accès Libre" : "Session Intensive Live",
+    schedule: "19h00 GMT",
+    oldPriceFcfa: c.price > 0 ? `${(c.price * 1.5).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "",
+    priceFcfa: c.price > 0 ? `${c.price.toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT",
+    priceEur: "",
+    isFree: c.price === 0,
+    image: c.thumbnail || "/images/bootcamp_pro_thumb.jpg",
+    href: c.price === 0 ? "/register-account" : `/checkout/${c.slug}`,
+    highlights: [
+      "Sessions intensives interactives en direct avec replays HD",
+      "Prompting avancé métiers & Ingénierie de contexte",
+      "Canva IA & Visuels professionnels avec Midjourney v6",
+      "Certificat officiel d'accomplissement & Groupe WhatsApp VIP"
+    ]
+  })) : defaultCourses
 
   const filteredCourses = activeCategory === "all"
     ? courses
@@ -169,7 +208,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
               {/* Media Thumbnail */}
               <div className="relative aspect-[16/9] overflow-hidden bg-slate-950">
                 <img
-                  src={course.image}
+                  src={course.image || "/images/bootcamp_pro_thumb.jpg"}
                   alt={course.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
                 />

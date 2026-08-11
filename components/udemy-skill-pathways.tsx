@@ -1,11 +1,23 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { GraduationCap, UserCheck, Gift, ArrowRight } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export function UdemySkillPathways() {
-  const pathways = [
+  const [dbCourses, setDbCourses] = useState<any[]>([])
+
+  useEffect(() => {
+    async function loadCourses() {
+      const { data } = await supabase.from("courses").select("*").order("price", { ascending: false })
+      if (data && data.length > 0) setDbCourses(data)
+    }
+    loadCourses()
+  }, [])
+
+  const defaultPathways = [
     {
       id: "pro",
       title: "Bootcamp IA Pro 2",
@@ -44,6 +56,19 @@ export function UdemySkillPathways() {
     }
   ]
 
+  const pathways = dbCourses.length > 0 ? dbCourses.map(c => ({
+    id: c.id,
+    title: c.title,
+    desc: c.description,
+    price: c.price > 0 ? `${c.price.toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT",
+    badge: c.badge || "FORMULATION OFFICIELLE",
+    icon: c.price === 0 ? Gift : c.price > 100000 ? UserCheck : GraduationCap,
+    href: c.price === 0 ? "/register-account" : `/checkout/${c.slug}`,
+    image: c.thumbnail || "/images/bootcamp_pro_thumb.jpg",
+    borderColor: c.price === 0 ? "border-emerald-500/40" : c.price > 100000 ? "border-amber-500/40" : "border-primary/40",
+    btnColor: c.price === 0 ? "bg-secondary text-foreground border border-border" : c.price > 100000 ? "bg-amber-500 text-slate-950" : "bg-primary text-primary-foreground"
+  })) : defaultPathways
+
   return (
     <section className="py-14 bg-background border-t border-border/50">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
@@ -80,7 +105,7 @@ export function UdemySkillPathways() {
               >
                 <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900">
                   <img
-                    src={item.image}
+                    src={item.image || "/images/bootcamp_pro_thumb.jpg"}
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
