@@ -5,14 +5,27 @@ export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
-    const { data: courses, error } = await supabaseServer
+    let { data: courses, error } = await supabaseServer
       .from("courses")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("sequence_order", { ascending: true })
+      .order("created_at", { ascending: true })
 
     if (error) {
-      console.warn("Courses fetch error from Supabase:", error.message)
-      return NextResponse.json({ success: true, courses: [] })
+      const fallback = await supabaseServer
+        .from("courses")
+        .select("*")
+        .order("created_at", { ascending: true })
+      courses = fallback.data
+    }
+
+    if (courses && courses.length > 0) {
+      courses.sort((a: any, b: any) => {
+        const seqA = a.sequence_order !== undefined && a.sequence_order !== null ? Number(a.sequence_order) : 999
+        const seqB = b.sequence_order !== undefined && b.sequence_order !== null ? Number(b.sequence_order) : 999
+        if (seqA !== seqB) return seqA - seqB
+        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+      })
     }
 
     return NextResponse.json({ success: true, courses: courses || [] })
@@ -24,33 +37,52 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { id, title, slug, subtitle, price, original_price, badge, category, status, poster, dates, instructor, live_meet_url, lessons } = body
+    const { id, title, slug, subtitle, price, original_price, badge, category, status, poster, dates, instructor, live_meet_url, sequence_order, lessons } = body
 
     if (!title || !slug) {
       return NextResponse.json({ error: "Le titre et le slug sont obligatoires." }, { status: 400 })
     }
 
-    // Upsert Course into Supabase
-    const { data: course, error } = await supabaseServer
+    const upsertPayload: any = {
+      ...(id ? { id } : {}),
+      title,
+      slug,
+      description: subtitle || body.description || "",
+      subtitle: subtitle || body.description || "",
+      price: price || 99000,
+      original_price: original_price || "150 000 FCFA",
+      badge: badge || "Nouveau",
+      category: category || "Bootcamp",
+      status: status || "published",
+      thumbnail: body.thumbnail || body.poster || "/images/bootcamp_pro_thumb.jpg",
+      poster: body.poster || body.thumbnail || "/images/bootcamp_pro_poster.jpg",
+      pdf_url: body.pdf_url || body.programme_url || "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+      format: body.format || "100% En Ligne",
+      certificate: body.certificate || "Certificat Officiel",
+      sequence_order: sequence_order !== undefined ? Number(sequence_order) : 1,
+      dates: dates || "Sur 7 jours",
+      instructor: instructor || "Alfred Dah",
+      live_meet_url: live_meet_url || "https://meet.google.com/xyz-abc-def",
+      features: body.features || [],
+      updated_at: new Date().toISOString()
+    }
+
+    let { data: course, error } = await supabaseServer
       .from("courses")
-      .upsert({
-        ...(id ? { id } : {}),
-        title,
-        slug,
-        subtitle,
-        price: price || "99 000 FCFA",
-        original_price: original_price || "150 000 FCFA",
-        badge: badge || "Nouveau",
-        category: category || "Bootcamp",
-        status: status || "published",
-        poster: poster || "/images/bootcamp_pro_thumb.jpg",
-        dates: dates || "Sur 7 jours",
-        instructor: instructor || "Alfred Dah",
-        live_meet_url: live_meet_url || "https://meet.google.com/xyz-abc-def",
-        updated_at: new Date().toISOString()
-      }, { onConflict: "slug" })
+      .upsert(upsertPayload, { onConflict: "slug" })
       .select()
       .single()
+
+    if (error && error.message.includes("sequence_order")) {
+      delete upsertPayload.sequence_order
+      const retry = await supabaseServer
+        .from("courses")
+        .upsert(upsertPayload, { onConflict: "slug" })
+        .select()
+        .single()
+      course = retry.data
+      error = retry.error
+    }
 
     if (error) {
       console.error("Error saving course to Supabase:", error)

@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { FileUploadField } from "@/components/ui/file-upload-field"
 import { 
   ShieldAlert, ShieldCheck, Users, DollarSign, BookOpen, FileCheck, 
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
-  Upload, ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
-  Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock
+  ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
+  Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
+  ArrowUp, ArrowDown
 } from "lucide-react"
 
 interface BootcampCourse {
@@ -21,9 +23,15 @@ interface BootcampCourse {
   category: string
   status: "published" | "draft" | "archived"
   poster: string
+  thumbnail?: string
+  pdf_url?: string
+  format?: string
+  certificate?: string
+  sequence_order?: number
   dates: string
   instructor: string
   live_meet_url?: string
+  features?: any
 }
 
 interface ResourceItem {
@@ -118,6 +126,7 @@ export default function SuperAdminDashboard() {
 
   const [courses, setCourses] = useState<BootcampCourse[]>([])
   const [resources, setResources] = useState<ResourceItem[]>([])
+  const [aiTools, setAiTools] = useState<any[]>([])
   const [lives, setLives] = useState<LiveSession[]>([])
   const [users, setUsers] = useState<UserProfile[]>([])
   const [payments, setPayments] = useState<PaymentRecord[]>([])
@@ -132,6 +141,7 @@ export default function SuperAdminDashboard() {
 
   // Modals Creation States
   const [showCourseModal, setShowCourseModal] = useState(false)
+  const [uploadingPoster, setUploadingPoster] = useState(false)
   const [courseForm, setCourseForm] = useState<Partial<BootcampCourse>>({
     title: "",
     slug: "",
@@ -141,11 +151,45 @@ export default function SuperAdminDashboard() {
     badge: "OFFRE FONDATEUR",
     category: "Bootcamp",
     status: "published",
-    poster: "/images/bootcamp_pro_thumb.jpg",
+    thumbnail: "/images/bootcamp_pro_thumb.jpg",
+    poster: "/images/bootcamp_pro_poster.jpg",
+    pdf_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+    format: "100% En Ligne",
+    certificate: "Certificat Officiel",
+    sequence_order: 1,
     dates: "31 Août - 6 Septembre 2026",
     instructor: "Alfred Dah",
     live_meet_url: "https://meet.google.com/xyz-abc-def"
   })
+
+  const handleUploadCoursePoster = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      setUploadingPoster(true)
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("bucket", "course-posters")
+      formData.append("folder", "posters")
+
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData
+      })
+      const data = await res.json()
+
+      if (data.url) {
+        setCourseForm(prev => ({ ...prev, poster: data.url }))
+        setNoticeMessage("Affiche de formation téléversée avec succès dans Supabase !")
+      } else {
+        alert(data.error || "Erreur de téléversement.")
+      }
+    } catch (err: any) {
+      alert("Erreur lors du téléversement: " + err.message)
+    } finally {
+      setUploadingPoster(false)
+    }
+  }
 
   const [showResourceModal, setShowResourceModal] = useState(false)
   const [resourceForm, setResourceForm] = useState<Partial<ResourceItem>>({
@@ -191,10 +235,13 @@ export default function SuperAdminDashboard() {
     hero_subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.",
     hero_dates: "31 Août – 6 Sept 2026",
     hero_time: "19h00 GMT",
+    hero_format: "🌍 100% En ligne",
+    hero_sessions: "🎓 7 Sessions intensives",
     hero_promo_price: "149,900 F CFA",
     hero_normal_price: "250,000 F CFA",
     whatsapp_number: "+226 0505 0577",
-    hero_poster_url: "/images/bootcamp_pro_poster.jpg"
+    hero_poster_url: "/images/bootcamp_pro_poster.jpg",
+    hero_programme_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
   })
   const [savingSettings, setSavingSettings] = useState(false)
 
@@ -264,10 +311,15 @@ export default function SuperAdminDashboard() {
       const dataCourses = await resCourses.json()
       if (dataCourses.courses) setCourses(dataCourses.courses)
 
-      // 3. Resources
+      // 3. Resources (Prompts & Blueprints)
       const resRes = await fetch("/api/admin/resources")
       const dataRes = await resRes.json()
       if (dataRes.resources) setResources(dataRes.resources)
+
+      // 3.b AI Tools
+      const resTools = await fetch("/api/admin/tools")
+      const dataTools = await resTools.json()
+      if (dataTools.tools) setAiTools(dataTools.tools)
 
       // 4. Lives
       const resLives = await fetch("/api/admin/lives")
@@ -342,6 +394,45 @@ export default function SuperAdminDashboard() {
       }
     } catch (e) {
       alert("Erreur lors de la suppression")
+    }
+  }
+
+  // Reorder Course (Up / Down)
+  async function handleMoveCourse(course: BootcampCourse, direction: "up" | "down") {
+    const currentIndex = courses.findIndex(c => (c.id && c.id === course.id) || c.slug === course.slug)
+    if (currentIndex === -1) return
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
+    if (targetIndex < 0 || targetIndex >= courses.length) return
+
+    const newCourses = [...courses]
+    const temp = newCourses[currentIndex]
+    newCourses[currentIndex] = newCourses[targetIndex]
+    newCourses[targetIndex] = temp
+
+    const updatedCurrent = { ...newCourses[currentIndex], sequence_order: currentIndex + 1 }
+    const updatedTarget = { ...newCourses[targetIndex], sequence_order: targetIndex + 1 }
+    newCourses[currentIndex] = updatedCurrent
+    newCourses[targetIndex] = updatedTarget
+
+    setCourses(newCourses)
+
+    try {
+      await Promise.all([
+        fetch("/api/admin/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedCurrent)
+        }),
+        fetch("/api/admin/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedTarget)
+        })
+      ])
+      showNotice("Ordre d'affichage des bootcamps mis à jour !")
+      await fetchAllData()
+    } catch (e) {
+      console.error("Reorder error:", e)
     }
   }
 
@@ -620,7 +711,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <DollarSign className="size-4 shrink-0" />
-                  <span>Vue d'Ensemble & KPIs</span>
+                  <span>Dashboard & KPIs</span>
                 </div>
               </button>
 
@@ -632,7 +723,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <FileCheck className="size-4 shrink-0" />
-                  <span>Inscriptions & Paiements</span>
+                  <span>Inscriptions</span>
                 </div>
                 {stats.pendingPaymentsCount > 0 && (
                   <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
@@ -653,7 +744,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Layers className="size-4 shrink-0" />
-                  <span>Bootcamps & Leçons</span>
+                  <span>Bootcamps</span>
                 </div>
                 <span className="text-[10px] opacity-75">({courses.length})</span>
               </button>
@@ -666,7 +757,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Sparkles className="size-4 shrink-0" />
-                  <span>Bibliothèque Prompts</span>
+                  <span>Bibliothèque</span>
                 </div>
                 <span className="text-[10px] opacity-75">({resources.length})</span>
               </button>
@@ -679,7 +770,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Video className="size-4 shrink-0" />
-                  <span>Directs Google Meet</span>
+                  <span>Directs</span>
                 </div>
               </button>
             </div>
@@ -695,7 +786,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Users className="size-4 shrink-0" />
-                  <span>Membres & Rôles RBAC</span>
+                  <span>Membres</span>
                 </div>
                 <span className="text-[10px] opacity-75">({users.length})</span>
               </button>
@@ -708,7 +799,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <BookOpen className="size-4 shrink-0" />
-                  <span>Devoirs sur 20</span>
+                  <span>Devoirs</span>
                 </div>
                 {stats.pendingSubmissions > 0 && (
                   <span className="bg-blue-500 text-white font-black text-[9px] px-1.5 py-0.2 rounded-full">
@@ -725,7 +816,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Building2 className="size-4 shrink-0" />
-                  <span>Devis B2B Entreprises</span>
+                  <span>Entreprises</span>
                 </div>
                 <span className="text-[10px] opacity-75">({stats.b2bCount})</span>
               </button>
@@ -742,7 +833,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Sparkles className="size-4 shrink-0" />
-                  <span>Configuration Site & Hero</span>
+                  <span>Paramètres</span>
                 </div>
               </button>
 
@@ -754,7 +845,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Download className="size-4 shrink-0" />
-                  <span>Exportation CSV</span>
+                  <span>Exportation Données</span>
                 </div>
               </button>
             </div>
@@ -788,15 +879,15 @@ export default function SuperAdminDashboard() {
           <div>
             <h1 className="font-heading text-2xl font-bold text-white uppercase tracking-tight">
               {activeTab === "kpi" && "Vue d'Ensemble & KPIs Financiers"}
-              {activeTab === "courses" && "Gestion des Bootcamps & Leçons"}
+              {activeTab === "courses" && "Gestion des Bootcamps"}
               {activeTab === "resources" && "Bibliothèque de Prompts & Templates"}
-              {activeTab === "lives" && "Sessions Live Google Meet & Replays"}
-              {activeTab === "payments" && "Inscriptions & Validation Mobile Money"}
+              {activeTab === "lives" && "Sessions Live & Replays"}
+              {activeTab === "payments" && "Inscriptions & Validation"}
               {activeTab === "users" && "Gestion des Membres & Rôles RBAC"}
-              {activeTab === "submissions" && "Correction des Devoirs sur 20"}
+              {activeTab === "submissions" && "Correction des Devoirs"}
               {activeTab === "b2b" && "Demandes de Devis B2B Entreprises"}
-              {activeTab === "settings" && "Configuration du Site & Hero Landing Page"}
-              {activeTab === "export" && "Exportation des Données CSV"}
+              {activeTab === "settings" && "Paramètres du Site"}
+              {activeTab === "export" && "Exportation des Données"}
             </h1>
             <p className="text-xs text-slate-400 mt-1">
               Console d'Administration Super Admin — Le Guide IA
@@ -974,12 +1065,15 @@ export default function SuperAdminDashboard() {
 
             {/* Courses List */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {courses.map(c => (
-                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col justify-between space-y-4">
+              {courses.map((c, idx) => (
+                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col justify-between space-y-4 relative">
                   <div className="space-y-3">
                     <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
-                      <img src={c.poster || "/images/bootcamp_pro_thumb.jpg"} alt={c.title} className="w-full h-full object-cover" />
-                      <div className="absolute top-2 left-2">
+                      <img src={c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg"} alt={c.title} className="w-full h-full object-cover" />
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                        <span className="bg-slate-950/80 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
+                          #{c.sequence_order || idx + 1}
+                        </span>
                         <span className="bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase">
                           {c.badge}
                         </span>
@@ -998,6 +1092,24 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+                    <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
+                      <button
+                        onClick={() => handleMoveCourse(c, "up")}
+                        disabled={idx === 0}
+                        className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+                        title="Déplacer vers le haut"
+                      >
+                        <ArrowUp className="size-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleMoveCourse(c, "down")}
+                        disabled={idx === courses.length - 1}
+                        className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+                        title="Déplacer vers le bas"
+                      >
+                        <ArrowDown className="size-3.5" />
+                      </button>
+                    </div>
                     <button
                       onClick={() => { setCourseForm(c); setShowCourseModal(true) }}
                       className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 flex items-center justify-center gap-1"
@@ -1081,11 +1193,70 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Badge Promotionnel</label>
+                        <label className="text-slate-400 block mb-1 font-bold">Ordre d'Affichage (#)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={courseForm.sequence_order || 1}
+                          onChange={e => setCourseForm({ ...courseForm, sequence_order: parseInt(e.target.value) || 1 })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-bold text-amber-400"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <FileUploadField
+                        label="🖼️ Image Miniature (Vignette affichée sur la fiche)"
+                        value={courseForm.thumbnail || ""}
+                        onChange={url => setCourseForm({ ...courseForm, thumbnail: url })}
+                        accept="image/*"
+                        bucket="course-posters"
+                        folder="thumbnails"
+                        placeholder="https://... ou téléversez une miniature"
+                        preview="image"
+                        hint="Format recommandé : 16:9 ou carré (ex: 1280×720px)"
+                      />
+                      <FileUploadField
+                        label="📜 Image Affiche Poster (Grand Format 3:4)"
+                        value={courseForm.poster || ""}
+                        onChange={url => setCourseForm({ ...courseForm, poster: url })}
+                        accept="image/*"
+                        bucket="course-posters"
+                        folder="posters"
+                        placeholder="https://... ou téléversez une affiche"
+                        preview="image"
+                        hint="Format recommandé : 3:4 (ex: 900×1200px)"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-slate-400 block mb-1 font-bold">Lien Google Meet (Direct Live)</label>
+                      <input
+                        type="text"
+                        value={courseForm.live_meet_url}
+                        onChange={e => setCourseForm({ ...courseForm, live_meet_url: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                      />
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">Dates / Période de la Session</label>
                         <input
                           type="text"
-                          value={courseForm.badge}
-                          onChange={e => setCourseForm({ ...courseForm, badge: e.target.value })}
+                          placeholder="ex: 31 Août au 6 Septembre 2026"
+                          value={courseForm.dates || ""}
+                          onChange={e => setCourseForm({ ...courseForm, dates: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">Format de la Session</label>
+                        <input
+                          type="text"
+                          placeholder="ex: 100% En Ligne"
+                          value={courseForm.format || ""}
+                          onChange={e => setCourseForm({ ...courseForm, format: e.target.value })}
                           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
                         />
                       </div>
@@ -1093,23 +1264,37 @@ export default function SuperAdminDashboard() {
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Image Poster URL (Supabase Storage)</label>
+                        <label className="text-slate-400 block mb-1 font-bold">Type de Certificat / Badge</label>
                         <input
                           type="text"
-                          value={courseForm.poster}
-                          onChange={e => setCourseForm({ ...courseForm, poster: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                          placeholder="ex: Certificat Officiel"
+                          value={courseForm.certificate || ""}
+                          onChange={e => setCourseForm({ ...courseForm, certificate: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
                         />
                       </div>
-                      <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Lien Google Meet (Direct Live)</label>
-                        <input
-                          type="text"
-                          value={courseForm.live_meet_url}
-                          onChange={e => setCourseForm({ ...courseForm, live_meet_url: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
-                        />
-                      </div>
+                      <FileUploadField
+                        label="📄 PDF du Programme (Upload local ou URL)"
+                        value={courseForm.pdf_url || ""}
+                        onChange={url => setCourseForm({ ...courseForm, pdf_url: url })}
+                        accept=".pdf,application/pdf"
+                        bucket="resources-files"
+                        folder="programmes"
+                        placeholder="https://... ou uploadez le PDF"
+                        preview="none"
+                        hint="PDF spécifique à cette formule de Bootcamp."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-slate-400 block mb-1 font-bold">Avantages / Inclus (1 par ligne)</label>
+                      <textarea
+                        rows={3}
+                        placeholder="7 sessions premium en direct...&#10;Replays vidéo HD...&#10;Certificat officiel..."
+                        value={Array.isArray(courseForm.features) ? courseForm.features.join("\n") : (courseForm.features || "")}
+                        onChange={e => setCourseForm({ ...courseForm, features: e.target.value.split("\n").filter(Boolean) })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                      />
                     </div>
 
                     <div className="flex gap-2 pt-3 border-t border-slate-800">
@@ -1251,6 +1436,18 @@ export default function SuperAdminDashboard() {
                       />
                     </div>
 
+                    <FileUploadField
+                      label="Fichier à Télécharger (PDF, DOCX, Blueprint)"
+                      value={(resourceForm as any).download_url || ""}
+                      onChange={url => setResourceForm({ ...resourceForm, download_url: url })}
+                      accept=".pdf,.doc,.docx,.json,.xlsx,.zip,application/*"
+                      bucket="resources-files"
+                      folder="documents"
+                      placeholder="https://... ou téléversez le document"
+                      preview="none"
+                      hint="Formats supportés : PDF, DOCX, JSON (Blueprint Make.com), XLSX, ZIP"
+                    />
+
                     <div className="flex gap-2 pt-3 border-t border-slate-800">
                       <button
                         type="button"
@@ -1376,6 +1573,18 @@ export default function SuperAdminDashboard() {
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
                       />
                     </div>
+
+                    <FileUploadField
+                      label="Replay Vidéo HD (Upload ou URL YouTube/Supabase)"
+                      value={liveForm.replay_url || ""}
+                      onChange={url => setLiveForm({ ...liveForm, replay_url: url })}
+                      accept="video/*,image/*,.mp4,.webm"
+                      bucket="course-replays"
+                      folder="replays"
+                      placeholder="https://youtube.com/... ou URL du replay HD"
+                      preview="none"
+                      hint="Collez le lien YouTube ou téléversez le fichier MP4 directement."
+                    />
 
                     <div className="flex gap-2 pt-3 border-t border-slate-800">
                       <button
@@ -1791,18 +2000,20 @@ export default function SuperAdminDashboard() {
               {/* Section 2: VSL Hero Video */}
               <div className="space-y-4 pt-4 border-t border-slate-800/80">
                 <h4 className="text-xs font-black uppercase tracking-wider text-purple-400 border-b border-slate-800/60 pb-2">
-                  2. Vidéo VSL de Présentation (YouTube Embed URL)
+                  2. Vidéo VSL de Présentation (Upload MP4 ou URL Embed)
                 </h4>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">URL d'Intégration YouTube Embed</label>
-                  <input
-                    type="url"
+                  <FileUploadField
+                    label="Vidéo VSL de Présentation (Upload local ou URL YouTube/Supabase)"
                     value={siteSettings.vsl_youtube_url}
-                    onChange={e => setSiteSettings({ ...siteSettings, vsl_youtube_url: e.target.value })}
-                    placeholder="https://www.youtube.com/embed/..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none font-mono"
+                    onChange={url => setSiteSettings({ ...siteSettings, vsl_youtube_url: url })}
+                    accept="video/*,.mp4,.webm"
+                    bucket="course-replays"
+                    folder="vsl"
+                    placeholder="https://www.youtube.com/embed/... ou téléversez un fichier MP4"
+                    preview="none"
+                    hint="Collez un lien d'intégration YouTube/Vimeo OU téléversez directement une vidéo MP4/WebM."
                   />
-                  <p className="text-[10px] text-slate-500">Exemple : https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1</p>
                 </div>
               </div>
 
@@ -1842,7 +2053,7 @@ export default function SuperAdminDashboard() {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-300">Dates des Directs GMT</label>
                     <input
@@ -1861,6 +2072,29 @@ export default function SuperAdminDashboard() {
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
                     />
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Format (Badge 3ème)</label>
+                    <input
+                      type="text"
+                      placeholder="ex: 🌍 100% En ligne"
+                      value={siteSettings.hero_format}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_format: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Nb Sessions (Badge 4ème)</label>
+                    <input
+                      type="text"
+                      placeholder="ex: 🎓 7 Sessions intensives"
+                      value={siteSettings.hero_sessions}
+                      onChange={e => setSiteSettings({ ...siteSettings, hero_sessions: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 pt-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-300">Prix Promo Affiche (FCFA)</label>
                     <input
@@ -1883,14 +2117,32 @@ export default function SuperAdminDashboard() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">URL Affiche Officielle Hero</label>
-                    <input
-                      type="text"
+                    <FileUploadField
+                      label="Affiche Officielle Hero (Upload ou URL)"
                       value={siteSettings.hero_poster_url}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_poster_url: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none font-mono"
+                      onChange={url => setSiteSettings({ ...siteSettings, hero_poster_url: url })}
+                      accept="image/*"
+                      bucket="course-posters"
+                      folder="hero"
+                      placeholder="https://... ou téléversez l'affiche"
+                      preview="image"
+                      hint="Format recommandé : 3:4 · JPG ou PNG"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <FileUploadField
+                    label="📄 PDF Programme Bootcamp (Upload ou URL)"
+                    value={siteSettings.hero_programme_url}
+                    onChange={url => setSiteSettings({ ...siteSettings, hero_programme_url: url })}
+                    accept=".pdf,application/pdf"
+                    bucket="resources-files"
+                    folder="programmes"
+                    placeholder="https://... ou téléversez le PDF du programme"
+                    preview="none"
+                    hint="Ce PDF s'ouvre quand l'utilisateur clique sur « Télécharger le programme » sur la page d'accueil."
+                  />
                 </div>
               </div>
 

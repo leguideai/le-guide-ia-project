@@ -4,78 +4,74 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { Check, Sparkles, ArrowRight, Clock } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 interface PricingProps {
-  selectedFormula?: "pro" | "business" | "free"
+  selectedCourseId?: string
 }
 
-export function Pricing({ selectedFormula = "pro" }: PricingProps) {
-  const content = {
-    pro: {
-      title: "Bootcamp IA Pro",
-      subtitle: "Pour Salariés, Cadres & Professionnels",
-      founderPrice: "149 000 FCFA",
-      founderApprox: "≈ 150 € / $165",
-      standardPrice: "250 000 FCFA",
-      standardApprox: "≈ 228 € / $250",
-      expireText: "OFFRE EXPIRE LE 20 AOÛT 2026 À MINUIT GMT",
-      targetDateIso: "2026-08-20T23:59:59Z",
-      standardDateText: "À partir du 21 Août 2026",
-      checkoutHref: "/checkout/bootcamp-ia-pro",
-      features: [
-        "7 sessions premium en direct live avec Alfred Dah",
-        "Créneaux : Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT",
-        "Replays vidéo HD téléchargeables sous 12h",
-        "Exercices pratiques & Ateliers en direct",
-        "Groupe WhatsApp privé d'entraide",
-        "Certificat officiel Le Guide IA individuel et vérifiable",
-        "Garantie satisfait ou remboursé (sous conditions)"
-      ]
-    },
-    business: {
-      title: "Bootcamp IA Business Exec",
-      subtitle: "Pour Dirigeants, Consultants & Entrepreneurs",
-      founderPrice: "199 000 FCFA",
-      founderApprox: "≈ 300 € / $330",
-      standardPrice: "299 000 FCFA",
-      standardApprox: "≈ 380 € / $420",
-      expireText: "OFFRE EXPIRE LE 10 SEPTEMBRE 2026 À MINUIT GMT",
-      targetDateIso: "2026-09-10T23:59:59Z",
-      standardDateText: "À partir du 11 Septembre 2026",
-      checkoutHref: "/checkout/bootcamp-ia-business",
-      features: [
-        "15h de sessions orientées Business & Automation",
-        "Créneaux : Lun-Ven 19h-21h GMT + Dimanche 16h-21h GMT",
-        "Inclus tout le programme Pro + Coaching 1h individuel",
-        "Modèles de Business Plans & Workflows d'Agents IA",
-        "Accès Espace Membre & Bibliothèque Premium de Prompts",
-        "Certificat IA Business vérifiable + Facture d'entreprise",
-        "Garantie satisfait ou remboursé (sous conditions)"
-      ]
-    },
-    free: {
-      title: "Initiation IA & ChatGPT",
-      subtitle: "Pour Découvrir les Règles du Prompting",
-      founderPrice: "GRATUIT",
-      founderApprox: "Libre accès",
-      standardPrice: "0 FCFA",
-      standardApprox: "Libre accès",
-      expireText: "",
-      targetDateIso: "",
-      standardDateText: "Accès Libre & permanent 24h/7j",
-      checkoutHref: "/register-account",
-      features: [
-        "Cours d'introduction pratique en accès immédiat dans l'Espace Membre",
-        "Découverte des fondamentaux du Prompt Engineering",
-        "Guide des 10 meilleurs cas d'usage de ChatGPT en entreprise",
-        "Accès aux fiches PDF d'initiation téléchargeables",
-        "Communauté ouverte WhatsApp des apprenants"
-      ]
+export function Pricing({ selectedCourseId }: PricingProps) {
+  const [dbCourses, setDbCourses] = useState<any[]>([])
+  const [activeId, setActiveId] = useState<string>(selectedCourseId || "")
+
+  useEffect(() => {
+    async function loadCourses() {
+      let { data, error } = await supabase.from("courses").select("*").order("sequence_order", { ascending: true }).order("created_at", { ascending: true })
+      if (error || !data || data.length === 0) {
+        const res = await supabase.from("courses").select("*").order("created_at", { ascending: true })
+        data = res.data
+      }
+      if (data && data.length > 0) {
+        setDbCourses(data)
+        if (!activeId) setActiveId(data[0].id)
+      }
     }
+    loadCourses()
+  }, [])
+
+  useEffect(() => {
+    if (selectedCourseId) setActiveId(selectedCourseId)
+  }, [selectedCourseId])
+
+  const activeCourse = dbCourses.find(c => c.id === activeId || c.slug === activeId) || dbCourses[0]
+
+  function formatPrice(val: any, currency = "FCFA") {
+    if (val === undefined || val === null || val === "") return ""
+    if (typeof val === "number") {
+      return val === 0 ? "GRATUIT" : `${val.toLocaleString("fr-FR")} ${currency}`
+    }
+    const str = String(val).trim()
+    if (str === "0" || str.toLowerCase() === "gratuit") return "GRATUIT"
+    return str.includes("FCFA") || str.includes("EUR") || str.includes("$") ? str : `${str} ${currency}`
   }
 
-  const activeKey = selectedFormula === "free" ? "free" : selectedFormula === "business" ? "business" : "pro"
-  const current = content[activeKey]
+  function formatStandardPrice(val: any, orig: any, currency = "FCFA") {
+    if (orig && String(orig).trim() !== "") {
+      return formatPrice(orig, currency)
+    }
+    if (typeof val === "number") {
+      return val === 0 ? "0 FCFA" : `${Math.round(val * 1.5).toLocaleString("fr-FR")} ${currency}`
+    }
+    const num = parseFloat(String(val).replace(/[^0-9.]/g, ""))
+    if (!isNaN(num) && num > 0) {
+      return `${Math.round(num * 1.5).toLocaleString("fr-FR")} ${currency}`
+    }
+    return String(val || "")
+  }
+
+  const current = {
+    title: activeCourse?.title || "BOOTCAMP IA",
+    subtitle: activeCourse?.description || activeCourse?.subtitle || "",
+    founderPrice: formatPrice(activeCourse?.price, activeCourse?.currency),
+    founderApprox: "",
+    standardPrice: formatStandardPrice(activeCourse?.price, activeCourse?.original_price, activeCourse?.currency),
+    standardApprox: "",
+    expireText: activeCourse?.badge || "",
+    targetDateIso: "",
+    standardDateText: activeCourse?.dates ? `Session : ${activeCourse.dates}` : "",
+    checkoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT") ? "/register-account" : `/checkout/${activeCourse?.slug || activeCourse?.id}`,
+    features: (activeCourse?.features && Array.isArray(activeCourse.features)) ? activeCourse.features : []
+  }
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
@@ -101,13 +97,13 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
     updateTimer()
     const timer = setInterval(updateTimer, 1000)
     return () => clearInterval(timer)
-  }, [activeKey, current.targetDateIso])
+  }, [activeId, current.targetDateIso])
 
   return (
     <section className="py-16 bg-background relative overflow-hidden border-t border-border/50" id="tarifs">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
-        {/* Left-Aligned Header (Matching Homepage Udemy Aesthetic) */}
+        {/* Left-Aligned Header */}
         <div className="space-y-3 text-left">
           <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
             TARIFS OFFICIELS · {current.title.toUpperCase()}
@@ -123,7 +119,7 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
           
           {/* Card 1: Offre Fondateur (Highlight) */}
           <motion.div
-            key={`founder-${activeKey}`}
+            key={`founder-${activeId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -139,38 +135,18 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
               <div className="text-center mt-4 mb-6 space-y-2">
                 <div className="flex items-center justify-center gap-2 pt-2">
                   <span className="font-heading text-4xl md:text-5xl font-black text-white">{current.founderPrice}</span>
-                  <span className="text-xs font-bold text-muted-foreground bg-card/80 border border-border/60 rounded-full px-2.5 py-1">
-                    {current.founderApprox}
-                  </span>
+                  {current.founderApprox && (
+                    <span className="text-xs font-bold text-muted-foreground bg-card/80 border border-border/60 rounded-full px-2.5 py-1">
+                      {current.founderApprox}
+                    </span>
+                  )}
                 </div>
 
-                {activeKey !== "free" && (
-                  <>
-                    <div className="text-xs font-extrabold text-amber-400 uppercase tracking-wide flex items-center justify-center gap-1.5 pt-1">
-                      <Clock className="size-3.5 animate-pulse" />
-                      <span>{current.expireText}</span>
-                    </div>
-
-                    {/* Live Countdown Timer Grid */}
-                    <div className="grid grid-cols-4 gap-2 pt-3 max-w-xs mx-auto">
-                      <div className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-2 text-center">
-                        <div className="text-lg font-black text-amber-400">{timeLeft.days}</div>
-                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">J</div>
-                      </div>
-                      <div className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-2 text-center">
-                        <div className="text-lg font-black text-amber-400">{timeLeft.hours}</div>
-                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">H</div>
-                      </div>
-                      <div className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-2 text-center">
-                        <div className="text-lg font-black text-amber-400">{timeLeft.minutes}</div>
-                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">M</div>
-                      </div>
-                      <div className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-2 text-center">
-                        <div className="text-lg font-black text-amber-400">{timeLeft.seconds}</div>
-                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">S</div>
-                      </div>
-                    </div>
-                  </>
+                {current.expireText && (
+                  <div className="text-xs font-extrabold text-amber-400 uppercase tracking-wide flex items-center justify-center gap-1.5 pt-1">
+                    <Clock className="size-3.5 animate-pulse" />
+                    <span>{current.expireText}</span>
+                  </div>
                 )}
               </div>
 
@@ -199,7 +175,7 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
 
           {/* Card 2: Prix Standard */}
           <motion.div
-            key={`standard-${activeKey}`}
+            key={`standard-${activeId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
@@ -212,9 +188,6 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
                 </span>
                 <div className="flex items-center justify-center gap-2 pt-1">
                   <span className="font-heading text-3xl md:text-4xl font-black text-foreground">{current.standardPrice}</span>
-                  <span className="text-xs text-muted-foreground bg-card/80 border border-border/60 rounded-full px-2.5 py-1">
-                    {current.standardApprox}
-                  </span>
                 </div>
                 <div className="text-xs text-muted-foreground font-semibold pt-1">
                   {current.standardDateText}
@@ -238,7 +211,7 @@ export function Pricing({ selectedFormula = "pro" }: PricingProps) {
                 href={current.checkoutHref}
                 className="w-full flex h-12 items-center justify-center gap-2 rounded-xl bg-secondary/80 hover:bg-secondary text-foreground font-bold text-xs md:text-sm border border-border transition-all active:scale-95 cursor-pointer"
               >
-                <span>{activeKey === "free" ? "S'inscrire gratuitement" : `Choisir l'accès standard (${current.standardPrice})`}</span>
+                <span>Choisir l'accès ({current.standardPrice})</span>
               </Link>
             </div>
           </motion.div>

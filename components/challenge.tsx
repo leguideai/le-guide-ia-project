@@ -153,6 +153,18 @@ function SignupForm({ perks }: { perks: string[] }) {
   const [submitted, setSubmitted] = useState(false)
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
   const [countrySearchQuery, setCountrySearchQuery] = useState("")
+  const [dbWhatsappUrl, setDbWhatsappUrl] = useState<string>("https://chat.whatsapp.com/leguideai-bootcamp")
+
+  useEffect(() => {
+    async function loadWhatsapp() {
+      const { data } = await supabase.from("live_sessions").select("whatsapp_url").limit(1).maybeSingle()
+      if (data?.whatsapp_url) {
+        setDbWhatsappUrl(data.whatsapp_url)
+      }
+    }
+    loadWhatsapp()
+  }, [])
+
   const countryDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

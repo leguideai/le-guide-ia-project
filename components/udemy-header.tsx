@@ -39,8 +39,8 @@ export function UdemyHeader() {
     }
   }
 
-  const [announcementText, setAnnouncementText] = useState("BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !")
-  const [announcementCta, setAnnouncementCta] = useState("Réserver ma place (149 000 FCFA) →")
+  const [announcementText, setAnnouncementText] = useState("")
+  const [announcementCta, setAnnouncementCta] = useState("")
 
   useEffect(() => {
     async function loadSettings() {

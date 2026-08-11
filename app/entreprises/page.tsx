@@ -21,17 +21,30 @@ export default function EntreprisesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.contactName || !form.email || !form.phone) {
+    if (!form.contactName || !form.email || !form.phone || !form.companyName) {
       setErrorMsg("Veuillez remplir tous les champs obligatoires.")
       setStatus("error")
       return
     }
     setStatus("loading")
     setErrorMsg("")
-    // Simulation submission
-    setTimeout(() => {
-      setStatus("success")
-    }, 1000)
+    try {
+      const res = await fetch("/api/b2b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      })
+      const data = await res.json()
+      if (data.success) {
+        setStatus("success")
+      } else {
+        setErrorMsg(data.error || "Erreur lors de l'envoi de la demande.")
+        setStatus("error")
+      }
+    } catch (err) {
+      setErrorMsg("Erreur réseau. Veuillez réessayer.")
+      setStatus("error")
+    }
   }
 
   const scrollToForm = () => {

@@ -5,16 +5,39 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { ArrowRight, Sparkles } from "lucide-react"
 
+import { supabase } from "@/lib/supabase"
+
 export function UdemyHeroBanner() {
   const [badge, setBadge] = useState("CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL")
   const [title, setTitle] = useState("Maîtrisez l'IA. Transformez votre carrière et votre business.")
   const [subtitle, setSubtitle] = useState("Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.")
   const [dates, setDates] = useState("31 Août – 6 Sept 2026")
   const [time, setTime] = useState("19h00 GMT")
-  const [posterUrl, setPosterUrl] = useState("/hero_bootcamp.jpg")
+  const [posterUrl, setPosterUrl] = useState("/images/bootcamp_pro_thumb.jpg")
+  const [heroFormat, setHeroFormat] = useState("🌍 100% En ligne")
+  const [heroSessions, setHeroSessions] = useState("🎓 7 Sessions intensives")
+  const [programmeUrl, setProgrammeUrl] = useState("/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf")
 
   useEffect(() => {
     async function loadSettings() {
+      try {
+        const { data: sbData } = await supabase.from("site_settings").select("*")
+        if (sbData && sbData.length > 0) {
+          const settingsMap: Record<string, string> = {}
+          sbData.forEach((s: any) => { settingsMap[s.key] = s.value })
+          if (settingsMap.hero_badge) setBadge(settingsMap.hero_badge)
+          if (settingsMap.hero_title) setTitle(settingsMap.hero_title)
+          if (settingsMap.hero_subtitle) setSubtitle(settingsMap.hero_subtitle)
+          if (settingsMap.hero_dates) setDates(settingsMap.hero_dates)
+          if (settingsMap.hero_time) setTime(settingsMap.hero_time)
+          if (settingsMap.hero_poster_url) setPosterUrl(settingsMap.hero_poster_url)
+          if (settingsMap.hero_format) setHeroFormat(settingsMap.hero_format)
+          if (settingsMap.hero_sessions) setHeroSessions(settingsMap.hero_sessions)
+          if (settingsMap.hero_programme_url) setProgrammeUrl(settingsMap.hero_programme_url)
+          return
+        }
+      } catch (e) {}
+
       try {
         const res = await fetch("/api/admin/settings")
         const data = await res.json()
@@ -25,6 +48,9 @@ export function UdemyHeroBanner() {
           if (data.settings.hero_dates) setDates(data.settings.hero_dates)
           if (data.settings.hero_time) setTime(data.settings.hero_time)
           if (data.settings.hero_poster_url) setPosterUrl(data.settings.hero_poster_url)
+          if (data.settings.hero_format) setHeroFormat(data.settings.hero_format)
+          if (data.settings.hero_sessions) setHeroSessions(data.settings.hero_sessions)
+          if (data.settings.hero_programme_url) setProgrammeUrl(data.settings.hero_programme_url)
         }
       } catch (e) {}
     }
@@ -71,10 +97,10 @@ export function UdemyHeroBanner() {
                     <span className="text-xs">🕖 {time}</span>
                   </div>
                   <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/50 p-2.5 shadow-sm">
-                    <span className="text-xs">🌍 100% En ligne</span>
+                    <span className="text-xs">{heroFormat}</span>
                   </div>
                   <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/50 p-2.5 shadow-sm">
-                    <span className="text-xs">🎓 7 Sessions intensives</span>
+                    <span className="text-xs">{heroSessions}</span>
                   </div>
                 </div>
               </div>
@@ -90,7 +116,7 @@ export function UdemyHeroBanner() {
                 </Link>
 
                 <a
-                  href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+                  href={programmeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-secondary/60 hover:bg-secondary text-foreground font-bold px-5 py-3 text-xs text-muted-foreground hover:text-foreground transition-all hover:scale-[1.01]"
@@ -129,7 +155,7 @@ export function UdemyHeroBanner() {
                 </Link>
 
                 <a
-                  href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+                  href={programmeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 rounded-xl border border-border bg-secondary/60 hover:bg-secondary text-foreground font-bold px-5 py-3 text-xs text-muted-foreground hover:text-foreground transition-all"

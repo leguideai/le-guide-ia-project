@@ -1,35 +1,35 @@
-"use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { Cpu, Briefcase, Sparkles, ArrowRight } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export function UdemyTrustLogos() {
   const [activePillar, setActivePillar] = useState("all")
+  const [dbTools, setDbTools] = useState<any[]>([])
 
-  const pillars = [
-    {
-      id: "all",
-      label: "Tous les Piliers",
-      icon: Sparkles,
-      count: "6 Outils"
-    },
-    {
-      id: "models",
-      label: "Pilier · Modèles IA & Recherche",
-      icon: Cpu,
-      count: "5 Technologies"
-    },
-    {
-      id: "career",
-      label: "Pilier · Employabilité & ATS",
-      icon: Briefcase,
-      count: "1 Plateforme"
+  useEffect(() => {
+    async function loadTools() {
+      try {
+        const { data } = await supabase.from("ai_tools").select("*").order("created_at", { ascending: true })
+        if (data && data.length > 0) {
+          setDbTools(data)
+          return
+        }
+      } catch (e) {}
+
+      try {
+        const res = await fetch("/api/admin/tools")
+        const data = await res.json()
+        if (data?.tools && data.tools.length > 0) {
+          setDbTools(data.tools)
+        }
+      } catch (e) {}
     }
-  ]
+    loadTools()
+  }, [])
 
-  const toolArchitecture = [
+  const defaultTools = [
     {
       pillar: "models",
       pillarLabel: "Modèles IA & Raisonnement",
@@ -56,35 +56,27 @@ export function UdemyTrustLogos() {
       icon: "💎",
       image: "/images/tools/gemini.png",
       gradient: "from-sky-500/10 via-sky-500/5 to-transparent"
-    },
-    {
-      pillar: "models",
-      pillarLabel: "Modèles IA & Raisonnement",
-      name: "Perplexity AI",
-      role: "Recherche web temps réel augmentée, vérification rigoureuse des sources & veille.",
-      icon: "🔍",
-      image: "/images/tools/perplexity.png",
-      gradient: "from-amber-500/10 via-amber-500/5 to-transparent"
-    },
-    {
-      pillar: "models",
-      pillarLabel: "Modèles IA & Raisonnement",
-      name: "Google NotebookLM",
-      role: "Création de bases de connaissances privées, interrogation de PDF & podcasts audio.",
-      icon: "📚",
-      image: "/images/tools/notebooklm.png",
-      gradient: "from-blue-500/10 via-blue-500/5 to-transparent"
-    },
-    {
-      pillar: "career",
-      pillarLabel: "Employabilité & Visibilité",
-      name: "LinkedIn & Optimisation ATS",
-      role: "Refonte de profil moderne, franchissement des filtres ATS recruteurs & marque personnelle.",
-      icon: "💼",
-      image: "/images/tools/linkedin.png",
-      gradient: "from-cyan-500/10 via-cyan-500/5 to-transparent"
     }
   ]
+
+  const pillars = [
+    {
+      id: "all",
+      label: "Tous les Piliers",
+      icon: Sparkles,
+      count: `${dbTools.length > 0 ? dbTools.length : 6} Outils`
+    }
+  ]
+
+  const toolArchitecture = dbTools.length > 0 ? dbTools.map((t: any) => ({
+    pillar: "models",
+    pillarLabel: t.category || "Outil IA",
+    name: t.name,
+    role: t.role || "Outil officiel certifié Le Guide IA",
+    icon: t.icon || "⚡",
+    image: t.image || "/images/tools/chatgpt.png",
+    gradient: "from-primary/10 via-primary/5 to-transparent"
+  })) : defaultTools
 
   const filteredTools = activePillar === "all" ? toolArchitecture : toolArchitecture.filter(t => t.pillar === activePillar)
 

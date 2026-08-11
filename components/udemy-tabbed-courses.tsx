@@ -31,8 +31,29 @@ export function UdemyTabbedCourses() {
 
   useEffect(() => {
     async function loadLessons() {
-      const { data } = await supabase.from("lessons").select("*").order("sequence_order", { ascending: true })
-      if (data && data.length > 0) setDbLessonsData(data)
+      try {
+        const { data } = await supabase.from("lessons").select("*").order("sequence_order", { ascending: true })
+        if (data && data.length > 0) {
+          setDbLessonsData(data)
+          return
+        }
+      } catch (e) {}
+
+      try {
+        const res = await fetch("/api/admin/courses")
+        const data = await res.json()
+        const fetchedLessons: any[] = []
+        if (data?.courses) {
+          data.courses.forEach((c: any) => {
+            if (c.lessons && Array.isArray(c.lessons)) {
+              fetchedLessons.push(...c.lessons)
+            }
+          })
+        }
+        if (fetchedLessons.length > 0) {
+          setDbLessonsData(fetchedLessons)
+        }
+      } catch (e) {}
     }
     loadLessons()
   }, [])
@@ -70,102 +91,9 @@ export function UdemyTabbedCourses() {
   })) : []
 
   const tabContent: Record<string, CourseCard[]> = {
-    initiation: dynamicLessonsMap.length > 0 ? dynamicLessonsMap.slice(0, 3) : [
-      {
-        id: "init-1",
-        title: "Mindset IA & Configuration de ChatGPT, Claude et Gemini",
-        subtitle: "Adopter les bonnes habitudes et créer votre environnement de travail moderne.",
-        duration: "25 min",
-        rating: "4.9",
-        reviews: "320 avis",
-        instructor: "Alfred Dah",
-        source: "youtube",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/initiation_free_thumb.jpg",
-        badge: "Module 1 · Vidéo HD",
-        price: "Gratuit (0 FCFA)",
-        href: "/register-account"
-      },
-      {
-        id: "init-2",
-        title: "Les 5 Règles d'Or du Prompting Professionnel",
-        subtitle: "Formuler des prompts structurés pour multiplier par 4 votre vitesse d'exécution.",
-        duration: "35 min",
-        rating: "4.9",
-        reviews: "410 avis",
-        instructor: "Alfred Dah",
-        source: "youtube",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_pro_thumb.jpg",
-        badge: "Module 2 · Tutoriel",
-        price: "Gratuit (0 FCFA)",
-        href: "/register-account"
-      }
-    ],
-    business: dynamicLessonsMap.length > 0 ? dynamicLessonsMap.slice(1, 4) : [
-      {
-        id: "biz-1",
-        title: "Créer son Business Model Canvas assisté par l'IA",
-        subtitle: "Transformer une idée en modèle économique clair, cohérent et testable.",
-        duration: "2h 00m",
-        rating: "5.0",
-        reviews: "150 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_business_thumb.jpg",
-        badge: "Session 3 Live",
-        price: "99 000 FCFA",
-        href: "/checkout/bootcamp-ia-pro"
-      }
-    ],
-    career: dynamicLessonsMap.length > 0 ? dynamicLessonsMap.slice(2, 5) : [
-      {
-        id: "car-1",
-        title: "Refonte du CV Moderne & Optimisation pour Filtres ATS",
-        subtitle: "Passer les algorithmes de recrutement et captiver l'attention en 10 secondes.",
-        duration: "40 min",
-        rating: "4.9",
-        reviews: "290 avis",
-        instructor: "Alfred Dah",
-        source: "youtube",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/initiation_free_thumb.jpg",
-        badge: "Module 7 · Emploi",
-        price: "Gratuit",
-        href: "/register-account"
-      },
-      {
-        id: "car-2",
-        title: "Positionnement & Marque Personnelle sur LinkedIn avec l'IA",
-        subtitle: "Transformer votre profil en aimant à opportunités et clients d'affaires.",
-        duration: "1h 10m",
-        rating: "5.0",
-        reviews: "340 avis",
-        instructor: "Alfred Dah",
-        source: "supabase",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_pro_thumb.jpg",
-        badge: "Module 7 · Intensive",
-        price: "99 000 FCFA",
-        href: "/checkout/bootcamp-ia-pro"
-      },
-      {
-        id: "car-3",
-        title: "Générer un Plan Éditorial de 30 Jours Prêt à Publier",
-        subtitle: "Publier du contenu à forte valeur ajoutée sans blocage de la page blanche.",
-        duration: "50 min",
-        rating: "4.9",
-        reviews: "160 avis",
-        instructor: "Alfred Dah",
-        source: "youtube",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        thumbnail: "/images/bootcamp_business_thumb.jpg",
-        badge: "Module 8 · Ventes",
-        price: "Accès Membre",
-        href: "/dashboard"
-      }
-    ]
+    initiation: dynamicLessonsMap.slice(0, 3),
+    business: dynamicLessonsMap.slice(1, 4),
+    career: dynamicLessonsMap.slice(0, 4)
   }
 
   const currentCards = tabContent[activeTab] || tabContent["initiation"]

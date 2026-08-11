@@ -18,6 +18,13 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(bytes)
     const fileName = `${folder}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
 
+    // Essayer de s'assurer que le bucket public existe
+    try {
+      await supabaseServer.storage.createBucket(bucket, { public: true })
+    } catch (e) {
+      // Ignorer si le bucket existe déjà
+    }
+
     const { data, error } = await supabaseServer
       .storage
       .from(bucket)

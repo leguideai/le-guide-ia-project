@@ -16,6 +16,28 @@ async function seedDatabase() {
     // 1. Seed Bootcamps (courses)
     const initialCourses = [
       {
+        slug: "initiation-free",
+        title: "Initiation IA & ChatGPT Pratique (Gratuit)",
+        description: "Module de découverte pour acquérir les fondations du prompting, configurer vos outils et décupler votre productivité au quotidien.",
+        price: 0,
+        currency: "FCFA",
+        badge: "ACCÈS GRATUIT",
+        thumbnail: "/images/initiation_free_thumb.jpg",
+        poster: "/images/initiation_free_thumb.jpg",
+        pdf_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+        format: "100% En Ligne",
+        certificate: "Accès Gratuit",
+        sequence_order: 1,
+        dates: "Accès Immédiat 24h/7j",
+        status: "active",
+        features: [
+          "Cours d'introduction pratique en accès immédiat dans l'Espace Membre",
+          "Découverte des fondamentaux du Prompt Engineering",
+          "Guide des meilleurs cas d'usage de ChatGPT en entreprise",
+          "Accès aux fiches PDF d'initiation téléchargeables"
+        ]
+      },
+      {
         slug: "bootcamp-pro-2",
         title: "Bootcamp IA Pro 2 — Session Intensive & Live",
         description: "Formation de 4 semaines en direct sur Google Meet avec Alfred Dah. Maîtrisez ChatGPT, Claude, Midjourney v6 et l'automatisation Make.com.",
@@ -23,7 +45,22 @@ async function seedDatabase() {
         currency: "FCFA",
         badge: "INTENSIF & LIVE",
         thumbnail: "/images/bootcamp_pro_thumb.jpg",
-        status: "active"
+        poster: "/images/bootcamp_pro_poster.jpg",
+        pdf_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+        format: "100% En Ligne",
+        certificate: "Certificat Officiel",
+        sequence_order: 2,
+        dates: "31 Août au 6 Septembre 2026",
+        status: "active",
+        features: [
+          "7 sessions premium en direct live avec Alfred Dah",
+          "Créneaux : Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT",
+          "Replays vidéo HD téléchargeables sous 12h",
+          "Exercices pratiques & Ateliers en direct",
+          "Groupe WhatsApp privé d'entraide",
+          "Certificat officiel Le Guide IA individuel et vérifiable",
+          "Facture d'achat automatique conforme pour entreprise"
+        ]
       },
       {
         slug: "bootcamp-business-exec",
@@ -33,17 +70,21 @@ async function seedDatabase() {
         currency: "FCFA",
         badge: "EXECUTIF VIP",
         thumbnail: "/images/bootcamp_business_thumb.jpg",
-        status: "active"
-      },
-      {
-        slug: "initiation-free",
-        title: "Initiation IA & ChatGPT Pratique (Gratuit)",
-        description: "Module de découverte pour acquérir les fondations du prompting, configurer vos outils et décupler votre productivité au quotidien.",
-        price: 0,
-        currency: "FCFA",
-        badge: "ACCÈS GRATUIT",
-        thumbnail: "/images/initiation_free_thumb.jpg",
-        status: "active"
+        poster: "/images/bootcamp_business_poster.jpg",
+        pdf_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+        format: "100% En Ligne",
+        certificate: "Certificat Executif",
+        sequence_order: 3,
+        dates: "15 Septembre au 20 Décembre 2026",
+        status: "active",
+        features: [
+          "15h de sessions orientées Business & Automation",
+          "Inclus tout le programme Pro + Coaching 1h individuel",
+          "Modèles de Business Plans & Workflows d'Agents IA",
+          "Accès Espace Membre & Bibliothèque Premium de Prompts",
+          "Certificat IA Business vérifiable + Facture d'entreprise",
+          "Garantie satisfait ou remboursé (sous conditions)"
+        ]
       }
     ]
 
@@ -56,6 +97,8 @@ async function seedDatabase() {
 
       if (!existing) {
         await supabaseServer.from("courses").insert(course)
+      } else {
+        await supabaseServer.from("courses").update(course).eq("id", existing.id)
       }
     }
 
@@ -149,25 +192,85 @@ async function seedDatabase() {
     // 3. Seed Resources (Prompts)
     const initialResources = [
       {
+        slug: "prompt-linkedin",
+        title: "Optimisation de profil LinkedIn Pro & ATS",
+        category: "Productivité & Rédaction",
+        type: "Prompt",
+        tier: "Membre Premium",
+        prompt_text: `Agis en tant qu'expert en personal branding et rédacteur LinkedIn professionnel. Rédige 3 titres percutants (max 220 caractères) avec mots-clés ATS et une section Infos captivante.`,
+        file_url: "/images/bootcamp_pro_thumb.jpg"
+      },
+      {
+        slug: "prompt-marketing-b2b",
+        title: "Email de prospection commerciale B2B",
+        category: "Marketing & Vente",
+        type: "Prompt",
+        tier: "Membre Premium",
+        prompt_text: `Rédige un email de prospection froide B2B concis (moins de 150 mots) axé sur la valeur et la résolution de problème.`,
+        file_url: "/images/bootcamp_business_thumb.jpg"
+      },
+      {
+        slug: "ex-excel-data",
+        title: "Devoir à Rendre : Analyse de Données Financières d'Entreprise",
+        category: "Exercices & Devoirs",
+        type: "Devoir",
+        tier: "Membre Premium",
+        prompt_text: `Projet pratique obligatoire à soumettre : importez le jeu de données Excel de 1 000 ventes dans ChatGPT, générez les graphiques financiers et soumettez votre rapport.`,
+        file_url: "/images/initiation_free_thumb.jpg"
+      },
+      {
+        slug: "ex-make-blueprint",
+        title: "Cas Pratique : Workflow de Prospection Automatisée sur Make.com",
+        category: "Automatisation",
+        type: "Blueprint",
+        tier: "Membre Premium",
+        prompt_text: `Configurez le scénario Make.com fourni, activez les Webhooks d'emails et effectuez un test d'envoi en direct.`,
+        file_url: "/images/bootcamp_pro_thumb.jpg"
+      },
+      {
+        slug: "bonus-midjourney",
+        title: "Vidéo Bonus : Masterclass Midjourney v6 & Photoréalisme",
+        category: "Génération Visuelle",
+        type: "Vidéo Masterclass",
+        tier: "Gratuit",
+        prompt_text: `Tutoriel exclusif de 45 minutes pour générer des visuels publicitaires hyper-réalistes et maîtriser les paramètres --ar, --stylize et --cref.`,
+        file_url: "/images/bootcamp_business_thumb.jpg"
+      },
+      {
+        slug: "bp-agence-ia",
+        title: "Business Plan — Agence de Services & Automatisations IA",
+        category: "Business Plan",
+        type: "Document",
+        tier: "Membre Premium",
+        prompt_text: `Plan d'affaires stratégique complet pour lancer une agence d'intégration IA pour PME : offre de services, tarification retainer et projections financières.`,
+        file_url: "/templates/Business_Plan_Agence_IA_Template.docx"
+      },
+      {
+        slug: "bp-aviculture",
+        title: "Modèle de Business Plan - Aviculture Moderne",
+        category: "Business Plan",
+        type: "Document",
+        tier: "Gratuit",
+        prompt_text: `Structure complète d'un projet d'élevage de poulets de chair et pondeuses au Burkina Faso.`,
+        file_url: "/templates/Business_Plan_Aviculture_Burkina_Faso_Template.docx"
+      },
+      {
+        slug: "prompt-ultime-redaction",
         title: "Prompt Ultime de Rédaction de Rapports & Synthèses B2B",
         category: "Productivité & Rédaction",
         type: "Prompt",
         tier: "Membre Premium",
-        prompt_text: `Tu es un expert en rédaction exécutive. Analyse le texte ci-joint et génère un rapport structuré comprenant : 1. Résumé exécutif en 3 puces, 2. Analyse d'impact stratégique, 3. Recommandations concrètes d'actions prioritaires.`
+        prompt_text: `Tu es un expert en rédaction exécutive. Analyse le texte ci-joint et génère un rapport structuré comprenant : 1. Résumé exécutif en 3 puces, 2. Analyse d'impact stratégique, 3. Recommandations concrètes d'actions prioritaires.`,
+        file_url: "/images/bootcamp_pro_thumb.jpg"
       },
       {
+        slug: "kit-prompt-midjourney-v6",
         title: "Kit d'Ingénierie de Prompt pour Génération d'Images Midjourney v6",
         category: "Génération Visuelle",
         type: "Blueprint",
         tier: "Gratuit",
-        prompt_text: `/imagine prompt: professional corporate portrait of an African entrepreneur working with AI tech interface, cinematic lighting, 8k resolution, photorealistic, shot on 85mm lens --ar 16:9 --v 6.0`
-      },
-      {
-        title: "Workflow Blueprint Make.com : Synchro Gmail -> ChatGPT -> WhatsApp",
-        category: "Automatisation",
-        type: "Automation Blueprint",
-        tier: "Membre Premium",
-        prompt_text: `JSON Blueprint d'automatisation Make.com permettant d'analyser chaque email entrant avec ChatGPT et d'envoyer un résumé instantané sur WhatsApp.`
+        prompt_text: `/imagine prompt: professional corporate portrait of an African entrepreneur working with AI tech interface, cinematic lighting, 8k resolution, photorealistic, shot on 85mm lens --ar 16:9 --v 6.0`,
+        file_url: "/images/bootcamp_business_thumb.jpg"
       }
     ]
 
@@ -175,11 +278,75 @@ async function seedDatabase() {
       const { data: existing } = await supabaseServer
         .from("resources")
         .select("id")
-        .eq("title", res.title)
+        .eq("slug", res.slug)
         .maybeSingle()
 
       if (!existing) {
         await supabaseServer.from("resources").insert(res)
+      }
+    }
+
+    // 3.b Seed AI Tools
+    const initialTools = [
+      {
+        slug: "chatgpt-openai",
+        name: "ChatGPT (OpenAI)",
+        category: "Modèles IA & Raisonnement",
+        role: "Génération de texte, Prompt Engineering avancé, Personas & Assistants sur-mesure.",
+        icon: "🤖",
+        image: "/images/tools/chatgpt.png"
+      },
+      {
+        slug: "claude-anthropic",
+        name: "Claude (Anthropic)",
+        category: "Modèles IA & Raisonnement",
+        role: "Rédaction complexe, analyse fine de documents, logique stratégique & synthèses.",
+        icon: "🧠",
+        image: "/images/tools/claude.png"
+      },
+      {
+        slug: "google-gemini",
+        name: "Google Gemini",
+        category: "Modèles IA & Raisonnement",
+        role: "Traitement multimodal, analyse d'images & intégration écosystème Workspace.",
+        icon: "💎",
+        image: "/images/tools/gemini.png"
+      },
+      {
+        slug: "perplexity-ai",
+        name: "Perplexity AI",
+        category: "Modèles IA & Recherche",
+        role: "Recherche web temps réel augmentée, vérification rigoureuse des sources & veille.",
+        icon: "🔍",
+        image: "/images/tools/perplexity.png"
+      },
+      {
+        slug: "google-notebooklm",
+        name: "Google NotebookLM",
+        category: "Modèles IA & Recherche",
+        role: "Création de bases de connaissances privées, interrogation de PDF & podcasts audio.",
+        icon: "📚",
+        image: "/images/tools/notebooklm.png"
+      },
+      {
+        slug: "linkedin-ats",
+        name: "LinkedIn & Optimisation ATS",
+        category: "Employabilité & Visibilité",
+        role: "Refonte de profil moderne, franchissement des filtres ATS recruteurs & marque personnelle.",
+        icon: "💼",
+        image: "/images/tools/linkedin.png"
+      }
+    ]
+
+    for (const tool of initialTools) {
+      const { data: existing } = await supabaseServer
+        .from("ai_tools")
+        .select("id")
+        .eq("slug", tool.slug)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabaseServer.from("ai_tools").insert(tool)
       }
     }
 

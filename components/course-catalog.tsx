@@ -14,149 +14,38 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
 
   useEffect(() => {
     async function loadCourses() {
-      const { data } = await supabase.from("courses").select("*").order("price", { ascending: false })
+      let { data, error } = await supabase.from("courses").select("*").order("sequence_order", { ascending: true }).order("created_at", { ascending: true })
+      if (error || !data || data.length === 0) {
+        const res = await supabase.from("courses").select("*").order("created_at", { ascending: true })
+        data = res.data
+      }
       if (data && data.length > 0) setDbCourses(data)
     }
     loadCourses()
   }, [])
 
-  const defaultCourses = [
-    {
-      id: "bootcamp-ia-pro",
-      category: "pro",
-      title: "Bootcamp IA Pro — Direct Live 15h & Replays HD",
-      subtitle: "Maîtrisez ChatGPT Pro, Claude 3.5, Midjourney, Canva IA & l'Automatisation Make pour décupler votre productivité.",
-      instructor: "Alfred Dah",
-      instructorRole: "Auditeur CISA & Expert IA",
-      rating: "4.9",
-      reviewsCount: "248 avis vérifiés",
-      studentsCount: "480+ apprenants",
-      badge: "🔥 BEST-SELLER 2026",
-      badgeColor: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-      hours: "15h en direct live",
-      schedule: "Lun-Ven 19h-21h + Sam 8h-13h GMT",
-      oldPriceFcfa: "150 000 FCFA",
-      priceFcfa: "99 000 FCFA",
-      priceEur: "150 € / $165",
-      isFree: false,
-      image: "/images/bootcamp_pro_thumb.jpg",
-      href: "/checkout/bootcamp-ia-pro",
-      highlights: [
-        "7 Sessions intensives interactives en direct avec replays HD",
-        "Prompting avancé métiers & Ingénierie de contexte",
-        "Canva IA & Visuels professionnels avec Midjourney v6",
-        "Certificat officiel d'accomplissement & Groupe WhatsApp VIP"
-      ]
-    },
-    {
-      id: "bootcamp-ia-business",
-      category: "business",
-      title: "Bootcamp IA Business & Dirigeants",
-      subtitle: "Automatisation d'entreprise, agents IA métiers, gouvernance et stratégie e-marketing sur-mesure.",
-      instructor: "Alfred Dah",
-      instructorRole: "Auditeur CISA & Fondateur Le Guide IA",
-      rating: "5.0",
-      reviewsCount: "94 avis dirigeants",
-      studentsCount: "120+ entrepreneurs",
-      badge: "🏆 FORMULE EXEC & B2B",
-      badgeColor: "bg-primary/20 text-primary border-primary/30",
-      hours: "Coaching 1:1 + Direct Live",
-      schedule: "Horaires flexibles + Sessions Direct",
-      oldPriceFcfa: "250 000 FCFA",
-      priceFcfa: "199 000 FCFA",
-      priceEur: "300 € / $330",
-      isFree: false,
-      image: "/images/bootcamp_business_poster.jpg",
-      href: "/checkout/bootcamp-ia-business",
-      highlights: [
-        "Inclus l'intégralité du Bootcamp Pro + Diagnostic d'entreprise 1h",
-        "Déploiement d'agents virtuels sur-mesure avec Make & GPTs",
-        "Optimisation de la gestion d'équipe et workflows automatisés",
-        "Accès illimité aux replays HD et support VIP direct avec Alfred Dah"
-      ]
-    },
-    {
-      id: "initiation-free",
-      category: "free",
-      title: "Initiation IA & ChatGPT Pratique (Offert)",
-      subtitle: "Comprendre les règles fondamentales du Prompting et configurer ses premiers outils d'IA.",
-      instructor: "Alfred Dah",
-      instructorRole: "Fondateur Le Guide IA",
-      rating: "4.8",
-      reviewsCount: "620+ membres",
-      studentsCount: "1200+ inscrits",
-      badge: "🎁 100% GRATUIT",
-      badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-      hours: "1h30 de cours vidéo",
-      schedule: "Accès immédiat et autonome",
-      oldPriceFcfa: "25 000 FCFA",
-      priceFcfa: "GRATUIT",
-      priceEur: "0 € / $0",
-      isFree: true,
-      image: "/images/initiation_free_thumb.jpg",
-      href: "/register-account",
-      highlights: [
-        "Création de compte ChatGPT & Réglages optimaux",
-        "Les 5 erreurs de débutant à éviter absolument",
-        "Fiches de prompts réutilisables immédiatement"
-      ]
-    },
-    {
-      id: "bibliotheque-prompts",
-      category: "resources",
-      title: "Bibliothèque de Prompts & Modèles Métiers",
-      subtitle: "Coffre-fort numérique de 30 à 40 ressources : guides PDF, trames de travail et prompts optimisés par profession.",
-      instructor: "Équipe Le Guide IA",
-      instructorRole: "Support & Curateurs IA",
-      rating: "4.9",
-      reviewsCount: "310 téléchargements",
-      studentsCount: "Tous les membres",
-      badge: "📚 RESSOURCES EN LIGNE",
-      badgeColor: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-      hours: "Mises à jour permanentes",
-      schedule: "Accès direct Espace Membre",
-      oldPriceFcfa: "45 000 FCFA",
-      priceFcfa: "Inclus Espace Membre",
-      priceEur: "Gratuit / VIP selon le statut",
-      isFree: true,
-      image: "/hero_bootcamp.jpg",
-      href: "/ressources",
-      highlights: [
-        "Fiches Prompts rédigées pour ChatGPT & Claude",
-        "Guide complet d'utilisation Midjourney & Canva IA",
-        "Accès gratuit pour les membres inscrits",
-        "Prompts avancés débloqués avec les Bootcamps"
-      ]
-    }
-  ]
-
-  const courses = dbCourses.length > 0 ? dbCourses.map(c => ({
+  const courses = dbCourses.map(c => ({
     id: c.slug || c.id,
     category: c.price === 0 ? "free" : c.price > 100000 ? "business" : "pro",
     title: c.title,
     subtitle: c.description,
-    instructor: "Alfred Dah",
+    instructor: c.instructor || "Alfred Dah",
     instructorRole: "Auditeur CISA & Expert IA",
     rating: "4.9",
     reviewsCount: "Avis apprenants certifiés",
     studentsCount: "Apprenants inscrits",
-    badge: c.badge || "FORMULE OFFICIELLE",
+    badge: c.badge,
     badgeColor: c.price === 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : c.price > 100000 ? "bg-primary/20 text-primary border-primary/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30",
     hours: c.price === 0 ? "Accès Libre" : "Session Intensive Live",
-    schedule: "19h00 GMT",
+    schedule: c.dates || "19h00 GMT",
     oldPriceFcfa: c.price > 0 ? `${(c.price * 1.5).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "",
     priceFcfa: c.price > 0 ? `${c.price.toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT",
     priceEur: "",
     isFree: c.price === 0,
-    image: c.thumbnail || "/images/bootcamp_pro_thumb.jpg",
-    href: c.price === 0 ? "/register-account" : `/checkout/${c.slug}`,
-    highlights: [
-      "Sessions intensives interactives en direct avec replays HD",
-      "Prompting avancé métiers & Ingénierie de contexte",
-      "Canva IA & Visuels professionnels avec Midjourney v6",
-      "Certificat officiel d'accomplissement & Groupe WhatsApp VIP"
-    ]
-  })) : defaultCourses
+    image: c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg",
+    href: `/bootcamp?course=${c.slug || c.id}`,
+    highlights: Array.isArray(c.features) ? c.features : []
+  }))
 
   const filteredCourses = activeCategory === "all"
     ? courses
@@ -268,7 +157,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
 
                   {/* Highlights Checklist */}
                   <div className="space-y-2 pt-2 text-xs text-muted-foreground">
-                    {course.highlights.map((h, idx) => (
+                    {course.highlights.map((h: string, idx: number) => (
                       <div key={idx} className="flex items-start gap-2">
                         <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0 mt-0.5" />
                         <span className="text-[11px] leading-tight">{h}</span>

@@ -1,9 +1,18 @@
 "use client"
 
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Zap, Video, ShieldCheck, Award, Users, ArrowRight, CheckCircle2, Sparkles, PlayCircle } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export function UdemyBanner() {
+  const [programmeUrl, setProgrammeUrl] = useState("/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf")
+
+  useEffect(() => {
+    supabase.from("site_settings").select("value").eq("key", "hero_programme_url").maybeSingle()
+      .then(({ data }) => { if (data?.value) setProgrammeUrl(data.value) })
+  }, [])
+
   return (
     <section className="py-20 bg-background relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -74,7 +83,7 @@ export function UdemyBanner() {
                 </Link>
 
                 <a
-                  href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+                  href={programmeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/40 hover:bg-card text-foreground font-bold px-6 py-3.5 text-xs text-slate-300 hover:text-white transition-all cursor-pointer"

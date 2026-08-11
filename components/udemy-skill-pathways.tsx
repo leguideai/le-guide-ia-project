@@ -11,63 +11,41 @@ export function UdemySkillPathways() {
 
   useEffect(() => {
     async function loadCourses() {
-      const { data } = await supabase.from("courses").select("*").order("price", { ascending: false })
-      if (data && data.length > 0) setDbCourses(data)
+      try {
+        let { data, error } = await supabase.from("courses").select("*").order("sequence_order", { ascending: true }).order("created_at", { ascending: true })
+        if (error || !data || data.length === 0) {
+          const res = await supabase.from("courses").select("*").order("created_at", { ascending: true })
+          data = res.data
+        }
+        if (data && data.length > 0) {
+          setDbCourses(data)
+          return
+        }
+      } catch (e) {}
+
+      try {
+        const res = await fetch("/api/admin/courses")
+        const data = await res.json()
+        if (data?.courses && data.courses.length > 0) {
+          setDbCourses(data.courses)
+        }
+      } catch (e) {}
     }
     loadCourses()
   }, [])
 
-  const defaultPathways = [
-    {
-      id: "pro",
-      title: "Bootcamp IA Pro 2",
-      desc: "7 Sessions intensives en direct pour salariés, managers et professionnels.",
-      price: "99 000 FCFA",
-      badge: "Formule Salariés & Pro",
-      icon: GraduationCap,
-      href: "/checkout/bootcamp-ia-pro",
-      image: "/images/bootcamp_pro_thumb.jpg",
-      borderColor: "border-primary/40",
-      btnColor: "bg-primary text-primary-foreground"
-    },
-    {
-      id: "business",
-      title: "Bootcamp IA Business (Exec)",
-      desc: "Inclus tout le programme Pro + Coaching 1h & Agents IA autonomes.",
-      price: "199 000 FCFA",
-      badge: "Formule Dirigeants & Exec",
-      icon: UserCheck,
-      href: "/checkout/bootcamp-ia-business",
-      image: "/images/bootcamp_business_poster.jpg",
-      borderColor: "border-amber-500/40",
-      btnColor: "bg-amber-500 text-slate-950"
-    },
-    {
-      id: "free",
-      title: "Initiation IA & ChatGPT (Offert)",
-      desc: "Cours d'introduction offert pour découvrir les règles du Prompting.",
-      price: "GRATUIT",
-      badge: "100% Free",
-      icon: Gift,
-      href: "/register-account",
-      image: "/images/initiation_free_thumb.jpg",
-      borderColor: "border-emerald-500/40",
-      btnColor: "bg-secondary text-foreground border border-border"
-    }
-  ]
-
-  const pathways = dbCourses.length > 0 ? dbCourses.map(c => ({
+  const pathways = dbCourses.map(c => ({
     id: c.id,
     title: c.title,
     desc: c.description,
     price: c.price > 0 ? `${c.price.toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT",
-    badge: c.badge || "FORMULATION OFFICIELLE",
+    badge: c.badge || "FORMULE OFFICIELLE",
     icon: c.price === 0 ? Gift : c.price > 100000 ? UserCheck : GraduationCap,
-    href: c.price === 0 ? "/register-account" : `/checkout/${c.slug}`,
+    href: `/bootcamp?course=${c.slug || c.id}`,
     image: c.thumbnail || "/images/bootcamp_pro_thumb.jpg",
     borderColor: c.price === 0 ? "border-emerald-500/40" : c.price > 100000 ? "border-amber-500/40" : "border-primary/40",
     btnColor: c.price === 0 ? "bg-secondary text-foreground border border-border" : c.price > 100000 ? "bg-amber-500 text-slate-950" : "bg-primary text-primary-foreground"
-  })) : defaultPathways
+  }))
 
   return (
     <section className="py-14 bg-background border-t border-border/50">
@@ -76,7 +54,7 @@ export function UdemySkillPathways() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-2 text-left">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-              BOOTCAMP PRO IA & BUSINESS
+              BOOTCAMP PRO IA
             </span>
           </div>
 

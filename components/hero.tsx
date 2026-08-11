@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
+import { supabase } from "@/lib/supabase"
 
 function CountdownTimer() {
   const { t } = useLanguage()
@@ -81,6 +82,12 @@ function CountdownTimer() {
 
 export function Hero() {
   const { t } = useLanguage()
+  const [programmeUrl, setProgrammeUrl] = useState("/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf")
+
+  useEffect(() => {
+    supabase.from("site_settings").select("value").eq("key", "hero_programme_url").maybeSingle()
+      .then(({ data }) => { if (data?.value) setProgrammeUrl(data.value) })
+  }, [])
 
   const badges = t("hero.badges") || []
 
@@ -152,7 +159,7 @@ export function Hero() {
               <ArrowRight className="size-4" />
             </a>
             <a
-              href="/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+              href={programmeUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(

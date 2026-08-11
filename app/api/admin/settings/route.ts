@@ -12,10 +12,13 @@ const DEFAULT_SETTINGS = {
   hero_subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.",
   hero_dates: "31 Août – 6 Sept 2026",
   hero_time: "19h00 GMT",
+  hero_format: "🌍 100% En ligne",
+  hero_sessions: "🎓 7 Sessions intensives",
   hero_promo_price: "149,900 F CFA",
   hero_normal_price: "250,000 F CFA",
   whatsapp_number: "+226 0505 0577",
-  hero_poster_url: "/images/bootcamp_pro_poster.jpg"
+  hero_poster_url: "/images/bootcamp_pro_poster.jpg",
+  hero_programme_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
 }
 
 export async function GET() {

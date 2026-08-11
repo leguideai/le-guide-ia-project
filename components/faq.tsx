@@ -24,12 +24,12 @@ export function FAQ() {
     loadFaqs()
   }, [])
 
-  const langItems = (t("faq.items") as any[]) || []
-  const items = dbFaqs.length > 0 ? dbFaqs.map(f => ({
+  const items = dbFaqs.map(f => ({
+    id: f.id,
     category: f.category,
     question: f.question,
     answer: f.answer
-  })) : langItems
+  }))
 
   const categories = (t("faq.categories") as Record<string, string>) || {
     all: "Toutes",
@@ -113,7 +113,7 @@ export function FAQ() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
-                  key={item.question || i}
+                  key={item.id || `faq-${i}-${item.question || item.q}`}
                   className="rounded-xl border border-border bg-card/40 backdrop-blur-sm overflow-hidden transition-colors hover:border-primary/20"
                 >
                   <button
@@ -123,7 +123,7 @@ export function FAQ() {
                   >
                     <span className="flex items-center gap-3">
                       <HelpCircle className="size-4 text-primary shrink-0" />
-                      <span>{item.q}</span>
+                      <span>{item.question || item.q}</span>
                     </span>
                     <ChevronDown
                       className={`size-4 text-muted-foreground shrink-0 transition-transform duration-300 ${
@@ -141,7 +141,7 @@ export function FAQ() {
                         transition={{ duration: 0.25, ease: "easeInOut" }}
                       >
                         <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
-                          {item.a}
+                          {item.answer || item.a}
                         </div>
                       </motion.div>
                     )}
