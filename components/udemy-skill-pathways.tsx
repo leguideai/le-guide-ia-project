@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { GraduationCap, UserCheck, Gift, ArrowRight } from "lucide-react"
+import { GraduationCap, UserCheck, Gift, ArrowRight, Calendar, Award } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 
 export function UdemySkillPathways() {
@@ -36,16 +36,36 @@ export function UdemySkillPathways() {
 
   const pathways = dbCourses.map(c => ({
     id: c.id,
+    slug: c.slug,
     title: c.title,
-    desc: c.description,
+    desc: c.description || c.subtitle,
     price: c.price > 0 ? `${c.price.toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT",
+    originalPrice: c.original_price || "",
     badge: c.badge || "FORMULE OFFICIELLE",
+    format: c.format || "100% En Ligne",
+    certificate: c.certificate || "",
+    dates: c.dates || "",
     icon: c.price === 0 ? Gift : c.price > 100000 ? UserCheck : GraduationCap,
     href: `/bootcamp?course=${c.slug || c.id}`,
-    image: c.thumbnail || "/images/bootcamp_pro_thumb.jpg",
-    borderColor: c.price === 0 ? "border-emerald-500/40" : c.price > 100000 ? "border-amber-500/40" : "border-primary/40",
-    btnColor: c.price === 0 ? "bg-secondary text-foreground border border-border" : c.price > 100000 ? "bg-amber-500 text-slate-950" : "bg-primary text-primary-foreground"
+    image: c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg",
+    isFree: c.price === 0,
+    isVIP: c.price > 100000,
+    accentColor: c.price === 0 ? "emerald" : c.price > 100000 ? "amber" : "blue",
   }))
+
+  // Dynamic grid: 1 card = full, 2 cards = 2 cols, 3+ = 3 cols
+  const gridClass =
+    pathways.length === 1
+      ? "grid grid-cols-1 max-w-2xl mx-auto"
+      : pathways.length === 2
+      ? "grid grid-cols-1 sm:grid-cols-2 gap-6"
+      : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+
+  const getAccent = (color: string) => {
+    if (color === "emerald") return { border: "border-emerald-500/50", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40", btn: "bg-emerald-500 text-slate-950", glow: "shadow-emerald-500/10", price: "text-emerald-400" }
+    if (color === "amber") return { border: "border-amber-500/50", badge: "bg-amber-500/20 text-amber-300 border-amber-500/40", btn: "bg-amber-500 text-slate-950", glow: "shadow-amber-500/10", price: "text-amber-400" }
+    return { border: "border-primary/50", badge: "bg-primary/20 text-primary border-primary/40", btn: "bg-primary text-primary-foreground", glow: "shadow-primary/10", price: "text-primary" }
+  }
 
   return (
     <section className="py-14 bg-background border-t border-border/50">
@@ -56,21 +76,23 @@ export function UdemySkillPathways() {
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
               BOOTCAMP PRO IA
             </span>
+            <p className="text-xs text-muted-foreground">Choisissez la formule adaptée à vos objectifs</p>
           </div>
 
-          <Link
+          {/* <Link
             href="/bootcamp"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors group shrink-0"
           >
             <span>Voir tous les bootcamps</span>
             <ArrowRight className="size-3.5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          </Link> */}
         </div>
 
-        {/* 3 Pathway Cards Grid (Scrollable on Mobile, Grid on Desktop) */}
-        <div className="flex overflow-x-auto md:overflow-visible snap-x no-scrollbar pt-3 pb-4 gap-4 md:grid md:grid-cols-3 md:pb-0">
+        {/* Adaptive Grid */}
+        <div className={gridClass}>
           {pathways.map((item, idx) => {
             const Icon = item.icon
+            const accent = getAccent(item.accentColor)
             return (
               <motion.div
                 key={item.id}
@@ -78,36 +100,70 @@ export function UdemySkillPathways() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: idx * 0.12 }}
-                whileHover={{ y: -6 }}
-                className={`relative z-10 hover:z-20 rounded-2xl border ${item.borderColor} bg-card/60 overflow-hidden flex flex-col justify-between hover:border-primary transition-all duration-300 shadow-xl group backdrop-blur-xl p-5 space-y-4 shrink-0 w-[280px] sm:w-[320px] md:w-auto snap-center`}
+                whileHover={{ y: -5 }}
+                className={`relative rounded-2xl border ${accent.border} bg-card/60 overflow-hidden flex flex-col group backdrop-blur-xl shadow-2xl ${accent.glow} transition-all duration-300 hover:shadow-lg`}
               >
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900">
+                {/* Image */}
+                <div className="relative w-full aspect-video overflow-hidden bg-slate-950">
                   <img
-                    src={item.image || "/images/bootcamp_pro_thumb.jpg"}
+                    src={item.image}
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute top-2.5 left-2.5 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white border border-border/60">
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                  {/* Badge top-left */}
+                  <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide border backdrop-blur-md ${accent.badge}`}>
                     {item.badge}
                   </div>
-                </div>
-
-                <div className="space-y-2 flex-1">
-                  <div className="flex items-center gap-2">
-                    <Icon className="size-4 text-primary" />
-                    <h3 className="font-heading text-base font-bold text-foreground">{item.title}</h3>
+                  {/* Price bottom-left over image */}
+                  <div className="absolute bottom-3 left-3 flex items-baseline gap-1.5">
+                    <span className={`text-xl font-black ${accent.price} drop-shadow-lg`}>{item.price}</span>
+                    {item.originalPrice && (
+                      <span className="text-xs text-slate-400 line-through">{item.originalPrice}</span>
+                    )}
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-border/60 flex items-center justify-between">
-                  <span className="font-heading text-base font-black text-primary">{item.price}</span>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-md group-hover:scale-105 ${item.btnColor}`}
-                  >
-                    <span>Explorer</span>
-                    <ArrowRight className="size-3.5" />
-                  </Link>
+                {/* Body */}
+                <div className="p-5 flex flex-col gap-4 flex-1">
+                  {/* Title */}
+                  <div className="flex items-start gap-2.5">
+                    <Icon className={`size-5 shrink-0 mt-0.5 ${accent.price}`} />
+                    <div>
+                      <h3 className="font-heading text-base font-bold text-foreground leading-snug">{item.title}</h3>
+                      {item.desc && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{item.desc}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Meta badges */}
+                  {/* <div className="flex flex-wrap gap-2">
+                    {item.format && (
+                      <span className="inline-flex items-center gap-1 bg-slate-800/60 border border-slate-700/50 text-slate-300 text-[10px] font-semibold px-2.5 py-1 rounded-full">
+                        <Calendar className="size-3" />
+                        {item.format}
+                      </span>
+                    )}
+                    {item.certificate && (
+                      <span className="inline-flex items-center gap-1 bg-slate-800/60 border border-slate-700/50 text-slate-300 text-[10px] font-semibold px-2.5 py-1 rounded-full">
+                        <Award className="size-3" />
+                        {item.certificate}
+                      </span>
+                    )}
+                  </div> */}
+
+                  {/* CTA */}
+                  <div className="mt-auto pt-3 border-t border-border/40">
+                    <Link
+                      href={item.href}
+                      className={`w-full flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all shadow-md hover:scale-[1.02] active:scale-95 ${accent.btn}`}
+                    >
+                      <span>Découvrir cette formule</span>
+                      <ArrowRight className="size-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             )

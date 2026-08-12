@@ -88,7 +88,7 @@ export function UdemyTrustLogos() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-3 text-left">
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
-              BOOTCAMP PRO · OUTILS IA
+              NOS OUTILS IA
             </span>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
               Une architecture complète structurée pour transformer votre productivité au quotidien.

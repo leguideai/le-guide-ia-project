@@ -32,23 +32,20 @@ export default function Page() {
       {/* 4. Les 3 Parcours d'Apprentissage (Cartes 3D HD) */}
       <UdemySkillPathways />
 
-      {/* 5. Section Parcours d'Apprentissage & Formations (Onglets & Cartes Vidéos) */}
-      <UdemyTabbedCourses />
-
-      {/* 5. Bandeau Écosystème & Stack Technologique Officielle */}
-      <UdemyTrustLogos />
-
       {/* 6. Banner Le Guide IA Business (Réplique Udemy Business Box) */}
       <UdemyBusinessBanner />
-
-      {/* 7. Certifications & Diplômes Officiels */}
-      <CertificationSection />
 
       {/* 8. Expertise & Autorité (Alfred Dah) */}
       <Authority />
 
       {/* 9. Avis & Témoignages Apprenants */}
       <Testimonials />
+
+      {/* 5. Section Parcours d'Apprentissage & Formations (Onglets & Cartes Vidéos) */}
+      <UdemyTabbedCourses />
+
+      {/* 5. Bandeau Écosystème & Stack Technologique Officielle */}
+      <UdemyTrustLogos />
 
       {/* 10. FAQ */}
       <FAQ />
