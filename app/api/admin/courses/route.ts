@@ -37,7 +37,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { id, title, slug, subtitle, price, original_price, badge, category, status, poster, dates, instructor, live_meet_url, sequence_order, lessons } = body
+    const { id, title, slug, subtitle, price, original_price, badge, category, status, poster, dates, start_date, end_date, session_count, whatsapp_url, instructor, live_meet_url, sequence_order, lessons } = body
 
     if (!title || !slug) {
       return NextResponse.json({ error: "Le titre et le slug sont obligatoires." }, { status: 400 })
@@ -61,6 +61,10 @@ export async function POST(req: Request) {
       certificate: body.certificate || "Certificat Officiel",
       sequence_order: sequence_order !== undefined ? Number(sequence_order) : 1,
       dates: dates || "Sur 7 jours",
+      start_date: start_date || null,
+      end_date: end_date || null,
+      session_count: session_count !== undefined && session_count !== null ? Number(session_count) : 0,
+      whatsapp_url: whatsapp_url || "",
       instructor: instructor || "Alfred Dah",
       live_meet_url: live_meet_url || "https://meet.google.com/xyz-abc-def",
       features: body.features || [],
@@ -73,11 +77,17 @@ export async function POST(req: Request) {
       .select()
       .single()
 
-    if (error && error.message.includes("sequence_order")) {
-      delete upsertPayload.sequence_order
+    if (error && (error.message.includes("sequence_order") || error.message.includes("column"))) {
+      // Si des colonnes n'existent pas encore dans Supabase, repli sans les nouvelles colonnes
+      const fallbackPayload = { ...upsertPayload }
+      delete fallbackPayload.start_date
+      delete fallbackPayload.end_date
+      delete fallbackPayload.session_count
+      delete fallbackPayload.whatsapp_url
+      delete fallbackPayload.sequence_order
       const retry = await supabaseServer
         .from("courses")
-        .upsert(upsertPayload, { onConflict: "slug" })
+        .upsert(fallbackPayload, { onConflict: "slug" })
         .select()
         .single()
       course = retry.data

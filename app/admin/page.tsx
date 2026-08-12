@@ -9,7 +9,7 @@ import {
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
   ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
-  ArrowUp, ArrowDown
+  ArrowUp, ArrowDown, Eye, MessageCircle
 } from "lucide-react"
 
 interface BootcampCourse {
@@ -28,10 +28,32 @@ interface BootcampCourse {
   format?: string
   certificate?: string
   sequence_order?: number
-  dates: string
-  instructor: string
+  dates?: string
+  start_date?: string
+  end_date?: string
+  session_count?: number
+  instructor?: string
   live_meet_url?: string
+  whatsapp_url?: string
   features?: any
+}
+
+interface BootcampSession {
+  id?: string
+  course_id: string
+  course_slug?: string
+  session_number: number
+  title: string
+  description?: string
+  scheduled_at: string
+  ends_at?: string
+  meet_url?: string
+  recording_url?: string
+  homework_title?: string
+  homework_description?: string
+  homework_file_url?: string
+  homework_deadline?: string
+  status: "upcoming" | "live" | "completed"
 }
 
 interface ResourceItem {
@@ -157,9 +179,144 @@ export default function SuperAdminDashboard() {
     format: "100% En Ligne",
     certificate: "Certificat Officiel",
     sequence_order: 1,
-    dates: "31 Août - 6 Septembre 2026",
+    dates: "",
+    start_date: "",
+    end_date: "",
+    session_count: 7,
     instructor: "Alfred Dah",
-    live_meet_url: "https://meet.google.com/xyz-abc-def"
+    live_meet_url: "https://meet.google.com/xyz-abc-def",
+    whatsapp_url: ""
+  })
+
+  // Sessions live par bootcamp
+  const [bootcampSessions, setBootcampSessions] = useState<BootcampSession[]>([])
+  const [selectedCourseForSessions, setSelectedCourseForSessions] = useState<BootcampCourse | null>(null)
+  const [showSessionModal, setShowSessionModal] = useState(false)
+
+  // Details Modal State
+  const [selectedCourseDetails, setSelectedCourseDetails] = useState<BootcampCourse | null>(null)
+  const [detailsSessions, setDetailsSessions] = useState<BootcampSession[]>([])
+  const [detailsEnrolledCount, setDetailsEnrolledCount] = useState<number>(0)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [loadingDetails, setLoadingDetails] = useState(false)
+
+  async function openCourseDetails(c: BootcampCourse) {
+    setSelectedCourseDetails(c)
+    setShowDetailsModal(true)
+    setLoadingDetails(true)
+    setDetailsSessions([])
+    setDetailsEnrolledCount(0)
+
+    try {
+      // 1. Fetch sessions
+      let query = supabase.from("bootcamp_sessions").select("*")
+      if (c.id && c.slug) {
+        query = query.or(`course_id.eq.${c.id},course_id.eq.${c.slug},course_slug.eq.${c.slug}`)
+      } else if (c.id) {
+        query = query.or(`course_id.eq.${c.id},course_id.eq.${c.slug}`)
+      } else {
+        query = query.eq("course_slug", c.slug)
+      }
+      let { data: sessData } = await query.order("session_number", { ascending: true })
+
+      if (!sessData || sessData.length === 0) {
+        // Fallback search: fetch all bootcamp_sessions
+        const { data: allSess } = await supabase.from("bootcamp_sessions").select("*").order("session_number", { ascending: true })
+        if (allSess && allSess.length > 0) {
+          const isCarriere = c.title?.toLowerCase().includes("carrière") || c.slug?.includes("carriere") || c.slug?.includes("pro")
+          const isBusiness = c.title?.toLowerCase().includes("business") || c.slug?.includes("business")
+          sessData = allSess.filter((s: any) => {
+            if (s.course_id === c.id || s.course_slug === c.slug || s.course_id === c.slug) return true
+            if (isCarriere && (s.course_slug?.includes("carriere") || s.course_slug?.includes("pro") || !s.course_slug)) return true
+            if (isBusiness && s.course_slug?.includes("business")) return true
+            return false
+          })
+          if (!sessData || sessData.length === 0) {
+            sessData = allSess
+          }
+        }
+      }
+      setDetailsSessions(sessData || [])
+
+      // 2. Fetch enrolled count from registrations
+      let regQuery = supabase.from("registrations").select("id", { count: "exact", head: true })
+      if (c.id && c.slug) {
+        regQuery = regQuery.or(`course_id.eq.${c.id},course_slug.eq.${c.slug}`)
+      } else if (c.id) {
+        regQuery = regQuery.eq("course_id", c.id)
+      } else {
+        regQuery = regQuery.eq("course_slug", c.slug)
+      }
+      const { count } = await regQuery
+      setDetailsEnrolledCount(count || 0)
+    } catch (err) {
+      console.error("Error fetching details:", err)
+    } finally {
+      setLoadingDetails(false)
+    }
+  }
+
+  async function openCourseSessions(c: BootcampCourse) {
+    setSelectedCourseForSessions(c)
+
+    let query = supabase.from("bootcamp_sessions").select("*")
+    if (c.id && c.slug) {
+      query = query.or(`course_id.eq.${c.id},course_id.eq.${c.slug},course_slug.eq.${c.slug}`)
+    } else if (c.id) {
+      query = query.or(`course_id.eq.${c.id},course_id.eq.${c.slug}`)
+    } else {
+      query = query.eq("course_slug", c.slug)
+    }
+    let { data: sessData } = await query.order("session_number", { ascending: true })
+
+    if (!sessData || sessData.length === 0) {
+      const { data: allSess } = await supabase.from("bootcamp_sessions").select("*").order("session_number", { ascending: true })
+      if (allSess && allSess.length > 0) {
+        const isCarriere = c.title?.toLowerCase().includes("carrière") || c.slug?.includes("carriere") || c.slug?.includes("pro")
+        const isBusiness = c.title?.toLowerCase().includes("business") || c.slug?.includes("business")
+        sessData = allSess.filter((s: any) => {
+          if (s.course_id === c.id || s.course_slug === c.slug || s.course_id === c.slug) return true
+          if (isCarriere && (s.course_slug?.includes("carriere") || s.course_slug?.includes("pro") || !s.course_slug)) return true
+          if (isBusiness && s.course_slug?.includes("business")) return true
+          return false
+        })
+        if (!sessData || sessData.length === 0) {
+          sessData = allSess
+        }
+      }
+    }
+
+    const fetched = sessData || []
+    setBootcampSessions(fetched)
+    setSessionForm({
+      session_number: fetched.length + 1,
+      title: "",
+      description: "",
+      scheduled_at: "",
+      ends_at: "",
+      meet_url: c.live_meet_url || "https://meet.google.com/xyz-abc-def",
+      recording_url: "",
+      homework_title: "",
+      homework_description: "",
+      homework_file_url: "",
+      homework_deadline: "",
+      status: "upcoming"
+    })
+    setShowSessionModal(true)
+  }
+  const [sessionForm, setSessionForm] = useState<Partial<BootcampSession>>({
+    session_number: 1,
+    title: "",
+    description: "",
+    scheduled_at: "",
+    ends_at: "",
+    meet_url: "",
+    recording_url: "",
+    homework_title: "",
+    homework_description: "",
+    homework_file_url: "",
+    homework_deadline: "",
+    status: "upcoming"
   })
 
   const handleUploadCoursePoster = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,6 +371,9 @@ export default function SuperAdminDashboard() {
   // Manual Enroll Form
   const [enrollEmail, setEnrollEmail] = useState("")
   const [enrollCourse, setEnrollCourse] = useState("bootcamp-pro-2")
+  const [enrollPaymentMethod, setEnrollPaymentMethod] = useState("")
+  const [enrollTransactionRef, setEnrollTransactionRef] = useState("")
+  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false)
 
   // Storage Upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null)
@@ -512,13 +672,24 @@ export default function SuperAdminDashboard() {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "enroll_course", userEmail: enrollEmail, courseSlug: enrollCourse })
+        body: JSON.stringify({
+          action: "enroll_course",
+          userEmail: enrollEmail,
+          courseSlug: enrollCourse,
+          paymentMethod: enrollPaymentMethod,
+          transactionRef: enrollTransactionRef
+        })
       })
       const data = await res.json()
       if (data.success) {
         showNotice(data.message)
         setEnrollEmail("")
+        setEnrollPaymentMethod("")
+        setEnrollTransactionRef("")
+        setShowEmailSuggestions(false)
         fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de l'inscription manuelle.")
       }
     } catch (err) {
       alert("Erreur d'inscription manuelle")
@@ -890,7 +1061,7 @@ export default function SuperAdminDashboard() {
               {activeTab === "export" && "Exportation des Données"}
             </h1>
             <p className="text-xs text-slate-400 mt-1">
-              Console d'Administration Super Admin — Le Guide IA
+              Console d'Administration Admin — Le Guide IA
             </p>
           </div>
 
@@ -976,32 +1147,127 @@ export default function SuperAdminDashboard() {
                   Inscription Manuelle d'un Apprenant
                 </h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Ajoutez manuellement un participant ayant effectué son versement hors plateforme pour lui débloquer immédiatement l'accès au Bootcamp.
+                  Inscrivez manuellement un étudiant, attribuez un mode de règlement et générez immédiatement un reçu/facture dans son espace membre.
                 </p>
+
                 <form onSubmit={handleManualEnroll} className="space-y-3 pt-2">
-                  <input
-                    type="email"
-                    required
-                    placeholder="Adresse Email du participant"
-                    value={enrollEmail}
-                    onChange={e => setEnrollEmail(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary outline-none"
-                  />
-                  <select
-                    value={enrollCourse}
-                    onChange={e => setEnrollCourse(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary outline-none"
-                  >
-                    <option value="bootcamp-pro-2">Bootcamp IA Pro 2 (99 000 FCFA)</option>
-                    <option value="bootcamp-business-exec">Bootcamp IA Business Exec (199 000 FCFA)</option>
-                    <option value="initiation-free">Initiation IA & ChatGPT (Gratuit)</option>
-                  </select>
+                  {/* Email avec Autocomplétion Suggerée des Élèves */}
+                  <div className="relative">
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Email de l'apprenant (suggestion automatique)</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Tapez l'adresse email du participant..."
+                      value={enrollEmail}
+                      onChange={e => {
+                        setEnrollEmail(e.target.value)
+                        setShowEmailSuggestions(true)
+                      }}
+                      onFocus={() => setShowEmailSuggestions(true)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+
+                    {/* Suggestions Dropdown */}
+                    {showEmailSuggestions && enrollEmail.trim().length > 0 && (
+                      <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto p-1 text-xs">
+                        {(() => {
+                          const query = enrollEmail.toLowerCase()
+                          const matches = users.filter(u =>
+                            u.email?.toLowerCase().includes(query) || u.full_name?.toLowerCase().includes(query)
+                          )
+                          if (matches.length === 0) {
+                            return (
+                              <div className="p-2.5 text-slate-400 text-center italic text-[11px]">
+                                Aucun compte élève existant ne correspond à "{enrollEmail}". L'inscription créera un nouveau reçu pour cet email.
+                              </div>
+                            )
+                          }
+                          return matches.map(u => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => {
+                                setEnrollEmail(u.email || "")
+                                setShowEmailSuggestions(false)
+                              }}
+                              className="w-full text-left p-2.5 rounded-xl hover:bg-slate-800 flex items-center justify-between transition-colors"
+                            >
+                              <div>
+                                <span className="font-bold text-white block">{u.full_name || "Élève sans nom"}</span>
+                                <span className="text-[10px] text-slate-400 font-mono">{u.email}</span>
+                              </div>
+                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                                {u.role}
+                              </span>
+                            </button>
+                          ))
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sélection du Bootcamp dynamique */}
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Bootcamp concerné</label>
+                    <select
+                      value={enrollCourse}
+                      onChange={e => setEnrollCourse(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    >
+                      {courses.length > 0 ? (
+                        courses.map(c => (
+                          <option key={c.id || c.slug} value={c.slug}>
+                            {c.title} ({c.price})
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="bootcamp-pro-2">Bootcamp IA Pro 2 (99 000 FCFA)</option>
+                          <option value="bootcamp-business-exec">Bootcamp IA Business Exec (199 000 FCFA)</option>
+                          <option value="initiation-free">Initiation IA &amp; ChatGPT (Gratuit)</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Mode de règlement & Référence (Optionnels) */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Moyen de paiement (Optionnel)</label>
+                      <select
+                        value={enrollPaymentMethod}
+                        onChange={e => setEnrollPaymentMethod(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none"
+                      >
+                        <option value="">Sélectionner un moyen (optionnel)</option>
+                        <option value="Wave Mobile Money">Wave</option>
+                        <option value="Orange Money">Orange Money</option>
+                        <option value="Moov Money">Moov Money</option>
+                        <option value="MTN Mobile Money">MTN Mobile Money</option>
+                        <option value="Virement Bancaire">Virement Bancaire</option>
+                        <option value="Espèces / Cash">Espèces / Cash</option>
+                        <option value="Offert / Gratuit">Offert / Gratuit</option>
+                        <option value="Carte Bancaire">Carte Bancaire</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Référence Transaction (Optionnel)</label>
+                      <input
+                        type="text"
+                        placeholder="ex: Ref Wave, OM, N° Virement"
+                        value={enrollTransactionRef}
+                        onChange={e => setEnrollTransactionRef(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none font-mono"
+                      />
+                    </div>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={processingId === "enroll"}
-                    className="w-full py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity"
+                    className="w-full py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity mt-2 shadow-lg shadow-primary/10"
                   >
-                    {processingId === "enroll" ? "Inscription en cours..." : "Valider l'Inscription et Débloquer Accès"}
+                    {processingId === "enroll" ? "Inscription et Génération du Reçu..." : "Valider l'Inscription et Débloquer Accès"}
                   </button>
                 </form>
               </div>
@@ -1035,14 +1301,13 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h2 className="font-heading text-xl font-bold text-white">Gestion & Création des Bootcamps</h2>
                 <p className="text-xs text-slate-400">Créez et publiez de nouvelles offres de formation visibles sur le site et l'espace membre.</p>
               </div>
               <button
                 onClick={() => {
                   setCourseForm({
                     title: "",
-                    slug: `bootcamp-ia-${Date.now().toString().slice(-4)}`,
+                    slug: "",
                     subtitle: "",
                     price: "99 000 FCFA",
                     original_price: "150 000 FCFA",
@@ -1050,7 +1315,12 @@ export default function SuperAdminDashboard() {
                     category: "Bootcamp",
                     status: "published",
                     poster: "/images/bootcamp_pro_thumb.jpg",
+                    thumbnail: "/images/bootcamp_pro_thumb.jpg",
                     dates: "Sessions Intensives Live",
+                    start_date: "",
+                    end_date: "",
+                    session_count: 7,
+                    whatsapp_url: "",
                     instructor: "Alfred Dah",
                     live_meet_url: "https://meet.google.com/xyz-abc-def"
                   })
@@ -1066,10 +1336,10 @@ export default function SuperAdminDashboard() {
             {/* Courses List */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {courses.map((c, idx) => (
-                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col justify-between space-y-4 relative">
-                  <div className="space-y-3">
+                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col justify-between space-y-4 relative group hover:border-slate-700 transition-all">
+                  <div className="space-y-3 cursor-pointer" onClick={() => openCourseDetails(c)}>
                     <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
-                      <img src={c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg"} alt={c.title} className="w-full h-full object-cover" />
+                      <img src={c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg"} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute top-2 left-2 flex items-center gap-1.5">
                         <span className="bg-slate-950/80 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
                           #{c.sequence_order || idx + 1}
@@ -1078,10 +1348,15 @@ export default function SuperAdminDashboard() {
                           {c.badge}
                         </span>
                       </div>
+                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="bg-slate-900/90 text-white font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 shadow-xl">
+                          <Eye className="size-3.5 text-primary" /> Voir les Détails
+                        </span>
+                      </div>
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="font-bold text-white text-base leading-snug">{c.title}</h3>
+                      <h3 className="font-bold text-white text-base leading-snug group-hover:text-primary transition-colors">{c.title}</h3>
                       <p className="text-xs text-slate-400 line-clamp-2">{c.subtitle}</p>
                     </div>
 
@@ -1111,11 +1386,27 @@ export default function SuperAdminDashboard() {
                       </button>
                     </div>
                     <button
+                      onClick={() => openCourseDetails(c)}
+                      className="p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 flex items-center justify-center gap-1"
+                      title="Voir les détails"
+                    >
+                      <Eye className="size-3.5 text-primary" />
+                    </button>
+                    <button
                       onClick={() => { setCourseForm(c); setShowCourseModal(true) }}
                       className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 flex items-center justify-center gap-1"
                     >
                       <Edit3 className="size-3" /> Modifier
                     </button>
+                    {(c.id || c.slug) && (
+                      <button
+                        onClick={() => openCourseSessions(c)}
+                        className="flex-1 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 text-xs font-bold hover:bg-primary hover:text-primary-foreground flex items-center justify-center gap-1 transition-all"
+                        title="Gérer les Sessions Live"
+                      >
+                        <Calendar className="size-3" /> Sessions
+                      </button>
+                    )}
                     {c.id && (
                       <button
                         onClick={() => handleDeleteCourse(c.id!)}
@@ -1241,7 +1532,7 @@ export default function SuperAdminDashboard() {
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Dates / Période de la Session</label>
+                        <label className="text-slate-400 block mb-1 font-bold">Dates / Période (affichage texte)</label>
                         <input
                           type="text"
                           placeholder="ex: 31 Août au 6 Septembre 2026"
@@ -1260,6 +1551,50 @@ export default function SuperAdminDashboard() {
                           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
                         />
                       </div>
+                    </div>
+
+                    {/* Dates structurées */}
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">📅 Date de début</label>
+                        <input
+                          type="date"
+                          value={courseForm.start_date || ""}
+                          onChange={e => setCourseForm({ ...courseForm, start_date: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">📅 Date de fin</label>
+                        <input
+                          type="date"
+                          value={courseForm.end_date || ""}
+                          onChange={e => setCourseForm({ ...courseForm, end_date: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold"># Nb de sessions</label>
+                        <input
+                          type="number"
+                          min={1}
+                          placeholder="7"
+                          value={courseForm.session_count || ""}
+                          onChange={e => setCourseForm({ ...courseForm, session_count: parseInt(e.target.value) || 0 })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-slate-400 block mb-1 font-bold">💬 Lien Groupe WhatsApp</label>
+                      <input
+                        type="text"
+                        placeholder="https://chat.whatsapp.com/..."
+                        value={courseForm.whatsapp_url || ""}
+                        onChange={e => setCourseForm({ ...courseForm, whatsapp_url: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                      />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -1310,10 +1645,502 @@ export default function SuperAdminDashboard() {
                         disabled={processingId === "save_course"}
                         className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-bold hover:opacity-90"
                       >
-                        Enregistrer dans Supabase
+                        Enregistrer
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+
+            {/* ===== MODAL GESTION DES SESSIONS LIVE ===== */}
+            {showSessionModal && selectedCourseForSessions && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-3xl w-full space-y-5 max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+                      <Calendar className="size-5 text-primary" />
+                      Sessions Live — {selectedCourseForSessions.title}
+                    </h3>
+                    <button onClick={() => { setShowSessionModal(false); setSelectedCourseForSessions(null); setBootcampSessions([]) }} className="text-slate-400 hover:text-white">✕</button>
+                  </div>
+
+                  {/* Liste des sessions existantes */}
+                  {bootcampSessions.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sessions existantes</h4>
+                      <div className="space-y-2">
+                        {bootcampSessions.map((s) => (
+                          <div key={s.id} className="flex items-center justify-between gap-3 bg-slate-800/60 rounded-xl px-4 py-3">
+                            <div>
+                              <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md mr-2">Session {s.session_number}</span>
+                              <span className="text-sm font-bold text-white">{s.title}</span>
+                              <div className="text-[10px] text-slate-400 mt-0.5">
+                                {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Date non définie"}
+                                {s.meet_url && <span className="ml-2 text-primary">• Meet ✓</span>}
+                                {s.recording_url && <span className="ml-2 text-emerald-400">• Replay ✓</span>}
+                                {s.homework_title && <span className="ml-2 text-amber-400">• Devoir ✓</span>}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                              <button
+                                onClick={() => setSessionForm({ ...s })}
+                                className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:text-white"
+                              >
+                                <Edit3 className="size-3.5" />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (!confirm("Supprimer cette session ?")) return
+                                  await supabase.from("bootcamp_sessions").delete().eq("id", s.id!)
+                                  setBootcampSessions(prev => prev.filter(x => x.id !== s.id))
+                                }}
+                                className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Formulaire ajout/édition session */}
+                  <div className="border-t border-slate-800 pt-4 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      {sessionForm.id ? `Modifier la session #${sessionForm.session_number}` : `Ajouter la session #${bootcampSessions.length + 1}`}
+                    </h4>
+                    <div className="grid gap-3 sm:grid-cols-2 text-xs">
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold"># Numéro de session (Auto-généré)</label>
+                        <input
+                          type="number"
+                          readOnly
+                          value={sessionForm.id ? sessionForm.session_number : (bootcampSessions.length + 1)}
+                          className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-primary font-bold outline-none cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">Titre de la session</label>
+                        <input type="text" placeholder="ex: Session 1 — Introduction à l'IA"
+                          value={sessionForm.title || ""}
+                          onChange={e => setSessionForm({ ...sessionForm, title: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">📅 Date et heure de début</label>
+                        <input type="datetime-local"
+                          value={sessionForm.scheduled_at ? sessionForm.scheduled_at.slice(0, 16) : ""}
+                          onChange={e => setSessionForm({ ...sessionForm, scheduled_at: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">📅 Date et heure de fin</label>
+                        <input type="datetime-local"
+                          value={sessionForm.ends_at ? sessionForm.ends_at.slice(0, 16) : ""}
+                          onChange={e => setSessionForm({ ...sessionForm, ends_at: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-slate-400 block mb-1 font-bold">🎬 Lien Google Meet (Direct Live)</label>
+                        <input type="url" placeholder="https://meet.google.com/..."
+                          value={sessionForm.meet_url || ""}
+                          onChange={e => setSessionForm({ ...sessionForm, meet_url: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-slate-400 block mb-1 font-bold">📺 Lien enregistrement replay (rend le replay immédiatement disponible)</label>
+                        <input type="url" placeholder="https://youtube.com/... ou vimeo.com/..."
+                          value={sessionForm.recording_url || ""}
+                          onChange={e => setSessionForm({ ...sessionForm, recording_url: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">📚 Titre du devoir</label>
+                        <input type="text" placeholder="ex: Créez votre premier prompt..."
+                          value={sessionForm.homework_title || ""}
+                          onChange={e => setSessionForm({ ...sessionForm, homework_title: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">⏰ Date limite du devoir</label>
+                        <input type="datetime-local"
+                          value={sessionForm.homework_deadline ? sessionForm.homework_deadline.slice(0, 16) : ""}
+                          onChange={e => setSessionForm({ ...sessionForm, homework_deadline: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-slate-400 block mb-1 font-bold">Description du devoir</label>
+                        <textarea rows={2} placeholder="Décrivez le travail demandé aux étudiants..."
+                          value={sessionForm.homework_description || ""}
+                          onChange={e => setSessionForm({ ...sessionForm, homework_description: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      {/* Téléversement du Fichier du Devoir (PDF ou Image) */}
+                      <div className="sm:col-span-2">
+                        <FileUploadField
+                          label="📄 Fichier Sujet du Devoir / Exercice (PDF ou Image - Upload Supabase)"
+                          value={sessionForm.homework_file_url || ""}
+                          onChange={url => setSessionForm({ ...sessionForm, homework_file_url: url })}
+                          accept=".pdf,image/*,application/pdf"
+                          bucket="resources-files"
+                          folder="homeworks"
+                          placeholder="https://... ou téléversez le sujet d'exercice"
+                          preview="none"
+                          hint="Document ou image du sujet d'exercice téléchargé par les étudiants."
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-slate-400 block mb-1 font-bold">Statut de la session</label>
+                        <select
+                          value={sessionForm.status || "upcoming"}
+                          onChange={e => setSessionForm({ ...sessionForm, status: e.target.value as any })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        >
+                          <option value="upcoming">🕒 À venir</option>
+                          <option value="live">🟢 En Direct Maintenant</option>
+                          <option value="completed">✅ Terminée</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      {sessionForm.id && (
+                        <button
+                          type="button"
+                          onClick={() => setSessionForm({
+                            session_number: bootcampSessions.length + 1,
+                            title: "",
+                            description: "",
+                            scheduled_at: "",
+                            ends_at: "",
+                            meet_url: selectedCourseForSessions?.live_meet_url || "",
+                            recording_url: "",
+                            homework_title: "",
+                            homework_description: "",
+                            homework_file_url: "",
+                            homework_deadline: "",
+                            status: "upcoming"
+                          })}
+                          className="py-2.5 px-4 rounded-xl bg-slate-700 text-slate-200 font-bold text-xs hover:bg-slate-600"
+                        >
+                          + Nouvelle session
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!sessionForm.title || !sessionForm.scheduled_at) { alert("Titre et date de début requis."); return }
+                          const targetCourseId = selectedCourseForSessions!.id || selectedCourseForSessions!.slug
+                          const targetCourseSlug = selectedCourseForSessions!.slug
+                          const autoNum = sessionForm.id ? sessionForm.session_number : (bootcampSessions.length + 1)
+
+                          const payload: any = {
+                            ...sessionForm,
+                            course_id: targetCourseId,
+                            course_slug: targetCourseSlug,
+                            session_number: autoNum
+                          }
+
+                          if (sessionForm.id) {
+                            const { error } = await supabase.from("bootcamp_sessions").update(payload).eq("id", sessionForm.id)
+                            if (!error) {
+                              setBootcampSessions(prev => prev.map(s => s.id === sessionForm.id ? { ...s, ...payload } as BootcampSession : s))
+                              showNotice("Session mise à jour !")
+                            } else {
+                              alert("Erreur de mise à jour: " + error.message)
+                            }
+                          } else {
+                            const { data, error } = await supabase.from("bootcamp_sessions").insert([payload]).select().single()
+                            if (!error && data) {
+                              setBootcampSessions(prev => [...prev, data as BootcampSession])
+                              setSessionForm({
+                                session_number: bootcampSessions.length + 2,
+                                title: "",
+                                description: "",
+                                scheduled_at: "",
+                                ends_at: "",
+                                meet_url: selectedCourseForSessions?.live_meet_url || "",
+                                recording_url: "",
+                                homework_title: "",
+                                homework_description: "",
+                                homework_file_url: "",
+                                homework_deadline: "",
+                                status: "upcoming"
+                              })
+                              showNotice("Session ajoutée avec succès !")
+                            } else {
+                              alert("Erreur d'ajout: " + error?.message)
+                            }
+                          }
+                        }}
+                        className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90"
+                      >
+                        {sessionForm.id ? "Mettre à jour la session" : "Enregistrer la session"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== MODAL D'APERÇU ET DÉTAILS COMPLETS DU BOOTCAMP ===== */}
+            {showDetailsModal && selectedCourseDetails && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-4xl w-full space-y-6 max-h-[92vh] overflow-y-auto shadow-2xl relative">
+                  
+                  {/* Header Modal */}
+                  <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
+                        <Eye className="size-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20">
+                          Aperçu &amp; Fiche Technique
+                        </span>
+                        <h3 className="font-heading text-xl font-bold text-white mt-1">
+                          {selectedCourseDetails.title}
+                        </h3>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { setShowDetailsModal(false); setSelectedCourseDetails(null) }}
+                      className="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Banner & Stats */}
+                  <div className="grid gap-6 md:grid-cols-3">
+                    {/* Poster preview */}
+                    <div className="md:col-span-1 space-y-3">
+                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl">
+                        <img
+                          src={selectedCourseDetails.poster || selectedCourseDetails.thumbnail || "/images/bootcamp_pro_thumb.jpg"}
+                          alt={selectedCourseDetails.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          <span className="bg-slate-950/90 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
+                            #{selectedCourseDetails.sequence_order || 1}
+                          </span>
+                          <span className="bg-primary/90 text-slate-950 px-2 py-0.5 rounded-md text-[9px] font-black uppercase">
+                            {selectedCourseDetails.badge}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 text-center space-y-1">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tarif Officiel</span>
+                        <div className="flex items-center justify-center gap-3">
+                          <span className="font-mono text-lg font-black text-emerald-400">{selectedCourseDetails.price}</span>
+                          {selectedCourseDetails.original_price && (
+                            <span className="font-mono text-xs text-slate-500 line-through">{selectedCourseDetails.original_price}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Détails & Sessions Info */}
+                    <div className="md:col-span-2 space-y-5">
+                      {/* Top KPI Cards */}
+                      <div className="grid grid-cols-3 gap-3 text-xs">
+                        <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                          <Users className="size-4 text-primary mx-auto" />
+                          <div className="font-bold text-white text-base font-mono">{detailsEnrolledCount}</div>
+                          <div className="text-[10px] text-slate-400 font-bold uppercase">Inscrits</div>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                          <Calendar className="size-4 text-emerald-400 mx-auto" />
+                          <div className="font-bold text-white text-base font-mono">{detailsSessions.length} / {selectedCourseDetails.session_count || 7}</div>
+                          <div className="text-[10px] text-slate-400 font-bold uppercase">Sessions Live</div>
+                        </div>
+                        <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                          <Award className="size-4 text-amber-400 mx-auto" />
+                          <div className="font-bold text-white text-xs truncate">{selectedCourseDetails.instructor || "Alfred Dah"}</div>
+                          <div className="text-[10px] text-slate-400 font-bold uppercase">Instructeur</div>
+                        </div>
+                      </div>
+
+                      {/* Fiche Descriptive */}
+                      <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3 text-xs">
+                        <h4 className="font-bold text-white flex items-center gap-2 border-b border-slate-800/80 pb-2">
+                          <BookOpen className="size-4 text-primary" /> Fiche Technique du Bootcamp
+                        </h4>
+                        <div className="grid sm:grid-cols-2 gap-2 text-slate-300">
+                          <div><span className="text-slate-500 font-bold">Slug :</span> <span className="font-mono text-primary">{selectedCourseDetails.slug}</span></div>
+                          <div><span className="text-slate-500 font-bold">Format :</span> {selectedCourseDetails.format || "100% En Ligne"}</div>
+                          <div><span className="text-slate-500 font-bold">Période :</span> {selectedCourseDetails.dates || "Non spécifiée"}</div>
+                          <div><span className="text-slate-500 font-bold">Certificat :</span> {selectedCourseDetails.certificate || "Certificat Officiel"}</div>
+                        </div>
+
+                        {/* Links preview */}
+                        <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                          {selectedCourseDetails.live_meet_url && (
+                            <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-xl text-[11px]">
+                              <span className="text-slate-400 font-bold flex items-center gap-1.5"><Video className="size-3.5 text-primary" /> Lien Google Meet Live:</span>
+                              <a href={selectedCourseDetails.live_meet_url} target="_blank" rel="noreferrer" className="text-primary hover:underline font-mono truncate max-w-[200px]">
+                                {selectedCourseDetails.live_meet_url}
+                              </a>
+                            </div>
+                          )}
+                          {selectedCourseDetails.whatsapp_url && (
+                            <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-xl text-[11px]">
+                              <span className="text-slate-400 font-bold flex items-center gap-1.5"><MessageCircle className="size-3.5 text-emerald-400" /> Groupe WhatsApp:</span>
+                              <a href={selectedCourseDetails.whatsapp_url} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-mono truncate max-w-[200px]">
+                                {selectedCourseDetails.whatsapp_url}
+                              </a>
+                            </div>
+                          )}
+                          {selectedCourseDetails.pdf_url && (
+                            <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-xl text-[11px]">
+                              <span className="text-slate-400 font-bold flex items-center gap-1.5"><FileText className="size-3.5 text-amber-400" /> Programme PDF:</span>
+                              <a href={selectedCourseDetails.pdf_url} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline font-bold">
+                                Ouvrir le PDF →
+                              </a>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Features list */}
+                        {selectedCourseDetails.features && Array.isArray(selectedCourseDetails.features) && selectedCourseDetails.features.length > 0 && (
+                          <div className="pt-2 border-t border-slate-800/80">
+                            <span className="text-slate-400 font-bold block mb-1">Inclus dans la formule :</span>
+                            <ul className="grid sm:grid-cols-2 gap-1 text-[11px] text-slate-300">
+                              {selectedCourseDetails.features.map((feat: string, idx: number) => (
+                                <li key={idx} className="flex items-center gap-1.5">
+                                  <CheckCircle2 className="size-3 text-emerald-400 shrink-0" />
+                                  <span>{feat}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Liste des Sessions Live */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-white text-xs uppercase tracking-widest flex items-center gap-2">
+                            <Calendar className="size-4 text-emerald-400" /> Planning des Sessions Live ({detailsSessions.length})
+                          </h4>
+                          <button
+                            onClick={() => {
+                              setShowDetailsModal(false)
+                              setSelectedCourseForSessions(selectedCourseDetails)
+                              setBootcampSessions(detailsSessions)
+                              setShowSessionModal(true)
+                            }}
+                            className="text-[11px] font-bold text-primary hover:underline"
+                          >
+                            + Gérer les sessions →
+                          </button>
+                        </div>
+
+                        {loadingDetails ? (
+                          <div className="p-4 text-center text-xs text-slate-400">Chargement des sessions...</div>
+                        ) : detailsSessions.length === 0 ? (
+                          <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-center text-xs text-slate-400">
+                            Aucune session live configurée pour ce bootcamp pour l'instant.
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                            {detailsSessions.map((s) => (
+                              <div key={s.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-start justify-between gap-3 text-xs">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-black uppercase px-2 py-0.5 rounded-md">
+                                      Session {s.session_number}
+                                    </span>
+                                    <span className="font-bold text-white">{s.title}</span>
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 flex items-center gap-3">
+                                    <span>📅 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Non planifiée"}</span>
+                                    {s.meet_url && <span className="text-primary font-semibold">Meet ✓</span>}
+                                    {s.recording_url && <span className="text-emerald-400 font-semibold">Replay Video ✓</span>}
+                                  </div>
+                                  {s.homework_title && (
+                                    <div className="text-[10px] text-amber-300/90 pt-0.5 flex items-center gap-1.5">
+                                      <span>📚 Devoir: {s.homework_title}</span>
+                                      {s.homework_file_url && (
+                                        <a href={s.homework_file_url} target="_blank" rel="noreferrer" className="text-primary underline">
+                                          (Fichier sujet)
+                                        </a>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ${
+                                  s.status === "live" ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse"
+                                  : s.status === "completed" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                }`}>
+                                  {s.status === "live" ? "En Direct" : s.status === "completed" ? "Terminée" : "À venir"}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Modal Actions */}
+                  <div className="flex items-center justify-end gap-3 border-t border-slate-800 pt-4">
+                    <button
+                      onClick={() => { setShowDetailsModal(false); setSelectedCourseDetails(null) }}
+                      className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700"
+                    >
+                      Fermer
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false)
+                        setSelectedCourseForSessions(selectedCourseDetails)
+                        setBootcampSessions(detailsSessions)
+                        setSessionForm({
+                          session_number: detailsSessions.length + 1,
+                          title: "",
+                          description: "",
+                          scheduled_at: "",
+                          ends_at: "",
+                          meet_url: selectedCourseDetails.live_meet_url || "",
+                          recording_url: "",
+                          homework_title: "",
+                          homework_description: "",
+                          homework_file_url: "",
+                          homework_deadline: "",
+                          status: "upcoming"
+                        })
+                        setShowSessionModal(true)
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-slate-800 text-primary border border-primary/30 font-bold text-xs hover:bg-slate-700 flex items-center gap-1.5"
+                    >
+                      <Calendar className="size-3.5" /> Gérer les Sessions
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false)
+                        setCourseForm(selectedCourseDetails)
+                        setShowCourseModal(true)
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-1.5 shadow-lg shadow-primary/20"
+                    >
+                      <Edit3 className="size-3.5" /> Modifier ce Bootcamp
+                    </button>
+                  </div>
+
                 </div>
               </div>
             )}
@@ -1325,7 +2152,6 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="font-heading text-xl font-bold text-white">Bibliothèque de Prompts & Templates</h2>
                 <p className="text-xs text-slate-400">Ajoutez des guides, templates et prompts réutilisables réservés aux membres.</p>
               </div>
               <button

@@ -32,7 +32,8 @@ import {
   MessageCircle,
   ShieldCheck,
   Calendar,
-  Upload
+  Upload,
+  DownloadCloudIcon
 } from "lucide-react"
 
 type TabType = "overview" | "courses" | "resources" | "certificates" | "invoices" | "profile"
@@ -51,12 +52,15 @@ interface Lesson {
   title: string
   duration: string
   scheduledDate?: string
+  scheduledAt?: string
   targetDate?: string
   videoUrl: string
   pdfUrl?: string
   pdfName?: string
   description: string
   isUpcoming?: boolean
+  isLive?: boolean
+  hasRecording?: boolean
   meetUrl?: string
   exercise?: ExerciseDetails
 }
@@ -328,7 +332,7 @@ export default function DashboardPage() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
   useEffect(() => {
-    const rawTarget = selectedLesson?.targetDate || "2026-08-30T19:00:00Z"
+    const rawTarget = selectedLesson?.scheduledAt || selectedLesson?.targetDate || "2026-08-31T19:00:00Z"
     const targetTimestamp = new Date(rawTarget).getTime()
 
     const updateTimer = () => {
@@ -353,9 +357,20 @@ export default function DashboardPage() {
 
   const [dbCourses, setDbCourses] = useState<any[]>([])
   const [dbLessons, setDbLessons] = useState<any[]>([])
+  const [dbBootcampSessions, setDbBootcampSessions] = useState<any[]>([])
   const [dbResources, setDbResources] = useState<any[]>([])
   const [dbLiveSession, setDbLiveSession] = useState<any>(null)
-  const [userEnrollments, setUserEnrollments] = useState<string[]>(["initiation-free"])
+  // userEnrollments stores course UUIDs (stable DB ids, not slugs)
+  const [userEnrollments, setUserEnrollments] = useState<string[]>([])
+  const [userInvoices, setUserInvoices] = useState<any[]>([])
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  // A course is accessible if: it's free (price===0) OR its DB uuid / slug is in userEnrollments OR user is admin
+  const canAccess = (course: BootcampCourse & { dbId?: string; slug?: string; isFree?: boolean }) =>
+    course.isFree ||
+    isAdmin ||
+    userEnrollments.includes(course.dbId || "") ||
+    userEnrollments.includes(course.slug || "")
 
   useEffect(() => {
     async function loadUserData() {
@@ -365,6 +380,8 @@ export default function DashboardPage() {
         return
       }
       setUser(user)
+
+      const userEmailClean = user.email?.toLowerCase().trim() || ""
 
       // 1. Fetch user profile
       const { data: profData } = await supabase
@@ -385,6 +402,7 @@ export default function DashboardPage() {
         if (profData.role === "admin" || profData.role === "super_admin") {
           const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
           if (params?.get("view") !== "student") {
+            setLoading(false)
             router.push("/admin")
             return
           }
@@ -401,6 +419,10 @@ export default function DashboardPage() {
       const { data: lData } = await supabase.from("lessons").select("*").order("sequence_order", { ascending: true })
       if (lData && lData.length > 0) setDbLessons(lData)
 
+      // 3b. Fetch dynamic bootcamp sessions from Supabase
+      const { data: bsData } = await supabase.from("bootcamp_sessions").select("*").order("session_number", { ascending: true })
+      if (bsData && bsData.length > 0) setDbBootcampSessions(bsData)
+
       // 4. Fetch dynamic resources/prompts from Supabase
       const { data: rData } = await supabase.from("resources").select("*").order("created_at", { ascending: false })
       if (rData && rData.length > 0) setDbResources(rData)
@@ -409,24 +431,72 @@ export default function DashboardPage() {
       const { data: liveData } = await supabase.from("live_sessions").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle()
       if (liveData) setDbLiveSession(liveData)
 
-      // 6. Check student enrollments and confirmed payments
+      // 6. Check confirmed payments — store enrolled course UUIDs & fetch user invoices
       const { data: pData } = await supabase
         .from("payments")
-        .select("status, registration_id, registrations(email)")
+        .select("id, amount, currency, method, status, transaction_ref, created_at, registration_id, registrations(email, course_id, course_slug, courses(id, title, price))")
         .eq("status", "confirmed")
 
-      const isPaidConfirmed = pData?.some((p: any) => p.registrations?.email?.toLowerCase() === user.email?.toLowerCase())
-      if (isPaidConfirmed || profData?.role === "admin" || profData?.role === "super_admin") {
-        setUserEnrollments(["bootcamp-pro-2", "bootcamp-business-exec", "initiation-free"])
+      const userPayments = pData?.filter((p: any) =>
+        p.registrations?.email?.toLowerCase() === userEmailClean
+      ) || []
+
+      const invoices = userPayments.map((p: any) => ({
+        id: p.id,
+        ref: p.transaction_ref || `FACT-${new Date(p.created_at || Date.now()).getFullYear()}-${p.id.slice(0, 6)}`,
+        title: (p.registrations?.courses as any)?.title ? `${(p.registrations?.courses as any)?.title} — Inscription Officielle` : "Bootcamp IA Pro — Inscription Officielle",
+        method: p.method || "Paiement Mobile Money / Wave (PayTech)",
+        amount: p.amount ? `${Number(p.amount).toLocaleString('fr-FR')} FCFA` : "99 000 FCFA",
+        date: p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : "Août 2026"
+      }))
+      setUserInvoices(invoices)
+
+      // 7. Also fetch paid registrations directly
+      const { data: regData } = await supabase
+        .from("registrations")
+        .select("course_id, course_slug")
+        .eq("email", userEmailClean)
+        .in("status", ["paye", "confirmed", "active"])
+
+      // 8. Also fetch user_courses table
+      const { data: ucData } = await supabase
+        .from("user_courses")
+        .select("course_slug")
+        .eq("user_email", userEmailClean)
+        .eq("status", "active")
+
+      const isAdminUser = profData?.role === "admin" || profData?.role === "super_admin"
+      setIsAdmin(isAdminUser)
+
+      if (isAdminUser) {
+        // Admin sees all courses — store all course IDs & slugs
+        setUserEnrollments((cData || []).flatMap((c: any) => [c.id, c.slug]))
       } else {
-        setUserEnrollments(["initiation-free"])
+        // Aggregate all course UUIDs and slugs from payments, registrations, and user_courses
+        const fromPayments = userPayments.flatMap((p: any) => [
+          p.registrations?.course_id,
+          p.registrations?.course_slug,
+          p.registrations?.courses?.id,
+          p.registrations?.courses?.slug
+        ])
+        const fromRegs = (regData || []).flatMap((r: any) => [r.course_id, r.course_slug])
+        const fromUserCourses = (ucData || []).map((uc: any) => uc.course_slug)
+
+        const allIdentifiers = Array.from(new Set([
+          ...fromPayments,
+          ...fromRegs,
+          ...fromUserCourses
+        ])).filter(Boolean) as string[]
+
+        setUserEnrollments(allIdentifiers)
       }
 
       setLoading(false)
     }
 
     loadUserData()
-  }, [router])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleCopyPrompt = (id: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -480,10 +550,10 @@ export default function DashboardPage() {
     )
   }
 
-  const navItems = [
+  const navItems: { id: string; label: string; icon: any; badge?: string }[] = [
     { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
-    { id: "courses", label: "Mes Formations", icon: BookOpen, badge: `${ENROLLED_BOOTCAMPS.length}` },
-    { id: "resources", label: "Mes Ressources", icon: Download, badge: `${resourcesData.length}` },
+    { id: "courses", label: "Mes Formations", icon: BookOpen },
+    { id: "resources", label: "Mes Ressources", icon: DownloadCloudIcon },
     { id: "certificates", label: "Mes Certificats", icon: Award },
     { id: "invoices", label: "Mes Factures", icon: FileText },
     { id: "profile", label: "Mon Profil", icon: User },
@@ -514,25 +584,59 @@ export default function DashboardPage() {
     return matchesSearch && matchesBootcamp && matchesType
   })
 
-  const displayedBootcamps: BootcampCourse[] = dbCourses.length > 0 ? dbCourses.map(c => ({
-    id: c.slug || c.id,
+  // Map DB courses — keep dbId (uuid) separate, add isFree flag
+  const displayedBootcamps = (dbCourses.length > 0 ? dbCourses : []).map((c: any) => ({
+    dbId: c.id,                          // stable UUID — never changes
+    id: c.slug || c.id,                  // for legacy display refs
+    slug: c.slug,
     title: c.title,
     subtitle: c.description,
     status: c.status || "active",
-    dates: c.price === 0 ? "Accès Illimité" : "Session Intensive Live",
-    instructor: "Alfred Dah",
-    poster: c.thumbnail || "/images/bootcamp_pro_thumb.jpg",
-    lessons: dbLessons.filter((l: any) => l.course_id === c.id).map((l: any, idx: number) => ({
-      id: l.id,
-      num: String(l.sequence_order || idx + 1).padStart(2, "0"),
-      title: l.title,
-      duration: l.duration || "2h 00m",
-      videoUrl: l.video_url || "https://www.youtube.com/embed/L_LUpnjgPso",
-      pdfUrl: l.pdf_url,
-      pdfName: l.pdf_url ? `Document_Support_${l.sequence_order || 1}.pdf` : undefined,
-      description: l.module_name || "Module de cours interactif"
-    }))
-  })) : []
+    isFree: Number(c.price) === 0,
+    price: c.price,
+    slug_checkout: c.slug,
+    dates: Number(c.price) === 0 ? "Accès Illimité" : (c.dates || "Session Intensive Live"),
+    instructor: c.instructor || "Alfred Dah",
+    live_meet_url: c.live_meet_url || "https://meet.google.com/leguideai-bootcamp-live",
+    poster: c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg",
+    lessons: (() => {
+      const courseSessions = dbBootcampSessions.filter(
+        (s: any) => s.course_id === c.id || s.course_id === c.slug || s.course_slug === c.slug
+      )
+      const sourceList = courseSessions.length > 0 ? courseSessions : dbLessons.filter((l: any) => l.course_id === c.id)
+      return sourceList.map((s: any, idx: number) => {
+        const hasRecording = Boolean((s.recording_url || s.video_url) && (s.recording_url || s.video_url).trim() !== "")
+        const isLive = s.status === "live"
+        const isUpcoming = s.status === "upcoming" || (!hasRecording && !isLive)
+
+        return {
+          id: s.id,
+          num: String(s.session_number || s.sequence_order || idx + 1).padStart(2, "0"),
+          title: s.title,
+          duration: s.scheduled_at
+            ? new Date(s.scheduled_at).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + " • 19h00 GMT"
+            : "2h 00m",
+          videoUrl: s.recording_url || s.video_url || null,
+          hasRecording,
+          isUpcoming,
+          isLive,
+          meetUrl: s.meet_url || c.live_meet_url,
+          homeworkTitle: s.homework_title,
+          homeworkDesc: s.homework_description,
+          homeworkFileUrl: s.homework_file_url,
+          status: s.status || "upcoming",
+          scheduledAt: s.scheduled_at,
+          pdfUrl: s.homework_file_url || s.pdf_url,
+          pdfName: s.homework_title ? `Exercice_${s.homework_title}.pdf` : undefined,
+          description: s.description || s.homework_description || "Session de formation pratique"
+        }
+      })
+    })()
+  }))
+
+  // Separate enrolled (accessible) vs locked (paid, not yet purchased)
+  const enrolledBootcamps = displayedBootcamps.filter((b: any) => canAccess(b))
+  const lockedBootcamps = displayedBootcamps.filter((b: any) => !canAccess(b))
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
@@ -667,157 +771,236 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* 1. Live Google Meet & WhatsApp Hub Banner with Live Countdown Timer */}
-            <div className="rounded-3xl border border-primary/40 bg-gradient-to-r from-primary/15 via-card to-card p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="space-y-3 max-w-2xl">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/20 px-3 py-1 rounded-full border border-primary/30 flex items-center gap-1.5">
-                      <Video className="size-3 animate-pulse text-primary" />
-                      DIRECT LIVE · BOOTCAMP IA PRO 2
-                    </span>
-                  </div>
-                  <h2 className="font-heading text-xl md:text-2xl font-black text-foreground">
-                    Session en Direct quotidienne (19h - 21h GMT)
-                  </h2>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Rejoignez Alfred Dah en direct chaque soir sur Google Meet pour votre cours interactif, vos exercices pratiques et le coaching en temps réel.
-                  </p>
-
-                  {/* Live Ticking Countdown Timer */}
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">Prochaine session dans :</span>
+            {/* 1. Live Google Meet & WhatsApp Hub Banner — Dynamique depuis DB */}
+            {(() => {
+              // Trouver le bootcamp actif auquel l'utilisateur est inscrit (ou à venir le plus proche)
+              const activeBootcamp = enrolledBootcamps.find((b: any) => b.status === "active")
+                || enrolledBootcamps.find((b: any) => b.status === "upcoming")
+                || enrolledBootcamps[0]
+              // Utiliser la date de la session live DB si disponible
+              const liveDate = dbLiveSession?.scheduled_at || dbLiveSession?.start_time
+              const hasLiveAccess = enrolledBootcamps.some((b: any) => !b.isFree)
+              return (
+              <div className="rounded-3xl border border-primary/40 bg-gradient-to-r from-primary/15 via-card to-card p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  <div className="space-y-3 max-w-2xl">
                     <div className="flex items-center gap-2">
-                      <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-primary/40 px-3 py-1.5 min-w-[52px] shadow-lg">
-                        <span className="font-heading text-base font-black text-primary font-mono leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Jours</span>
-                      </div>
-                      <span className="text-primary font-bold text-sm">:</span>
-                      <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-primary/40 px-3 py-1.5 min-w-[52px] shadow-lg">
-                        <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Heures</span>
-                      </div>
-                      <span className="text-primary font-bold text-sm">:</span>
-                      <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-primary/40 px-3 py-1.5 min-w-[52px] shadow-lg">
-                        <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Min</span>
-                      </div>
-                      <span className="text-primary font-bold text-sm">:</span>
-                      <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-amber-500/50 px-3 py-1.5 min-w-[52px] shadow-lg">
-                        <span className="font-heading text-base font-black text-amber-400 font-mono leading-none animate-pulse">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                        <span className="text-[9px] font-bold text-amber-400/80 uppercase mt-0.5">Sec</span>
-                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/20 px-3 py-1 rounded-full border border-primary/30 flex items-center gap-1.5">
+                        <Video className="size-3 animate-pulse text-primary" />
+                        DIRECT LIVE{activeBootcamp ? ` · ${activeBootcamp.title.toUpperCase()}` : ""}
+                      </span>
                     </div>
+                    <h2 className="font-heading text-xl md:text-2xl font-black text-foreground">
+                      {dbLiveSession?.title || "Session en Direct Live"}
+                    </h2>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {dbLiveSession?.description || `Rejoignez ${activeBootcamp?.instructor || "Alfred Dah"} en direct sur Google Meet pour votre cours interactif, exercices pratiques et coaching en temps réel.`}
+                    </p>
+
+                    {/* Countdown — vers la date de la session DB ou la prochaine session de la leçon */}
+                    <div className="pt-2 flex flex-wrap items-center gap-3">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                        {liveDate ? "Prochaine session dans :" : "Prochaine session :"}
+                      </span>
+                      {liveDate ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-primary/40 px-3 py-1.5 min-w-[52px] shadow-lg">
+                            <span className="font-heading text-base font-black text-primary font-mono leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Jours</span>
+                          </div>
+                          <span className="text-primary font-bold text-sm">:</span>
+                          <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-primary/40 px-3 py-1.5 min-w-[52px] shadow-lg">
+                            <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Heures</span>
+                          </div>
+                          <span className="text-primary font-bold text-sm">:</span>
+                          <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-primary/40 px-3 py-1.5 min-w-[52px] shadow-lg">
+                            <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Min</span>
+                          </div>
+                          <span className="text-primary font-bold text-sm">:</span>
+                          <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950/90 border border-amber-500/50 px-3 py-1.5 min-w-[52px] shadow-lg">
+                            <span className="font-heading text-base font-black text-amber-400 font-mono leading-none animate-pulse">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                            <span className="text-[9px] font-bold text-amber-400/80 uppercase mt-0.5">Sec</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Date à annoncer</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                    {hasLiveAccess ? (
+                      <>
+                        <a
+                          href={dbLiveSession?.meet_url || activeBootcamp?.live_meet_url || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-5 py-3 text-xs shadow-lg transition-all"
+                        >
+                          <Video className="size-4" />
+                          <span>Rejoindre le Google Meet Live</span>
+                        </a>
+                        <a
+                          href={dbLiveSession?.whatsapp_url || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold px-5 py-3 text-xs transition-all"
+                        >
+                          <MessageCircle className="size-4" />
+                          <span>Groupe WhatsApp</span>
+                        </a>
+                      </>
+                    ) : (
+                      <Link
+                        href="/bootcamp"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold px-5 py-3 text-xs transition-all hover:bg-rose-500/30"
+                      >
+                        <span>🔒 Réserver pour accéder au Live</span>
+                      </Link>
+                    )}
                   </div>
                 </div>
+              </div>
+              )
+            })()}
 
-                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                  <a
-                    href={dbLiveSession?.meet_url || "https://meet.google.com/leguideai-bootcamp-live"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-5 py-3 text-xs shadow-lg transition-all"
-                  >
-                    <Video className="size-4" />
-                    <span>Rejoindre le Google Meet Live</span>
-                  </a>
-                  <a
-                    href={dbLiveSession?.whatsapp_url || "https://chat.whatsapp.com/leguideai-bootcamp"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold px-5 py-3 text-xs transition-all"
-                  >
-                    <MessageCircle className="size-4" />
-                    <span>Groupe WhatsApp</span>
-                  </a>
+            {/* 2. Mes Formations Inscrites */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-heading text-base font-bold text-foreground">Mes Formations</h3>
+                <button onClick={() => setActiveTab("courses")} className="text-xs text-primary font-bold hover:underline">Voir tout →</button>
+              </div>
+
+              {enrolledBootcamps.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {enrolledBootcamps.map((bootcamp: any) => (
+                    <div key={bootcamp.dbId} className="rounded-2xl border border-border bg-card/40 overflow-hidden p-3.5 flex flex-col justify-between space-y-3 hover:border-primary/40 transition-colors text-left shadow-lg">
+                      <div className="space-y-2">
+                        {/* Miniature Thumbnail */}
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-border/60">
+                          <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover" />
+                          <div className="absolute top-2 left-2">
+                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border shadow-md ${
+                              bootcamp.isFree ? "bg-emerald-500 text-slate-950 border-emerald-400"
+                              : bootcamp.status === "active" ? "bg-emerald-500/90 text-slate-950 border-emerald-400"
+                              : bootcamp.status === "completed" ? "bg-blue-600 text-white border-blue-400"
+                              : "bg-amber-500 text-slate-950 border-amber-400"
+                            }`}>
+                              {bootcamp.isFree ? "Gratuit" : bootcamp.status === "active" ? "Actif" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="font-heading text-xs font-bold text-foreground line-clamp-2">{bootcamp.title}</h4>
+                        <p className="text-[10px] text-muted-foreground">{bootcamp.dates}</p>
+                      </div>
+                      <button
+                        onClick={() => { setSelectedBootcamp(bootcamp); setSelectedLesson(bootcamp.lessons[0]); setActiveTab("courses") }}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground py-2 rounded-xl border border-primary/20 transition-all cursor-pointer"
+                      >
+                        <PlayCircle className="size-3.5" />
+                        <span>Accéder aux cours</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border/60 bg-card/20 p-5 text-center text-xs text-muted-foreground">
+                  Vous n'êtes inscrit à aucune formation pour le moment.
+                </div>
+              )}
+            </div>
+
+            {/* 2b. Formations & Bootcamps Disponibles (Non inscrits) */}
+            {lockedBootcamps.length > 0 && (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-heading text-base font-bold text-foreground">Formations &amp; Bootcamps Disponibles</h3>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {lockedBootcamps.map((bootcamp: any) => (
+                    <div key={bootcamp.dbId} className="rounded-2xl border border-border/40 bg-gradient-to-b from-slate-900/60 to-slate-950/60 overflow-hidden p-3.5 flex flex-col justify-between space-y-3 text-left shadow-lg">
+                      <div className="space-y-2">
+                        {/* Miniature Thumbnail */}
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-border/40">
+                          <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover" />
+                          <div className="absolute top-2 left-2">
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md border bg-primary/20 text-primary border-primary/30 shadow-md">
+                              Formule Payante
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="font-heading text-xs font-bold text-foreground line-clamp-2">{bootcamp.title}</h4>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>{bootcamp.dates}</span>
+                          <span className="font-bold text-primary font-mono">{bootcamp.price}</span>
+                        </div>
+                      </div>
+                      <a
+                        href={`/bootcamp?course=${bootcamp.slug}`}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 py-2 rounded-xl transition-all shadow-md"
+                      >
+                        <span>Réserver ma place →</span>
+                      </a>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* 2. Enrolled Bootcamps Overview Grid */}
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-heading text-base font-bold text-foreground">Mes Bootcamps Inscrits</h3>
-                <button onClick={() => setActiveTab("courses")} className="text-xs text-primary font-bold hover:underline">Voir toutes mes formations →</button>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                {displayedBootcamps.map((bootcamp) => (
-                  <div 
-                    key={bootcamp.id} 
-                    className="rounded-2xl border border-border bg-card/40 p-4 flex flex-col justify-between space-y-3 hover:border-primary/40 transition-colors text-left"
+            {/* 3. Dernières sessions — depuis DB, premier bootcamp actif inscrit */}
+            {(() => {
+              const activeBootcamp = enrolledBootcamps.find((b: any) => b.status === "active" || b.status === "upcoming") || enrolledBootcamps[0]
+              const recentLessons = activeBootcamp?.lessons?.slice(0, 3) || []
+              if (!activeBootcamp || recentLessons.length === 0) return null
+              return (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-heading text-base font-bold text-foreground">
+                    Dernières sessions — {activeBootcamp.title}
+                  </h3>
+                  <button
+                    onClick={() => { setSelectedBootcamp(activeBootcamp); setActiveTab("courses") }}
+                    className="text-xs text-primary font-bold hover:underline"
                   >
-                    <div className="space-y-2">
-                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${
-                        bootcamp.status === "active"
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : bootcamp.status === "completed"
-                          ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                          : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                      }`}>
-                        {bootcamp.status === "active" ? "Active" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
-                      </span>
-                      <h4 className="font-heading text-xs font-bold text-foreground line-clamp-2">{bootcamp.title}</h4>
-                      <p className="text-[10px] text-muted-foreground">{bootcamp.dates}</p>
-                    </div>
+                    Accéder au lecteur complet →
+                  </button>
+                </div>
 
-                    <button
-                      onClick={() => {
-                        setSelectedBootcamp(bootcamp)
-                        setSelectedLesson(bootcamp.lessons[0])
-                        setActiveTab("courses")
-                      }}
-                      className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground py-2 rounded-xl border border-primary/20 transition-all cursor-pointer"
+                <div className="grid gap-3">
+                  {recentLessons.map((lesson: any) => (
+                    <div
+                      key={lesson.id}
+                      className="rounded-2xl border border-border/80 bg-card/40 p-4 flex items-center justify-between gap-4 hover:border-primary/40 transition-colors"
                     >
-                      <PlayCircle className="size-3.5" />
-                      <span>Accéder aux cours</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 3. Replays & Sessions Preview */}
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-heading text-base font-bold text-foreground">Dernières sessions du Bootcamp Pro</h3>
-                <button onClick={() => {
-                  setSelectedBootcamp(ENROLLED_BOOTCAMPS[0])
-                  setActiveTab("courses")
-                }} className="text-xs text-primary font-bold hover:underline">Accéder au lecteur complet →</button>
-              </div>
-
-              <div className="grid gap-3">
-                {BOOTCAMP_LESSONS.slice(0, 3).map((lesson) => (
-                  <div 
-                    key={lesson.id} 
-                    className="rounded-2xl border border-border/80 bg-card/40 p-4 flex items-center justify-between gap-4 hover:border-primary/40 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="size-7 rounded-xl bg-card border border-border flex items-center justify-center font-mono text-xs font-bold text-primary">
-                        {lesson.num}
-                      </span>
-                      <div>
-                        <h4 className="text-xs font-bold text-foreground">{lesson.title}</h4>
-                        <span className="text-[10px] text-muted-foreground">Durée : {lesson.duration} · {lesson.isUpcoming ? "Session à venir" : "✓ Replay disponible"}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="size-7 rounded-xl bg-card border border-border flex items-center justify-center font-mono text-xs font-bold text-primary">
+                          {lesson.num}
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-bold text-foreground">{lesson.title}</h4>
+                          <span className="text-[10px] text-muted-foreground">
+                            Durée : {lesson.duration}
+                            {lesson.videoUrl ? " · ✓ Replay disponible" : " · Session à venir"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <button
-                      onClick={() => {
-                        setSelectedBootcamp(ENROLLED_BOOTCAMPS[0])
-                        setSelectedLesson(lesson)
-                        setActiveTab("courses")
-                      }}
-                      className="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground px-3 py-1.5 rounded-xl border border-primary/20 transition-all cursor-pointer shrink-0"
-                    >
-                      <Play className="size-3 fill-current" />
-                      <span>{lesson.isUpcoming ? "Consulter" : "Regarder le Replay"}</span>
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        onClick={() => { setSelectedBootcamp(activeBootcamp); setSelectedLesson(lesson); setActiveTab("courses") }}
+                        className="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 hover:bg-primary hover:text-primary-foreground px-3 py-1.5 rounded-xl border border-primary/20 transition-all cursor-pointer shrink-0"
+                      >
+                        <Play className="size-3 fill-current" />
+                        <span>{lesson.videoUrl ? "Regarder le Replay" : "Consulter"}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+              )
+            })()}
 
           </div>
         )}
@@ -833,68 +1016,98 @@ export default function DashboardPage() {
                     <h1 className="font-heading text-2xl font-bold text-foreground">Mes Formations & Bootcamps Inscrits</h1>
                     <p className="text-xs text-muted-foreground mt-1">Sélectionnez une formation pour accéder au lien, supports PDF et exercices pratiques.</p>
                   </div>
-                  <span className="text-xs font-extrabold text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
-                    {displayedBootcamps.length} Formations enregistrées
-                  </span>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {displayedBootcamps.map((bootcamp) => (
-                    <div
-                      key={bootcamp.id}
-                      className="rounded-3xl border border-border/80 bg-card/40 overflow-hidden flex flex-col justify-between hover:border-primary/40 transition-all shadow-xl group text-left"
-                    >
-                      <div className="space-y-3 p-5">
-                        {/* Card Media Header */}
-                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-border/60 mb-2">
-                          <img
-                            src={bootcamp.poster}
-                            alt={bootcamp.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute top-2.5 left-2.5">
-                            <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md shadow-md border ${
-                              bootcamp.status === "active"
-                                ? "bg-emerald-500 text-slate-950 border-emerald-400"
-                                : bootcamp.status === "completed"
-                                ? "bg-blue-600 text-white border-blue-400"
-                                : "bg-amber-500 text-slate-950 border-amber-400"
-                            }`}>
-                              {bootcamp.status === "active" ? "Active" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
-                            </span>
+                {/* ─── Formations accessibles ─── */}
+                {enrolledBootcamps.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="font-heading text-base font-bold text-foreground">Mes formations actives</h2>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {enrolledBootcamps.map((bootcamp: any) => (
+                        <div
+                          key={bootcamp.dbId}
+                          className="rounded-3xl border border-border/80 bg-card/40 overflow-hidden flex flex-col justify-between hover:border-primary/40 transition-all shadow-xl group text-left"
+                        >
+                          <div className="space-y-3 p-5">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-border/60 mb-2">
+                              <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              <div className="absolute top-2.5 left-2.5">
+                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md shadow-md border ${
+                                  bootcamp.isFree ? "bg-emerald-500 text-slate-950 border-emerald-400"
+                                  : bootcamp.status === "active" ? "bg-emerald-500 text-slate-950 border-emerald-400"
+                                  : bootcamp.status === "completed" ? "bg-blue-600 text-white border-blue-400"
+                                  : "bg-amber-500 text-slate-950 border-amber-400"
+                                }`}>
+                                  {bootcamp.isFree ? "Gratuit" : bootcamp.status === "active" ? "Actif" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <h3 className="font-heading text-base font-bold text-foreground group-hover:text-primary transition-colors leading-snug">{bootcamp.title}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
+                            </div>
+                            <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
+                              <div><strong>Dates :</strong> {bootcamp.dates}</div>
+                              <div><strong>Formateur :</strong> {bootcamp.instructor}</div>
+                            </div>
+                          </div>
+                          <div className="p-5 pt-0">
+                            <button
+                              onClick={() => { setSelectedBootcamp(bootcamp); setSelectedLesson(bootcamp.lessons[0]) }}
+                              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all cursor-pointer"
+                            >
+                              <PlayCircle className="size-4" />
+                              <span>Accéder à la formation</span>
+                            </button>
                           </div>
                         </div>
-
-                        <div className="space-y-1.5">
-                          <h3 className="font-heading text-base font-bold text-foreground group-hover:text-primary transition-colors leading-snug">
-                            {bootcamp.title}
-                          </h3>
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                            {bootcamp.subtitle}
-                          </p>
-                        </div>
-
-                        <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
-                          <div><strong>Dates :</strong> {bootcamp.dates}</div>
-                          <div><strong>Formateur :</strong> {bootcamp.instructor}</div>
-                        </div>
-                      </div>
-
-                      {/* Footer Action */}
-                      <div className="p-5 pt-0">
-                        <button
-                          onClick={() => {
-                            setSelectedBootcamp(bootcamp)
-                            setSelectedLesson(bootcamp.lessons[0])
-                          }}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all cursor-pointer"
-                        >
-                          <span>Accéder à la formation</span>
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
+
+                {/* ─── Formations disponibles à l'achat ─── */}
+                {lockedBootcamps.length > 0 && (
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-3">
+                      <h2 className="font-heading text-base font-bold text-foreground">Autres formations disponibles</h2>
+                      <span className="text-[10px] font-bold text-muted-foreground bg-secondary/60 border border-border px-2.5 py-1 rounded-full">Non inscrit</span>
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {lockedBootcamps.map((bootcamp: any) => (
+                        <div
+                          key={bootcamp.dbId}
+                          className="rounded-3xl border border-border/40 bg-gradient-to-b from-slate-900/40 to-slate-950/60 overflow-hidden flex flex-col justify-between transition-all shadow-xl text-left"
+                        >
+                          <div className="space-y-3 p-5">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-border/40 mb-2">
+                              <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover" />
+                              <div className="absolute top-2.5 left-2.5">
+                                <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-md shadow-md border bg-primary/20 text-primary border-primary/30">Formule Payante</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <h3 className="font-heading text-base font-bold text-foreground leading-snug">{bootcamp.title}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
+                            </div>
+                            <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
+                              <div><strong>Dates :</strong> {bootcamp.dates}</div>
+                              <div><strong>Formateur :</strong> {bootcamp.instructor}</div>
+                            </div>
+                          </div>
+                          <div className="p-5 pt-0">
+                            <a
+                              href={`/bootcamp?course=${bootcamp.slug}`}
+                              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all"
+                            >
+                              <span>Réserver ma place →</span>
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* Detail View: Video Player & Lessons for selectedBootcamp */
@@ -935,7 +1148,11 @@ export default function DashboardPage() {
                               {selectedLesson.title}
                             </h3>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                              Cette session aura lieu en direct sur Google Meet ({selectedLesson.scheduledDate || selectedBootcamp.dates}). Le replay HD sera accessible immédiatement après la session.
+                              Cette session aura lieu en direct sur Google Meet ({
+                                selectedLesson.scheduledAt
+                                  ? new Date(selectedLesson.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " à " + new Date(selectedLesson.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+                                  : selectedLesson.scheduledDate || selectedBootcamp.dates
+                              }). Le replay HD sera accessible immédiatement après la session.
                             </p>
                           </div>
 
@@ -1004,11 +1221,13 @@ export default function DashboardPage() {
                         </div>
 
                         <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border ${
-                          selectedLesson.isUpcoming || selectedBootcamp.status === "upcoming"
+                          selectedLesson.isLive
+                            ? "bg-red-500/10 text-red-400 border-red-500/30 animate-pulse"
+                            : selectedLesson.isUpcoming
                             ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                             : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                         }`}>
-                          {selectedLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? "Session à venir" : "Replay Disponible"}
+                          {selectedLesson.isLive ? "🟢 En Direct Maintenant" : selectedLesson.isUpcoming ? "🕒 Session à venir" : "🎬 Replay Disponible"}
                         </span>
                       </div>
 
@@ -1122,8 +1341,8 @@ export default function DashboardPage() {
                                 <Clock className="size-3" />
                                 <span>{lesson.duration}</span>
                                 <span>·</span>
-                                <span className={isUpcoming ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
-                                  {isUpcoming ? "À venir" : "Replay HD"}
+                                <span className={lesson.isLive ? "text-red-400 font-bold animate-pulse" : lesson.isUpcoming ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
+                                  {lesson.isLive ? "En Direct" : lesson.isUpcoming ? "À venir" : "Replay HD"}
                                 </span>
                               </div>
                               {lesson.scheduledDate && (
@@ -1378,7 +1597,7 @@ export default function DashboardPage() {
           <div className="space-y-6">
             <div>
               <h1 className="font-heading text-2xl font-bold text-foreground">Mes Factures &amp; Reçus</h1>
-              <p className="text-xs text-muted-foreground mt-1">Téléchargez vos factures d'achat officielles aux formats FCFA et EUR.</p>
+              <p className="text-xs text-muted-foreground mt-1">Téléchargez vos factures d'achat et reçus d'inscription officiels.</p>
             </div>
 
             <div className="rounded-3xl border border-border bg-card/40 overflow-hidden shadow-xl">
@@ -1389,23 +1608,39 @@ export default function DashboardPage() {
                 <span className="text-right">Action / Statut</span>
               </div>
 
-              <div className="p-4 grid grid-cols-4 text-xs items-center border-b border-border/40">
-                <div>
-                  <p className="font-bold text-foreground">Bootcamp IA Pro 2 — Inscription Officielle</p>
-                  <p className="text-[10px] text-muted-foreground">Paiement Mobile Money / Wave (PayTech)</p>
-                </div>
-                <span className="text-muted-foreground">Août 2026</span>
-                <span className="font-mono font-bold text-foreground">99 000 FCFA</span>
-                <div className="text-right flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => setIsInvoiceModalOpen(true)}
-                    className="flex items-center gap-1 text-xs font-bold text-primary hover:underline cursor-pointer"
-                  >
-                    <Download className="size-3.5" />
-                    <span>Télécharger (PDF)</span>
-                  </button>
-                </div>
-              </div>
+              {(() => {
+                if (userInvoices.length === 0) {
+                  return (
+                    <div className="p-8 text-center text-xs text-muted-foreground space-y-1">
+                      <p className="font-bold text-foreground">Aucune facture enregistrée dans Supabase</p>
+                      <p>Les factures et reçus d'inscription officiels apparaîtront automatiquement ici dès qu'un versement est confirmé.</p>
+                    </div>
+                  )
+                }
+
+                return userInvoices.map((inv: any) => (
+                  <div key={inv.id} className="p-4 grid grid-cols-4 text-xs items-center border-b border-border/40 hover:bg-slate-900/30 transition-colors">
+                    <div>
+                      <p className="font-bold text-foreground">{inv.title}</p>
+                      <p className="text-[10px] text-muted-foreground">{inv.method}</p>
+                    </div>
+                    <span className="text-muted-foreground">{inv.date}</span>
+                    <span className="font-mono font-bold text-foreground">{inv.amount}</span>
+                    <div className="text-right flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedInvoice(inv)
+                          setIsInvoiceModalOpen(true)
+                        }}
+                        className="flex items-center gap-1 text-xs font-bold text-primary hover:underline cursor-pointer bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl"
+                      >
+                        <Download className="size-3.5" />
+                        <span>Télécharger (PDF)</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              })()}
             </div>
           </div>
         )}
@@ -1565,8 +1800,8 @@ export default function DashboardPage() {
           <div className="bg-slate-900 border border-border rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl text-left">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
-                <h3 className="font-heading text-lg font-bold text-white">Facture Officielle</h3>
-                <span className="text-[10px] text-muted-foreground font-mono">Réf: FACT-2026-0899</span>
+                <h3 className="font-heading text-lg font-bold text-white">Facture Officielle / Reçu</h3>
+                <span className="text-[10px] text-muted-foreground font-mono">Réf: {selectedInvoice?.ref || "FACT-2026-0899"}</span>
               </div>
               <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">PAYÉ</span>
             </div>
@@ -1578,15 +1813,19 @@ export default function DashboardPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Désignation :</span>
-                <span className="font-bold text-white">Bootcamp IA Pro 2</span>
+                <span className="font-bold text-white">{selectedInvoice?.title || "Bootcamp IA Pro 2"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Moyen de règlement :</span>
-                <span className="font-bold text-white">Mobile Money (PayTech)</span>
+                <span className="font-bold text-white">{selectedInvoice?.method || "Mobile Money / Wave"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Date de règlement :</span>
+                <span className="font-bold text-white">{selectedInvoice?.date || "Août 2026"}</span>
               </div>
               <div className="flex justify-between border-t border-border pt-3 text-sm">
                 <span className="font-bold text-white">Montant Total :</span>
-                <span className="font-bold text-primary font-mono">99 000 FCFA</span>
+                <span className="font-bold text-primary font-mono">{selectedInvoice?.amount || "99 000 FCFA"}</span>
               </div>
             </div>
 

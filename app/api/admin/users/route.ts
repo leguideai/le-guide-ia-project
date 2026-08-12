@@ -45,45 +45,129 @@ export async function POST(req: Request) {
     }
 
     if (action === "enroll_course") {
+      const { paymentMethod, transactionRef } = await req.json().catch(() => ({}))
       if (!userEmail || !courseSlug) {
         return NextResponse.json({ error: "userEmail et courseSlug requis." }, { status: 400 })
       }
 
-      // Check if registration exists
-      const { data: existingReg } = await supabaseServer
-        .from("registrations")
-        .select("id")
-        .eq("email", userEmail.toLowerCase())
+      const emailClean = userEmail.toLowerCase().trim()
+
+      // Fetch course details
+      const { data: courseData } = await supabaseServer
+        .from("courses")
+        .select("*")
+        .or(`slug.eq.${courseSlug},id.eq.${courseSlug}`)
         .maybeSingle()
 
-      if (existingReg) {
-        await supabaseServer
+      const courseId = courseData?.id || null
+      const courseSlugFinal = courseData?.slug || courseSlug
+      const courseTitle = courseData?.title || courseSlug
+      const rawPrice = courseData?.price ? String(courseData.price).replace(/\D/g, "") : "99000"
+      const amountNum = parseInt(rawPrice) || 99000
+
+      // 1. Get or create profile
+      const { data: profile } = await supabaseServer
+        .from("profiles")
+        .select("full_name")
+        .eq("email", emailClean)
+        .maybeSingle()
+
+      const fullName = profile?.full_name || emailClean.split("@")[0]
+
+      // 2. Check or create registration for this email & course
+      let regId: string | null = null
+
+      try {
+        let queryReg = supabaseServer
           .from("registrations")
-          .update({ status: "paye" })
-          .eq("id", existingReg.id)
-      } else {
+          .select("id")
+          .eq("email", emailClean)
+
+        if (courseId) {
+          queryReg = queryReg.eq("course_id", courseId)
+        }
+
+        const { data: existingReg, error: selErr } = await queryReg.maybeSingle()
+
+        if (!selErr && existingReg) {
+          regId = existingReg.id
+          await supabaseServer
+            .from("registrations")
+            .update({
+              status: "paye",
+              ...(courseId ? { course_id: courseId } : {}),
+              course_slug: courseSlugFinal
+            })
+            .eq("id", regId)
+        } else {
+          let { data: newReg, error: regErr } = await supabaseServer
+            .from("registrations")
+            .insert({
+              full_name: fullName,
+              email: emailClean,
+              ...(courseId ? { course_id: courseId } : {}),
+              course_slug: courseSlugFinal,
+              status: "paye",
+              source: "admin_manual_enroll"
+            })
+            .select()
+            .single()
+
+          if (regErr && (regErr.message.includes("column") || regErr.code === "42703")) {
+            // Fallback: insert basic registration without extra columns if SQL not run yet
+            const { data: fbReg } = await supabaseServer
+              .from("registrations")
+              .insert({
+                full_name: fullName,
+                email: emailClean,
+                status: "paye",
+                source: "admin_manual_enroll"
+              })
+              .select()
+              .single()
+
+            if (fbReg) regId = fbReg.id
+          } else if (newReg) {
+            regId = newReg.id
+          }
+        }
+      } catch (err) {
+        console.error("Registration error:", err)
+      }
+
+      // 3. Create confirmed payment record for the receipt
+      const methodLabel = paymentMethod && paymentMethod.trim() !== "" ? paymentMethod : "Inscription Manuelle (Admin)"
+      const refCode = transactionRef && transactionRef.trim() !== "" ? transactionRef : `ADM-${Date.now().toString().slice(-6)}`
+
+      if (regId) {
         await supabaseServer
-          .from("registrations")
+          .from("payments")
           .insert({
-            full_name: userEmail.split("@")[0],
-            email: userEmail.toLowerCase(),
-            status: "paye",
-            source: "admin_manual_enroll"
+            registration_id: regId,
+            amount: amountNum,
+            currency: "XOF",
+            method: methodLabel,
+            status: "confirmed",
+            transaction_ref: refCode,
+            created_at: new Date().toISOString()
           })
       }
 
-      // Add to user_courses if table exists
+      // 4. Add to user_courses if table exists
       const { error: enrollErr } = await supabaseServer
         .from("user_courses")
         .upsert({
-          user_email: userEmail.toLowerCase(),
+          user_email: emailClean,
           course_slug: courseSlug,
           status: "active"
         }, { onConflict: "user_email,course_slug" })
 
       if (enrollErr) console.warn("user_courses insert warning:", enrollErr.message)
 
-      return NextResponse.json({ success: true, message: `Utilisateur ${userEmail} inscrit avec succès au cours ${courseSlug}` })
+      return NextResponse.json({
+        success: true,
+        message: `Utilisateur ${emailClean} inscrit avec succès à "${courseTitle}" (${methodLabel})`
+      })
     }
 
     return NextResponse.json({ error: "Action inconnue" }, { status: 400 })
