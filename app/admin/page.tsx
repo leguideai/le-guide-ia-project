@@ -4,12 +4,13 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
+import { formatVideoEmbedUrl, HeroVslVideo } from "@/components/vsl-hero-video"
 import { 
   ShieldAlert, ShieldCheck, Users, DollarSign, BookOpen, FileCheck, 
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
   ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
-  ArrowUp, ArrowDown, Eye, MessageCircle, LogOut
+  ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X
 } from "lucide-react"
 
 interface BootcampCourse {
@@ -401,10 +402,11 @@ export default function SuperAdminDashboard() {
   const [gradeFeedback, setGradeFeedback] = useState("")
 
   // Site Settings state
-  const [siteSettings, setSiteSettings] = useState({
+  const [siteSettings, setSiteSettings] = useState<any>({
     announcement_text: "BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !",
     announcement_cta: "Réserver ma place (149 000 FCFA) →",
     vsl_youtube_url: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1",
+    vsl_videos_pool: "",
     hero_badge: "CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL",
     hero_title: "Maîtrisez l'IA. Transformez votre carrière et votre business.",
     hero_subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.",
@@ -420,6 +422,141 @@ export default function SuperAdminDashboard() {
   })
   const [savingSettings, setSavingSettings] = useState(false)
 
+  // VSL Videos Pool state
+  const [vslVideosList, setVslVideosList] = useState<HeroVslVideo[]>([
+    {
+      id: "vsl-official",
+      title: "Présentation Complète du Bootcamp PRO IA par Alfred Dah",
+      video_url: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1",
+      badge: "Vidéo Officielle",
+      author_name: "Alfred Dah",
+      author_role: "Fondateur & Expert IA",
+      is_active: true
+    },
+    {
+      id: "vsl-testimonial-1",
+      title: "Comment l'IA a transformé mon quotidien professionnel et ma productivité",
+      video_url: "https://www.youtube.com/embed/L_LUpnjgPso?rel=0&modestbranding=1",
+      badge: "Témoignage Apprenant",
+      author_name: "Diplômé Bootcamp Promo 1",
+      author_role: "Consultant Stratégie & Finance",
+      is_active: true
+    }
+  ])
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showVslModal, setShowVslModal] = useState(false)
+  const [editingVslIdx, setEditingVslIdx] = useState<number | null>(null)
+  const [vslForm, setVslForm] = useState<HeroVslVideo>({
+    id: "",
+    title: "",
+    video_url: "",
+    badge: "Témoignage Apprenant",
+    author_name: "",
+    author_role: "",
+    is_active: true
+  })
+
+  function handleOpenAddVslVideo() {
+    setEditingVslIdx(null)
+    setVslForm({
+      id: "vsl-" + Date.now(),
+      title: "",
+      video_url: "",
+      badge: "Témoignage Apprenant",
+      author_name: "",
+      author_role: "",
+      is_active: true
+    })
+    setShowVslModal(true)
+  }
+
+  function handleOpenEditVslVideo(v: HeroVslVideo, idx: number) {
+    setEditingVslIdx(idx)
+    setVslForm({ ...v })
+    setShowVslModal(true)
+  }
+
+  async function handleSaveVslVideo(e: React.FormEvent) {
+    e.preventDefault()
+    if (!vslForm.title || !vslForm.video_url) {
+      alert("Veuillez renseigner le titre et le lien/fichier vidéo.")
+      return
+    }
+
+    const formattedUrl = formatVideoEmbedUrl(vslForm.video_url)
+    const updatedVideo: HeroVslVideo = {
+      ...vslForm,
+      video_url: formattedUrl,
+      id: vslForm.id || "vsl-" + Date.now()
+    }
+
+    let updatedList: HeroVslVideo[] = []
+    if (editingVslIdx !== null) {
+      updatedList = [...vslVideosList]
+      updatedList[editingVslIdx] = updatedVideo
+    } else {
+      updatedList = [...vslVideosList, updatedVideo]
+    }
+
+    setVslVideosList(updatedList)
+    const newSettings = {
+      ...siteSettings,
+      vsl_videos_pool: JSON.stringify(updatedList),
+      vsl_youtube_url: updatedList[0]?.video_url || siteSettings.vsl_youtube_url
+    }
+    setSiteSettings(newSettings)
+    setShowVslModal(false)
+
+    try {
+      await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: newSettings })
+      })
+      showNotice("Vidéo VSL / Témoignage enregistré et actif !")
+    } catch (e) {}
+  }
+
+  async function handleDeleteVslVideo(idx: number) {
+    if (!confirm("Voulez-vous supprimer cette vidéo de la rotation ?")) return
+    const updatedList = vslVideosList.filter((_, i) => i !== idx)
+    setVslVideosList(updatedList)
+    const newSettings = {
+      ...siteSettings,
+      vsl_videos_pool: JSON.stringify(updatedList),
+      vsl_youtube_url: updatedList[0]?.video_url || siteSettings.vsl_youtube_url
+    }
+    setSiteSettings(newSettings)
+
+    try {
+      await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: newSettings })
+      })
+      showNotice("Vidéo supprimée de la rotation.")
+    } catch (e) {}
+  }
+
+  async function handleToggleVslActive(idx: number) {
+    const updatedList = [...vslVideosList]
+    updatedList[idx].is_active = !updatedList[idx].is_active
+    setVslVideosList(updatedList)
+    const newSettings = {
+      ...siteSettings,
+      vsl_videos_pool: JSON.stringify(updatedList)
+    }
+    setSiteSettings(newSettings)
+
+    try {
+      await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: newSettings })
+      })
+    } catch (e) {}
+  }
+
   useEffect(() => {
     checkAdminAccess()
     fetchAllData()
@@ -429,10 +566,14 @@ export default function SuperAdminDashboard() {
     e.preventDefault()
     setSavingSettings(true)
     try {
+      const payloadSettings = {
+        ...siteSettings,
+        vsl_videos_pool: JSON.stringify(vslVideosList)
+      }
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings: siteSettings })
+        body: JSON.stringify({ settings: payloadSettings })
       })
       const data = await res.json()
       if (data.success) {
@@ -859,8 +1000,246 @@ export default function SuperAdminDashboard() {
         </div>
       )}
 
-      {/* Left Vertical Sidebar Navigation */}
-      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-800/80 bg-slate-950/90 backdrop-blur-xl p-4 flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen overflow-y-auto">
+      {/* Mobile Top Navigation Bar (Phone & Tablet) */}
+      <header className="md:hidden sticky top-0 z-40 bg-slate-950/95 border-b border-slate-800/80 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="font-heading font-black text-lg text-white tracking-wider">
+            LE GUIDE <span className="text-primary">IA</span>
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+            Admin
+          </span>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchAllData}
+            disabled={loading}
+            className="size-9 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            title="Rafraîchir les données"
+          >
+            <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="size-9 rounded-xl bg-primary text-slate-950 flex items-center justify-center shadow-lg font-bold cursor-pointer transition-all active:scale-95"
+            aria-label="Ouvrir le menu d'administration"
+          >
+            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Slide-Out Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-slate-950/98 backdrop-blur-2xl flex flex-col justify-between p-5 overflow-y-auto animate-fadeIn">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
+                <span className="font-heading font-black text-xl text-white">
+                  LE GUIDE <span className="text-primary">IA</span>
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                  Admin
+                </span>
+              </Link>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="size-9 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            {/* Admin Profile Info */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3.5 flex items-center gap-3">
+              <div className="size-9 rounded-full bg-primary text-slate-950 flex items-center justify-center font-black text-xs border border-white/20 shrink-0">
+                {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-xs font-bold text-white truncate">{currentUser?.email || "Alfred Dah"}</p>
+                <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                  <ShieldCheck className="size-3" /> {userRole || "super_admin"}
+                </span>
+              </div>
+            </div>
+
+            {/* Mobile Nav Links */}
+            <div className="space-y-4 text-left">
+              {/* Section 1 */}
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
+                <button
+                  onClick={() => { setActiveTab("kpi"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <DollarSign className="size-4 shrink-0" />
+                    <span>Dashboard & KPIs</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("payments"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "payments" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FileCheck className="size-4 shrink-0" />
+                    <span>Inscriptions</span>
+                  </div>
+                  {stats.pendingPaymentsCount > 0 && (
+                    <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full">
+                      {stats.pendingPaymentsCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Section 2 */}
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Gestion du Contenu</p>
+                <button
+                  onClick={() => { setActiveTab("courses"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Layers className="size-4 shrink-0" />
+                    <span>Bootcamps</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({courses.length})</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("resources"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="size-4 shrink-0" />
+                    <span>Bibliothèque</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({resources.length})</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("lives"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Video className="size-4 shrink-0" />
+                    <span>Directs</span>
+                  </div>
+                </button>
+              </div>
+
+              {/* Section 3 */}
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Apprenants & Devoirs</p>
+                <button
+                  onClick={() => { setActiveTab("users"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Users className="size-4 shrink-0" />
+                    <span>Membres</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({users.length})</span>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("submissions"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "submissions" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <BookOpen className="size-4 shrink-0" />
+                    <span>Devoirs</span>
+                  </div>
+                  {stats.pendingSubmissions > 0 && (
+                    <span className="bg-blue-500 text-white font-black text-[9px] px-2 py-0.5 rounded-full">
+                      {stats.pendingSubmissions}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("b2b"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "b2b" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Building2 className="size-4 shrink-0" />
+                    <span>Entreprises</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({stats.b2bCount})</span>
+                </button>
+              </div>
+
+              {/* Section 4 */}
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Outils & Configuration</p>
+                <button
+                  onClick={() => { setActiveTab("settings"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="size-4 shrink-0" />
+                    <span>Paramètres</span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("export"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Download className="size-4 shrink-0" />
+                    <span>Exportation Données</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-800 space-y-2">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-900/60"
+            >
+              <ExternalLink className="size-3.5" />
+              <span>Voir le site public</span>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+            >
+              <LogOut className="size-3.5 text-red-400" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Left Vertical Sidebar Navigation (hidden on mobile) */}
+      <aside className="hidden md:flex w-64 border-r border-slate-800/80 bg-slate-950/90 backdrop-blur-xl p-4 flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="space-y-6">
           
           {/* Brand Header */}
@@ -1059,11 +1438,11 @@ export default function SuperAdminDashboard() {
       </aside>
 
       {/* Main Workspace */}
-      <main className="flex-1 p-6 md:p-10 space-y-8 overflow-y-auto max-w-7xl mx-auto w-full text-left">
+      <main className="flex-1 p-3 sm:p-6 md:p-10 space-y-6 sm:space-y-8 overflow-y-auto max-w-7xl mx-auto w-full text-left">
         {/* Workspace Top Header Bar */}
-        <div className="flex items-center justify-between pb-6 border-b border-slate-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-800/80">
           <div>
-            <h1 className="font-heading text-2xl font-bold text-white uppercase tracking-tight">
+            <h1 className="font-heading text-lg sm:text-2xl font-bold text-white uppercase tracking-tight">
               {activeTab === "kpi" && "Vue d'Ensemble & KPIs Financiers"}
               {activeTab === "courses" && "Gestion des Bootcamps"}
               {activeTab === "resources" && "Bibliothèque de Prompts & Templates"}
@@ -1075,88 +1454,88 @@ export default function SuperAdminDashboard() {
               {activeTab === "settings" && "Paramètres du Site"}
               {activeTab === "export" && "Exportation des Données"}
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-400 mt-0.5">
               Console d'Administration Admin — Le Guide IA
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button 
               onClick={fetchAllData}
               disabled={loading}
-              className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-all text-xs font-bold flex items-center gap-2"
+              className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-all text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
             >
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-              Rafraîchir
+              <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span>Rafraîchir</span>
             </button>
           </div>
         </div>
 
         {/* TAB 1: KPI OVERVIEW */}
         {activeTab === "kpi" && (
-          <div className="space-y-8 animate-fadeIn">
+          <div className="space-y-6 sm:space-y-8 animate-fadeIn">
             {/* KPI Cards Grid */}
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
+            <div className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires</span>
-                  <div className="size-10 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
-                    <DollarSign className="size-5" />
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires</span>
+                  <div className="size-9 sm:size-10 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                    <DollarSign className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-3xl font-black text-white">
-                  {stats.totalRevenue.toLocaleString()} <span className="text-sm font-normal text-emerald-400">FCFA</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-white">
+                  {stats.totalRevenue.toLocaleString()} <span className="text-xs sm:text-sm font-normal text-emerald-400">FCFA</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Paiements validés PayTech & Mobile Money</p>
+                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Paiements validés PayTech & Mobile Money</p>
               </div>
 
-              <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
+              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all" />
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Inscrits</span>
-                  <div className="size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
-                    <Users className="size-5" />
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Inscrits</span>
+                  <div className="size-9 sm:size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
+                    <Users className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-3xl font-black text-white">
-                  {stats.totalRegistrations} <span className="text-sm font-normal text-slate-400">apprenants</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-white">
+                  {stats.totalRegistrations} <span className="text-xs sm:text-sm font-normal text-slate-400">apprenants</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Apprenants inscrits sur les Bootcamps</p>
+                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Apprenants inscrits sur les Bootcamps</p>
               </div>
 
-              <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
+              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Paiements à valider</span>
-                  <div className="size-10 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
-                    <Clock className="size-5" />
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Paiements à valider</span>
+                  <div className="size-9 sm:size-10 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
+                    <Clock className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-3xl font-black text-amber-400">
-                  {stats.pendingPaymentsCount} <span className="text-sm font-normal text-slate-400">en attente</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-amber-400">
+                  {stats.pendingPaymentsCount} <span className="text-xs sm:text-sm font-normal text-slate-400">en attente</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Dépôts Mobile Money Direct à vérifier</p>
+                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Dépôts Mobile Money Direct à vérifier</p>
               </div>
 
-              <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
+              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all" />
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Devis B2B Entreprises</span>
-                  <div className="size-10 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
-                    <Building2 className="size-5" />
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Devis B2B Entreprises</span>
+                  <div className="size-9 sm:size-10 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
+                    <Building2 className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-3xl font-black text-white">
-                  {stats.b2bCount} <span className="text-sm font-normal text-slate-400">demandes</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-white">
+                  {stats.b2bCount} <span className="text-xs sm:text-sm font-normal text-slate-400">demandes</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-2">Opportunités B2B d'entreprises</p>
+                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Opportunités B2B d'entreprises</p>
               </div>
             </div>
 
             {/* Quick Actions Panel */}
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="p-6 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-4">
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-4">
                 <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
                   <UserPlus className="size-5 text-primary" />
                   Inscription Manuelle d'un Apprenant
@@ -2892,23 +3271,95 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
 
-              {/* Section 2: VSL Hero Video */}
+              {/* Section 2: VSL Hero Video & Testimonials Pool */}
               <div className="space-y-4 pt-4 border-t border-slate-800/80">
-                <h4 className="text-xs font-black uppercase tracking-wider text-purple-400 border-b border-slate-800/60 pb-2">
-                  2. Vidéo VSL de Présentation (Upload MP4 ou URL Embed)
-                </h4>
-                <div className="space-y-1.5">
-                  <FileUploadField
-                    label="Vidéo VSL de Présentation (Upload local ou URL YouTube/Supabase)"
-                    value={siteSettings.vsl_youtube_url}
-                    onChange={url => setSiteSettings({ ...siteSettings, vsl_youtube_url: url })}
-                    accept="video/*,.mp4,.webm"
-                    bucket="course-replays"
-                    folder="vsl"
-                    placeholder="https://www.youtube.com/embed/... ou téléversez un fichier MP4"
-                    preview="none"
-                    hint="Collez un lien d'intégration YouTube/Vimeo OU téléversez directement une vidéo MP4/WebM."
-                  />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                      <Video className="size-4" />
+                      2. Pool de Vidéos VSL & Témoignages (Aléatoire & Switcher)
+                    </h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Chaque visiteur verra une vidéo choisie aléatoirement parmi les vidéos actives, avec la possibilité de naviguer entre les différents témoignages et présentations.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleOpenAddVslVideo}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 self-start sm:self-auto cursor-pointer"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Ajouter une Vidéo / Témoignage</span>
+                  </button>
+                </div>
+
+                {/* List of configured videos */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {vslVideosList.map((v, vIdx) => {
+                    const isDirect = v.video_url?.match(/\.(mp4|webm|ogg|mov)(\?|$)/i) || v.video_url?.includes("supabase.co/storage")
+                    return (
+                      <div
+                        key={v.id || vIdx}
+                        className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
+                          v.is_active !== false
+                            ? "bg-slate-950/80 border-slate-800"
+                            : "bg-slate-950/40 border-slate-900 opacity-60"
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              {v.badge || "Vidéo"}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleVslActive(vIdx)}
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                                  v.is_active !== false
+                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                                    : "bg-slate-800 text-slate-400 border-slate-700"
+                                }`}
+                              >
+                                {v.is_active !== false ? "✓ Actif (En rotation)" : "Inactif"}
+                              </button>
+                            </div>
+                          </div>
+
+                          <h5 className="font-bold text-xs text-white line-clamp-2">{v.title}</h5>
+
+                          {v.author_name && (
+                            <p className="text-[11px] text-slate-400">
+                              Par : <strong className="text-slate-200">{v.author_name}</strong> {v.author_role ? `(${v.author_role})` : ""}
+                            </p>
+                          )}
+
+                          <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 truncate">
+                            {isDirect ? "📁 Fichier direct MP4/Supabase" : "🔴 YouTube Embed / Lien"} : {v.video_url}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditVslVideo(v, vIdx)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all cursor-pointer"
+                          >
+                            <Edit3 className="size-3 text-primary" />
+                            <span>Modifier</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteVslVideo(vIdx)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold transition-all cursor-pointer"
+                          >
+                            <Trash2 className="size-3" />
+                            <span>Supprimer</span>
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -3068,10 +3519,122 @@ export default function SuperAdminDashboard() {
             </div>
             <button
               onClick={exportRegistrationsCSV}
-              className="px-8 py-3.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm hover:bg-emerald-400 transition-colors shadow-xl"
+              className="px-8 py-3.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-sm hover:bg-emerald-400 transition-colors shadow-xl cursor-pointer"
             >
               Télécharger le Fichier CSV (.csv)
             </button>
+          </div>
+        )}
+
+        {/* MODAL: AJOUTER / MODIFIER UNE VIDÉO VSL OU TÉMOIGNAGE */}
+        {showVslModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-xl rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Video className="size-5 text-purple-400" />
+                  {editingVslIdx !== null ? "Modifier la Vidéo / Témoignage" : "Ajouter une Vidéo / Témoignage"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowVslModal(false)}
+                  className="size-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveVslVideo} className="space-y-4 text-xs">
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-300">Titre de la vidéo *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Témoignage : Patrick K. - Consultant Stratégie IA"
+                    value={vslForm.title}
+                    onChange={e => setVslForm({ ...vslForm, title: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-300">Badge / Catégorie</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Témoignage Apprenant, Vidéo Officielle, Cas Client..."
+                      value={vslForm.badge}
+                      onChange={e => setVslForm({ ...vslForm, badge: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-300">Nom de l'intervenant / auteur</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Alfred Dah, Patrick K., Dr. Traoré..."
+                      value={vslForm.author_name || ""}
+                      onChange={e => setVslForm({ ...vslForm, author_name: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-300">Rôle ou métier de l'auteur (Optionnel)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Diplômé Promo 1 • Consultant Financier"
+                    value={vslForm.author_role || ""}
+                    onChange={e => setVslForm({ ...vslForm, author_role: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <FileUploadField
+                    label="Lien Vidéo YouTube OU Téléversement MP4 Supabase *"
+                    value={vslForm.video_url}
+                    onChange={url => setVslForm({ ...vslForm, video_url: url })}
+                    accept="video/*,.mp4,.webm"
+                    bucket="course-replays"
+                    folder="vsl"
+                    placeholder="https://www.youtube.com/watch?v=... ou téléversez un fichier MP4"
+                    preview="none"
+                    hint="Collez n'importe quel lien YouTube (standard, watch, shorts, embed) ou téléversez votre fichier vidéo directement."
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="vsl_is_active"
+                    checked={vslForm.is_active !== false}
+                    onChange={e => setVslForm({ ...vslForm, is_active: e.target.checked })}
+                    className="size-4 rounded accent-primary cursor-pointer"
+                  />
+                  <label htmlFor="vsl_is_active" className="text-xs font-semibold text-slate-200 cursor-pointer">
+                    Activer cette vidéo dans la rotation aléatoire d'accueil
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowVslModal(false)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg cursor-pointer"
+                  >
+                    {editingVslIdx !== null ? "Mettre à jour" : "Ajouter au pool de vidéos"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
