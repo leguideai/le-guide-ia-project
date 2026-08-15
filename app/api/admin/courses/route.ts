@@ -26,6 +26,27 @@ export async function GET() {
         if (seqA !== seqB) return seqA - seqB
         return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
       })
+
+      // Dual-layer fallback: Hydrate offer dates from site_settings if columns are empty
+      try {
+        const { data: settingsData } = await supabaseServer.from("site_settings").select("*")
+        if (settingsData && settingsData.length > 0) {
+          const settingsMap: Record<string, any> = {}
+          settingsData.forEach((s: any) => {
+            if (s.key && s.key.startsWith("offer_")) {
+              try { settingsMap[s.key] = JSON.parse(s.value) } catch { settingsMap[s.key] = s.value }
+            }
+          })
+          courses.forEach((c: any) => {
+            const offerBackup = settingsMap[`offer_${c.slug}`]
+            if (offerBackup && typeof offerBackup === "object") {
+              if (!c.offer_start_date && offerBackup.offer_start_date) c.offer_start_date = offerBackup.offer_start_date
+              if (!c.offer_end_date && offerBackup.offer_end_date) c.offer_end_date = offerBackup.offer_end_date
+              if (!c.offer_badge_text && offerBackup.offer_badge_text) c.offer_badge_text = offerBackup.offer_badge_text
+            }
+          })
+        }
+      } catch (e) {}
     }
 
     return NextResponse.json({ success: true, courses: courses || [] })
@@ -86,7 +107,7 @@ export async function POST(req: Request) {
       .single()
 
     if (error && (error.message.includes("sequence_order") || error.message.includes("column") || error.message.includes("skills") || error.message.includes("offer_"))) {
-      // Si des colonnes n'existent pas encore dans Supabase, repli sans les nouvelles colonnes
+      // Si des colonnes n'existent pas encore dans courses, repli sans les nouvelles colonnes
       const fallbackPayload = { ...upsertPayload }
       delete fallbackPayload.skills
       delete fallbackPayload.start_date
@@ -105,6 +126,21 @@ export async function POST(req: Request) {
       course = retry.data
       error = retry.error
     }
+
+    // Always backup offer validity into site_settings so it is guaranteed to persist immediately
+    try {
+      if (offer_start_date !== undefined || offer_end_date !== undefined || offer_badge_text !== undefined) {
+        await supabaseServer.from("site_settings").upsert({
+          key: `offer_${slug}`,
+          value: JSON.stringify({
+            offer_start_date: offer_start_date || null,
+            offer_end_date: offer_end_date || null,
+            offer_badge_text: offer_badge_text || "Offre Fondateur"
+          }),
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" })
+      }
+    } catch (e) {}
 
     if (error) {
       console.error("Error saving course to Supabase:", error)

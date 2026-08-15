@@ -151,11 +151,34 @@ function parseCourseSkills(c: any): string[] {
   return validSkills
 }
 
+function formatPriceStr(val: any): string {
+  if (val === null || val === undefined || val === "") return ""
+  if (typeof val === "number") {
+    return val > 0 ? `${val.toLocaleString("fr-FR")} FCFA` : "GRATUIT"
+  }
+  const str = String(val).trim()
+  if (str.toLowerCase() === "gratuit" || str === "0") return "GRATUIT"
+  const num = parseInt(str.replace(/\s+/g, "").replace(/fcfa/gi, ""), 10)
+  if (!isNaN(num) && num > 0) {
+    return `${num.toLocaleString("fr-FR")} FCFA`
+  }
+  return str
+}
+
 export function UdemySkillPathways() {
   const [dbCourses, setDbCourses] = useState<any[]>(DEFAULT_COURSES)
 
   useEffect(() => {
     async function loadCourses() {
+      try {
+        const res = await fetch("/api/admin/courses")
+        const data = await res.json()
+        if (data?.courses && data.courses.length > 0) {
+          setDbCourses(data.courses)
+          return
+        }
+      } catch (e) {}
+
       try {
         let { data, error } = await supabase.from("courses").select("*").order("sequence_order", { ascending: true }).order("created_at", { ascending: true })
         if (error || !data || data.length === 0) {
@@ -165,14 +188,6 @@ export function UdemySkillPathways() {
         if (data && data.length > 0) {
           setDbCourses(data)
           return
-        }
-      } catch (e) {}
-
-      try {
-        const res = await fetch("/api/admin/courses")
-        const data = await res.json()
-        if (data?.courses && data.courses.length > 0) {
-          setDbCourses(data.courses)
         }
       } catch (e) {}
     }
@@ -198,8 +213,8 @@ export function UdemySkillPathways() {
       slug: c.slug,
       title: c.title,
       desc: c.description || c.subtitle,
-      price: typeof c.price === "number" ? (c.price > 0 ? `${c.price.toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT") : String(c.price || "99 000 FCFA"),
-      originalPrice: c.original_price || "",
+      price: formatPriceStr(c.price || "99000"),
+      originalPrice: formatPriceStr(c.original_price || "149000"),
       badge: c.badge || "FORMULE OFFICIELLE",
       format: c.format || "100% En Ligne",
       certificate: c.certificate || "Certificat Officiel",
@@ -245,11 +260,11 @@ export function UdemySkillPathways() {
   }
 
   return (
-    <section className="py-14 bg-background border-t border-border/50">
-      <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
+    <section className="py-10 sm:py-14 bg-background border-t border-border/50">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-8 space-y-6 sm:space-y-8">
         
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="space-y-2 text-left">
+          <div className="space-y-1.5 text-left">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
               BOOTCAMP PRO IA
             </span>
@@ -289,7 +304,7 @@ export function UdemySkillPathways() {
                 </div>
 
                 {/* Body */}
-                <div className="p-6 flex flex-col gap-6 flex-1 justify-between">
+                <div className="p-4 sm:p-6 flex flex-col gap-5 sm:gap-6 flex-1 justify-between">
                   <div className="space-y-4">
                     {/* Header with Title & Price */}
                     <div className="space-y-3 text-left">
@@ -299,27 +314,30 @@ export function UdemySkillPathways() {
                       </div>
 
                       {/* Dynamic Price & Founder Offer Validity Box */}
-                      <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80 space-y-2">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <div className="flex items-baseline gap-2">
-                            <span className={`text-2xl font-black ${accent.price}`}>{item.price}</span>
+                      <div className="bg-slate-950/80 p-3 sm:p-4 rounded-2xl border border-slate-800/80 space-y-2.5">
+                        {/* Top Row: Price + Offer Badge */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <span className={`text-xl sm:text-2xl font-black tracking-tight ${accent.price}`}>{item.price}</span>
                             {item.originalPrice && (
-                              <span className="text-xs text-muted-foreground line-through font-medium">{item.originalPrice}</span>
+                              <span className="text-xs text-muted-foreground line-through font-semibold">{item.originalPrice}</span>
                             )}
                           </div>
                           {item.offer && (
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30 shrink-0">
-                              🔥 {item.offer.badgeText}
-                            </span>
+                            <div className="self-start sm:self-auto">
+                              <span className="inline-flex items-center text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30 whitespace-nowrap">
+                                🔥 {item.offer.badgeText}
+                              </span>
+                            </div>
                           )}
                         </div>
 
                         {/* Date de début et fin de l'offre */}
                         {item.offer && item.offer.periodLabel && (
-                          <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-border/40 text-slate-300">
+                          <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] pt-2 border-t border-border/40 text-slate-300">
                             <span className="text-slate-400 flex items-center gap-1.5 font-medium">
                               <Clock className="size-3.5 text-amber-400 shrink-0" />
-                              Validité de l'offre :
+                              <span>Validité de l'offre :</span>
                             </span>
                             <span className="font-bold text-amber-300">
                               {item.offer.periodLabel}
@@ -335,12 +353,12 @@ export function UdemySkillPathways() {
 
                     {/* 1. Dates & Format Badge */}
                     {item.dates && (
-                      <div className="flex flex-wrap items-center gap-2 pt-1">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-3.5 py-2 rounded-xl shadow-sm">
+                      <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl shadow-sm">
                           <Calendar className="size-4 text-amber-400 shrink-0" />
                           <span>Session : <strong>{item.dates}</strong></span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-200 bg-slate-900 border border-slate-700 px-3 py-2 rounded-xl">
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-200 bg-slate-900 border border-slate-700 px-3 py-1.5 sm:py-2 rounded-xl">
                           <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                           <span>{item.format}</span>
                         </div>
@@ -349,22 +367,22 @@ export function UdemySkillPathways() {
 
                     {/* 2. Compétences & Livrables Concrets (Garantis à la fin) */}
                     {item.skills && item.skills.length > 0 && (
-                      <div className="space-y-3 pt-3 text-left bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
-                        <div className="flex items-center justify-between gap-2 pb-2 border-b border-border/50">
+                      <div className="space-y-3 pt-3 text-left bg-slate-950/50 p-3.5 sm:p-4 rounded-2xl border border-slate-800">
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-border/50">
                           <div className="flex items-center gap-1.5">
-                            <Sparkles className="size-4 text-amber-400 shrink-0" />
-                            <span className="text-xs font-black uppercase tracking-wider text-white">
-                              Compétences & Livrables concrets :
+                            <Sparkles className="size-3.5 sm:size-4 text-amber-400 shrink-0" />
+                            <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">
+                              Compétences & Livrables :
                             </span>
                           </div>
-                          <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full shrink-0">
+                          <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full shrink-0">
                             Garantis à la fin
                           </span>
                         </div>
                         <ul className="space-y-2">
                           {item.skills.map((skill: string, sIdx: number) => (
-                            <li key={sIdx} className="flex items-start gap-2.5 text-xs text-slate-200 leading-snug font-medium">
-                              <CheckCircle2 className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+                            <li key={sIdx} className="flex items-start gap-2 text-xs text-slate-200 leading-snug font-medium">
+                              <CheckCircle2 className="size-3.5 sm:size-4 text-emerald-400 shrink-0 mt-0.5" />
                               <span>{skill}</span>
                             </li>
                           ))}
