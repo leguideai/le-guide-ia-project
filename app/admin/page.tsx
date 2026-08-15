@@ -9,7 +9,7 @@ import {
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
   ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
-  ArrowUp, ArrowDown, Eye, MessageCircle
+  ArrowUp, ArrowDown, Eye, MessageCircle, LogOut
 } from "lucide-react"
 
 interface BootcampCourse {
@@ -31,11 +31,15 @@ interface BootcampCourse {
   dates?: string
   start_date?: string
   end_date?: string
+  offer_start_date?: string
+  offer_end_date?: string
+  offer_badge_text?: string
   session_count?: number
   instructor?: string
   live_meet_url?: string
   whatsapp_url?: string
   features?: any
+  skills?: any
 }
 
 interface BootcampSession {
@@ -182,11 +186,22 @@ export default function SuperAdminDashboard() {
     dates: "",
     start_date: "",
     end_date: "",
+    offer_start_date: "",
+    offer_end_date: "",
+    offer_badge_text: "Offre Fondateur",
     session_count: 7,
     instructor: "Alfred Dah",
     live_meet_url: "https://meet.google.com/xyz-abc-def",
     whatsapp_url: ""
   })
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    if (typeof window !== "undefined") {
+      localStorage.clear()
+      window.location.href = "/login"
+    }
+  }
 
   // Sessions live par bootcamp
   const [bootcampSessions, setBootcampSessions] = useState<BootcampSession[]>([])
@@ -1027,19 +1042,19 @@ export default function SuperAdminDashboard() {
         {/* Sidebar Footer Links */}
         <div className="pt-4 border-t border-slate-800/80 space-y-2">
           <Link
-            href="/dashboard?view=student"
-            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
-          >
-            <BookOpen className="size-3.5" />
-            <span>Espace Membre Apprenant</span>
-          </Link>
-          <Link
             href="/"
             className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
           >
             <ExternalLink className="size-3.5" />
             <span>Voir le site public</span>
           </Link>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+          >
+            <LogOut className="size-3.5 text-red-400" />
+            <span>Déconnexion</span>
+          </button>
         </div>
       </aside>
 
@@ -1495,6 +1510,48 @@ export default function SuperAdminDashboard() {
                       </div>
                     </div>
 
+                    {/* 🔥 Validité de l'Offre Fondateur / Promo */}
+                    <div className="bg-slate-950/70 border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                          🔥 Validité de l'Offre Fondateur / Promo (Dynamique)
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+                          Affiché sur l'accueil
+                        </span>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div>
+                          <label className="text-slate-400 block mb-1 font-bold">📅 Début de l'offre</label>
+                          <input
+                            type="date"
+                            value={courseForm.offer_start_date ? courseForm.offer_start_date.substring(0, 10) : ""}
+                            onChange={e => setCourseForm({ ...courseForm, offer_start_date: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-400 block mb-1 font-bold">⏳ Fin de l'offre (Date limite)</label>
+                          <input
+                            type="date"
+                            value={courseForm.offer_end_date ? courseForm.offer_end_date.substring(0, 10) : ""}
+                            onChange={e => setCourseForm({ ...courseForm, offer_end_date: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400 font-bold text-amber-300"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-400 block mb-1 font-bold">🏷️ Badge / Label Promo</label>
+                          <input
+                            type="text"
+                            placeholder="ex: Offre Fondateur"
+                            value={courseForm.offer_badge_text || ""}
+                            onChange={e => setCourseForm({ ...courseForm, offer_badge_text: e.target.value })}
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="grid gap-3 sm:grid-cols-2">
                       <FileUploadField
                         label="🖼️ Image Miniature (Vignette affichée sur la fiche)"
@@ -1621,15 +1678,27 @@ export default function SuperAdminDashboard() {
                       />
                     </div>
 
-                    <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Avantages / Inclus (1 par ligne)</label>
-                      <textarea
-                        rows={3}
-                        placeholder="7 sessions premium en direct...&#10;Replays vidéo HD...&#10;Certificat officiel..."
-                        value={Array.isArray(courseForm.features) ? courseForm.features.join("\n") : (courseForm.features || "")}
-                        onChange={e => setCourseForm({ ...courseForm, features: e.target.value.split("\n").filter(Boolean) })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
-                      />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">Avantages / Inclus (1 par ligne)</label>
+                        <textarea
+                          rows={3}
+                          placeholder="7 sessions premium en direct...&#10;Replays vidéo HD...&#10;Certificat officiel..."
+                          value={Array.isArray(courseForm.features) ? courseForm.features.join("\n") : (courseForm.features || "")}
+                          onChange={e => setCourseForm({ ...courseForm, features: e.target.value.split("\n").filter(Boolean) })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-400 block mb-1 font-bold">🎯 Compétences clés acquises (1 par ligne)</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Système de travail IA personnalisé...&#10;Prompt Engineering avancé...&#10;Automatisation Make.com..."
+                          value={Array.isArray(courseForm.skills) ? courseForm.skills.join("\n") : (courseForm.skills || "")}
+                          onChange={e => setCourseForm({ ...courseForm, skills: e.target.value.split("\n").filter(Boolean) })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary text-xs"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex gap-2 pt-3 border-t border-slate-800">

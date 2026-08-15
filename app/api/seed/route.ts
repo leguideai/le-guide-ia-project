@@ -14,7 +14,7 @@ export async function POST() {
 async function seedDatabase() {
   try {
     // 1. Seed Bootcamps (courses)
-    const initialCourses = [
+    const initialCourses: any[] = [
       {
         slug: "initiation-free",
         title: "Initiation IA & ChatGPT Pratique (Gratuit)",
@@ -30,6 +30,12 @@ async function seedDatabase() {
         sequence_order: 1,
         dates: "Accès Immédiat 24h/7j",
         status: "active",
+        skills: [
+          "Découverte des fondamentaux du Prompt Engineering",
+          "Configuration de votre environnement d'outils IA",
+          "Guide des meilleurs cas d'usage de ChatGPT en entreprise",
+          "Accès aux fiches PDF d'initiation téléchargeables"
+        ],
         features: [
           "Cours d'introduction pratique en accès immédiat dans l'Espace Membre",
           "Découverte des fondamentaux du Prompt Engineering",
@@ -39,51 +45,66 @@ async function seedDatabase() {
       },
       {
         slug: "bootcamp-pro-2",
-        title: "Bootcamp IA Pro 2 — Session Intensive & Live",
-        description: "Formation de 4 semaines en direct sur Google Meet avec Alfred Dah. Maîtrisez ChatGPT, Claude, Midjourney v6 et l'automatisation Make.com.",
+        title: "Bootcamp IA & Carrière",
+        description: "Conçu pour les professionnels en poste, cadres et consultants voulant transformer l'IA en avantage concret dans leur travail quotidien et leur trajectoire de carrière.",
         price: 99000,
         currency: "FCFA",
-        badge: "INTENSIF & LIVE",
+        badge: "INTENSIF & DIRECT",
         thumbnail: "/images/bootcamp_pro_thumb.jpg",
         poster: "/images/bootcamp_pro_poster.jpg",
-        pdf_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
-        format: "100% En Ligne",
-        certificate: "Certificat Officiel",
-        sequence_order: 2,
-        dates: "31 Août au 6 Septembre 2026",
+        pdf_url: "https://voxqivzzskbttytyklnn.supabase.co/storage/v1/object/public/resources-files/programmes/1786475706651_Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+        format: "100% En Ligne (14h en direct)",
+        certificate: "Certificat Officiel LE GUIDE IA",
+        sequence_order: 1,
+        dates: "31 Août au 5 Septembre 2026",
         status: "active",
+        skills: [
+          "Système de travail IA personnalisé, configuré et opérationnel",
+          "Bibliothèque de prompts professionnels adaptée à votre poste",
+          "Bibliothèque de modèles d'emails, rapports et synthèses prêts à l'emploi",
+          "Premier workflow automatisé, testé et fonctionnel (Make / n8n)",
+          "CV compatible ATS et profil LinkedIn optimisés et publiés",
+          "Plan de carrière IA sur 90 jours + Certificat officiel"
+        ],
         features: [
-          "7 sessions premium en direct live avec Alfred Dah",
-          "Créneaux : Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT",
-          "Replays vidéo HD téléchargeables sous 12h",
-          "Exercices pratiques & Ateliers en direct",
-          "Groupe WhatsApp privé d'entraide",
-          "Certificat officiel Le Guide IA individuel et vérifiable",
-          "Facture d'achat automatique conforme pour entreprise"
+          "Système de travail IA personnalisé, configuré et opérationnel",
+          "Bibliothèque de prompts professionnels adaptée à votre poste",
+          "Bibliothèque de modèles d'emails, rapports et synthèses professionnels",
+          "Premier workflow automatisé, testé et fonctionnel (Make / n8n)",
+          "CV compatible ATS et profil LinkedIn optimisés et publiés",
+          "Plan de carrière IA sur 90 jours + Certificat officiel"
         ]
       },
       {
         slug: "bootcamp-business-exec",
-        title: "Bootcamp IA Business & Dirigeants (Exec)",
-        description: "Accompagnement VIP sur-mesure pour chefs d'entreprise et cadres. Audit de processus, intégration Copilot & Gemini et automatisation.",
-        price: 199000,
+        title: "Bootcamp IA & Business",
+        description: "Pour entrepreneurs, fondateurs et dirigeants souhaitant structurer leur modèle économique, automatiser leur prospection et accélérer leurs ventes avec l'IA.",
+        price: 149000,
         currency: "FCFA",
         badge: "EXECUTIF VIP",
         thumbnail: "/images/bootcamp_business_thumb.jpg",
         poster: "/images/bootcamp_business_poster.jpg",
-        pdf_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
-        format: "100% En Ligne",
-        certificate: "Certificat Executif",
-        sequence_order: 3,
-        dates: "15 Septembre au 20 Décembre 2026",
+        pdf_url: "https://voxqivzzskbttytyklnn.supabase.co/storage/v1/object/public/resources-files/programmes/1786799298400_Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+        format: "100% En Ligne (Direct + Ateliers VIP)",
+        certificate: "Certificat Executif Business LE GUIDE IA",
+        sequence_order: 2,
+        dates: "14 au 19 Septembre 2026",
         status: "active",
+        skills: [
+          "Business Model Canvas finalisé et testé avec l'IA",
+          "Business Plan professionnel structuré pour investisseurs & banques",
+          "Bibliothèque de 100+ prompts stratégiques Business & Vente",
+          "Workflow d'automatisation de tâches & prospection (Make / n8n)",
+          "Stratégie de contenu & Plan éditorial 30 jours prêt à publier",
+          "Roadmap Business IA sur 90 jours + Certificat officiel"
+        ],
         features: [
-          "15h de sessions orientées Business & Automation",
-          "Inclus tout le programme Pro + Coaching 1h individuel",
-          "Modèles de Business Plans & Workflows d'Agents IA",
-          "Accès Espace Membre & Bibliothèque Premium de Prompts",
-          "Certificat IA Business vérifiable + Facture d'entreprise",
-          "Garantie satisfait ou remboursé (sous conditions)"
+          "Business Model Canvas finalisé et testé avec l'IA",
+          "Business Plan professionnel structuré pour investisseurs & banques",
+          "Bibliothèque de 100+ prompts stratégiques Business & Vente",
+          "Workflow d'automatisation de tâches & prospection (Make / n8n)",
+          "Stratégie de contenu & Plan éditorial 30 jours prêt à publier",
+          "Roadmap Business IA sur 90 jours + Certificat officiel"
         ]
       }
     ]

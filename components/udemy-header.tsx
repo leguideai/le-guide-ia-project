@@ -135,42 +135,39 @@ export function UdemyHeader() {
           </Link>
 
           {user ? (
-            <>
-              <Link href="/dashboard" className="hidden md:inline-flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-3.5 py-2 rounded-xl hover:bg-primary hover:text-primary-foreground transition-all">
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 text-xs font-black text-slate-950 bg-primary hover:opacity-90 px-3.5 py-2 rounded-xl shadow-md transition-all"
+              >
                 <User className="size-3.5" />
                 <span>Mon Espace</span>
               </Link>
 
               <button
                 onClick={handleLogout}
-                className="text-xs font-bold text-rose-400 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white px-3.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5"
+                className="text-xs font-bold text-rose-400 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white px-2.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1"
+                title="Déconnexion"
               >
                 <LogOut className="size-3.5" />
                 <span className="hidden sm:inline">Déconnexion</span>
               </button>
-            </>
+            </div>
           ) : (
-            <>
-              <Link
-                href="/login"
-                className="text-xs font-bold text-white border border-border hover:bg-secondary px-4 py-2 rounded-xl transition-all"
-              >
-                Se connecter
-              </Link>
-
-              <Link
-                href="/register-account"
-                className="text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl shadow-lg transition-all"
-              >
-                S'inscrire
-              </Link>
-            </>
+            <Link
+              href="/login"
+              className="text-xs font-bold text-slate-950 bg-primary hover:opacity-90 px-4 py-2 rounded-xl shadow-md transition-all inline-flex items-center gap-1.5"
+            >
+              <User className="size-3.5" />
+              <span>Connexion</span>
+            </Link>
           )}
 
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-slate-300 hover:text-white p-2"
+            className="md:hidden text-slate-300 hover:text-white p-2 rounded-lg hover:bg-secondary transition-colors"
+            aria-label="Menu"
           >
             {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
           </button>
@@ -179,44 +176,80 @@ export function UdemyHeader() {
 
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-card p-4 space-y-3">
-          <Link href="/bootcamp" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-foreground">
-            Bootcamps IA Live
-          </Link>
-          <Link href="/ressources" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-foreground">
-            Bibliothèque Premium
-          </Link>
-          <Link href="/entreprises" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-foreground">
-            Espace Entreprises (B2B)
-          </Link>
+        <div className="md:hidden border-t border-border bg-slate-950/98 px-5 py-6 space-y-5 shadow-2xl backdrop-blur-2xl">
+          <div className="relative">
+            <Search className="size-4 text-muted-foreground absolute left-3.5 top-2.5" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher une formation..."
+              className="w-full rounded-xl border border-border bg-input/40 pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
 
-          {user ? (
-            <>
-              <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-primary">
-                Mon Espace
-              </Link>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false)
-                  handleLogout()
-                }}
-                className="block w-full text-left py-2 text-xs font-bold text-rose-400"
+          <div className="space-y-1">
+            <Link
+              href="/bootcamp"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-foreground hover:bg-secondary"
+            >
+              <GraduationCap className="size-4 text-primary" />
+              <span>Bootcamps IA Live</span>
+            </Link>
+            <Link
+              href="/ressources"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-foreground hover:bg-secondary"
+            >
+              <BookOpen className="size-4 text-purple-400" />
+              <span>Bibliothèque de Prompts</span>
+            </Link>
+            <Link
+              href="/entreprises"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-foreground hover:bg-secondary"
+            >
+              <Building2 className="size-4 text-emerald-400" />
+              <span>Espace Entreprises (B2B)</span>
+            </Link>
+          </div>
+
+          <div className="pt-3 border-t border-border/60">
+            {user ? (
+              <div className="space-y-2">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-lg"
+                >
+                  <User className="size-4" />
+                  <span>Accéder à Mon Espace</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    handleLogout()
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 font-bold text-xs"
+                >
+                  <LogOut className="size-3.5" />
+                  <span>Déconnexion</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-lg"
               >
-                Déconnexion
-              </button>
-            </>
-          ) : (
-            <div className="pt-2 flex flex-col gap-2">
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block text-center py-2 text-xs font-bold text-white border border-border rounded-xl">
-                Se connecter
+                <User className="size-4" />
+                <span>Connexion</span>
               </Link>
-              <Link href="/register-account" onClick={() => setMobileMenuOpen(false)} className="block text-center py-2 text-xs font-bold text-primary-foreground bg-primary rounded-xl">
-                S'inscrire
-              </Link>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 

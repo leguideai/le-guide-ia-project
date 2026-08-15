@@ -7,6 +7,7 @@ import { Mail, CheckCircle2 } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
+import { supabase } from "@/lib/supabase"
 
 const socials = [
   {
@@ -26,26 +27,18 @@ const socials = [
   },
 ]
 
-function InlineCountdown() {
-  const [targetTime, setTargetTime] = useState<number>(new Date("2026-08-31T19:00:00Z").getTime())
+function InlineCountdown({ targetEndDate }: { targetEndDate?: string }) {
+  const [targetTime, setTargetTime] = useState<number>(new Date(targetEndDate || "2026-08-25T23:59:59Z").getTime())
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    async function loadDate() {
-      try {
-        const res = await fetch("/api/admin/settings")
-        const data = await res.json()
-        if (data?.settings?.hero_dates) {
-          // If hero_dates or live session date exists
-          const parsed = Date.parse(data.settings.hero_dates)
-          if (!isNaN(parsed)) setTargetTime(parsed)
-        }
-      } catch (e) {}
+    if (targetEndDate) {
+      const parsed = Date.parse(targetEndDate)
+      if (!isNaN(parsed)) setTargetTime(parsed)
     }
-    loadDate()
-  }, [])
+  }, [targetEndDate])
 
   useEffect(() => {
     setMounted(true)
@@ -71,7 +64,7 @@ function InlineCountdown() {
   if (!mounted || expired) return null
 
   return (
-    <span className="text-amber-500 font-bold ml-1">
+    <span className="text-amber-400 font-bold ml-1">
       · Expire dans {timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m
     </span>
   )
@@ -84,105 +77,134 @@ interface CtaFooterProps {
 export function CtaFooter({ hideCta = false }: CtaFooterProps) {
   const pathname = usePathname()
   const { t } = useLanguage()
+  const [activeCourse, setActiveCourse] = useState<any>({
+    title: "Bootcamp IA & Carrière",
+    slug: "bootcamp-ia-carriere",
+    price: 99000,
+    original_price: "149 000 FCFA",
+    offer_badge_text: "Offre Fondateur",
+    offer_end_date: "2026-08-25T23:59:59Z"
+  })
+
+  useEffect(() => {
+    async function loadActiveCourse() {
+      try {
+        const { data } = await supabase
+          .from("courses")
+          .select("*")
+          .order("sequence_order", { ascending: true })
+          .limit(1)
+
+        if (data && data.length > 0) {
+          setActiveCourse(data[0])
+        }
+      } catch (e) {}
+    }
+    loadActiveCourse()
+  }, [])
+
   const links = [
     { label: "Bootcamps IA", href: "/bootcamp" },
     { label: "Bibliothèque Premium", href: "/ressources" },
     { label: "Entreprises (B2B)", href: "/entreprises" },
   ]
 
+  const formattedPrice = typeof activeCourse.price === "number"
+    ? `${activeCourse.price.toLocaleString("fr-FR")} FCFA`
+    : String(activeCourse.price || "99 000 FCFA")
+
   return (
-    <footer className="relative border-t border-border/60 bg-slate-950">
-      <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
+    <footer className="relative border-t border-border/60 bg-slate-950 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:py-16 md:px-8">
         
         {/* Section de Clôture Premium */}
         {!hideCta && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-3xl bg-[#0D1B3E] border border-primary/20 p-8 sm:p-12 shadow-2xl"
-        >
-          {/* Logo en haut à gauche */}
-          <a href="/" className="absolute top-6 left-6 flex items-center gap-2.5 z-20 hover:opacity-90 transition-opacity">
-            <img
-              src="/Logo%20avatar.png"
-              alt="Logo Le Guide IA"
-              className="size-8 rounded-lg object-cover"
-            />
-            <span className="font-heading text-base font-extrabold tracking-tight text-white">
-              LE GUIDE <span className="text-primary">IA</span>
-            </span>
-          </a>
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative overflow-hidden rounded-3xl bg-[#0D1B3E] border border-primary/20 p-6 sm:p-10 md:p-12 shadow-2xl"
+          >
+            {/* Logo en haut à gauche */}
+            <a href="/" className="flex items-center gap-2.5 z-20 hover:opacity-90 transition-opacity mb-6">
+              <img
+                src="/Logo%20avatar.png"
+                alt="Logo Le Guide IA"
+                className="size-7 sm:size-8 rounded-lg object-cover"
+              />
+              <span className="font-heading text-sm sm:text-base font-extrabold tracking-tight text-white">
+                LE GUIDE <span className="text-primary">IA</span>
+              </span>
+            </a>
 
-          <div className="grid gap-8 lg:grid-cols-12 items-center relative z-10 pt-8 lg:pt-0">
-            {/* Left Content */}
-            <div className="lg:col-span-8 text-left">
-              <h2 className="font-heading text-2xl font-black leading-tight text-white sm:text-3xl max-w-2xl">
-                "{t("ctaFooter.title")}"
-              </h2>
-              <p className="mt-4 text-sm text-slate-300 max-w-xl">
-                {t("ctaFooter.desc")}
-              </p>
-              
-              <div className="mt-8">
-                <a
-                  href="/checkout/bootcamp-ia-pro"
-                  className={cn(
-                    buttonVariants({ size: "lg" }),
-                    "h-12 bg-primary hover:opacity-90 text-primary-foreground font-bold border-none px-8 text-base shadow-lg active:scale-95 transition-transform inline-flex items-center justify-center gap-2"
-                  )}
-                >
-                  S'inscrire au Bootcamp IA Pro (99 000 FCFA)
-                </a>
+            <div className="grid gap-8 lg:grid-cols-12 items-center relative z-10">
+              {/* Left Content */}
+              <div className="lg:col-span-8 text-left space-y-4">
+                <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black leading-tight text-white max-w-2xl">
+                  "{t("ctaFooter.title")}"
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+                  L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le <strong className="text-white font-bold">{activeCourse.title}</strong> pour maîtriser les outils indispensables à votre réussite.
+                </p>
                 
-                <div className="mt-4 text-xs text-slate-300 flex flex-wrap gap-2 items-center">
-                  <span className="font-bold text-white">{t("ctaFooter.founderPrice")}</span>
-                  <InlineCountdown />
-                </div>
+                <div className="pt-4 space-y-3">
+                  <div>
+                    <a
+                      href={`/bootcamp?course=${activeCourse.slug || "bootcamp-ia-carriere"}`}
+                      className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
+                    >
+                      S'inscrire au {activeCourse.title} ({formattedPrice})
+                    </a>
+                  </div>
+                  
+                  <div className="text-xs text-slate-300 flex flex-wrap gap-2 items-center">
+                    <span className="font-bold text-white">{activeCourse.original_price || "149 000 FCFA"} • {activeCourse.offer_badge_text || "Offre Fondateur"}</span>
+                    <InlineCountdown targetEndDate={activeCourse.offer_end_date} />
+                  </div>
 
-                {/* Checklist Badges */}
-                <div className="mt-6 flex flex-wrap gap-4 text-xs font-semibold text-slate-200">
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="size-4 text-emerald-400" />
-                    {t("pricing.features.5")}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="size-4 text-emerald-400" />
-                    Accès immédiat au groupe WhatsApp
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="size-4 text-emerald-400" />
-                    Certificat officiel
-                  </span>
+                  {/* Checklist Badges */}
+                  <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-4 text-xs font-semibold text-slate-200">
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                      <span>Garantie satisfait ou remboursé</span>
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                      <span>Accès immédiat au groupe WhatsApp</span>
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                      <span>Certificat officiel LE GUIDE IA</span>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right Image (Alfred Dah Portrait) */}
-            <div className="lg:col-span-4 hidden lg:block relative">
-              <a
-                href="https://www.linkedin.com/in/alfreddah/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative block overflow-hidden rounded-2xl border border-primary/20 glow-blue bg-slate-950/20 max-w-[280px] ml-auto group cursor-pointer"
-                title="Profil LinkedIn d'Alfred Dah"
-              >
-                <img
-                  src="/profile_alfred.jpg"
-                  alt="Alfred Dah - Expert IA & Fondateur de Le Guide IA"
-                  className="w-full object-cover aspect-[4/5] object-top grayscale group-hover:grayscale-0 transition-all duration-500"
-                />
-                <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-950/90 border border-sky-500/40 px-2.5 py-1 text-[11px] font-bold text-sky-400 backdrop-blur-md group-hover:bg-sky-600 group-hover:text-white transition-colors">
-                  <svg viewBox="0 0 24 24" className="size-3.5 fill-current">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                  <span>LinkedIn</span>
-                </div>
-              </a>
+              {/* Right Image (Alfred Dah Portrait) */}
+              <div className="lg:col-span-4 hidden lg:block relative">
+                <a
+                  href="https://www.linkedin.com/in/alfreddah/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative block overflow-hidden rounded-2xl border border-primary/20 glow-blue bg-slate-950/20 max-w-[280px] ml-auto group cursor-pointer"
+                  title="Profil LinkedIn d'Alfred Dah"
+                >
+                  <img
+                    src="/profile_alfred.jpg"
+                    alt="Alfred Dah - Expert IA & Fondateur de Le Guide IA"
+                    className="w-full object-cover aspect-[4/5] object-top grayscale group-hover:grayscale-0 transition-all duration-500"
+                  />
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-950/90 border border-sky-500/40 px-2.5 py-1 text-[11px] font-bold text-sky-400 backdrop-blur-md group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                    <svg viewBox="0 0 24 24" className="size-3.5 fill-current">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    <span>LinkedIn</span>
+                  </div>
+                </a>
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
         )}
 
         {/* Footer info links grid */}

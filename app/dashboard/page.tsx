@@ -33,7 +33,9 @@ import {
   ShieldCheck,
   Calendar,
   Upload,
-  DownloadCloudIcon
+  DownloadCloudIcon,
+  Menu,
+  X
 } from "lucide-react"
 
 type TabType = "overview" | "courses" | "resources" | "certificates" | "invoices" | "profile"
@@ -274,6 +276,7 @@ const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
 export default function DashboardPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabType>("overview")
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -640,8 +643,119 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
-      {/* Sidebar Navigation (Fixed full height on desktop, no header) */}
-      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-card/40 backdrop-blur-xl p-4 flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen overflow-y-auto">
+      {/* Mobile Top Header for Espace Membre */}
+      <div className="md:hidden sticky top-0 z-40 bg-slate-950/95 border-b border-border px-4 py-3 flex items-center justify-between backdrop-blur-xl">
+        <Link href="/" className="flex items-center gap-2">
+          <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-7 rounded-lg object-cover" />
+          <span className="font-heading text-sm font-black tracking-tight text-white">
+            LE GUIDE <span className="text-primary">IA</span>
+          </span>
+        </Link>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-lg flex items-center gap-1">
+            <ShieldCheck className="size-3" />
+            {navItems.find(i => i.id === activeTab)?.label || "Dashboard"}
+          </span>
+          <button
+            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 hover:text-white transition-colors"
+            aria-label="Menu Espace Membre"
+          >
+            {mobileSidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Navigation Drawer Overlay */}
+      {mobileSidebarOpen && (
+        <div className="md:hidden fixed inset-0 top-[57px] z-50 bg-slate-950/98 backdrop-blur-2xl p-5 overflow-y-auto space-y-5 animate-in fade-in slide-in-from-top-4 duration-200">
+          {/* User profile */}
+          <div className="rounded-2xl border border-border/80 bg-secondary/40 p-3.5 flex items-center gap-3">
+            <div className="size-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm border border-white/20 shrink-0 shadow-md">
+              {(fullName || user?.email || "U").substring(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="text-sm font-bold text-foreground truncate">{fullName || "Membre Apprenant"}</p>
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                <ShieldCheck className="size-3" /> Espace Membre
+              </span>
+            </div>
+          </div>
+
+          {/* Nav items */}
+          <nav className="space-y-1.5">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = activeTab === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id as TabType)
+                    setMobileSidebarOpen(false)
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-lg"
+                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="size-4 shrink-0" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
+                      isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary border border-primary/20"
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </nav>
+
+          {/* Bottom Actions */}
+          <div className="pt-4 border-t border-border/60 space-y-2">
+            {(profile?.role === "admin" || profile?.role === "super_admin") && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileSidebarOpen(false)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black text-slate-950 bg-primary shadow-md"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="size-4" />
+                  <span>Portail Super Admin</span>
+                </div>
+                <ChevronRight className="size-3.5" />
+              </Link>
+            )}
+            <Link
+              href="/"
+              onClick={() => setMobileSidebarOpen(false)}
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
+            >
+              <ExternalLink className="size-3.5" />
+              <span>Voir le site public</span>
+            </Link>
+            <button
+              onClick={() => {
+                setMobileSidebarOpen(false)
+                handleLogout()
+              }}
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10"
+            >
+              <LogOut className="size-3.5" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar Navigation (Fixed full height on desktop) */}
+      <aside className="hidden md:flex w-64 border-r border-border bg-card/40 backdrop-blur-xl p-4 flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="space-y-5">
           
           {/* Brand Logo inside Dashboard Sidebar */}

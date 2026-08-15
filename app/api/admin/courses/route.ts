@@ -37,7 +37,11 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { id, title, slug, subtitle, price, original_price, badge, category, status, poster, dates, start_date, end_date, session_count, whatsapp_url, instructor, live_meet_url, sequence_order, lessons } = body
+    const {
+      id, title, slug, subtitle, price, original_price, badge, category, status,
+      poster, dates, start_date, end_date, session_count, whatsapp_url, instructor,
+      live_meet_url, sequence_order, offer_start_date, offer_end_date, offer_badge_text, lessons
+    } = body
 
     if (!title || !slug) {
       return NextResponse.json({ error: "Le titre et le slug sont obligatoires." }, { status: 400 })
@@ -63,11 +67,15 @@ export async function POST(req: Request) {
       dates: dates || "Sur 7 jours",
       start_date: start_date || null,
       end_date: end_date || null,
+      offer_start_date: offer_start_date || null,
+      offer_end_date: offer_end_date || null,
+      offer_badge_text: offer_badge_text || "Offre Fondateur",
       session_count: session_count !== undefined && session_count !== null ? Number(session_count) : 0,
       whatsapp_url: whatsapp_url || "",
       instructor: instructor || "Alfred Dah",
       live_meet_url: live_meet_url || "https://meet.google.com/xyz-abc-def",
       features: body.features || [],
+      skills: body.skills || body.features || [],
       updated_at: new Date().toISOString()
     }
 
@@ -77,11 +85,15 @@ export async function POST(req: Request) {
       .select()
       .single()
 
-    if (error && (error.message.includes("sequence_order") || error.message.includes("column"))) {
+    if (error && (error.message.includes("sequence_order") || error.message.includes("column") || error.message.includes("skills") || error.message.includes("offer_"))) {
       // Si des colonnes n'existent pas encore dans Supabase, repli sans les nouvelles colonnes
       const fallbackPayload = { ...upsertPayload }
+      delete fallbackPayload.skills
       delete fallbackPayload.start_date
       delete fallbackPayload.end_date
+      delete fallbackPayload.offer_start_date
+      delete fallbackPayload.offer_end_date
+      delete fallbackPayload.offer_badge_text
       delete fallbackPayload.session_count
       delete fallbackPayload.whatsapp_url
       delete fallbackPayload.sequence_order

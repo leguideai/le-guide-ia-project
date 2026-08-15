@@ -21,6 +21,21 @@ export function UdemyHeroBanner() {
   useEffect(() => {
     async function loadSettings() {
       try {
+        const { data: coursesData } = await supabase
+          .from("courses")
+          .select("*")
+          .order("sequence_order", { ascending: true })
+          .limit(1)
+
+        if (coursesData && coursesData.length > 0) {
+          const c = coursesData[0]
+          if (c.thumbnail || c.poster) setPosterUrl(c.thumbnail || c.poster)
+          if (c.dates) setDates(c.dates)
+          if (c.pdf_url) setProgrammeUrl(c.pdf_url)
+        }
+      } catch (e) {}
+
+      try {
         const { data: sbData } = await supabase.from("site_settings").select("*")
         if (sbData && sbData.length > 0) {
           const settingsMap: Record<string, string> = {}
