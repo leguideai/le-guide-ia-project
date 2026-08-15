@@ -224,7 +224,7 @@ export default function CheckoutPage({ params }: PageProps) {
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Sanson Alfred Dah"
+                  placeholder="Votre nom complet"
                   className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                 />
               </div>
