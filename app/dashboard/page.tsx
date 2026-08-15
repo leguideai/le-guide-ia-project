@@ -67,123 +67,9 @@ interface Lesson {
   exercise?: ExerciseDetails
 }
 
-const DEFAULT_MEET_URL = "https://meet.google.com/leguideai-bootcamp-live"
+const DEFAULT_MEET_URL = ""
 
-const BOOTCAMP_LESSONS: Lesson[] = [
-  {
-    id: "les-01",
-    num: "01",
-    title: "Mindset IA & Fondations du Prompting",
-    duration: "2h 30m",
-    scheduledDate: "Samedi 22 Août 2026 • 19h00 - 21h30 GMT",
-    targetDate: "2026-08-22T19:00:00Z",
-    videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-    pdfUrl: "/images/bootcamp_business_poster.jpg",
-    pdfName: "Support_Module1_Mindset_Prompting.pdf",
-    description: "Comprendre la logique des LLM, structurer vos instructions (Context, Persona, Task, Output) et éviter les hallucinations.",
-    meetUrl: DEFAULT_MEET_URL
-  },
-  {
-    id: "les-02",
-    num: "02",
-    title: "Maîtrise de ChatGPT & Claude 3.5 pour la Rédaction",
-    duration: "2h 15m",
-    scheduledDate: "Dimanche 23 Août 2026 • 19h00 - 21h15 GMT",
-    targetDate: "2026-08-23T19:00:00Z",
-    videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-    pdfUrl: "/images/initiation_free_poster.jpg",
-    pdfName: "Cheatsheet_Prompts_Redaction_Pro.pdf",
-    description: "Techniques d'ingénierie de prompt avancées pour la rédaction de rapports, emails B2B et stratégies marketing.",
-    meetUrl: DEFAULT_MEET_URL
-  },
-  {
-    id: "les-03",
-    num: "03",
-    title: "Création Visuelle avec Canva IA & Midjourney v6",
-    duration: "2h 45m",
-    scheduledDate: "Samedi 29 Août 2026 • 19h00 - 21h45 GMT",
-    targetDate: "2026-08-29T19:00:00Z",
-    videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-    pdfUrl: "/images/bootcamp_pro_thumb.jpg",
-    pdfName: "Guide_Design_Midjourney_Canva.pdf",
-    description: "Générer des visuels publicitaires professionnels, des logos et des visuels de marque avec l'intelligence artificielle.",
-    meetUrl: DEFAULT_MEET_URL
-  },
-  {
-    id: "les-04",
-    num: "04",
-    title: "Automatisation & Workflows IA avec Make.com",
-    duration: "2h 30m",
-    scheduledDate: "Dimanche 30 Août 2026 • 19h00 - 21h30 GMT",
-    targetDate: "2026-08-30T19:00:00Z",
-    videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-    pdfUrl: "/images/bootcamp_business_thumb.jpg",
-    pdfName: "Blueprints_Make_Automation.json",
-    description: "Connecter vos applications (Gmail, WhatsApp, Google Sheets, ChatGPT) sans coder pour automatiser vos tâches quotidiennes.",
-    isUpcoming: true,
-    meetUrl: DEFAULT_MEET_URL,
-    exercise: {
-      type: "cas-pratique",
-      title: "Cas Pratique : Test du Scénario Make.com",
-      deadline: "Mardi 8 Septembre 2026 à 19h00 GMT",
-      status: "pending"
-    }
-  },
-  {
-    id: "les-05",
-    num: "05",
-    title: "Analyse de Données & Excel assisté par l'IA",
-    duration: "2h 00m",
-    scheduledDate: "Lundi 31 Août 2026 • 19h00 - 21h00 GMT",
-    targetDate: "2026-08-31T19:00:00Z",
-    videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-    pdfUrl: "/images/initiation_free_thumb.jpg",
-    pdfName: "Fichiers_Exercice_Excel_IA.xlsx",
-    description: "Utiliser ChatGPT Advanced Data Analysis et Copilot pour traiter des bases de données volumineuses et générer des graphiques.",
-    isUpcoming: true,
-    meetUrl: DEFAULT_MEET_URL,
-    exercise: {
-      type: "devoir-a-rendre",
-      title: "Devoir à Rendre : Rapport d'Analyse Financière Excel & IA",
-      deadline: "Dimanche 6 Septembre 2026 à 23h59 GMT",
-      status: "pending"
-    }
-  },
-  {
-    id: "les-06",
-    num: "06",
-    title: "Études de Cas Métiers & Intégration en Entreprise",
-    duration: "3h 00m",
-    scheduledDate: "Vendredi 4 Septembre 2026 • 19h00 - 22h00 GMT",
-    targetDate: "2026-09-04T19:00:00Z",
-    videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-    pdfUrl: "/images/b2b_enterprise_thumb.jpg",
-    pdfName: "Template_Audit_Gouvernance_IA.pdf",
-    description: "Cas pratiques réels d'implémentation de l'IA dans la gestion de projets, le marketing, les RH et les finances.",
-    isUpcoming: true,
-    meetUrl: DEFAULT_MEET_URL
-  },
-  {
-    id: "les-07",
-    num: "07",
-    title: "Session Live Q&R + Évaluation Finale",
-    duration: "2h 00m",
-    scheduledDate: "Samedi 5 Septembre 2026 • 19h00 - 21h00 GMT",
-    targetDate: "2026-09-05T19:00:00Z",
-    videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-    pdfUrl: "/images/leguideai_official_certificate.jpg",
-    pdfName: "Sujet_Evaluation_Finale_Bootcamp.pdf",
-    description: "Session de questions/réponses en direct avec Alfred Dah, validation du projet de fin d'étude et obtention du certificat.",
-    isUpcoming: true,
-    meetUrl: DEFAULT_MEET_URL,
-    exercise: {
-      type: "devoir-a-rendre",
-      title: "Évaluation Finale : Projet d'Intégration IA",
-      deadline: "Vendredi 11 Septembre 2026 à 23h59 GMT",
-      status: "pending"
-    }
-  }
-]
+const BOOTCAMP_LESSONS: Lesson[] = []
 
 interface BootcampCourse {
   id: string
@@ -196,82 +82,7 @@ interface BootcampCourse {
   lessons: Lesson[]
 }
 
-const ENROLLED_BOOTCAMPS: BootcampCourse[] = [
-  {
-    id: "bootcamp-pro-2",
-    title: "Bootcamp IA Pro 2 — Session Intensive & Live",
-    subtitle: "Maîtrisez ChatGPT, Claude 3.5, Canva IA, Midjourney v6 et Make pour décupler votre productivité.",
-    status: "active",
-    dates: "31 Août - 6 Septembre 2026",
-    instructor: "Alfred Dah",
-    poster: "/images/bootcamp_pro_thumb.jpg",
-    lessons: BOOTCAMP_LESSONS
-  },
-    {
-    id: "bootcamp-business-exec",
-    title: "Bootcamp IA Business & Dirigeants (Exec)",
-    subtitle: "Gouvernance IA, intégration d'agents IA métiers, sécurité des données et coaching stratégique 1:1.",
-    status: "upcoming",
-    dates: "15 Septembre - 21 Septembre 2026",
-    instructor: "Alfred Dah",
-    poster: "/images/bootcamp_business_thumb.png",
-    lessons: [
-      {
-        id: "biz-01",
-        num: "01",
-        title: "Diagnostic & Gouvernance IA en Entreprise",
-        duration: "2h 30m",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        pdfUrl: "/images/bootcamp_business_poster.jpg",
-        pdfName: "Cadre_Gouvernance_IA_Exec.pdf",
-        description: "Évaluer la maturité IA de votre organisation et fixer les règles de sécurité et conformité des données.",
-        isUpcoming: true
-      },
-      {
-        id: "biz-02",
-        num: "02",
-        title: "Déploiement d'Agents IA Métiers & Coaching 1:1",
-        duration: "3h 00m",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        pdfUrl: "/images/b2b_enterprise_thumb.jpg",
-        pdfName: "Plan_Deploiement_Agents_IA.pdf",
-        description: "Créer des agents virtuels spécialisés pour vos départements RH, Marketing, Ventes et Finances.",
-        isUpcoming: true
-      }
-    ]
-  },
-  {
-    id: "initiation-free",
-    title: "Initiation IA & ChatGPT Pratique",
-    subtitle: "Prise en main des bases de l'IA générative, écriture des premiers prompts et cas d'usage quotidiens.",
-    status: "completed",
-    dates: "Accès Illimité",
-    instructor: "Alfred Dah",
-    poster: "/images/initiation_free_thumb.jpg",
-    lessons: [
-      {
-        id: "init-01",
-        num: "01",
-        title: "Introduction à l'IA Générative & ChatGPT",
-        duration: "1h 15m",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        pdfUrl: "/images/initiation_free_poster.jpg",
-        pdfName: "Guide_Initiation_IA_Gratuit.pdf",
-        description: "Comprendre le fonctionnement des modèles de langage et créer votre premier compte ChatGPT."
-      },
-      {
-        id: "init-02",
-        num: "02",
-        title: "Structure d'un Prompt Parfait & Rédaction",
-        duration: "1h 30m",
-        videoUrl: "https://www.youtube.com/embed/L_LUpnjgPso",
-        pdfUrl: "/images/initiation_free_thumb.jpg",
-        pdfName: "Prompts_Essentiels_Bureautique.pdf",
-        description: "Formuler des requêtes efficaces pour synthétiser des documents et rédiger vos emails."
-      }
-    ]
-  }
-]
+const ENROLLED_BOOTCAMPS: BootcampCourse[] = []
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -447,9 +258,9 @@ export default function DashboardPage() {
       const invoices = userPayments.map((p: any) => ({
         id: p.id,
         ref: p.transaction_ref || `FACT-${new Date(p.created_at || Date.now()).getFullYear()}-${p.id.slice(0, 6)}`,
-        title: (p.registrations?.courses as any)?.title ? `${(p.registrations?.courses as any)?.title} — Inscription Officielle` : "Bootcamp IA Pro — Inscription Officielle",
+        title: (p.registrations?.courses as any)?.title ? `${(p.registrations?.courses as any)?.title} — Inscription Officielle` : "Inscription Officielle",
         method: p.method || "Paiement Mobile Money / Wave (PayTech)",
-        amount: p.amount ? `${Number(p.amount).toLocaleString('fr-FR')} FCFA` : "99 000 FCFA",
+        amount: p.amount ? `${Number(p.amount).toLocaleString('fr-FR')} FCFA` : "0 FCFA",
         date: p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : "Août 2026"
       }))
       setUserInvoices(invoices)
