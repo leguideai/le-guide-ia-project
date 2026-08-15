@@ -3597,7 +3597,7 @@ export default function SuperAdminDashboard() {
                     value={vslForm.video_url}
                     onChange={url => setVslForm({ ...vslForm, video_url: url })}
                     accept="video/*,.mp4,.webm"
-                    bucket="course-replays"
+                    bucket="resources-files"
                     folder="vsl"
                     placeholder="https://www.youtube.com/watch?v=... ou téléversez un fichier MP4"
                     preview="none"

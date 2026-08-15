@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Upload, X, ExternalLink, FileImage, FileText, Film } from "lucide-react"
+import { Upload, X, ExternalLink, FileImage, FileText, Film, AlertCircle } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 interface FileUploadFieldProps {
   label: string
@@ -20,7 +21,7 @@ export function FileUploadField({
   value,
   onChange,
   accept = "image/*",
-  bucket = "course-posters",
+  bucket = "resources-files",
   folder = "uploads",
   placeholder = "https://... ou téléversez un fichier",
   preview = "image",
@@ -42,25 +43,65 @@ export function FileUploadField({
 
     setError(null)
     setUploading(true)
+
+    const targetBucket = bucket || "resources-files"
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
+    const fileName = `${folder}/${Date.now()}_${safeName}`
+
     try {
+      // 1. Tenter l'Upload Direct Client vers Supabase Storage (Bypasse la limite de 4.5MB Vercel)
+      try {
+        const { data: uploadData, error: uploadErr } = await supabase
+          .storage
+          .from(targetBucket)
+          .upload(fileName, file, {
+            contentType: file.type || "application/octet-stream",
+            upsert: true
+          })
+
+        if (!uploadErr && uploadData?.path) {
+          const { data: publicUrlData } = supabase.storage.from(targetBucket).getPublicUrl(fileName)
+          if (publicUrlData?.publicUrl) {
+            onChange(publicUrlData.publicUrl)
+            setUploading(false)
+            if (inputRef.current) inputRef.current.value = ""
+            return
+          }
+        }
+      } catch (clientErr) {
+        console.warn("Client direct upload bypassed, trying server API fallback:", clientErr)
+      }
+
+      // 2. Repli vers l'API Serverless si l'upload direct n'a pas pu être finalisé
       const formData = new FormData()
       formData.append("file", file)
-      formData.append("bucket", bucket)
+      formData.append("bucket", targetBucket)
       formData.append("folder", folder)
 
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         body: formData
       })
-      const data = await res.json()
 
-      if (data.url) {
+      const resText = await res.text()
+      let data: any
+      try {
+        data = JSON.parse(resText)
+      } catch (jsonErr) {
+        if (res.status === 413 || resText.toLowerCase().includes("too large") || resText.startsWith("Request En")) {
+          throw new Error("Ce fichier dépasse la limite autorisée par le serveur Vercel (4.5MB max). Pour une vidéo longue, nous vous conseillons de coller son lien YouTube.")
+        }
+        throw new Error(`Erreur serveur (${res.status}) : ${resText.slice(0, 100)}`)
+      }
+
+      if (data?.url) {
         onChange(data.url)
       } else {
-        setError(data.error || "Erreur lors du téléversement.")
+        setError(data?.error || "Erreur lors du téléversement du fichier.")
       }
     } catch (err: any) {
-      setError("Erreur réseau : " + err.message)
+      console.error("Upload error:", err)
+      setError(err.message || "Erreur réseau lors du téléversement.")
     } finally {
       setUploading(false)
       if (inputRef.current) inputRef.current.value = ""
@@ -85,7 +126,7 @@ export function FileUploadField({
         {uploading ? (
           <>
             <div className="size-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
-            <span>Téléversement vers Supabase...</span>
+            <span>Téléversement direct vers Supabase...</span>
           </>
         ) : (
           <>
@@ -119,11 +160,11 @@ export function FileUploadField({
           {value && (
             <>
               {(isImage || value.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i)) && (
-                <a href={value} target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-primary transition-colors">
+                <a href={value} target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-primary transition-colors" title="Voir l'image">
                   <ExternalLink className="size-3.5" />
                 </a>
               )}
-              <button type="button" onClick={handleClear} className="text-slate-500 hover:text-red-400 transition-colors">
+              <button type="button" onClick={handleClear} className="text-slate-500 hover:text-red-400 transition-colors" title="Effacer">
                 <X className="size-3.5" />
               </button>
             </>
@@ -133,9 +174,10 @@ export function FileUploadField({
 
       {/* Error */}
       {error && (
-        <p className="text-[11px] text-red-400 flex items-center gap-1">
-          <X className="size-3" /> {error}
-        </p>
+        <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[11px] text-red-400 flex items-start gap-1.5 leading-snug">
+          <AlertCircle className="size-4 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
       )}
 
       {/* Hint */}

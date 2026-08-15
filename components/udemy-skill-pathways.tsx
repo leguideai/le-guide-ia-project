@@ -154,13 +154,13 @@ function parseCourseSkills(c: any): string[] {
 function formatPriceStr(val: any): string {
   if (val === null || val === undefined || val === "") return ""
   if (typeof val === "number") {
-    return val > 0 ? `${val.toLocaleString("fr-FR")} FCFA` : "GRATUIT"
+    return val > 0 ? `${val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : "GRATUIT"
   }
   const str = String(val).trim()
   if (str.toLowerCase() === "gratuit" || str === "0") return "GRATUIT"
-  const num = parseInt(str.replace(/\s+/g, "").replace(/fcfa/gi, ""), 10)
+  const num = parseInt(str.replace(/[^\d]/g, ""), 10)
   if (!isNaN(num) && num > 0) {
-    return `${num.toLocaleString("fr-FR")} FCFA`
+    return `${num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA`
   }
   return str
 }

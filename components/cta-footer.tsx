@@ -110,7 +110,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
   ]
 
   const formattedPrice = typeof activeCourse.price === "number"
-    ? `${activeCourse.price.toLocaleString("fr-FR")} FCFA`
+    ? `${activeCourse.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA`
     : String(activeCourse.price || "99 000 FCFA")
 
   return (
