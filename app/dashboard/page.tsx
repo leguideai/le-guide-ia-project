@@ -556,9 +556,9 @@ export default function DashboardPage() {
   const navItems: { id: string; label: string; icon: any; badge?: string }[] = [
     { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
     { id: "courses", label: "Mes Formations", icon: BookOpen },
-    { id: "resources", label: "Mes Ressources", icon: DownloadCloudIcon },
-    { id: "certificates", label: "Mes Certificats", icon: Award },
-    { id: "invoices", label: "Mes Factures", icon: FileText },
+    // { id: "resources", label: "Mes Ressources", icon: DownloadCloudIcon },
+    // { id: "certificates", label: "Mes Certificats", icon: Award },
+    // { id: "invoices", label: "Mes Factures", icon: FileText },
     { id: "profile", label: "Mon Profil", icon: User },
   ]
 
@@ -576,7 +576,7 @@ export default function DashboardPage() {
     exerciseType: undefined,
     fileSize: "PDF / Fichier Supabase",
     deadline: "Permanent",
-    tier: r.tier || "Membre Premium"
+    tier: r.tier || ""
   })) : []
 
   const filteredResources = allResources.filter((r) => {
@@ -599,9 +599,9 @@ export default function DashboardPage() {
     price: c.price,
     slug_checkout: c.slug,
     dates: Number(c.price) === 0 ? "Accès Illimité" : (c.dates || "Session Intensive Live"),
-    instructor: c.instructor || "Alfred Dah",
-    live_meet_url: c.live_meet_url || "https://meet.google.com/leguideai-bootcamp-live",
-    poster: c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg",
+    instructor: c.instructor || "",
+    live_meet_url: c.live_meet_url || "",
+    poster: c.thumbnail || c.poster || "",
     lessons: (() => {
       const courseSessions = dbBootcampSessions.filter(
         (s: any) => s.course_id === c.id || s.course_id === c.slug || s.course_slug === c.slug
@@ -617,8 +617,8 @@ export default function DashboardPage() {
           num: String(s.session_number || s.sequence_order || idx + 1).padStart(2, "0"),
           title: s.title,
           duration: s.scheduled_at
-            ? new Date(s.scheduled_at).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + " • 19h00 GMT"
-            : "2h 00m",
+            ? new Date(s.scheduled_at).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }) + ""
+            : "",
           videoUrl: s.recording_url || s.video_url || null,
           hasRecording,
           isUpcoming,
@@ -631,7 +631,7 @@ export default function DashboardPage() {
           scheduledAt: s.scheduled_at,
           pdfUrl: s.homework_file_url || s.pdf_url,
           pdfName: s.homework_title ? `Exercice_${s.homework_title}.pdf` : undefined,
-          description: s.description || s.homework_description || "Session de formation pratique"
+          description: s.description || s.homework_description || ""
         }
       })
     })()
