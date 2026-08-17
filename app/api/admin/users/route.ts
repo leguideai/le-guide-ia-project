@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
+import { sendManualEnrollmentEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
@@ -23,7 +24,21 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { userId, role, action, courseSlug, userEmail } = await req.json()
+    const body = await req.json()
+    const {
+      userId,
+      role,
+      action,
+      sendEmail = true
+    } = body
+
+    const userEmail = body.userEmail || body.email || body.user_email
+    const courseSlug = body.courseSlug || body.course_slug
+    const userName = body.userName || body.name || body.fullName || body.full_name
+    const paymentMethod = body.paymentMethod || body.payment_method
+    const transactionRef = body.transactionRef || body.transaction_ref
+    const courseTitleOverride = body.course_title || body.courseTitle
+    const amountPaidOverride = body.amount_paid || body.amountPaid || body.amount
 
     if (action === "update_role") {
       if (!userId || !role) {
@@ -44,15 +59,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, user: data, message: `Rôle mis à jour avec succès: ${role}` })
     }
 
-    if (action === "enroll_course") {
-      const { paymentMethod, transactionRef } = await req.json().catch(() => ({}))
+    if (action === "enroll_course" || action === "enroll_single_course") {
       if (!userEmail || !courseSlug) {
         return NextResponse.json({ error: "userEmail et courseSlug requis." }, { status: 400 })
       }
 
       const emailClean = userEmail.toLowerCase().trim()
 
-      // Fetch course details
+      // 1. Fetch course details
       const { data: courseData } = await supabaseServer
         .from("courses")
         .select("*")
@@ -61,20 +75,71 @@ export async function POST(req: Request) {
 
       const courseId = courseData?.id || null
       const courseSlugFinal = courseData?.slug || courseSlug
-      const courseTitle = courseData?.title || courseSlug
-      const rawPrice = courseData?.price ? String(courseData.price).replace(/\D/g, "") : "99000"
-      const amountNum = parseInt(rawPrice) || 99000
+      const courseTitle = courseTitleOverride || courseData?.title || (courseSlug === "bootcamp-business-exec" ? "Bootcamp IA Business Exec" : "Formation IA")
+      const amountNum = amountPaidOverride ? Number(amountPaidOverride) : (courseData?.price ? parseInt(String(courseData.price).replace(/\D/g, "")) : 39000)
 
-      // 1. Get or create profile
-      const { data: profile } = await supabaseServer
+      // 2. Look up or Create Auth User in Supabase Auth
+      let authUserId: string | null = null
+      let isNewAccount = false
+      let tempPassword: string | undefined = undefined
+
+      try {
+        const { data: listData } = await supabaseServer.auth.admin.listUsers()
+        const existingAuthUser = listData?.users?.find(u => u.email?.toLowerCase() === emailClean)
+
+        if (existingAuthUser) {
+          authUserId = existingAuthUser.id
+        } else {
+          // Generate secure temporary password for new student
+          isNewAccount = true
+          tempPassword = `Lgi${Math.floor(1000 + Math.random() * 9000)}!2026`
+          const { data: newUser, error: createErr } = await supabaseServer.auth.admin.createUser({
+            email: emailClean,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { full_name: userName || emailClean.split("@")[0] }
+          })
+
+          if (newUser?.user) {
+            authUserId = newUser.user.id
+          } else if (createErr) {
+            console.warn("Supabase auth createUser warning:", createErr.message)
+          }
+        }
+      } catch (authErr) {
+        console.warn("Auth check/creation exception:", authErr)
+      }
+
+      // 3. Get or update profile
+      const { data: existingProfile } = await supabaseServer
         .from("profiles")
-        .select("full_name")
+        .select("*")
         .eq("email", emailClean)
         .maybeSingle()
 
-      const fullName = profile?.full_name || emailClean.split("@")[0]
+      const resolvedFullName = userName?.trim() || existingProfile?.full_name || emailClean.split("@")[0]
 
-      // 2. Check or create registration for this email & course
+      if (authUserId) {
+        await supabaseServer
+          .from("profiles")
+          .upsert({
+            id: authUserId,
+            email: emailClean,
+            full_name: resolvedFullName,
+            role: existingProfile?.role || "student",
+            updated_at: new Date().toISOString()
+          }, { onConflict: "id" })
+      } else if (!existingProfile) {
+        await supabaseServer
+          .from("profiles")
+          .insert({
+            email: emailClean,
+            full_name: resolvedFullName,
+            role: "student"
+          })
+      }
+
+      // 4. Check or create registration for this email & course
       let regId: string | null = null
 
       try {
@@ -100,10 +165,10 @@ export async function POST(req: Request) {
             })
             .eq("id", regId)
         } else {
-          let { data: newReg, error: regErr } = await supabaseServer
+          const { data: newReg, error: regErr } = await supabaseServer
             .from("registrations")
             .insert({
-              full_name: fullName,
+              full_name: resolvedFullName,
               email: emailClean,
               ...(courseId ? { course_id: courseId } : {}),
               course_slug: courseSlugFinal,
@@ -114,11 +179,10 @@ export async function POST(req: Request) {
             .single()
 
           if (regErr && (regErr.message.includes("column") || regErr.code === "42703")) {
-            // Fallback: insert basic registration without extra columns if SQL not run yet
             const { data: fbReg } = await supabaseServer
               .from("registrations")
               .insert({
-                full_name: fullName,
+                full_name: resolvedFullName,
                 email: emailClean,
                 status: "paye",
                 source: "admin_manual_enroll"
@@ -135,7 +199,7 @@ export async function POST(req: Request) {
         console.error("Registration error:", err)
       }
 
-      // 3. Create confirmed payment record for the receipt
+      // 5. Create confirmed payment record for the receipt
       const methodLabel = paymentMethod && paymentMethod.trim() !== "" ? paymentMethod : "Inscription Manuelle (Admin)"
       const refCode = transactionRef && transactionRef.trim() !== "" ? transactionRef : `ADM-${Date.now().toString().slice(-6)}`
 
@@ -153,20 +217,51 @@ export async function POST(req: Request) {
           })
       }
 
-      // 4. Add to user_courses if table exists
+      // 6. Add to user_courses for immediate platform access
+      const userCoursePayload: any = {
+        user_email: emailClean,
+        course_slug: courseSlugFinal,
+        status: "active"
+      }
+      if (authUserId) userCoursePayload.user_id = authUserId
+      if (courseId) userCoursePayload.course_id = courseId
+
       const { error: enrollErr } = await supabaseServer
         .from("user_courses")
-        .upsert({
-          user_email: emailClean,
-          course_slug: courseSlug,
-          status: "active"
-        }, { onConflict: "user_email,course_slug" })
+        .upsert(userCoursePayload, { onConflict: authUserId ? "user_id,course_id" : "user_email,course_slug" })
 
       if (enrollErr) console.warn("user_courses insert warning:", enrollErr.message)
 
+      // 7. Envoi de l'Email de confirmation et d'accès automatique via Resend
+      let emailSent = false
+      if (sendEmail !== false) {
+        try {
+          const mailRes = await sendManualEnrollmentEmail({
+            fullName: resolvedFullName,
+            email: emailClean,
+            courseTitle,
+            amount: amountNum,
+            paymentMethod: methodLabel,
+            transactionRef: refCode,
+            tempPassword,
+            isNewAccount
+          })
+          emailSent = !!mailRes.success
+        } catch (mailErr) {
+          console.error("Failed to send manual enrollment email:", mailErr)
+        }
+      }
+
       return NextResponse.json({
         success: true,
-        message: `Utilisateur ${emailClean} inscrit avec succès à "${courseTitle}" (${methodLabel})`
+        emailSent,
+        isNewAccount,
+        tempPassword,
+        message: `Apprenant ${emailClean} inscrit à "${courseTitle}" ! ${
+          emailSent
+            ? "📧 Email d'accès et reçu envoyé avec succès."
+            : "⚠️ Accès débloqué (email non délivré si clé API Resend absente)."
+        }`
       })
     }
 

@@ -103,7 +103,7 @@ export default function RegisterAccountPage() {
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Sanson Alfred Dah"
+                    placeholder="Votre nom complet"
                     className="w-full rounded-xl border border-border bg-input/40 pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                   />
                 </div>

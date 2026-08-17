@@ -367,7 +367,7 @@ export default function DashboardPage() {
   const navItems: { id: string; label: string; icon: any; badge?: string }[] = [
     { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
     { id: "courses", label: "Mes Formations", icon: BookOpen },
-    // { id: "resources", label: "Mes Ressources", icon: DownloadCloudIcon },
+    { id: "resources", label: "Mes Ressources", icon: DownloadCloudIcon },
     // { id: "certificates", label: "Mes Certificats", icon: Award },
     // { id: "invoices", label: "Mes Factures", icon: FileText },
     { id: "profile", label: "Mon Profil", icon: User },

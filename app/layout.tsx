@@ -115,7 +115,7 @@ export default function RootLayout({
   const clarityProjectId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID
 
   return (
-    <html lang="fr" className={`${jakarta.variable} ${geistMono.variable}`}>
+    <html lang="fr" className={`${jakarta.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Google Tag Manager (GTM) */}
         {gtmId && (
@@ -148,7 +148,7 @@ export default function RootLayout({
           </Script>
         )}
       </head>
-      <body className="font-sans antialiased bg-background">
+      <body className="font-sans antialiased bg-background" suppressHydrationWarning>
         {/* Google Tag Manager (noscript) */}
         {gtmId && (
           <noscript>

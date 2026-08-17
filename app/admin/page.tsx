@@ -5,13 +5,23 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
 import { formatVideoEmbedUrl, HeroVslVideo } from "@/components/vsl-hero-video"
+import { FormationItem, FormationCategory, DEFAULT_FORMATIONS, DEFAULT_FORMATION_CATEGORIES } from "@/lib/formations-data"
 import { 
   ShieldAlert, ShieldCheck, Users, DollarSign, BookOpen, FileCheck, 
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
   ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
-  ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X
+  ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X,
+  Bot, Film, ShoppingBag, Zap
 } from "lucide-react"
+
+function LinkedinIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+    </svg>
+  )
+}
 
 interface BootcampCourse {
   id?: string
@@ -134,7 +144,7 @@ interface B2BRecord {
 }
 
 export default function SuperAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "resources" | "lives" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
+  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
@@ -152,6 +162,7 @@ export default function SuperAdminDashboard() {
   })
 
   const [courses, setCourses] = useState<BootcampCourse[]>([])
+  const [formations, setFormations] = useState<FormationItem[]>([])
   const [resources, setResources] = useState<ResourceItem[]>([])
   const [aiTools, setAiTools] = useState<any[]>([])
   const [lives, setLives] = useState<LiveSession[]>([])
@@ -165,6 +176,55 @@ export default function SuperAdminDashboard() {
   const [paymentFilter, setPaymentFilter] = useState("all")
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
+
+  // Formations Modals & Form State
+  const [showFormationModal, setShowFormationModal] = useState(false)
+  const [editingFormation, setEditingFormation] = useState<FormationItem | null>(null)
+  const [featuresText, setFeaturesText] = useState("")
+  const [formationCategories, setFormationCategories] = useState<FormationCategory[]>(DEFAULT_FORMATION_CATEGORIES)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<FormationCategory | null>(null)
+  const [categoryForm, setCategoryForm] = useState<Partial<FormationCategory>>({
+    label: "",
+    slug: "",
+    icon: "sparkles",
+    order_index: 1,
+    is_active: true
+  })
+  const [formationForm, setFormationForm] = useState<Partial<FormationItem>>({
+    title: "",
+    slug: "",
+    tagline: "",
+    description: "",
+    badge: "Nouveau",
+    tool_icon: "chatgpt",
+    category_slug: "chatgpt",
+    thumbnail: "/images/formation_chatgpt_thumb.jpg",
+    instructor: "Alfred Dah · Expert IA & Automatisation",
+    rating: 4.9,
+    reviews_count: "150+ avis",
+    duration: "10h de vidéo",
+    modules_count: "20 leçons",
+    prompts_count: "100+ prompts",
+    price: 39000,
+    original_price: "69 000 FCFA",
+    currency: "FCFA",
+    features: [],
+    stats: [
+      { label: "Parties", value: "4" },
+      { label: "Leçons vidéo", value: "20" },
+      { label: "De contenu", value: "10h" }
+    ],
+    testimonial: {
+      quote: "Une formation claire, immédiatement applicable avec des résultats concrets.",
+      author_name: "Jean Kouassi",
+      author_role: "Directeur de Projet",
+      avatar_initials: "JK",
+      rating: 5
+    },
+    order_index: 1,
+    is_active: true
+  })
 
   // Modals Creation States
   const [showCourseModal, setShowCourseModal] = useState(false)
@@ -386,9 +446,11 @@ export default function SuperAdminDashboard() {
 
   // Manual Enroll Form
   const [enrollEmail, setEnrollEmail] = useState("")
+  const [enrollFullName, setEnrollFullName] = useState("")
   const [enrollCourse, setEnrollCourse] = useState("bootcamp-pro-2")
   const [enrollPaymentMethod, setEnrollPaymentMethod] = useState("")
   const [enrollTransactionRef, setEnrollTransactionRef] = useState("")
+  const [enrollSendEmail, setEnrollSendEmail] = useState(true)
   const [showEmailSuggestions, setShowEmailSuggestions] = useState(false)
 
   // Storage Upload state
@@ -622,10 +684,16 @@ export default function SuperAdminDashboard() {
       const dataStats = await resStats.json()
       if (dataStats.stats) setStats(dataStats.stats)
 
-      // 2. Courses
+      // 2. Courses (Bootcamps Live)
       const resCourses = await fetch("/api/admin/courses")
       const dataCourses = await resCourses.json()
       if (dataCourses.courses) setCourses(dataCourses.courses)
+
+      // 2.b Formations Vidéos (À la demande)
+      const resFormations = await fetch("/api/admin/formations")
+      const dataFormations = await resFormations.json()
+      if (dataFormations.formations) setFormations(dataFormations.formations)
+      if (dataFormations.categories) setFormationCategories(dataFormations.categories)
 
       // 3. Resources (Prompts & Blueprints)
       const resRes = await fetch("/api/admin/resources")
@@ -752,6 +820,184 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  // ================= FORMATIONS VIDÉOS (À LA DEMANDE) =================
+  function openNewFormation() {
+    setEditingFormation(null)
+    setFormationForm({
+      title: "",
+      slug: "",
+      tagline: "",
+      description: "",
+      badge: "Nouveau",
+      tool_icon: "chatgpt",
+      thumbnail: "/images/formation_chatgpt_thumb.jpg",
+      instructor: "Alfred Dah · Expert IA & Automatisation",
+      rating: 4.9,
+      reviews_count: "150+ avis",
+      duration: "10h de vidéo",
+      modules_count: "20 leçons",
+      prompts_count: "100+ prompts",
+      price: 39000,
+      original_price: "69 000 FCFA",
+      currency: "FCFA",
+      features: [
+        "Modules complets et cas pratiques guidés étape par étape",
+        "Méthodes et prompts réutilisables immédiatement",
+        "Modèles et templates à télécharger",
+        "Accès à vie et mises à jour continues"
+      ],
+      stats: [
+        { label: "Parties", value: "4" },
+        { label: "Leçons vidéo", value: "20" },
+        { label: "De contenu", value: "10h" }
+      ],
+      testimonial: {
+        quote: "Une formation claire, immédiatement applicable avec des résultats concrets dès la première semaine.",
+        author_name: "Jean Kouassi",
+        author_role: "Directeur de Projet",
+        avatar_initials: "JK",
+        rating: 5
+      },
+      order_index: formations.length + 1,
+      is_active: true
+    })
+    setFeaturesText("Modules complets et cas pratiques guidés étape par étape\nMéthodes et prompts réutilisables immédiatement\nModèles et templates à télécharger\nAccès à vie et mises à jour continues")
+    setShowFormationModal(true)
+  }
+
+  function openEditFormation(f: FormationItem) {
+    setEditingFormation(f)
+    setFormationForm(f)
+    setFeaturesText((f.features || []).join("\n"))
+    setShowFormationModal(true)
+  }
+
+  async function handleSaveFormation(e: React.FormEvent) {
+    e.preventDefault()
+    setProcessingId("save_formation")
+    try {
+      const parsedFeatures = featuresText.split("\n").map(l => l.trim()).filter(Boolean)
+      const payload = {
+        ...formationForm,
+        features: parsedFeatures.length > 0 ? parsedFeatures : formationForm.features
+      }
+      const res = await fetch("/api/admin/formations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save", formation: payload })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Formation vidéo enregistrée avec succès !")
+        setShowFormationModal(false)
+        if (data.formations) setFormations(data.formations)
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur de sauvegarde")
+      }
+    } catch (err) {
+      alert("Erreur de communication serveur")
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  async function handleDeleteFormation(f: FormationItem) {
+    if (!confirm(`Voulez-vous vraiment supprimer la formation "${f.title}" ?`)) return
+    try {
+      const res = await fetch("/api/admin/formations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", formationId: f.id, formationSlug: f.slug })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Formation supprimée.")
+        if (data.formations) setFormations(data.formations)
+        fetchAllData()
+      }
+    } catch (e) {
+      alert("Erreur lors de la suppression")
+    }
+  }
+
+  async function handleToggleFormationActive(f: FormationItem) {
+    try {
+      const res = await fetch("/api/admin/formations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "toggle_active", formationId: f.id, formationSlug: f.slug })
+      })
+      const data = await res.json()
+      if (data.success && data.formations) {
+        setFormations(data.formations)
+        showNotice(f.is_active ? "Formation masquée du site public" : "Formation activée sur le site public")
+      }
+    } catch (e) {}
+  }
+
+  // ================= CATÉGORIES DE FORMATIONS CRUD =================
+  function openNewCategory() {
+    setEditingCategory(null)
+    setCategoryForm({
+      label: "",
+      slug: "",
+      icon: "sparkles",
+      order_index: formationCategories.length + 1,
+      is_active: true
+    })
+    setShowCategoryModal(true)
+  }
+
+  function openEditCategory(cat: FormationCategory) {
+    setEditingCategory(cat)
+    setCategoryForm(cat)
+    setShowCategoryModal(true)
+  }
+
+  async function handleSaveCategory(e: React.FormEvent) {
+    e.preventDefault()
+    if (!categoryForm.label || !categoryForm.slug) return
+    setProcessingId("save_category")
+    try {
+      const res = await fetch("/api/admin/formations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "save_category", category: categoryForm })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Catégorie enregistrée avec succès !")
+        setShowCategoryModal(false)
+        if (data.categories) setFormationCategories(data.categories)
+      } else {
+        alert(data.error || "Erreur de sauvegarde de la catégorie")
+      }
+    } catch (e) {
+      alert("Erreur réseau lors de la sauvegarde de la catégorie")
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  async function handleDeleteCategory(cat: FormationCategory) {
+    if (!confirm(`Voulez-vous vraiment supprimer la catégorie "${cat.label}" ?`)) return
+    try {
+      const res = await fetch("/api/admin/formations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_category", categoryId: cat.id, categorySlug: cat.slug })
+      })
+      const data = await res.json()
+      if (data.success && data.categories) {
+        showNotice("Catégorie supprimée.")
+        setFormationCategories(data.categories)
+      }
+    } catch (e) {
+      alert("Erreur lors de la suppression de la catégorie")
+    }
+  }
+
   // Create or Update Resource Item
   async function handleSaveResource(e: React.FormEvent) {
     e.preventDefault()
@@ -831,17 +1077,21 @@ export default function SuperAdminDashboard() {
         body: JSON.stringify({
           action: "enroll_course",
           userEmail: enrollEmail,
+          userName: enrollFullName,
           courseSlug: enrollCourse,
           paymentMethod: enrollPaymentMethod,
-          transactionRef: enrollTransactionRef
+          transactionRef: enrollTransactionRef,
+          sendEmail: enrollSendEmail
         })
       })
       const data = await res.json()
       if (data.success) {
         showNotice(data.message)
         setEnrollEmail("")
+        setEnrollFullName("")
         setEnrollPaymentMethod("")
         setEnrollTransactionRef("")
+        setEnrollSendEmail(true)
         setShowEmailSuggestions(false)
         fetchAllData()
       } else {
@@ -1116,13 +1366,26 @@ export default function SuperAdminDashboard() {
                 </button>
 
                 <button
+                  onClick={() => { setActiveTab("formations"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="size-4 shrink-0 text-cyan-400" />
+                    <span>Formations Vidéos</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({formations.length})</span>
+                </button>
+
+                <button
                   onClick={() => { setActiveTab("resources"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Sparkles className="size-4 shrink-0" />
+                    <BookOpen className="size-4 shrink-0" />
                     <span>Bibliothèque</span>
                   </div>
                   <span className="text-[10px] opacity-75">({resources.length})</span>
@@ -1152,7 +1415,7 @@ export default function SuperAdminDashboard() {
                 >
                   <div className="flex items-center gap-2.5">
                     <Users className="size-4 shrink-0" />
-                    <span>Membres</span>
+                    <span>Membres & Rôles</span>
                   </div>
                   <span className="text-[10px] opacity-75">({users.length})</span>
                 </button>
@@ -1164,16 +1427,20 @@ export default function SuperAdminDashboard() {
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <BookOpen className="size-4 shrink-0" />
+                    <FileCheck className="size-4 shrink-0" />
                     <span>Devoirs</span>
                   </div>
                   {stats.pendingSubmissions > 0 && (
-                    <span className="bg-blue-500 text-white font-black text-[9px] px-2 py-0.5 rounded-full">
+                    <span className="bg-rose-500 text-white font-black text-[9px] px-2 py-0.5 rounded-full">
                       {stats.pendingSubmissions}
                     </span>
                   )}
                 </button>
+              </div>
 
+              {/* Section 4 */}
+              <div className="space-y-1">
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Organisation</p>
                 <button
                   onClick={() => { setActiveTab("b2b"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1182,15 +1449,15 @@ export default function SuperAdminDashboard() {
                 >
                   <div className="flex items-center gap-2.5">
                     <Building2 className="size-4 shrink-0" />
-                    <span>Entreprises</span>
+                    <span>Demandes B2B</span>
                   </div>
-                  <span className="text-[10px] opacity-75">({stats.b2bCount})</span>
+                  {stats.b2bCount > 0 && (
+                    <span className="bg-primary text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full">
+                      {stats.b2bCount}
+                    </span>
+                  )}
                 </button>
-              </div>
 
-              {/* Section 4 */}
-              <div className="space-y-1">
-                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Outils & Configuration</p>
                 <button
                   onClick={() => { setActiveTab("settings"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1198,7 +1465,7 @@ export default function SuperAdminDashboard() {
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Sparkles className="size-4 shrink-0" />
+                    <Award className="size-4 shrink-0" />
                     <span>Paramètres</span>
                   </div>
                 </button>
@@ -1211,61 +1478,43 @@ export default function SuperAdminDashboard() {
                 >
                   <div className="flex items-center gap-2.5">
                     <Download className="size-4 shrink-0" />
-                    <span>Exportation Données</span>
+                    <span>Exports</span>
                   </div>
+                </button>
+              </div>
+
+              {/* Logout Mobile */}
+              <div className="pt-4 border-t border-slate-800">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-3.5 py-3 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                  <LogOut className="size-4 shrink-0" />
+                  <span>Déconnexion</span>
                 </button>
               </div>
             </div>
           </div>
-
-          <div className="pt-4 border-t border-slate-800 space-y-2">
-            <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white bg-slate-900/60"
-            >
-              <ExternalLink className="size-3.5" />
-              <span>Voir le site public</span>
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
-            >
-              <LogOut className="size-3.5 text-red-400" />
-              <span>Déconnexion</span>
-            </button>
-          </div>
         </div>
       )}
 
-      {/* Desktop Left Vertical Sidebar Navigation (hidden on mobile) */}
-      <aside className="hidden md:flex w-64 border-r border-slate-800/80 bg-slate-950/90 backdrop-blur-xl p-4 flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto">
-        <div className="space-y-6">
-          
-          {/* Brand Header */}
-          <Link href="/" className="flex items-center gap-2.5 px-2 py-1 hover:opacity-90 transition-opacity">
-            <span className="font-heading font-black text-xl text-white tracking-wider">
-              LE GUIDE <span className="text-primary">IA</span>
-            </span>
-          </Link>
-
-          {/* Admin Profile Summary Card */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 flex items-center gap-3">
-            <div className="size-9 rounded-full bg-primary text-slate-950 flex items-center justify-center font-black text-xs border border-white/20 shrink-0 shadow-md">
-              {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
+      {/* Desktop Sidebar (Left) */}
+      <aside className="w-64 border-r border-slate-800/80 bg-slate-950/60 p-4 hidden md:flex flex-col justify-between shrink-0">
+        <div className="space-y-6 text-left">
+          {/* Logo & Platform Info */}
+          <div className="flex items-center gap-3 px-2">
+            <div className="size-9 rounded-xl bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center text-slate-950 font-black text-xs shadow-lg shadow-primary/20">
+              IA
             </div>
-            <div className="min-w-0 flex-1 text-left">
-              <p className="text-xs font-bold text-white truncate">{currentUser?.email?.split("@")[0] || "Alfred Dah"}</p>
-              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                <ShieldCheck className="size-3" /> {userRole || "super_admin"}
-              </span>
+            <div>
+              <span className="font-heading font-black text-sm text-white tracking-wide block">LE GUIDE IA</span>
+              <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block">ADMIN PORTAL</span>
             </div>
           </div>
 
-          {/* Navigation Sections */}
-          <div className="space-y-5">
-            
-            {/* Section 1: ANALYTIQUES & FINANCES */}
+          {/* Nav Categories */}
+          <div className="space-y-4">
+            {/* Section 1: ANALYTIQUES & REVENUS */}
             <div className="space-y-1">
               <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
               <button
@@ -1315,28 +1564,29 @@ export default function SuperAdminDashboard() {
               </button>
 
               <button
+                onClick={() => setActiveTab("formations")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="size-4 shrink-0 text-cyan-400" />
+                  <span>Formations Vidéos</span>
+                </div>
+                <span className="text-[10px] opacity-75">({formations.length})</span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab("resources")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="size-4 shrink-0" />
+                  <BookOpen className="size-4 shrink-0" />
                   <span>Bibliothèque</span>
                 </div>
                 <span className="text-[10px] opacity-75">({resources.length})</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab("lives")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Video className="size-4 shrink-0" />
-                  <span>Directs</span>
-                </div>
               </button>
             </div>
 
@@ -1351,7 +1601,7 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Users className="size-4 shrink-0" />
-                  <span>Membres</span>
+                  <span>Membres & Rôles</span>
                 </div>
                 <span className="text-[10px] opacity-75">({users.length})</span>
               </button>
@@ -1363,16 +1613,20 @@ export default function SuperAdminDashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <BookOpen className="size-4 shrink-0" />
-                  <span>Devoirs</span>
+                  <FileCheck className="size-4 shrink-0" />
+                  <span>Correction Devoirs</span>
                 </div>
                 {stats.pendingSubmissions > 0 && (
-                  <span className="bg-blue-500 text-white font-black text-[9px] px-1.5 py-0.2 rounded-full">
+                  <span className="bg-rose-500 text-white font-black text-[9px] px-1.5 py-0.2 rounded-full">
                     {stats.pendingSubmissions}
                   </span>
                 )}
               </button>
+            </div>
 
+            {/* Section 4: ORGANISATION */}
+            <div className="space-y-1">
+              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Organisation</p>
               <button
                 onClick={() => setActiveTab("b2b")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1381,15 +1635,15 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Building2 className="size-4 shrink-0" />
-                  <span>Entreprises</span>
+                  <span>Demandes B2B</span>
                 </div>
-                <span className="text-[10px] opacity-75">({stats.b2bCount})</span>
+                {stats.b2bCount > 0 && (
+                  <span className="bg-primary text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
+                    {stats.b2bCount}
+                  </span>
+                )}
               </button>
-            </div>
 
-            {/* Section 4: OUTILS & CONFIGURATION */}
-            <div className="space-y-1">
-              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Outils & Configuration</p>
               <button
                 onClick={() => setActiveTab("settings")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1397,7 +1651,7 @@ export default function SuperAdminDashboard() {
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="size-4 shrink-0" />
+                  <Award className="size-4 shrink-0" />
                   <span>Paramètres</span>
                 </div>
               </button>
@@ -1410,26 +1664,30 @@ export default function SuperAdminDashboard() {
               >
                 <div className="flex items-center gap-2.5">
                   <Download className="size-4 shrink-0" />
-                  <span>Exportation Données</span>
+                  <span>Exports</span>
                 </div>
               </button>
             </div>
-
           </div>
         </div>
 
-        {/* Sidebar Footer Links */}
-        <div className="pt-4 border-t border-slate-800/80 space-y-2">
-          <Link
-            href="/"
-            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
-          >
-            <ExternalLink className="size-3.5" />
-            <span>Voir le site public</span>
-          </Link>
+        {/* User Info & Signout */}
+        <div className="pt-4 border-t border-slate-800/80 space-y-3">
+          <div className="flex items-center gap-3 px-2">
+            <div className="size-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-white text-xs font-bold">
+              {currentUser?.email?.[0]?.toUpperCase() || "A"}
+            </div>
+            <div className="min-w-0 text-left">
+              <p className="text-xs font-bold text-white truncate">{currentUser?.email || "Alfred Dah"}</p>
+              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                <ShieldCheck className="size-3" /> {userRole || "super_admin"}
+              </span>
+            </div>
+          </div>
+
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer text-left"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
           >
             <LogOut className="size-3.5 text-red-400" />
             <span>Déconnexion</span>
@@ -1444,7 +1702,8 @@ export default function SuperAdminDashboard() {
           <div>
             <h1 className="font-heading text-lg sm:text-2xl font-bold text-white uppercase tracking-tight">
               {activeTab === "kpi" && "Vue d'Ensemble & KPIs Financiers"}
-              {activeTab === "courses" && "Gestion des Bootcamps"}
+              {activeTab === "courses" && "Gestion des Bootcamps (Lives)"}
+              {activeTab === "formations" && "Gestion des Formations Vidéos (À la demande)"}
               {activeTab === "resources" && "Bibliothèque de Prompts & Templates"}
               {activeTab === "lives" && "Sessions Live & Replays"}
               {activeTab === "payments" && "Inscriptions & Validation"}
@@ -1547,7 +1806,7 @@ export default function SuperAdminDashboard() {
                 <form onSubmit={handleManualEnroll} className="space-y-3 pt-2">
                   {/* Email avec Autocomplétion Suggerée des Élèves */}
                   <div className="relative">
-                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Email de l'apprenant (suggestion automatique)</label>
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Email de l'apprenant * (suggestion automatique)</label>
                     <input
                       type="email"
                       required
@@ -1572,7 +1831,7 @@ export default function SuperAdminDashboard() {
                           if (matches.length === 0) {
                             return (
                               <div className="p-2.5 text-slate-400 text-center italic text-[11px]">
-                                Aucun compte élève existant ne correspond à "{enrollEmail}". L'inscription créera un nouveau reçu pour cet email.
+                                Aucun compte élève existant ne correspond à "{enrollEmail}". L'inscription créera un nouveau reçu et un compte d'accès pour cet email.
                               </div>
                             )
                           }
@@ -1582,6 +1841,7 @@ export default function SuperAdminDashboard() {
                               type="button"
                               onClick={() => {
                                 setEnrollEmail(u.email || "")
+                                if (u.full_name) setEnrollFullName(u.full_name)
                                 setShowEmailSuggestions(false)
                               }}
                               className="w-full text-left p-2.5 rounded-xl hover:bg-slate-800 flex items-center justify-between transition-colors"
@@ -1600,9 +1860,21 @@ export default function SuperAdminDashboard() {
                     )}
                   </div>
 
+                  {/* Nom complet de l'apprenant */}
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Nom complet du participant (Optionnel)</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Jean Dupont (recommandé pour personnaliser l'email et le certificat)"
+                      value={enrollFullName}
+                      onChange={e => setEnrollFullName(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:border-primary outline-none"
+                    />
+                  </div>
+
                   {/* Sélection du Bootcamp dynamique */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Bootcamp concerné</label>
+                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Bootcamp concerné *</label>
                     <select
                       value={enrollCourse}
                       onChange={e => setEnrollCourse(e.target.value)}
@@ -1656,12 +1928,24 @@ export default function SuperAdminDashboard() {
                     </div>
                   </div>
 
+                  {/* Checkbox Envoyer Email de confirmation */}
+                  <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 cursor-pointer text-xs text-slate-300 hover:text-white transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={enrollSendEmail}
+                      onChange={e => setEnrollSendEmail(e.target.checked)}
+                      className="size-4 rounded accent-primary cursor-pointer"
+                    />
+                    <Mail className="size-4 text-primary shrink-0" />
+                    <span>Envoyer automatiquement l'email de confirmation d'inscription et d'accès</span>
+                  </label>
+
                   <button
                     type="submit"
                     disabled={processingId === "enroll"}
-                    className="w-full py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity mt-2 shadow-lg shadow-primary/10"
+                    className="w-full py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity mt-2 shadow-lg shadow-primary/10 cursor-pointer"
                   >
-                    {processingId === "enroll" ? "Inscription et Génération du Reçu..." : "Valider l'Inscription et Débloquer Accès"}
+                    {processingId === "enroll" ? "Inscription & Envoi de l'email..." : "Valider l'Inscription et Débloquer Accès"}
                   </button>
                 </form>
               </div>
@@ -2592,6 +2876,530 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB 2.b: FORMATIONS VIDÉOS (À LA DEMANDE) CRUD */}
+        {activeTab === "formations" && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <p className="text-xs text-slate-400">
+                  Gérez les masterclasses vidéos asynchrones vendues à l'unité. Vos modifications apparaissent immédiatement sur <Link href="/formations" target="_blank" className="text-primary hover:underline font-bold">/formations</Link> et sur la page d'accueil.
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                <button
+                  onClick={() => setShowCategoryModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:text-white hover:border-slate-500 font-bold text-xs flex items-center gap-2 shadow-md cursor-pointer"
+                >
+                  <Layers className="size-4 text-cyan-400" />
+                  Gérer les Catégories (Tabs)
+                </button>
+                <button
+                  onClick={openNewFormation}
+                  className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+                >
+                  <Plus className="size-4" />
+                  Créer une Formation Vidéo
+                </button>
+              </div>
+            </div>
+
+            {/* Category Chips Bar */}
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-primary" />
+                  Catégories &amp; Onglets Actifs ({formationCategories.length}) :
+                </span>
+                <button
+                  onClick={openNewCategory}
+                  className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="size-3" /> Ajouter une catégorie
+                </button>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {formationCategories.map((c) => {
+                  const count = formations.filter(f => f.category_slug === c.slug || f.tool_icon === c.slug).length
+                  return (
+                    <div
+                      key={c.id || c.slug}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-200"
+                    >
+                      <span>{c.label}</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-400 font-bold">
+                        {count} cours
+                      </span>
+                      <button
+                        onClick={() => openEditCategory(c)}
+                        className="text-slate-400 hover:text-white p-0.5"
+                        title="Modifier la catégorie"
+                      >
+                        <Edit3 className="size-3" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(c)}
+                        className="text-rose-400 hover:text-rose-300 p-0.5"
+                        title="Supprimer la catégorie"
+                      >
+                        <Trash2 className="size-3" />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Formations Grid */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+              {formations.map((f, idx) => (
+                <div 
+                  key={f.id || f.slug} 
+                  className={`rounded-3xl border bg-slate-900/50 backdrop-blur-xl flex flex-col justify-between overflow-hidden relative transition-all ${
+                    f.is_active ? "border-slate-800 hover:border-slate-700" : "border-rose-900/40 opacity-75"
+                  }`}
+                >
+                  {/* Thumbnail Cover 16/9 */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-slate-950 border-b border-slate-800">
+                    <img
+                      src={f.thumbnail || "/images/formation_claude_thumb.jpg"}
+                      alt={f.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                    
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-950/90 text-primary border border-primary/30 backdrop-blur-md shadow-md">
+                        {f.badge || "Formation"}
+                      </span>
+                    </div>
+
+                    <div className="absolute top-3 right-3">
+                      <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md border backdrop-blur-md shadow-md ${
+                        f.is_active ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                      }`}>
+                        {f.is_active ? "Active" : "Masquée"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="size-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-black text-sm text-primary shadow-md shrink-0">
+                          {f.tool_icon === "claude" ? <Bot className="size-5 text-[#d97757]" /> :
+                           f.tool_icon === "chatgpt" ? <Sparkles className="size-5 text-[#10a37f]" /> :
+                           f.tool_icon === "notebook" ? <FileText className="size-5 text-[#4285f4]" /> :
+                           f.tool_icon === "linkedin" ? <LinkedinIcon className="size-5 text-[#0a66c2]" /> :
+                           <Film className="size-5 text-primary" />}
+                        </div>
+                        <div>
+                          <h3 className="font-heading text-base font-black text-white leading-snug">
+                            {f.title}
+                          </h3>
+                          <span className="text-[11px] text-slate-500 font-mono">
+                            /{f.slug}
+                          </span>
+                        </div>
+                      </div>
+
+                    {/* Tagline & Description */}
+                    {f.tagline && (
+                      <p className="text-xs font-bold text-primary">
+                        {f.tagline}
+                      </p>
+                    )}
+                    <p className="text-xs text-slate-400 line-clamp-2">
+                      {f.description}
+                    </p>
+
+                    {/* Metadata Pills */}
+                    <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-300">
+                      <span className="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">
+                        ⏱️ {f.duration}
+                      </span>
+                      <span className="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">
+                        📚 {f.modules_count}
+                      </span>
+                      <span className="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">
+                        ⚡ {f.prompts_count}
+                      </span>
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-baseline justify-between">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-semibold">Prix de vente :</span>
+                        <span className="font-heading text-lg font-black text-white">
+                          {typeof f.price === "number" ? f.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") : f.price} FCFA
+                        </span>
+                      </div>
+                      {f.original_price && (
+                        <span className="text-xs text-slate-500 line-through font-semibold">
+                          {f.original_price}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-800/80">
+                    <button
+                      onClick={() => handleToggleFormationActive(f)}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                        f.is_active 
+                          ? "text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white"
+                          : "text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20"
+                      }`}
+                    >
+                      {f.is_active ? "Masquer du site" : "Activer sur le site"}
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEditFormation(f)}
+                        className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <Edit3 className="size-3.5 text-primary" />
+                        <span>Modifier</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteFormation(f)}
+                        className="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        title="Supprimer la formation"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+            {/* Formation Creation / Edition Modal */}
+            {showFormationModal && (
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-3xl w-full space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl">
+                  
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div className="space-y-1 text-left">
+                      <span className="text-[10px] font-black uppercase text-primary tracking-widest">
+                        Catalogue Formations
+                      </span>
+                      <h3 className="font-heading text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                        <Sparkles className="size-5 text-primary" />
+                        {editingFormation ? `Modifier : ${editingFormation.title}` : "Créer une Nouvelle Formation Vidéo"}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setShowFormationModal(false)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      <X className="size-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveFormation} className="space-y-6 text-xs text-left">
+                    
+                    {/* Section 1 : Informations Générales */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
+                        <FileText className="size-4 text-primary" /> 1. Informations Générales
+                      </h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Titre de la Formation *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="ex: Maîtriser Claude 3.7 & Claude Code"
+                            value={formationForm.title || ""}
+                            onChange={e => setFormationForm({ ...formationForm, title: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Slug Unique *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="ex: maitriser-claude-ia"
+                            value={formationForm.slug || ""}
+                            onChange={e => setFormationForm({ ...formationForm, slug: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-mono text-xs outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-slate-300 block mb-1 font-bold">Accroche / Tagline de Résultat</label>
+                        <input
+                          type="text"
+                          placeholder="ex: Déléguez enfin le travail complexe qui vous prend des heures"
+                          value={formationForm.tagline || ""}
+                          onChange={e => setFormationForm({ ...formationForm, tagline: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-slate-300 block mb-1 font-bold">Description Détaillée</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Présentation synthétique des bénéfices concrets pour l'élève..."
+                          value={formationForm.description || ""}
+                          onChange={e => setFormationForm({ ...formationForm, description: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      {/* Miniature / Affiche 16/9 avec Téléversement Local vers Supabase */}
+                      <FileUploadField
+                        label="Miniature / Affiche Visuelle 16/9 (Upload local vers Supabase ou URL)"
+                        value={formationForm.thumbnail || ""}
+                        onChange={url => setFormationForm({ ...formationForm, thumbnail: url })}
+                        accept="image/*"
+                        bucket="resources-files"
+                        folder="formations-thumbnails"
+                        placeholder="https://... ou téléversez votre image locale"
+                        preview="image"
+                        hint="Format 16:9 recommandé (ex: 1280×720px). Téléversez un fichier depuis votre ordinateur ou collez une URL."
+                      />
+
+                      <div className="grid gap-3 sm:grid-cols-4">
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Catégorie (Tabs) *</label>
+                          <select
+                            value={formationForm.category_slug || formationForm.tool_icon || "chatgpt"}
+                            onChange={e => setFormationForm({ ...formationForm, category_slug: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs font-semibold"
+                          >
+                            {formationCategories.map(cat => (
+                              <option key={cat.id || cat.slug} value={cat.slug}>
+                                {cat.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Badge Marketing</label>
+                          <select
+                            value={formationForm.badge || "Nouveau"}
+                            onChange={e => setFormationForm({ ...formationForm, badge: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs"
+                          >
+                            <option value="Best-seller">Best-seller</option>
+                            <option value="Forte demande">Forte demande</option>
+                            <option value="Nouveau">Nouveau</option>
+                            <option value="Prospection">Prospection</option>
+                            <option value="Recommandé">Recommandé</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Icône Outil</label>
+                          <select
+                            value={formationForm.tool_icon || "chatgpt"}
+                            onChange={e => setFormationForm({ ...formationForm, tool_icon: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs"
+                          >
+                            <option value="claude">Claude (Anthropic)</option>
+                            <option value="chatgpt">ChatGPT (OpenAI)</option>
+                            <option value="notebook">NotebookLM (Google)</option>
+                            <option value="linkedin">LinkedIn Pro</option>
+                            <option value="make">Make Automation</option>
+                            <option value="python">Python IA</option>
+                            <option value="gemini">Gemini Pro</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Ordre</label>
+                          <input
+                            type="number"
+                            value={formationForm.order_index || 1}
+                            onChange={e => setFormationForm({ ...formationForm, order_index: parseInt(e.target.value) || 1 })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 2 : Tarifs & Métadonnées */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
+                        <DollarSign className="size-4 text-emerald-400" /> 2. Tarifs & Métadonnées
+                      </h4>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Prix de Vente (FCFA) *</label>
+                          <input
+                            type="number"
+                            required
+                            placeholder="ex: 39000"
+                            value={formationForm.price || ""}
+                            onChange={e => setFormationForm({ ...formationForm, price: parseInt(e.target.value) || 0 })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Prix Barré (ex: 69 000 FCFA)</label>
+                          <input
+                            type="text"
+                            placeholder="ex: 69 000 FCFA"
+                            value={formationForm.original_price || ""}
+                            onChange={e => setFormationForm({ ...formationForm, original_price: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 pt-6">
+                          <label className="flex items-center gap-2 cursor-pointer text-slate-300 font-bold">
+                            <input
+                              type="checkbox"
+                              checked={formationForm.is_active !== false}
+                              onChange={e => setFormationForm({ ...formationForm, is_active: e.target.checked })}
+                              className="size-4 accent-primary rounded"
+                            />
+                            <span>Visible sur le catalogue public</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Durée Vidéo</label>
+                          <input
+                            type="text"
+                            placeholder="ex: 12h+ de vidéo"
+                            value={formationForm.duration || ""}
+                            onChange={e => setFormationForm({ ...formationForm, duration: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Nombre de Leçons / Modules</label>
+                          <input
+                            type="text"
+                            placeholder="ex: 29 leçons"
+                            value={formationForm.modules_count || ""}
+                            onChange={e => setFormationForm({ ...formationForm, modules_count: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Prompts & Livrables Inclus</label>
+                          <input
+                            type="text"
+                            placeholder="ex: 150+ prompts premium"
+                            value={formationForm.prompts_count || ""}
+                            onChange={e => setFormationForm({ ...formationForm, prompts_count: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 3 : Livrables & Compétences Clés */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
+                        <CheckCircle2 className="size-4 text-cyan-400" /> 3. Livrables & Compétences Clés (1 par ligne)
+                      </h4>
+                      <textarea
+                        rows={4}
+                        placeholder="Insérez un livrable par ligne :&#10;Prompt engineering expert avec la méthode CARTEL&#10;Création de GPTs sur-mesure&#10;Workflows Make prêts à importer"
+                        value={featuresText}
+                        onChange={e => setFeaturesText(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary font-sans leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Section 4 : Témoignage Client Embarqué */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
+                        <Sparkles className="size-4 text-amber-400" /> 4. Témoignage Client Embarqué
+                      </h4>
+                      <div>
+                        <label className="text-slate-300 block mb-1 font-bold">Citation de l'Élève</label>
+                        <textarea
+                          rows={2}
+                          placeholder="ex: Des exemples concrets qu'on peut appliquer tout de suite dans son travail..."
+                          value={formationForm.testimonial?.quote || ""}
+                          onChange={e => setFormationForm({
+                            ...formationForm,
+                            testimonial: { ...formationForm.testimonial, quote: e.target.value, author_name: formationForm.testimonial?.author_name || "Élève" }
+                          })}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Nom Complet de l'Élève</label>
+                          <input
+                            type="text"
+                            placeholder="ex: David Fraisse"
+                            value={formationForm.testimonial?.author_name || ""}
+                            onChange={e => setFormationForm({
+                              ...formationForm,
+                              testimonial: { ...formationForm.testimonial, quote: formationForm.testimonial?.quote || "", author_name: e.target.value }
+                            })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Rôle / Entreprise</label>
+                          <input
+                            type="text"
+                            placeholder="ex: Consultant Stratégie & IA"
+                            value={formationForm.testimonial?.author_role || ""}
+                            onChange={e => setFormationForm({
+                              ...formationForm,
+                              testimonial: { ...formationForm.testimonial, quote: formationForm.testimonial?.quote || "", author_name: formationForm.testimonial?.author_name || "", author_role: e.target.value }
+                            })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-300 block mb-1 font-bold">Initiales Avatar</label>
+                          <input
+                            type="text"
+                            placeholder="ex: DF"
+                            value={formationForm.testimonial?.avatar_initials || ""}
+                            onChange={e => setFormationForm({
+                              ...formationForm,
+                              testimonial: { ...formationForm.testimonial, quote: formationForm.testimonial?.quote || "", author_name: formationForm.testimonial?.author_name || "", avatar_initials: e.target.value }
+                            })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer Actions */}
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setShowFormationModal(false)}
+                        className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 transition-colors"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={processingId === "save_formation"}
+                        className="px-6 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 cursor-pointer"
+                      >
+                        {processingId === "save_formation" ? "Enregistrement..." : "Enregistrer la Formation"}
+                      </button>
+                    </div>
+
+                  </form>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
@@ -3634,6 +4442,189 @@ export default function SuperAdminDashboard() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL GESTION DES CATÉGORIES DE FORMATIONS */}
+        {showCategoryModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleUp">
+              <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                    <Layers className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-lg font-black text-white">Catégories &amp; Onglets Formations</h3>
+                    <p className="text-xs text-slate-400">Gérez les onglets de filtrage affichés sur l'accueil et sur /formations</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }}
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                {/* Formulaire d'ajout / modification de catégorie */}
+                <form onSubmit={handleSaveCategory} className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2">
+                    <Sparkles className="size-3.5" />
+                    {editingCategory ? `Modifier la catégorie "${editingCategory.label}"` : "Ajouter une nouvelle catégorie"}
+                  </h4>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Nom de la catégorie (Label de l'onglet) *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: DeepSeek & Open Source"
+                        value={categoryForm.label || ""}
+                        onChange={e => {
+                          const val = e.target.value
+                          const autoSlug = val.toLowerCase().trim().replace(/[^a-z0-9]/g, "-")
+                          setCategoryForm({ 
+                            ...categoryForm, 
+                            label: val,
+                            slug: editingCategory ? (categoryForm.slug || autoSlug) : autoSlug
+                          })
+                        }}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Slug URL (Identifiant unique) *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: deepseek"
+                        value={categoryForm.slug || ""}
+                        onChange={e => setCategoryForm({ ...categoryForm, slug: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-bold text-slate-300 block mb-1">Ordre d'affichage</label>
+                      <input
+                        type="number"
+                        value={categoryForm.order_index || 1}
+                        onChange={e => setCategoryForm({ ...categoryForm, order_index: parseInt(e.target.value) || 1 })}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-6">
+                      <input
+                        type="checkbox"
+                        id="cat_is_active"
+                        checked={categoryForm.is_active !== false}
+                        onChange={e => setCategoryForm({ ...categoryForm, is_active: e.target.checked })}
+                        className="size-4 rounded accent-primary cursor-pointer"
+                      />
+                      <label htmlFor="cat_is_active" className="text-xs font-semibold text-slate-300 cursor-pointer">
+                        Activer cet onglet sur le site
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+                    {editingCategory && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingCategory(null)
+                          setCategoryForm({ label: "", slug: "", icon: "sparkles", order_index: formationCategories.length + 1, is_active: true })
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                      >
+                        Annuler la modification
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={processingId === "save_category"}
+                      className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 flex items-center gap-1.5 shadow-md cursor-pointer"
+                    >
+                      {processingId === "save_category" ? (
+                        <RefreshCw className="size-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="size-3.5" />
+                      )}
+                      <span>{editingCategory ? "Enregistrer les modifications" : "Créer la catégorie"}</span>
+                    </button>
+                  </div>
+                </form>
+
+                {/* Liste des catégories existantes */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Catégories existantes ({formationCategories.length})
+                  </h4>
+
+                  <div className="space-y-2">
+                    {formationCategories.map((c, idx) => {
+                      const count = formations.filter(f => f.category_slug === c.slug || f.tool_icon === c.slug).length
+                      return (
+                        <div
+                          key={c.id || c.slug}
+                          className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="size-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-xs font-mono font-bold text-primary">
+                              {idx + 1}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white text-xs">{c.label}</span>
+                                <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded">
+                                  /{c.slug}
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-slate-400">
+                                {count} formation{count > 1 ? "s" : ""} liée{count > 1 ? "s" : ""}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => openEditCategory(c)}
+                              className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <Edit3 className="size-3" /> Modifier
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(c)}
+                              className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:bg-rose-500/20 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <Trash2 className="size-3" /> Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  className="px-5 py-2 rounded-xl bg-slate-800 text-slate-200 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                >
+                  Fermer
+                </button>
+              </div>
             </div>
           </div>
         )}

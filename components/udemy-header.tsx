@@ -56,6 +56,19 @@ export function UdemyHeader() {
     loadSettings()
   }, [])
 
+  const handleSearchSubmit = (e: React.FormEvent | React.KeyboardEvent) => {
+    if ('key' in e && e.key !== 'Enter') return
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+    const q = searchQuery.toLowerCase().trim()
+    if (q.includes("claude")) router.push("/formations?category=claude")
+    else if (q.includes("chatgpt") || q.includes("make")) router.push("/formations?category=chatgpt")
+    else if (q.includes("notebook") || q.includes("gemini")) router.push("/formations?category=notebook")
+    else if (q.includes("linkedin") || q.includes("prospect")) router.push("/formations?category=linkedin")
+    else router.push("/formations")
+    setMobileMenuOpen(false)
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full bg-slate-950/95 border-b border-border/80 backdrop-blur-xl">
       
@@ -100,6 +113,10 @@ export function UdemyHeader() {
                   <GraduationCap className="size-4 text-primary" />
                   <span>Bootcamps IA Live</span>
                 </Link>
+                <Link href="/formations" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
+                  <Sparkles className="size-4 text-cyan-400" />
+                  <span>Nos Formations (À la demande)</span>
+                </Link>
                 <Link href="/ressources" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
                   <BookOpen className="size-4 text-purple-400" />
                   <span>Bibliothèque de Prompts</span>
@@ -115,21 +132,26 @@ export function UdemyHeader() {
 
         {/* Search Bar (Udemy Style) */}
         <div className="flex-1 max-w-md hidden md:block">
-          <div className="relative">
+          <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="size-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Que voulez-vous apprendre ? (ex: ChatGPT, Prompting, Automation Make...)"
+              onKeyDown={handleSearchSubmit}
+              placeholder="Que voulez-vous apprendre ? (ex: ChatGPT, Claude, Make...)"
               className="w-full rounded-full border border-border bg-input/40 pl-10 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
             />
-          </div>
+          </form>
         </div>
 
         {/* Nav Links & Actions */}
         <div className="flex items-center gap-3 shrink-0">
           
+          <Link href="/formations" className="hidden md:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
+            Nos Formations
+          </Link>
+
           <Link href="/entreprises" className="hidden lg:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
             Le Guide IA Business
           </Link>
@@ -179,16 +201,17 @@ export function UdemyHeader() {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-slate-950/98 px-5 py-6 space-y-5 shadow-2xl backdrop-blur-2xl">
-          <div className="relative">
+          <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="size-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchSubmit}
               placeholder="Rechercher une formation..."
               className="w-full rounded-xl border border-border bg-input/40 pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
-          </div>
+          </form>
 
           <div className="space-y-1">
             <Link
@@ -198,6 +221,14 @@ export function UdemyHeader() {
             >
               <GraduationCap className="size-4 text-primary" />
               <span>Bootcamps IA Live</span>
+            </Link>
+            <Link
+              href="/formations"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-foreground hover:bg-secondary"
+            >
+              <Sparkles className="size-4 text-cyan-400" />
+              <span>Formations Vidéos (À la demande)</span>
             </Link>
             <Link
               href="/ressources"
