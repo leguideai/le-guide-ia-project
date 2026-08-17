@@ -260,8 +260,8 @@ function FormationsContent() {
     }
 
     try {
-      // Enregistrer la transaction Mobile Money
-      await fetch("/api/payment/direct-mobile", {
+      // Enregistrer la transaction Mobile Money (Status: pending_verification, validation sous 24h)
+      const res = await fetch("/api/payment/direct-mobile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -277,24 +277,14 @@ function FormationsContent() {
         })
       })
 
-      // Enregistrer l'accès dans user_courses
-      await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "enroll_single_course",
-          email: buyerEmail,
-          course_slug: selectedFormation.slug,
-          course_title: selectedFormation.title,
-          amount_paid: selectedFormation.price,
-          payment_method: `mobile_direct_${paymentMethod}`
-        })
-      })
-
-      setUserEnrollments(prev => [...prev, selectedFormation.slug])
-      setPaymentSuccess(true)
+      const data = await res.json()
+      if (data.success) {
+        setPaymentSuccess(true)
+      } else {
+        setErrorMessage(data.message || "Erreur lors de l'enregistrement de votre paiement.")
+      }
     } catch (e) {
-      console.error("Error enrolling user:", e)
+      console.error("Error submitting mobile money payment:", e)
       setErrorMessage("Une erreur est survenue lors de l'enregistrement de votre paiement.")
     } finally {
       setProcessingPayment(false)
@@ -630,50 +620,68 @@ function FormationsContent() {
               </button>
 
               {paymentSuccess ? (
-                <div className="text-center space-y-4 py-4">
-                  <div className="size-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
-                    <Check className="size-8" />
+                <div className="text-center space-y-4 py-3">
+                  <div className="size-16 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+                    <Clock className="size-8 animate-pulse" />
                   </div>
-                  <h3 className="font-heading text-xl font-black text-white">
-                    Paiement Enregistré avec Succès !
-                  </h3>
-                  <p className="text-xs text-slate-300">
-                    Votre accès à la formation <strong>{selectedFormation.title}</strong> est validé. Vous pouvez dès maintenant visionner l'intégralité des modules dans votre espace membre.
+                  
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                      Validation sous moins de 24h
+                    </span>
+                    <h3 className="font-heading text-xl font-black text-white pt-1">
+                      Demande d'Accès Enregistrée !
+                    </h3>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
+                    Votre déclaration de paiement Mobile Money pour la formation <strong>{selectedFormation.title}</strong> a bien été transmise à notre équipe administrative.
                   </p>
 
+                  {/* Récapitulatif de la transaction */}
                   <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-left space-y-2 text-xs">
                     <div className="flex justify-between text-slate-400">
                       <span>Formation :</span>
                       <strong className="text-white">{selectedFormation.title}</strong>
                     </div>
                     <div className="flex justify-between text-slate-400">
-                      <span>Montant réglé :</span>
+                      <span>Montant à vérifier :</span>
                       <strong className="text-white">{formatPriceNum(selectedFormation.price)}</strong>
                     </div>
                     <div className="flex justify-between text-slate-400">
-                      <span>Référence :</span>
+                      <span>Référence de transaction :</span>
                       <strong className="text-primary font-mono">{transactionRef || "N/A"}</strong>
+                    </div>
+                    <div className="flex justify-between text-slate-400 border-t border-slate-800/80 pt-2">
+                      <span>Délai d'activation :</span>
+                      <strong className="text-amber-400 font-bold">Moins de 24h ouvrées</strong>
                     </div>
                   </div>
 
-                  <div className="pt-2 space-y-2.5">
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-primary text-slate-950 font-black text-sm hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                    >
-                      <Play className="size-4" />
-                      <span>Accéder à mon Espace Membre</span>
-                    </Link>
+                  <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 text-left text-xs text-slate-400 space-y-1">
+                    <p className="text-[11px] text-slate-300">
+                      📧 Un email de confirmation a été envoyé à votre adresse. Dès vérification du dépôt, votre formation sera automatiquement débloquée dans votre Espace Membre.
+                    </p>
+                  </div>
 
+                  <div className="pt-2 space-y-2.5">
                     <a
-                      href={`https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens de finaliser mon paiement pour la formation "${selectedFormation.title}" (${formatPriceNum(selectedFormation.price)}) avec la référence : ${transactionRef}.`)}`}
+                      href={`https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens d'effectuer le virement Mobile Money pour la formation "${selectedFormation.title}" (${formatPriceNum(selectedFormation.price)}) avec la référence : ${transactionRef}. Pouvez-vous valider mon accès ? Merci !`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-xs transition-all"
+                      className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black text-xs sm:text-sm transition-all shadow-lg shadow-[#25D366]/20 cursor-pointer"
                     >
-                      <MessageSquare className="size-3.5" />
-                      <span>Confirmer mon reçu sur WhatsApp</span>
+                      <MessageSquare className="size-4" />
+                      <span>Accélérer ma validation sur WhatsApp</span>
                     </a>
+
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all"
+                    >
+                      <Play className="size-3.5" />
+                      <span>Voir mon Espace Membre</span>
+                    </Link>
                   </div>
                 </div>
               ) : (

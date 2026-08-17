@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { GraduationCap, UserCheck, Gift, ArrowRight, Calendar, CheckCircle2, Sparkles, Download, Clock } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { Select } from "@base-ui/react"
 
 const MONTHS_FR = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -18,69 +19,16 @@ function formatDateSafe(d: Date | string | null | undefined): string {
   return `${date.getDate()} ${MONTHS_FR[date.getMonth()]}`
 }
 
-const DEFAULT_COURSES = [
-  {
-    id: "bootcamp-ia-carriere",
-    slug: "bootcamp-ia-carriere",
-    title: "Bootcamp IA & Carrière",
-    subtitle: "Conçu pour les professionnels en poste, consultants et cadres voulant transformer l'IA en avantage concret dans leur travail quotidien et leur trajectoire.",
-    description: "Conçu pour les professionnels en poste, consultants et cadres voulant transformer l'IA en avantage concret dans leur travail quotidien et leur trajectoire.",
-    price: 99000,
-    original_price: "149 000 FCFA",
-    badge: "INTENSIF & DIRECT",
-    dates: "31 Août au 5 Septembre 2026",
-    format: "100% En Ligne",
-    offer_start_date: "2026-08-10T00:00:00Z",
-    offer_end_date: "2026-08-25T23:59:59Z",
-    offer_badge_text: "Offre Fondateur -50 000 FCFA",
-    pdf_url: "https://voxqivzzskbttytyklnn.supabase.co/storage/v1/object/public/resources-files/programmes/1786475706651_Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
-    poster: "/images/bootcamp_pro_thumb.jpg",
-    thumbnail: "/images/bootcamp_pro_thumb.jpg",
-    skills: [
-      "Système de travail IA personnalisé, configuré et opérationnel dès le 1er jour",
-      "Bibliothèque de prompts professionnels adaptée à votre métier",
-      "Modèles d'écrits professionnels (emails, rapports, notes, synthèses)",
-      "Premier workflow automatisé fonctionnel (Make / n8n)",
-      "CV compatible ATS et profil LinkedIn optimisés et publiés",
-      "Plan de carrière IA sur 90 jours + Certificat officiel LE GUIDE IA"
-    ]
-  },
-  {
-    id: "bootcamp-business-exec",
-    slug: "bootcamp-business-exec",
-    title: "Bootcamp IA & Business",
-    subtitle: "Pour entrepreneurs, fondateurs et dirigeants souhaitant structurer leur modèle économique, automatiser leur prospection et accélérer leurs ventes avec l'IA.",
-    description: "Pour entrepreneurs, fondateurs et dirigeants souhaitant structurer leur modèle économique, automatiser leur prospection et accélérer leurs ventes avec l'IA.",
-    price: 149000,
-    original_price: "199 000 FCFA",
-    badge: "EXECUTIF VIP",
-    dates: "14 au 19 Septembre 2026",
-    format: "100% En Ligne",
-    offer_start_date: "2026-08-10T00:00:00Z",
-    offer_end_date: "2026-09-05T23:59:59Z",
-    offer_badge_text: "Offre Fondateur -50 000 FCFA",
-    pdf_url: "https://voxqivzzskbttytyklnn.supabase.co/storage/v1/object/public/resources-files/programmes/1786799298400_Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
-    poster: "/images/bootcamp_business_thumb.jpg",
-    thumbnail: "/images/bootcamp_business_thumb.jpg",
-    skills: [
-      "Business Model Canvas finalisé et validé par l'IA",
-      "Business Plan professionnel structuré pour investisseurs & banques",
-      "Bibliothèque de 100+ prompts stratégiques Business & Vente",
-      "Workflow d'automatisation des tâches & prospection commerciale (Make / n8n)",
-      "Stratégie de contenu & Plan éditorial 30 jours prêt à publier",
-      "Roadmap Business IA sur 90 jours + Certificat officiel LE GUIDE IA"
-    ]
-  }
-]
+
 
 function getOfferDetails(c: any) {
   const badgeText = c.offer_badge_text || "Offre Fondateur"
   const rawStart = c.offer_start_date
-  const rawEnd = c.offer_end_date || (c.slug?.includes("business") ? "2026-09-05T23:59:59Z" : "2026-08-25T23:59:59Z")
+  const rawEnd = c.offer_end_date || (c.slug?.includes("business") ? "" : "")
 
   if (rawEnd) {
     try {
-      const endFormatted = formatDateSafe(rawEnd) || "25 Août"
+      const endFormatted = formatDateSafe(rawEnd) || ""
       const startFormatted = rawStart ? formatDateSafe(rawStart) : null
 
       const periodLabel = startFormatted
@@ -93,11 +41,11 @@ function getOfferDetails(c: any) {
         endFormatted
       }
     } catch {
-      return { badgeText, periodLabel: "Jusqu'au 25 Août", endFormatted: "25 Août" }
+      return { badgeText, periodLabel: "", endFormatted: "" }
     }
   }
 
-  return { badgeText, periodLabel: "Jusqu'au 25 Août", endFormatted: "25 Août" }
+  return { badgeText, periodLabel: "", endFormatted: "" }
 }
 
 function parseCourseSkills(c: any): string[] {
@@ -128,24 +76,10 @@ function parseCourseSkills(c: any): string[] {
   const isCarriere = c.title?.toLowerCase().includes("carrière") || c.slug?.includes("carriere") || c.slug?.includes("pro")
   const isBusiness = c.title?.toLowerCase().includes("business") || c.slug?.includes("business")
   if (isCarriere) {
-    return [
-      "Système de travail IA personnalisé, configuré et opérationnel dès le 1er jour",
-      "Bibliothèque de prompts professionnels adaptée à votre métier",
-      "Modèles d'écrits professionnels (emails, rapports, notes, synthèses)",
-      "Premier workflow automatisé fonctionnel (Make / n8n)",
-      "CV compatible ATS et profil LinkedIn optimisés et publiés",
-      "Plan de carrière IA sur 90 jours + Certificat officiel LE GUIDE IA"
-    ]
+    return []
   }
   if (isBusiness) {
-    return [
-      "Business Model Canvas finalisé et validé par l'IA",
-      "Business Plan professionnel structuré pour investisseurs & banques",
-      "Bibliothèque de 100+ prompts stratégiques Business & Vente",
-      "Workflow d'automatisation des tâches & prospection commerciale (Make / n8n)",
-      "Stratégie de contenu & Plan éditorial 30 jours prêt à publier",
-      "Roadmap Business IA sur 90 jours + Certificat officiel LE GUIDE IA"
-    ]
+    return []
   }
 
   return validSkills
@@ -166,7 +100,7 @@ function formatPriceStr(val: any): string {
 }
 
 export function UdemySkillPathways() {
-  const [dbCourses, setDbCourses] = useState<any[]>(DEFAULT_COURSES)
+  const [dbCourses, setDbCourses] = useState<any[]>([])
 
   useEffect(() => {
     async function loadCourses() {
@@ -200,10 +134,10 @@ export function UdemySkillPathways() {
       : (c.start_date && c.end_date)
       ? `Du ${formatDateSafe(c.start_date)} au ${formatDateSafe(c.end_date)}`
       : c.slug?.includes("business") || c.title?.toLowerCase().includes("business")
-      ? "14 au 19 Septembre 2026"
+      ? ""
       : c.price === 0
-      ? "Accès Immédiat 24h/7j"
-      : "31 Août au 5 Septembre 2026"
+      ? ""
+      : ""
 
     const skills = parseCourseSkills(c)
     const offer = c.price === 0 ? null : getOfferDetails(c)
@@ -213,18 +147,18 @@ export function UdemySkillPathways() {
       slug: c.slug,
       title: c.title,
       desc: c.description || c.subtitle,
-      price: formatPriceStr(c.price || "99000"),
-      originalPrice: formatPriceStr(c.original_price || "149000"),
-      badge: c.badge || "FORMULE OFFICIELLE",
-      format: c.format || "100% En Ligne",
-      certificate: c.certificate || "Certificat Officiel",
+      price: formatPriceStr(c.price || ""),
+      originalPrice: formatPriceStr(c.original_price || ""),
+      badge: c.badge || "",
+      format: c.format || "",
+      certificate: c.certificate || "",
       dates: datesText,
       skills: skills,
       offer: offer,
-      pdfUrl: c.pdf_url || "https://voxqivzzskbttytyklnn.supabase.co/storage/v1/object/public/resources-files/programmes/1786475706651_Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+      pdfUrl: c.pdf_url || "",
       icon: c.price === 0 ? Gift : Number(c.price) > 100000 || String(c.slug).includes("business") ? UserCheck : GraduationCap,
       href: `/bootcamp?course=${c.slug || c.id}`,
-      image: c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg",
+      image: c.thumbnail || c.poster || "",
       isFree: c.price === 0,
       isVIP: Number(c.price) > 100000 || String(c.slug).includes("business"),
       accentColor: c.price === 0 ? "emerald" : Number(c.price) > 100000 || String(c.slug).includes("business") ? "amber" : "blue",
@@ -260,20 +194,20 @@ export function UdemySkillPathways() {
   }
 
   return (
-    <section className="py-10 sm:py-14 bg-background border-t border-border/50">
-      <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-8 space-y-6 sm:space-y-8">
+    <section className="py-12 sm:py-16 md:py-20 bg-background border-t border-border/50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8 space-y-6 sm:space-y-8 w-full">
         
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-1.5 text-left">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
               BOOTCAMP PRO IA
             </span>
-            <p className="text-xs text-muted-foreground">Choisissez la formule adaptée à vos objectifs</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Choisissez la formule adaptée à vos objectifs</p>
           </div>
         </div>
 
-        {/* Stable Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        {/* Full-width Responsive Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full">
           {pathways.map((item, idx) => {
             const Icon = item.icon
             const accent = getAccent(item.accentColor)
@@ -408,9 +342,9 @@ export function UdemySkillPathways() {
                         className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold px-3.5 py-3 text-xs transition-all shrink-0 hover:text-white"
                         title="Télécharger le programme officiel (PDF)"
                       >
-                        <Download className="size-3.5 text-primary" />
-                        <span className="hidden sm:inline">Programme PDF</span>
-                        <span className="sm:hidden">Programme (PDF)</span>
+                        <span className="hidden sm:inline">Voir Programme</span>
+                        <span className="sm:hidden">Voir Programme</span>
+                        <ArrowRight className="size-3.5 text-primary" />
                       </a>
                     )}
                   </div>

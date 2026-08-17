@@ -1235,7 +1235,9 @@ export default function SuperAdminDashboard() {
       p.registrations?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.transaction_ref?.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesFilter = paymentFilter === "all" || p.status === paymentFilter
+    const matchesFilter = paymentFilter === "all" || 
+      p.status === paymentFilter || 
+      (paymentFilter === "pending_verification" && (p.status === "pending" || p.status === "pending_verification"))
     return matchesSearch && matchesFilter
   })
 
@@ -3759,10 +3761,10 @@ export default function SuperAdminDashboard() {
                         <td className="p-4">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                             p.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                            p.status === "pending_verification" ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
+                            (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
                             "bg-slate-800 text-slate-400 border-slate-700"
                           }`}>
-                            {p.status === "pending_verification" ? "À vérifier" : p.status}
+                            {(p.status === "pending_verification" || p.status === "pending") ? "À vérifier" : p.status}
                           </span>
                         </td>
                         <td className="p-4 text-slate-400 text-[11px]">
@@ -3773,16 +3775,16 @@ export default function SuperAdminDashboard() {
                             <button
                               onClick={() => handlePaymentStatus(p.id, "confirmed")}
                               disabled={processingId === p.id}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-[11px] hover:bg-emerald-400 transition-colors shadow-md"
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-[11px] hover:bg-emerald-400 transition-colors shadow-md cursor-pointer"
                             >
                               Valider & Envoyer Accès
                             </button>
                           )}
-                          {p.status === "pending_verification" && (
+                          {(p.status === "pending_verification" || p.status === "pending") && (
                             <button
                               onClick={() => handlePaymentStatus(p.id, "rejected")}
                               disabled={processingId === p.id}
-                              className="px-2.5 py-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-[11px] hover:bg-red-500/30 transition-colors"
+                              className="px-2.5 py-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-[11px] hover:bg-red-500/30 transition-colors cursor-pointer"
                             >
                               Rejeter
                             </button>

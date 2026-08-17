@@ -176,6 +176,7 @@ export default function DashboardPage() {
   const [dbLiveSession, setDbLiveSession] = useState<any>(null)
   // userEnrollments stores course UUIDs (stable DB ids, not slugs)
   const [userEnrollments, setUserEnrollments] = useState<string[]>([])
+  const [pendingCourses, setPendingCourses] = useState<any[]>([])
   const [userInvoices, setUserInvoices] = useState<any[]>([])
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -278,6 +279,17 @@ export default function DashboardPage() {
         .select("course_slug")
         .eq("user_email", userEmailClean)
         .eq("status", "active")
+
+      // 9. Fetch pending verification courses (Mobile Money pending admin approval)
+      const { data: pendingUcData } = await supabase
+        .from("user_courses")
+        .select("course_slug, created_at, payment_method, amount_paid")
+        .eq("user_email", userEmailClean)
+        .eq("status", "pending_verification")
+
+      if (pendingUcData && pendingUcData.length > 0) {
+        setPendingCourses(pendingUcData)
+      }
 
       const isAdminUser = profData?.role === "admin" || profData?.role === "super_admin"
       setIsAdmin(isAdminUser)
@@ -448,9 +460,14 @@ export default function DashboardPage() {
     })()
   }))
 
-  // Separate enrolled (accessible) vs locked (paid, not yet purchased)
+  // Separate enrolled (accessible) vs pending (awaiting admin verification) vs locked (not yet registered)
+  const pendingCourseSlugs = pendingCourses.map((pc: any) => pc.course_slug)
+  const isPendingCourse = (b: any) =>
+    !canAccess(b) && (pendingCourseSlugs.includes(b.slug) || pendingCourseSlugs.includes(b.dbId) || pendingCourseSlugs.includes(b.id))
+
   const enrolledBootcamps = displayedBootcamps.filter((b: any) => canAccess(b))
-  const lockedBootcamps = displayedBootcamps.filter((b: any) => !canAccess(b))
+  const pendingBootcamps = displayedBootcamps.filter((b: any) => isPendingCourse(b))
+  const lockedBootcamps = displayedBootcamps.filter((b: any) => !canAccess(b) && !isPendingCourse(b))
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
@@ -696,7 +713,37 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* 1. Live Google Meet & WhatsApp Hub Banner — Dynamique depuis DB */}
+            {/* 0. Notification Formation(s) en attente de validation administrative Mobile Money */}
+            {pendingCourses.length > 0 && (
+              <div className="p-5 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left shadow-lg">
+                <div className="flex items-start gap-3.5">
+                  <Clock className="size-5 text-amber-400 shrink-0 mt-0.5 animate-pulse" />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                        Vérification sous 24h
+                      </span>
+                      <h4 className="font-bold text-xs sm:text-sm text-white">
+                        {pendingCourses.length === 1 ? "1 formation en cours de validation administrative" : `${pendingCourses.length} formations en cours de validation`}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      Votre déclaration de virement Mobile Money est en cours de vérification par l'équipe d'administration Le Guide IA. Vos accès seront automatiquement débloqués dans votre espace membre sous 24h ouvrées.
+                    </p>
+                  </div>
+                </div>
+
+                <a
+                  href="https://wa.me/22605050577?text=Bonjour%20Alfred%2C%20je%20viens%20de%20v%C3%A9rifier%20mon%20Dashboard%20et%20je%20souhaite%20acc%C3%A9l%C3%A9rer%20la%20validation%20de%20mon%20virement%20Mobile%20Money."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black text-xs flex items-center justify-center gap-2 shrink-0 transition-all shadow-md active:scale-95"
+                >
+                  <MessageCircle className="size-4" />
+                  <span>Accélérer sur WhatsApp</span>
+                </a>
+              </div>
+            )}
             {(() => {
               // Trouver le bootcamp actif auquel l'utilisateur est inscrit (ou à venir le plus proche)
               const activeBootcamp = enrolledBootcamps.find((b: any) => b.status === "active")
@@ -798,7 +845,7 @@ export default function DashboardPage() {
                 <button onClick={() => setActiveTab("courses")} className="text-xs text-primary font-bold hover:underline">Voir tout →</button>
               </div>
 
-              {enrolledBootcamps.length > 0 ? (
+              {enrolledBootcamps.length > 0 || pendingBootcamps.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-3">
                   {enrolledBootcamps.map((bootcamp: any) => (
                     <div key={bootcamp.dbId} className="rounded-2xl border border-border bg-card/40 overflow-hidden p-3.5 flex flex-col justify-between space-y-3 hover:border-primary/40 transition-colors text-left shadow-lg">
@@ -826,6 +873,30 @@ export default function DashboardPage() {
                       >
                         <PlayCircle className="size-3.5" />
                         <span>Accéder aux cours</span>
+                      </button>
+                    </div>
+                  ))}
+
+                  {pendingBootcamps.map((bootcamp: any) => (
+                    <div key={bootcamp.dbId} className="rounded-2xl border border-amber-500/40 bg-gradient-to-b from-amber-500/5 to-card/60 overflow-hidden p-3.5 flex flex-col justify-between space-y-3 text-left shadow-lg">
+                      <div className="space-y-2">
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-amber-500/30">
+                          <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover opacity-80" />
+                          <div className="absolute top-2 left-2">
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md border shadow-md bg-amber-500 text-slate-950 border-amber-400">
+                              ⏳ Validation 24h
+                            </span>
+                          </div>
+                        </div>
+                        <h4 className="font-heading text-xs font-bold text-foreground line-clamp-2">{bootcamp.title}</h4>
+                        <p className="text-[10px] text-amber-400 font-semibold">Vérification Mobile Money en cours...</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab("courses")}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-500/15 py-2 rounded-xl border border-amber-500/30 transition-all"
+                      >
+                        <Clock className="size-3.5 animate-pulse" />
+                        <span>Voir le statut</span>
                       </button>
                     </div>
                   ))}
@@ -991,7 +1062,61 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* ─── Formations disponibles à l'achat ─── */}
+                {/* ─── Formations en attente de validation (Mobile Money sous 24h) ─── */}
+                {pendingBootcamps.length > 0 && (
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-3">
+                      <h2 className="font-heading text-base font-bold text-foreground">Formations en cours de validation</h2>
+                      <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full animate-pulse">
+                        ⏳ Activation sous 24h
+                      </span>
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {pendingBootcamps.map((bootcamp: any) => (
+                        <div
+                          key={bootcamp.dbId}
+                          className="rounded-3xl border border-amber-500/40 bg-gradient-to-b from-amber-500/5 via-card/60 to-card/90 overflow-hidden flex flex-col justify-between transition-all shadow-xl text-left"
+                        >
+                          <div className="space-y-3 p-5">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-amber-500/30 mb-2">
+                              <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover opacity-80" />
+                              <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center">
+                                <span className="bg-amber-500/90 text-slate-950 px-3 py-1.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-1.5">
+                                  <Clock className="size-3.5" />
+                                  Vérification administrative
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <h3 className="font-heading text-base font-bold text-foreground leading-snug">{bootcamp.title}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 leading-relaxed">
+                              ⏳ Votre virement Mobile Money est en cours de vérification. Vos vidéos et ressources seront débloquées sous moins de 24h ouvrées.
+                            </div>
+                          </div>
+
+                          <div className="p-5 pt-0 space-y-2">
+                            <div className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold py-2.5 text-xs">
+                              <Clock className="size-3.5 animate-pulse" />
+                              <span>Validation en cours...</span>
+                            </div>
+
+                            <a
+                              href={`https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens de vérifier mon dashboard pour la formation "${bootcamp.title}". Mon paiement Mobile Money est en cours de validation. Pouvez-vous vérifier mon virement ? Merci !`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black py-2 text-xs transition-all shadow-md active:scale-95"
+                            >
+                              <MessageCircle className="size-3.5" />
+                              <span>Accélérer sur WhatsApp</span>
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {lockedBootcamps.length > 0 && (
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-3">
