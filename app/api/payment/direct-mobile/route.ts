@@ -157,7 +157,7 @@ export async function POST(req: Request) {
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
               <p style="font-size: 12px; color: #94a3b8; text-align: center;">
                 Le Guide IA — Équipe Support & Accompagnement<br />
-                WhatsApp Support : +226 0505 0577 · contact@leguideai.com
+                WhatsApp Support : +226 0505 0577 · alfred@leguideai.com
               </p>
             </div>
           `,

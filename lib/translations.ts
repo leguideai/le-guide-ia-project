@@ -248,25 +248,61 @@ export const translations: Record<string, any> = {
       title: "Des questions ? Nous avons les réponses",
       categories: {
         all: "Toutes",
-        pricing: "Paiement & Tarifs",
-        program: "Programme & Outils",
-        logistics: "Logistique & Replays",
-        guarantee: "Garantie & Support"
+        program: "Programme & Formations",
+        pricing: "Paiement & Accès",
+        guarantee: "Certification & Accompagnement"
       },
       items: [
-        { category: "program", q: "Qu'est-ce qui différencie ce Bootcamp d'une formation YouTube gratuite ?", a: "Ce Bootcamp est 100% interactif avec Alfred Dah. Il inclut 10 exercices pratiques modélisés pour des cas réels africains et de la diaspora, un accompagnement personnalisé en direct, et un groupe d'entraide privé WhatsApp pour pérenniser vos acquis." },
-        { category: "program", q: "Je n'ai jamais utilisé l'IA. Est-ce que je peux suivre le Bootcamp ?", a: "Oui, tout à fait. Nous démarrons avec le mindset et les bases professionnelles du prompting (sessions 1 et 2) avant d'aborder des cas avancés. La formation est conçue pour être progressive et accessible." },
-        { category: "logistics", q: "Est-ce que les sessions sont enregistrées si je rate un live ?", a: "Oui. Toutes les sessions sont enregistrées et les replays sont disponibles sous 12h dans votre espace membre." },
-        { category: "logistics", q: "Quel est le fuseau horaire ?", a: "Toutes les sessions en direct se déroulent à 19h00 GMT (heure de Ouagadougou/Abidjan/Dakar). Pour le Cameroun/Gabon/Congo il sera 20h00, et pour la France il sera 21h00." },
-        { category: "pricing", q: "Comment s'effectue le paiement depuis mon pays ?", a: "Vous pouvez payer facilement par Orange Money, Wave, Zelle ou par virement bancaire pour les entreprises. Les détails de paiement et le formulaire de confirmation sont disponibles dans la section Paiement ci-dessus." },
-        { category: "guarantee", q: "Y a-t-il une garantie satisfait ou remboursé ?", a: "Oui, nous offrons une garantie satisfait ou remboursé sous conditions d'assiduité (avoir assisté aux lives et soumis les 3 premiers exercices) dans les 5 premiers jours du Bootcamp." },
-        { category: "guarantee", q: "Qu'est-ce qui se passe après le Bootcamp ? Y a-t-il un suivi ?", a: "Après le Bootcamp, vous conservez l'accès au groupe privé WhatsApp Le Guide IA PRO pour continuer à échanger, poser des questions et recevoir nos partages exclusifs." },
-        { category: "pricing", q: "Puis-je inscrire mon équipe ou mon entreprise ?", a: "Oui, nous proposons des tarifs de groupe ou des sessions intra-entreprises. Contactez-nous par email à alfred@leguideai.com." },
-        { category: "program", q: "Quels sont les outils requis pour suivre les lives ?", a: "Un simple ordinateur ou smartphone et une connexion internet. Nous utiliserons des versions gratuites de ChatGPT, Claude, Gemini et Canva IA, vous n'avez pas besoin d'abonnements payants." },
-        { category: "pricing", q: "Quel est le tarif de l'offre Fondateur et quand expire-t-elle ?", a: "Le tarif Fondateur est de 149 900 FCFA (environ 262 USD). Cette offre exclusive expire le 20 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD)." },
-        { category: "logistics", q: "Le Bootcamp convient-il aux résidents de la diaspora ?", a: "Oui, tout à fait. Les horaires (19h00 GMT / 21h00 en France) et les moyens de paiement comme Zelle sont spécifiquement adaptés pour faciliter la participation de la diaspora." },
-        { category: "pricing", q: "Puis-je obtenir une facture pour mon entreprise ?", a: "Oui, nous pouvons vous émettre une facture professionnelle au nom de votre entreprise pour justifier la formation. Envoyez-nous simplement les détails de facturation sur WhatsApp." },
-        { category: "logistics", q: "Comment puis-je rejoindre le groupe WhatsApp privé ?", a: "Une fois votre confirmation de paiement transmise via notre formulaire, notre équipe valide votre accès sous 24h et vous recevez un lien d'intégration WhatsApp direct par e-mail et SMS/WhatsApp." }
+        {
+          category: "program",
+          q: "Dois-je avoir des compétences en programmation pour suivre vos formations ?",
+          a: "Absolument aucun prérequis technique n'est requis. Nos Bootcamps et Masterclasses sont 100% axés sur les outils No-Code, les modèles de langage et l'IA générative appliquée (ChatGPT, Claude 3.5 Sonnet, Gemini, Midjourney, Canva IA, Make et n8n). Chaque concept est expliqué pas à pas avec des cas pratiques immédiatement applicables à votre métier ou entreprise."
+        },
+        {
+          category: "program",
+          q: "Quelle est la différence entre vos Bootcamps interactifs et vos Masterclasses vidéos ?",
+          a: "Nos Bootcamps sont des programmes intensifs en direct avec nos formateurs experts (dont Alfred Dah), comprenant des ateliers pratiques en temps réel, des devoirs corrigés et des sessions de questions/réponses en direct. Les Masterclasses vidéos sont des formations enregistrées en auto-formation que vous pouvez suivre à votre propre rythme depuis votre Espace Membre."
+        },
+        {
+          category: "program",
+          q: "De quel matériel ou logiciel ai-je besoin pour participer aux cours ?",
+          a: "Un simple ordinateur portable (ou smartphone/tablette) et une connexion Internet stable suffisent. Pour tous les outils d'IA utilisés durant nos formations (ChatGPT, Claude, Canva, etc.), nous vous formons sur les versions gratuites avant d'envisager des abonnements payants optionnels."
+        },
+        {
+          category: "program",
+          q: "Les formations et ressources sont-elles adaptées au contexte économique africain ?",
+          a: "Oui, c'est l'ADN même du Guide IA. Tous nos cas d'usage, modèles de business plans, prompts métiers et stratégies d'automatisation sont conçus sur mesure pour répondre aux réalités économiques et professionnelles en Afrique francophone et de la diaspora (recrutement, commerce, marketing local, finance, etc.)."
+        },
+        {
+          category: "pricing",
+          q: "Quels sont les moyens de paiement acceptés sur la plateforme ?",
+          a: "Nous proposons des solutions de paiement ultra-flexibles adaptées à chaque pays : Mobile Money instantané (Orange Money, Wave, MTN MoMo, Moov Money), cartes bancaires internationales (Visa, Mastercard) et virements bancaires professionnels (B2B) avec émission de facture proforma."
+        },
+        {
+          category: "pricing",
+          q: "Quand et comment ai-je accès à mon espace de formation après mon paiement ?",
+          a: "Pour les paiements par carte bancaire, votre accès est activé automatiquement et instantanément. Pour les règlements par Mobile Money ou Virement, notre équipe administrative valide manuellement votre transaction sous 24 heures et vous recevez vos identifiants d'accès complets ainsi qu'un email de confirmation."
+        },
+        {
+          category: "pricing",
+          q: "Mon accès à l'Espace Membre et aux contenus est-il limité dans le temps ?",
+          a: "Non, votre accès est illimité et à vie. Vous conservez un accès permanent à tous vos cours achetés, aux supports de formation, aux modèles téléchargeables ainsi qu'à toutes les futures mises à jour des cours sans aucun abonnement récurrent ni frais supplémentaire."
+        },
+        {
+          category: "guarantee",
+          q: "Délivrez-vous un certificat officiel à la fin de la formation ?",
+          a: "Oui. Chaque apprenant ayant suivi l'intégralité des modules et validé ses projets pratiques reçoit un Certificat Officiel d'Aptitude & Compétences IA émis par Le Guide IA. Ce certificat vérifiable peut être téléchargé en haute résolution et ajouté directement à votre CV et profil LinkedIn."
+        },
+        {
+          category: "guarantee",
+          q: "Comment fonctionne le support et la communauté privée des apprenants ?",
+          a: "Dès votre inscription, vous intégrez notre communauté privée WhatsApp d'apprenants et de professionnels. Vous pouvez y poser toutes vos questions techniques, échanger avec vos pairs, partager vos projets et bénéficier d'une assistance directe de nos formateurs tout au long de votre apprentissage."
+        },
+        {
+          category: "guarantee",
+          q: "Est-il possible d'inscrire plusieurs collaborateurs ou d'organiser une formation sur mesure pour mon entreprise ?",
+          a: "Tout à fait. Nous proposons des offres d'accompagnement B2B et des sessions privées intra-entreprises adaptées aux objectifs spécifiques de vos équipes (marketing, finance, direction, RH). Vous pouvez nous contacter directement par email à alfred@leguideai.com ou sur WhatsApp au +226 05 05 05 77 pour recevoir un devis personnalisé."
+        }
       ]
     },
     ctaFooter: {
@@ -545,27 +581,61 @@ export const translations: Record<string, any> = {
       title: "Questions? We have answers",
       categories: {
         all: "All",
-        pricing: "Payment & Pricing",
-        program: "Program & Tools",
-        logistics: "Logistics & Replays",
-        guarantee: "Guarantee & Support"
+        program: "Program & Courses",
+        pricing: "Payment & Access",
+        guarantee: "Certification & Support"
       },
       items: [
-        { category: "program", q: "What makes this Bootcamp different from a free YouTube video?", a: "This Bootcamp is 100% interactive with Alfred Dah. It includes 10 practical exercises mapped to real African and diaspora scenarios, personalized live coaching, and a private WhatsApp support group to consolidate your learning." },
-        { category: "program", q: "I have never used AI before. Can I attend this Bootcamp?", a: "Yes, absolutely. We start with the professional mindset and prompting basics (Sessions 1 and 2) before moving to advanced topics. The training is progressive and accessible." },
-        { category: "logistics", q: "Are the sessions recorded if I miss a live?", a: "Yes. All sessions are recorded and replays are available within 48 hours in your member area." },
-        { category: "logistics", q: "What is the time zone?", a: "All live sessions are held at 7:00 PM GMT (Ouagadougou/Abidjan/Dakar time). For Cameroon/Gabon/Congo, it will be 8:00 PM, and for France, it will be 9:00 PM." },
-        { category: "pricing", q: "How do I pay from my country?", a: "You can pay easily by Orange Money, Wave, Zelle, or by bank transfer for businesses. Payment details and the confirmation form are available in the Payment section above." },
-        { category: "guarantee", q: "Is there a money-back guarantee?", a: "Yes, we offer a money-back guarantee based on attendance (having attended lives and submitted the first 3 exercises) within the first 5 days of the Bootcamp." },
-        { category: "guarantee", q: "Is the certificate recognized by employers?", a: "The Le Guide IA certificate attests to your practical skills and the completion of your deliverables. It is highly valued by local employers and on LinkedIn as proof of operational skills." },
-        { category: "guarantee", q: "What happens after the Bootcamp? Is there any follow-up?", a: "After the Bootcamp, you keep access to the private Le Guide IA PRO WhatsApp group to continue exchanges, ask questions, and receive exclusive updates." },
-        { category: "pricing", q: "Can I enroll my team or my company?", a: "Yes, we offer group rates or in-house sessions. Contact us by email at alfred@leguideai.com." },
-        { category: "program", q: "What tools are required to follow the lives?", a: "A computer or smartphone and an internet connection. We will use the free versions of ChatGPT, Claude, Gemini, and Canva IA; you don't need paid subscriptions." },
-        { category: "program", q: "Who is the expert Alfred Dah?", a: "Alfred Dah is a certified CISA systems auditor, holder of an MBA and specialized in AI governance, with over 24 years of experience in digital transformation." },
-        { category: "pricing", q: "What is the Founder Price and when does it expire?", a: "The Founder price is 149,900 FCFA (approximately $262 USD). This exclusive offer expires on August 20, 2026 at midnight GMT. The price will then revert to the standard rate of 250,000 FCFA (approximately $440 USD)." },
-        { category: "logistics", q: "Does the Bootcamp suit diaspora residents?", a: "Yes, absolutely. The hours (7:00 PM GMT / 9:00 PM in France) and payment methods like Zelle are specifically tailored for diaspora participation." },
-        { category: "pricing", q: "Can I get an invoice for my company?", a: "Yes, we can issue a professional invoice under your company's name. Simply send us your invoicing details on WhatsApp." },
-        { category: "logistics", q: "How do I join the private WhatsApp group?", a: "Once your payment confirmation is sent via our form, our team validates your access within 24 hours and you receive a direct WhatsApp integration link by email and SMS/WhatsApp." }
+        {
+          category: "program",
+          q: "Do I need programming skills to attend your courses?",
+          a: "No technical prerequisites are required. Our Bootcamps and Masterclasses are 100% focused on No-Code tools, large language models, and applied generative AI (ChatGPT, Claude 3.5 Sonnet, Gemini, Midjourney, Canva AI, Make, and n8n). Every concept is taught step-by-step with practical cases directly applicable to your business."
+        },
+        {
+          category: "program",
+          q: "What is the difference between interactive Bootcamps and video Masterclasses?",
+          a: "Our Bootcamps are intensive live cohort programs led by expert trainers (including Alfred Dah) with real-time workshops, reviewed assignments, and live Q&A sessions. Video Masterclasses are self-paced recorded courses you can watch anytime from your Member Area."
+        },
+        {
+          category: "program",
+          q: "What hardware or software do I need to attend?",
+          a: "A standard laptop (or tablet/smartphone) and a stable internet connection are all you need. For all AI tools used throughout our programs (ChatGPT, Claude, Canva, etc.), we show you how to maximize free tiers before considering optional paid plans."
+        },
+        {
+          category: "program",
+          q: "Are the courses tailored to African and emerging market contexts?",
+          a: "Yes, that is the core mission of Le Guide IA. All our case studies, business plan templates, prompt libraries, and automation workflows are designed specifically for the economic realities of Francophone Africa and the diaspora."
+        },
+        {
+          category: "pricing",
+          q: "What payment methods are accepted on the platform?",
+          a: "We provide convenient payment options for every country: Instant Mobile Money (Orange Money, Wave, MTN MoMo, Moov Money), international bank cards (Visa, Mastercard), and corporate wire transfers with proforma invoices."
+        },
+        {
+          category: "pricing",
+          q: "When and how do I receive access to my course after payment?",
+          a: "Card payments automatically grant instant access. For Mobile Money and Bank Transfers, our administrative team validates your transaction within 24 hours, and you receive your access credentials and a confirmation email."
+        },
+        {
+          category: "pricing",
+          q: "Is my access to the Member Area time-limited?",
+          a: "No, your access is lifetime and unlimited. You keep permanent access to your purchased courses, downloadable materials, prompt libraries, and all future curriculum updates with no recurring fees."
+        },
+        {
+          category: "guarantee",
+          q: "Do you provide an official certificate upon course completion?",
+          a: "Yes. Every learner who completes the modules and validates their practical projects receives an Official Certificate of AI Proficiency & Skills from Le Guide IA, verifiable and ready to share on LinkedIn and CVs."
+        },
+        {
+          category: "guarantee",
+          q: "How does learner support and the private community work?",
+          a: "Upon enrollment, you join our private WhatsApp community of learners and professionals to ask technical questions, network, share projects, and receive direct coaching throughout your learning journey."
+        },
+        {
+          category: "guarantee",
+          q: "Can I enroll multiple team members or book a custom corporate training?",
+          a: "Yes, absolutely. We offer tailored B2B corporate training and dedicated private cohort sessions for companies and organizations. Contact us directly at alfred@leguideai.com or on WhatsApp at +226 05 05 05 77 for a customized quote."
+        }
       ]
     },
     ctaFooter: {

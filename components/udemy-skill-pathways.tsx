@@ -270,10 +270,10 @@ export function UdemySkillPathways() {
                           <div className="flex flex-wrap items-center  gap-1 text-[11px] pt-2 border-t border-border/40 text-slate-300">
                             <span className="text-slate-400 flex items-center gap-1.5 font-medium">
                               <Clock className="size-3.5 text-[#D4AF37] shrink-0" />
-                              <span>Offre valable jusqu'au :</span>
+                              <span>Offre valable jusqu'au </span>
                             </span>
                             <span className="font-bold text-[#ECC86B]">
-                              {item.offer.periodLabel}
+                              {item.offer.periodLabel} 2026
                             </span>
                           </div>
                         )}

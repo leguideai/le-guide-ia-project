@@ -33,10 +33,9 @@ export function FAQ() {
 
   const categories = (t("faq.categories") as Record<string, string>) || {
     all: "Toutes",
-    pricing: "Paiement & Tarifs",
-    program: "Programme & Outils",
-    logistics: "Logistique & Replays",
-    guarantee: "Garantie & Support"
+    program: "Programme & Formations",
+    pricing: "Paiement & Accès",
+    guarantee: "Certification & Accompagnement"
   }
 
   const [activeCategory, setActiveCategory] = useState<string>("all")
@@ -53,9 +52,8 @@ export function FAQ() {
 
   const categoryIcons: Record<string, any> = {
     all: Layers,
-    pricing: CreditCard,
     program: BookOpen,
-    logistics: Clock,
+    pricing: CreditCard,
     guarantee: ShieldCheck,
   }
 
