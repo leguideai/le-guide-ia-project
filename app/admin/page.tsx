@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
@@ -1235,35 +1235,171 @@ export default function SuperAdminDashboard() {
   }
 
   // Compute Calendar Events for Admin Dashboard
-  const adminCalendarEvents = (allSessions || []).map((s: BootcampSession) => {
-    const course = courses.find(c => c.id === s.course_id || c.slug === s.course_slug || c.slug === s.course_id)
-    const dateStr = s.scheduled_at 
-      ? String(s.scheduled_at).split("T")[0]
-      : "2026-08-31"
+  const adminCalendarEvents = useMemo(() => {
+    const rawEvents = (allSessions || []).map((s: BootcampSession) => {
+      const course = courses.find(c => c.id === s.course_id || c.slug === s.course_slug || c.slug === s.course_id)
+      const dateStr = s.scheduled_at 
+        ? String(s.scheduled_at).split("T")[0]
+        : "2026-08-31"
 
-    const isBusiness = Number(course?.price) >= 140000 || 
-      String(course?.slug || "").includes("business") || 
-      String(s.title || "").toLowerCase().includes("business")
+      const isBusiness = Number(course?.price) >= 140000 || 
+        String(course?.slug || "").includes("business") || 
+        String(s.title || "").toLowerCase().includes("business")
 
-    return {
-      id: s.id || `sess-${s.session_number}-${dateStr}`,
-      courseId: s.course_id || course?.id || "bootcamp-pro-2",
-      courseSlug: s.course_slug || course?.slug || "bootcamp-pro-2",
-      courseTitle: course?.title || (isBusiness ? "Bootcamp IA & Business (Exclusive Managers)" : "Bootcamp IA & Carrière"),
-      track: isBusiness ? ("business" as const) : ("carriere" as const),
-      sessionNumber: s.session_number,
-      title: s.title,
-      description: s.description || "",
-      date: dateStr,
-      startTime: s.scheduled_at && s.scheduled_at.includes("T") ? s.scheduled_at.split("T")[1].slice(0, 5) : "19:00",
-      endTime: s.ends_at && s.ends_at.includes("T") ? s.ends_at.split("T")[1].slice(0, 5) : "21:00",
-      instructor: course?.instructor || "Alfred Dah",
-      meetUrl: s.meet_url || course?.live_meet_url,
-      recordingUrl: s.recording_url,
-      whatsappUrl: course?.whatsapp_url,
-      status: s.status || "upcoming"
-    }
-  })
+      return {
+        id: s.id || `sess-${s.session_number}-${dateStr}`,
+        courseId: s.course_id || course?.id || "bootcamp-pro-2",
+        courseSlug: s.course_slug || course?.slug || "bootcamp-pro-2",
+        courseTitle: course?.title || (isBusiness ? "Bootcamp IA & Business (Exclusive Managers)" : "Bootcamp IA & Carrière"),
+        track: isBusiness ? ("business" as const) : ("carriere" as const),
+        eventType: "session" as const,
+        sessionNumber: s.session_number,
+        title: s.title,
+        description: s.description || "",
+        date: dateStr,
+        startTime: s.scheduled_at && s.scheduled_at.includes("T") ? s.scheduled_at.split("T")[1].slice(0, 5) : "19:00",
+        endTime: s.ends_at && s.ends_at.includes("T") ? s.ends_at.split("T")[1].slice(0, 5) : "21:00",
+        instructor: course?.instructor || "Alfred Dah",
+        meetUrl: s.meet_url || course?.live_meet_url,
+        recordingUrl: s.recording_url,
+        whatsappUrl: course?.whatsapp_url,
+        status: s.status || "upcoming"
+      }
+    })
+
+    const cohortLaunches = [
+      {
+        id: "cohort-admin-carriere-2026-08-31",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 31 Août)",
+        description: "Lancement officiel de la cohorte intensive de 7 jours.",
+        date: "2026-08-31",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-admin-business-2026-08-31",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 31 Août)",
+        description: "Lancement de la cohorte exécutive pour dirigeants et managers.",
+        date: "2026-08-31",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-admin-carriere-2026-09-14",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 14 Septembre)",
+        description: "Cohorte de mi-septembre.",
+        date: "2026-09-14",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-admin-business-2026-09-14",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 14 Septembre)",
+        description: "Cohorte exécutive de mi-septembre.",
+        date: "2026-09-14",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-admin-carriere-2026-09-28",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 28 Septembre)",
+        description: "Cohorte de fin septembre.",
+        date: "2026-09-28",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-admin-business-2026-09-28",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 28 Septembre)",
+        description: "Cohorte exécutive de fin septembre.",
+        date: "2026-09-28",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-admin-carriere-2026-10-12",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 12 Octobre)",
+        description: "Cohorte d'octobre.",
+        date: "2026-10-12",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-admin-business-2026-10-12",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 12 Octobre)",
+        description: "Cohorte exécutive d'octobre.",
+        date: "2026-10-12",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        status: "upcoming" as const
+      }
+    ]
+
+    return [...cohortLaunches, ...rawEvents]
+  }, [allSessions, courses])
 
   // Generate 7-Day Cohort Handler for Admin
   async function handleGenerateCohort(courseId: string, startDateStr: string) {

@@ -45,7 +45,13 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(error.message === "Invalid login credentials" ? "Email ou mot de passe incorrect. Si ce compte n'a pas encore été créé, cliquez sur 'Créer un compte'." : error.message)
+      if (error.message.toLowerCase().includes("email not confirmed") || error.message.toLowerCase().includes("not confirmed")) {
+        setError("Votre adresse email n'est pas encore confirmée. Veuillez cliquer sur le lien d'activation reçu dans votre boîte de réception (ou dans vos spams).")
+      } else if (error.message === "Invalid login credentials") {
+        setError("Email ou mot de passe incorrect. Si ce compte n'a pas encore été créé, cliquez sur 'Créer un compte'.")
+      } else {
+        setError(error.message)
+      }
       setLoading(false)
     } else if (data?.session) {
       // Check user role for smart redirection

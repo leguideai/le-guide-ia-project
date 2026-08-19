@@ -218,19 +218,27 @@ export async function POST(req: Request) {
       }
 
       // 6. Add to user_courses for immediate platform access
-      const userCoursePayload: any = {
-        user_email: emailClean,
-        course_slug: courseSlugFinal,
-        status: "active"
+      try {
+        const { error: enrollErr } = await supabaseServer
+          .from("user_courses")
+          .upsert({
+            user_email: emailClean,
+            course_slug: courseSlugFinal,
+            status: "active"
+          }, { onConflict: "user_email,course_slug" })
+
+        if (enrollErr) {
+          await supabaseServer
+            .from("user_courses")
+            .insert({
+              user_email: emailClean,
+              course_slug: courseSlugFinal,
+              status: "active"
+            })
+        }
+      } catch (ucErrCatch) {
+        console.warn("user_courses note:", ucErrCatch)
       }
-      if (authUserId) userCoursePayload.user_id = authUserId
-      if (courseId) userCoursePayload.course_id = courseId
-
-      const { error: enrollErr } = await supabaseServer
-        .from("user_courses")
-        .upsert(userCoursePayload, { onConflict: authUserId ? "user_id,course_id" : "user_email,course_slug" })
-
-      if (enrollErr) console.warn("user_courses insert warning:", enrollErr.message)
 
       // 7. Envoi de l'Email de confirmation et d'accès automatique via Resend
       let emailSent = false

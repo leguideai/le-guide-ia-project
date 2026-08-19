@@ -35,7 +35,10 @@ import {
   Upload,
   DownloadCloudIcon,
   Menu,
-  X
+  X,
+  Mail,
+  RefreshCw,
+  AlertCircle
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 
@@ -94,6 +97,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [savingProfile, setSavingProfile] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+
+  // Email verification barrier state
+  const [isEmailUnverified, setIsEmailUnverified] = useState(false)
+  const [resendingEmail, setResendingEmail] = useState(false)
+  const [resendStatus, setResendStatus] = useState<string | null>(null)
 
   // Course Player & Resources State
   const [selectedBootcamp, setSelectedBootcamp] = useState<BootcampCourse | null>(null)
@@ -196,6 +204,20 @@ export default function DashboardPage() {
         return
       }
       setUser(user)
+
+      // Verification de l'email : si le compte n'a pas confirme son email, bloquer l'acces a l'espace membre
+      const isConfirmed = Boolean(
+        user.email_confirmed_at || 
+        (user as any).confirmed_at || 
+        user.app_metadata?.provider === "google" ||
+        user.user_metadata?.email_verified === true
+      )
+
+      if (!isConfirmed) {
+        setIsEmailUnverified(true)
+        setLoading(false)
+        return
+      }
 
       const userEmailClean = user.email?.toLowerCase().trim() || ""
 
@@ -340,6 +362,30 @@ export default function DashboardPage() {
     }
   }
 
+  const handleResendVerification = async () => {
+    if (!user?.email) return
+    setResendingEmail(true)
+    setResendStatus(null)
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: user.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+      if (error) {
+        setResendStatus(`Erreur : ${error.message}`)
+      } else {
+        setResendStatus("Email de confirmation renvoyé avec succès ! Vérifiez votre boîte de réception (et vos spams).")
+      }
+    } catch (err: any) {
+      setResendStatus("Impossible de renvoyer l'email pour le moment.")
+    } finally {
+      setResendingEmail(false)
+    }
+  }
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user?.id) return
@@ -467,7 +513,165 @@ export default function DashboardPage() {
       })
     }
 
-    return evs
+    // Inject Upcoming Official Bootcamp Cohort Launch Dates (Rentrées officielles)
+    const upcomingCohorts = [
+      {
+        id: "cohort-carriere-2026-08-31",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte 31 Août 2026",
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 31 Août)",
+        description: "Lancement officiel de la cohorte intensive de 7 jours. Démarrage des masterclasses interactives, coaching direct sur Google Meet et remise des accès aux ressources privées.",
+        date: "2026-08-31",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA, Expert IA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-business-2026-08-31",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte 31 Août 2026",
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 31 Août)",
+        description: "Lancement de la cohorte exécutive de 7 jours. Stratégies IA pour décideurs, automatisation de flux de travail, gouvernance & cybersécurité.",
+        date: "2026-08-31",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-carriere-2026-09-14",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte Mi-Septembre 2026",
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 14 Septembre)",
+        description: "Nouvelle session intensive de 7 jours pour professionnels et consultants. Maîtrise des LLMs, Make, n8n et assistants spécialisés.",
+        date: "2026-09-14",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-business-2026-09-14",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte Mi-Septembre 2026",
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 14 Septembre)",
+        description: "Programme d'accompagnement accéléré pour chefs d'entreprises et cadres supérieurs.",
+        date: "2026-09-14",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-carriere-2026-09-28",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte Fin-Septembre 2026",
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 28 Septembre)",
+        description: "Rentrée d'automne du Bootcamp Carrière. 7 jours d'immersion pratique.",
+        date: "2026-09-28",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-business-2026-09-28",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte Fin-Septembre 2026",
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 28 Septembre)",
+        description: "Cohorte de fin septembre pour dirigeants et décideurs d'entreprise.",
+        date: "2026-09-28",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-carriere-2026-10-12",
+        courseId: "bootcamp-pro-2",
+        courseSlug: "bootcamp-pro-2",
+        courseTitle: "Bootcamp IA & Carrière",
+        track: "carriere" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte Octobre 2026",
+        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 12 Octobre)",
+        description: "Cohorte d'octobre 2026 du Bootcamp Carrière.",
+        date: "2026-10-12",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      },
+      {
+        id: "cohort-business-2026-10-12",
+        courseId: "bootcamp-business-exec",
+        courseSlug: "bootcamp-business-exec",
+        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+        track: "business" as const,
+        eventType: "bootcamp_launch" as const,
+        cohortName: "Cohorte Octobre 2026",
+        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 12 Octobre)",
+        description: "Cohorte d'octobre pour dirigeants et décideurs d'entreprise.",
+        date: "2026-10-12",
+        duration: "7 Jours Intensifs",
+        startTime: "19:00",
+        endTime: "21:00",
+        instructor: "Alfred Dah (Auditeur CISA)",
+        meetUrl: "https://meet.google.com",
+        whatsappUrl: "https://wa.me/22605050577",
+        status: "upcoming" as const
+      }
+    ]
+
+    // Combine cohort launch dates with session events (avoiding duplicates)
+    const combined = [...upcomingCohorts, ...evs]
+    return combined
   }, [dbBootcampSessions, dbCourses])
 
   const navItems: { id: string; label: string; icon: any; badge?: string }[] = [
@@ -571,6 +775,65 @@ export default function DashboardPage() {
           <span>Chargement de votre Espace Membre...</span>
         </div>
       </div>
+    )
+  }
+
+  if (isEmailUnverified) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="w-full max-w-md space-y-6 text-center">
+          <div className="flex items-center justify-center gap-2">
+            <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
+            <span className="font-heading text-lg font-black tracking-tight text-white">
+              LE GUIDE <span className="text-primary">IA</span>
+            </span>
+          </div>
+
+          <div className="rounded-3xl border border-amber-500/30 bg-slate-900/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-5">
+            <div className="size-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+              <Mail className="size-7 animate-pulse" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="font-heading text-xl font-bold text-white">Vérification de votre Email requise</h2>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Un lien d'activation a été envoyé à <strong className="text-primary font-bold">{user?.email}</strong>. Veuillez cliquer sur ce lien dans votre boîte de réception pour débloquer votre accès à l'Espace Membre.
+              </p>
+            </div>
+
+            {resendStatus && (
+              <div className={`p-3 rounded-xl text-xs font-bold ${resendStatus.includes("succès") ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/20"}`}>
+                {resendStatus}
+              </div>
+            )}
+
+            <div className="space-y-3 pt-2">
+              <button
+                onClick={handleResendVerification}
+                disabled={resendingEmail}
+                className="w-full py-3 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/20"
+              >
+                <RefreshCw className={`size-4 ${resendingEmail ? "animate-spin" : ""}`} />
+                <span>{resendingEmail ? "Envoi en cours..." : "Renvoyer l'email de confirmation"}</span>
+              </button>
+
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-bold text-xs hover:bg-slate-700 transition-all cursor-pointer"
+              >
+                J'ai déjà validé mon email (Actualiser)
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="w-full py-2 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                Se déconnecter
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
     )
   }
 
