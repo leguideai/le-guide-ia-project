@@ -54,15 +54,15 @@ export function WhyBootcamp() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 md:p-8 relative glow-emerald shadow-lg"
+            className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-6 md:p-8 relative glow-blue shadow-xl"
           >
-            <div className="absolute -top-3.5 right-6 rounded-full bg-emerald-500 px-3 py-0.5 text-[10px] font-extrabold text-emerald-950 uppercase tracking-wider">
+            <div className="absolute -top-3.5 right-6 rounded-full bg-primary px-3.5 py-1 text-[10px] font-extrabold text-primary-foreground uppercase tracking-wider shadow-md">
               Recommandé
             </div>
             
-            <h3 className="font-heading text-xl font-extrabold text-emerald-400 flex items-center gap-2 mb-6">
-              <span className="flex size-7 items-center justify-center rounded-full bg-emerald-500/20">
-                <Check className="size-4 text-emerald-400" />
+            <h3 className="font-heading text-xl font-extrabold text-primary flex items-center gap-2 mb-6">
+              <span className="flex size-7 items-center justify-center rounded-full bg-primary/20">
+                <Check className="size-4 text-primary" />
               </span>
               {t("whyBootcamp.avecLabel")}
             </h3>
@@ -70,7 +70,7 @@ export function WhyBootcamp() {
             <ul className="space-y-4">
               {items.map((item: any, i: number) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-foreground/90 font-medium">
-                  <Check className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <Check className="size-4 text-primary shrink-0 mt-0.5" />
                   <span>{item.avec}</span>
                 </li>
               ))}

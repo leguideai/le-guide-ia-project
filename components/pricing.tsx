@@ -99,42 +99,75 @@ export function Pricing({ selectedCourseId }: PricingProps) {
     return () => clearInterval(timer)
   }, [activeId, current.targetDateIso])
 
+  const isBusiness = Number(activeCourse?.price) >= 140000 || 
+    String(activeCourse?.slug || "").includes("business") || 
+    String(activeCourse?.slug || "").includes("exec") || 
+    String(activeCourse?.title || "").toLowerCase().includes("business") ||
+    String(activeCourse?.badge || "").toLowerCase().includes("vip") ||
+    String(activeCourse?.badge || "").toLowerCase().includes("manager")
+
+  const badgeText = isBusiness 
+    ? "EXCLUSIVE MANAGERS" 
+    : (activeCourse?.badge && !activeCourse.badge.toLowerCase().includes("vip") && !activeCourse.badge.toLowerCase().includes("executif"))
+      ? activeCourse.badge
+      : "PARCOURS CARRIÈRE & PROS"
+
+  const theme = isBusiness
+    ? {
+        border: "border-2 border-[#D4AF37] glow-gold bg-slate-950",
+        badge: "bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-slate-950 border border-[#F3E5AB]",
+        priceColor: "text-white",
+        expireColor: "text-[#ECC86B]",
+        expireIcon: "text-[#D4AF37]",
+        checkColor: "text-[#D4AF37]",
+        btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-xl shadow-[#D4AF37]/25",
+      }
+    : {
+        border: "border-2 border-blue-500/80 glow-blue bg-slate-950",
+        badge: "bg-blue-600 text-white border border-blue-400 font-black",
+        priceColor: "text-white",
+        expireColor: "text-blue-300",
+        expireIcon: "text-blue-400",
+        checkColor: "text-blue-400",
+        btn: "bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-xl shadow-blue-500/25",
+      }
+
   return (
     <section className="py-16 bg-background relative overflow-hidden border-t border-border/50" id="tarifs">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
         {/* Left-Aligned Header */}
         <div className="space-y-3 text-left">
-          <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
+          <span className={`inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest px-3.5 py-1.5 rounded-full border ${isBusiness ? "text-[#ECC86B] bg-[#D4AF37]/10 border-[#D4AF37]/30" : "text-primary bg-primary/10 border-primary/20"}`}>
             TARIFS OFFICIELS · {current.title.toUpperCase()}
           </span>
       
           <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
-            Profitez du Tarif Fondateur avantageux avant l'expiration du décompte et le passage au tarif standard.
+            Profitez du tarif officiel garanti avec accès complet aux sessions en direct, aux replays HD et au certificat d'accomplissement.
           </p>
         </div>
 
         {/* 2 Cards Grid: Offre Fondateur vs Prix Standard */}
         <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto items-stretch pt-6 md:pt-8">
           
-          {/* Card 1: Offre Fondateur (Highlight) */}
+          {/* Card 1: Offre Actuelle (Highlight) */}
           <motion.div
             key={`founder-${activeId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="relative rounded-3xl border-2 border-amber-500 bg-slate-950 p-6 md:p-8 shadow-2xl flex flex-col justify-between z-10"
+            className={`relative rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-between z-10 ${theme.border}`}
           >
-            {/* Top Founder Badge */}
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-5 py-1 text-xs font-black text-slate-950 uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20">
-              <Sparkles className="size-3.5 fill-slate-950" />
-              OFFRE FONDATEUR
+            {/* Top Badge */}
+            <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${theme.badge}`}>
+              <Sparkles className="size-3.5" />
+              {badgeText}
             </div>
 
             <div>
               <div className="text-center mt-4 mb-6 space-y-2">
                 <div className="flex items-center justify-center gap-2 pt-2">
-                  <span className="font-heading text-4xl md:text-5xl font-black text-white">{current.founderPrice}</span>
+                  <span className={`font-heading text-4xl md:text-5xl font-black ${theme.priceColor}`}>{current.founderPrice}</span>
                   {current.founderApprox && (
                     <span className="text-xs font-bold text-muted-foreground bg-card/80 border border-border/60 rounded-full px-2.5 py-1">
                       {current.founderApprox}
@@ -142,10 +175,10 @@ export function Pricing({ selectedCourseId }: PricingProps) {
                   )}
                 </div>
 
-                {current.expireText && (
-                  <div className="text-xs font-extrabold text-amber-400 uppercase tracking-wide flex items-center justify-center gap-1.5 pt-1">
-                    <Clock className="size-3.5 animate-pulse" />
-                    <span>{current.expireText}</span>
+                {current.standardDateText && (
+                  <div className={`text-xs font-extrabold uppercase tracking-wide flex items-center justify-center gap-1.5 pt-1 ${theme.expireColor}`}>
+                    <Clock className={`size-3.5 animate-pulse ${theme.expireIcon}`} />
+                    <span>{current.standardDateText}</span>
                   </div>
                 )}
               </div>
@@ -154,8 +187,8 @@ export function Pricing({ selectedCourseId }: PricingProps) {
                 <ul className="space-y-3.5">
                   {current.features.map((f: string, index: number) => (
                     <li key={index} className="flex items-start gap-3 text-xs md:text-sm text-foreground/95">
-                      <Check className="size-4 text-amber-400 shrink-0 mt-0.5" />
-                      <span>{f}</span>
+                      <Check className={`size-4 shrink-0 mt-0.5 ${theme.checkColor}`} />
+                      <span>{String(f).replace(/VIP/gi, "Exclusifs")}</span>
                     </li>
                   ))}
                 </ul>
@@ -165,9 +198,9 @@ export function Pricing({ selectedCourseId }: PricingProps) {
             <div className="mt-8">
               <Link
                 href={current.checkoutHref}
-                className="w-full flex h-13 items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition-all shadow-xl active:scale-95 cursor-pointer"
+                className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl text-sm transition-all shadow-xl active:scale-95 cursor-pointer ${theme.btn}`}
               >
-                <span>Profiter du Tarif Fondateur ({current.founderPrice})</span>
+                <span>Rejoindre le Bootcamp ({current.founderPrice})</span>
                 <ArrowRight className="size-4" />
               </Link>
             </div>

@@ -8,39 +8,39 @@ export function EcosystemHub() {
   const pillars = [
     {
       id: "bootcamp-pro",
-      title: "Bootcamp IA Pro (99 000 FCFA)",
-      subtitle: "15h de formation intensive pour salariés & professionnels",
-      desc: "Développez votre carrière et votre productivité individuelle avec l'IA. Du Lundi au Vendredi (19h-21h GMT) + Samedi (8h-13h GMT).",
+      title: "Bootcamp IA Carrière & Pros (99 000 FCFA)",
+      subtitle: "15h de formation intensive pour salariés, cadres & professionnels",
+      desc: "Boostez votre productivité et propulsez votre carrière avec l'IA. Du Lundi au Vendredi (19h-21h GMT) + Samedi (8h-13h GMT).",
       icon: GraduationCap,
       href: "/bootcamp",
       badge: "1ère Semaine du Mois",
-      color: "from-blue-500/20 via-primary/10 to-transparent",
-      borderColor: "border-primary/40",
+      color: "from-blue-600/20 via-blue-500/5 to-transparent",
+      borderColor: "border-blue-500/40",
       highlights: ["Pratique sur cas réels métiers", "Exercices & Ateliers en direct", "Certificat officiel d'accomplissement"]
     },
     {
       id: "bootcamp-business",
-      title: "Bootcamp IA Business (199 000 FCFA)",
-      subtitle: "15h pour entrepreneurs & indépendants",
-      desc: "Développez et automatisez votre activité avec l'IA. Du Lundi au Vendredi (19h-21h GMT) + Dimanche (16h-21h GMT).",
+      title: "Bootcamp Exclusive Managers (149 000 FCFA)",
+      subtitle: "15h pour dirigeants, managers & entrepreneurs",
+      desc: "Structurez, automatisez et accélérez votre business avec l'IA. Du Lundi au Vendredi (19h-21h GMT) + Dimanche (16h-21h GMT).",
       icon: UserCheck,
       href: "/bootcamp",
       badge: "3ème Semaine du Mois",
-      color: "from-amber-500/20 via-amber-500/5 to-transparent",
-      borderColor: "border-amber-500/30",
-      highlights: ["Automation & Workflows Business", "Modèles d'offres & E-marketing", "Certificat IA Business vérifiable"]
+      color: "from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent",
+      borderColor: "border-[#D4AF37]/50",
+      highlights: ["Automation & Workflows Business", "Modèles d'offres & E-marketing", "Certificat IA Exécutif vérifiable"]
     },
     {
       id: "resources",
-      title: "Bibliothèque Premium",
-      subtitle: "30 à 40 Prompts, Guides & Modèles",
-      desc: "Un coffre-fort numérique mis à jour régulièrement : prompts métiers optimisés, modèles de documents et guides pratiques.",
+      title: "Formations Vidéo & Ressources",
+      subtitle: "Accès immédiat 24h/24, à vie",
+      desc: "Une sélection de modules pré-enregistrés et une boîte à outils de prompts métiers testés pour automatiser vos tâches quotidiennes.",
       icon: BookOpen,
-      href: "/ressources",
-      badge: "Ressources V1",
-      color: "from-purple-500/20 via-purple-500/5 to-transparent",
-      borderColor: "border-purple-500/30",
-      highlights: ["Prompts métiers prêts à l'emploi", "Section gratuite d'acquisition", "Accès réservé aux membres"]
+      href: "/formations",
+      badge: "Catalogue Autonome",
+      color: "from-slate-800/40 via-slate-900/60 to-transparent",
+      borderColor: "border-slate-700/60",
+      highlights: ["Vidéos explicatives avec accès à vie", "Prompts métiers prêts à l'emploi", "Mises à jour régulières"]
     },
     {
       id: "b2b",
@@ -49,10 +49,10 @@ export function EcosystemHub() {
       desc: "Accompagnement sur-mesure pour les entreprises : construction/refonte web, Google Workspace/Gemini, Copilot et visibilité numérique.",
       icon: Building2,
       href: "/entreprises",
-      badge: "Offre B2B",
-      color: "from-emerald-500/20 via-emerald-500/5 to-transparent",
-      borderColor: "border-emerald-500/30",
-      highlights: ["Formulaire de diagnostic en 2 min", "Accompagnement sur-mesure", "Devis qualifié personnalisé"]
+      badge: "Offre B2B Sur-Mesure",
+      color: "from-blue-900/20 via-slate-900 to-transparent",
+      borderColor: "border-blue-500/30",
+      highlights: ["Diagnostic de maturité en 2 min", "Formation intra-entreprise sur-mesure", "Devis qualifié personnalisé"]
     }
   ]
 
@@ -113,7 +113,7 @@ export function EcosystemHub() {
                   <ul className="space-y-2.5 pt-2">
                     {p.highlights.map((h, i) => (
                       <li key={i} className="flex items-center gap-2.5 text-xs text-foreground/90 font-medium">
-                        <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className={`size-4 shrink-0 ${p.id === "bootcamp-business" ? "text-[#D4AF37]" : "text-primary"}`} />
                         <span>{h}</span>
                       </li>
                     ))}

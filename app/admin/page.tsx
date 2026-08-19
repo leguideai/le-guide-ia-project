@@ -12,8 +12,9 @@ import {
   ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
   ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X,
-  Bot, Film, ShoppingBag, Zap
+  Bot, Film, ShoppingBag, Zap, CalendarCheck
 } from "lucide-react"
+import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 
 function LinkedinIcon({ className }: { className?: string }) {
   return (
@@ -144,7 +145,7 @@ interface B2BRecord {
 }
 
 export default function SuperAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
+  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "newsletter" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
@@ -166,6 +167,18 @@ export default function SuperAdminDashboard() {
   const [resources, setResources] = useState<ResourceItem[]>([])
   const [aiTools, setAiTools] = useState<any[]>([])
   const [lives, setLives] = useState<LiveSession[]>([])
+  const [allSessions, setAllSessions] = useState<BootcampSession[]>([])
+  const [showCohortModal, setShowCohortModal] = useState(false)
+  const [cohortForm, setCohortForm] = useState({ courseId: "", startDate: "2026-08-31" })
+  const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([])
+  const [broadcastForm, setBroadcastForm] = useState({
+    subject: "🔥 Nouvelles Masterclasses & Astuces IA exclusives — LE GUIDE IA",
+    title: "Nos dernières analyses et opportunités IA",
+    bodyHtml: "<p>Bonjour à tous,</p><p>Voici les dernières actualités IA et les dates de nos prochains bootcamps.</p>",
+    isTest: false
+  })
+  const [sendingBroadcast, setSendingBroadcast] = useState(false)
+  const [broadcastResult, setBroadcastResult] = useState<any>(null)
   const [users, setUsers] = useState<UserProfile[]>([])
   const [payments, setPayments] = useState<PaymentRecord[]>([])
   const [submissions, setSubmissions] = useState<SubmissionRecord[]>([])
@@ -710,6 +723,10 @@ export default function SuperAdminDashboard() {
       const dataLives = await resLives.json()
       if (dataLives.lives) setLives(dataLives.lives)
 
+      // 4.b Bootcamp Sessions for Calendar
+      const { data: allSess } = await supabase.from("bootcamp_sessions").select("*").order("session_number", { ascending: true })
+      if (allSess) setAllSessions(allSess)
+
       // 5. Users
       const resUsers = await fetch("/api/admin/users")
       const dataUsers = await resUsers.json()
@@ -734,6 +751,11 @@ export default function SuperAdminDashboard() {
       const resSettings = await fetch("/api/admin/settings")
       const dataSettings = await resSettings.json()
       if (dataSettings.settings) setSiteSettings(dataSettings.settings)
+
+      // 10. Newsletter Subscribers
+      const resNews = await fetch("/api/newsletter")
+      const dataNews = await resNews.json()
+      if (dataNews.subscribers) setNewsletterSubscribers(dataNews.subscribers)
     } catch (err) {
       console.error("Fetch admin data error:", err)
     } finally {
@@ -1212,6 +1234,146 @@ export default function SuperAdminDashboard() {
     setTimeout(() => setNoticeMessage(null), 5000)
   }
 
+  // Compute Calendar Events for Admin Dashboard
+  const adminCalendarEvents = (allSessions || []).map((s: BootcampSession) => {
+    const course = courses.find(c => c.id === s.course_id || c.slug === s.course_slug || c.slug === s.course_id)
+    const dateStr = s.scheduled_at 
+      ? String(s.scheduled_at).split("T")[0]
+      : "2026-08-31"
+
+    const isBusiness = Number(course?.price) >= 140000 || 
+      String(course?.slug || "").includes("business") || 
+      String(s.title || "").toLowerCase().includes("business")
+
+    return {
+      id: s.id || `sess-${s.session_number}-${dateStr}`,
+      courseId: s.course_id || course?.id || "bootcamp-pro-2",
+      courseSlug: s.course_slug || course?.slug || "bootcamp-pro-2",
+      courseTitle: course?.title || (isBusiness ? "Bootcamp IA & Business (Exclusive Managers)" : "Bootcamp IA & Carrière"),
+      track: isBusiness ? ("business" as const) : ("carriere" as const),
+      sessionNumber: s.session_number,
+      title: s.title,
+      description: s.description || "",
+      date: dateStr,
+      startTime: s.scheduled_at && s.scheduled_at.includes("T") ? s.scheduled_at.split("T")[1].slice(0, 5) : "19:00",
+      endTime: s.ends_at && s.ends_at.includes("T") ? s.ends_at.split("T")[1].slice(0, 5) : "21:00",
+      instructor: course?.instructor || "Alfred Dah",
+      meetUrl: s.meet_url || course?.live_meet_url,
+      recordingUrl: s.recording_url,
+      whatsappUrl: course?.whatsapp_url,
+      status: s.status || "upcoming"
+    }
+  })
+
+  // Generate 7-Day Cohort Handler for Admin
+  async function handleGenerateCohort(courseId: string, startDateStr: string) {
+    const course = courses.find(c => c.id === courseId || c.slug === courseId) || courses[0]
+    if (!course) return
+
+    const isBusiness = Number(course.price) >= 140000 || String(course.slug || "").includes("business")
+    const titlesCarriere = [
+      "Session 1 : Les Fondations de l'IA & Prompt Engineering Avancé",
+      "Session 2 : Maîtrise de Claude 3.5 Sonnet & ChatGPT 4o",
+      "Session 3 : Analyse de Documents & Synthèse Stratégique",
+      "Session 4 : Création de Contenus & Visuels Pro (Midjourney & Flux)",
+      "Session 5 : Automatisation des Tâches avec Make & n8n",
+      "Session 6 : Assistants Personnalisés & GPTs Métiers",
+      "Session 7 : Projet Final, Audit IA & Remise des Certificats"
+    ]
+
+    const titlesBusiness = [
+      "Session 1 : IA Stratégique pour Dirigeants & Managers",
+      "Session 2 : Automatisation des Processus Métiers & Réduction des Coûts",
+      "Session 3 : IA & Productivité d'Équipe (Management & RH)",
+      "Session 4 : Gouvernance, Cybersécurité & Audit IA (CISA)",
+      "Session 5 : Intégration de Workflows IA Entreprise",
+      "Session 6 : Masterclass Exclusive & Cas d'Usage Grands Comptes",
+      "Session 7 : Plan de Transformation IA & Certificat Exécutif"
+    ]
+
+    const titles = isBusiness ? titlesBusiness : titlesCarriere
+    const start = new Date(startDateStr)
+
+    const payload = titles.map((t, idx) => {
+      const cur = new Date(start)
+      cur.setDate(start.getDate() + idx)
+      const datePart = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`
+      const sched = `${datePart}T19:00:00Z`
+      const end = `${datePart}T21:00:00Z`
+
+      return {
+        course_id: course.id || course.slug,
+        course_slug: course.slug,
+        session_number: idx + 1,
+        title: t,
+        description: isBusiness 
+          ? "Masterclass exécutive interactive en direct avec Alfred Dah sur Google Meet." 
+          : "Session intensive interactive en direct avec Alfred Dah sur Google Meet.",
+        scheduled_at: sched,
+        ends_at: end,
+        meet_url: course.live_meet_url || "https://meet.google.com",
+        status: "upcoming"
+      }
+    })
+
+    try {
+      const { data, error } = await supabase.from("bootcamp_sessions").insert(payload).select()
+      if (!error && data) {
+        setAllSessions(prev => [...prev, ...data])
+        showNotice(`Cohorte de 7 sessions générée avec succès pour ${course.title} !`)
+        setShowCohortModal(false)
+      } else {
+        showNotice("Erreur lors de la création de la cohorte.")
+      }
+    } catch (e) {
+      showNotice("Erreur réseau lors de la génération.")
+    }
+  }
+
+  // Newsletter Actions
+  async function handleSendBroadcast(e: React.FormEvent) {
+    e.preventDefault()
+    if (!broadcastForm.subject || !broadcastForm.bodyHtml) return
+    setSendingBroadcast(true)
+    setBroadcastResult(null)
+    try {
+      const res = await fetch("/api/admin/newsletter/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(broadcastForm)
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setBroadcastResult(data)
+        showNotice(`Diffusion envoyée avec succès à ${data.sentCount} destinataire(s) via samba@leguideai.com !`)
+      } else {
+        showNotice(data.message || "Erreur lors de l'envoi de la diffusion.")
+      }
+    } catch (err) {
+      showNotice("Erreur réseau lors de la diffusion.")
+    } finally {
+      setSendingBroadcast(false)
+    }
+  }
+
+  async function handleDeleteSubscriber(sub: any) {
+    if (!confirm(`Supprimer l'abonné "${sub.email}" de la newsletter ?`)) return
+    try {
+      const res = await fetch(`/api/newsletter?id=${sub.id || ""}&email=${encodeURIComponent(sub.email)}`, {
+        method: "DELETE"
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setNewsletterSubscribers(prev => prev.filter(s => s.email !== sub.email && s.id !== sub.id))
+        showNotice("Abonné supprimé.")
+      } else {
+        showNotice(data.message || "Erreur de suppression.")
+      }
+    } catch (e) {
+      showNotice("Erreur réseau.")
+    }
+  }
+
   if (unauthorized) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
@@ -1400,9 +1562,10 @@ export default function SuperAdminDashboard() {
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Video className="size-4 shrink-0" />
-                    <span>Directs</span>
+                    <Calendar className="size-4 shrink-0" />
+                    <span>Calendrier & Directs</span>
                   </div>
+                  <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>
                 </button>
               </div>
 
@@ -1443,6 +1606,19 @@ export default function SuperAdminDashboard() {
               {/* Section 4 */}
               <div className="space-y-1">
                 <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Organisation</p>
+                <button
+                  onClick={() => { setActiveTab("newsletter"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "newsletter" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Mail className="size-4 shrink-0" />
+                    <span>Newsletter & Diffusion</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({newsletterSubscribers.length})</span>
+                </button>
+
                 <button
                   onClick={() => { setActiveTab("b2b"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1590,6 +1766,19 @@ export default function SuperAdminDashboard() {
                 </div>
                 <span className="text-[10px] opacity-75">({resources.length})</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab("lives")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="size-4 shrink-0" />
+                  <span>Calendrier & Directs</span>
+                </div>
+                <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>
+              </button>
             </div>
 
             {/* Section 3: APPRENANTS & DEVOIRS */}
@@ -1629,6 +1818,19 @@ export default function SuperAdminDashboard() {
             {/* Section 4: ORGANISATION */}
             <div className="space-y-1">
               <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Organisation</p>
+              <button
+                onClick={() => setActiveTab("newsletter")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "newsletter" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Mail className="size-4 shrink-0" />
+                  <span>Newsletter & Diffusion</span>
+                </div>
+                <span className="text-[10px] opacity-75">({newsletterSubscribers.length})</span>
+              </button>
+
               <button
                 onClick={() => setActiveTab("b2b")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -1766,14 +1968,14 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/10 rounded-full blur-2xl group-hover:bg-[#D4AF37]/20 transition-all" />
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Paiements à valider</span>
-                  <div className="size-9 sm:size-10 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
+                  <div className="size-9 sm:size-10 rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center">
                     <Clock className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-2xl sm:text-3xl font-black text-amber-400">
+                <div className="font-heading text-2xl sm:text-3xl font-black text-[#ECC86B]">
                   {stats.pendingPaymentsCount} <span className="text-xs sm:text-sm font-normal text-slate-400">en attente</span>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Dépôts Mobile Money Direct à vérifier</p>
@@ -3555,66 +3757,199 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* TAB 4: LIVE GOOGLE MEET SESSIONS */}
+        {/* TAB 4: LIVE GOOGLE MEET SESSIONS & CALENDAR */}
         {activeTab === "lives" && (
-          <div className="space-y-6 animate-fadeIn">
-            <div className="flex justify-between items-center">
+          <div className="space-y-8 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="font-heading text-xl font-bold text-white">Planning des Directs Google Meet</h2>
-                <p className="text-xs text-slate-400">Programmez les visioconférences et déposez les liens de replays HD.</p>
+                <h2 className="font-heading text-xl font-bold text-white flex items-center gap-2">
+                  <Calendar className="size-6 text-primary" />
+                  Calendrier &amp; Planning des Sessions Bootcamps
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Définissez les dates des prochaines cohortes de bootcamps, visioconférences Google Meet et replays.
+                </p>
               </div>
-              <button
-                onClick={() => {
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <button
+                  onClick={() => {
+                    setCohortForm({
+                      courseId: courses[0]?.id || courses[0]?.slug || "bootcamp-pro-2",
+                      startDate: "2026-08-31"
+                    })
+                    setShowCohortModal(true)
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#AA7C11] text-slate-950 font-black text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 cursor-pointer"
+                >
+                  <Zap className="size-4" />
+                  Générer Cohorte (7 Jours)
+                </button>
+
+                <button
+                  onClick={() => {
+                    setLiveForm({
+                      title: "Session Live Intensive #01",
+                      course_slug: "bootcamp-pro-2",
+                      meet_url: "https://meet.google.com/xyz-abc-def",
+                      replay_url: "",
+                      scheduled_at: new Date().toISOString(),
+                      status: "upcoming"
+                    })
+                    setShowLiveModal(true)
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+                >
+                  <Plus className="size-4" />
+                  Programmer un Direct
+                </button>
+              </div>
+            </div>
+
+            {/* Interactive Calendar Component for Admin */}
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
+              <BootcampCalendar
+                events={adminCalendarEvents}
+                courses={courses}
+                isAdmin={true}
+                onAddEvent={(dateStr) => {
                   setLiveForm({
-                    title: "Session Live Intensive #01",
-                    course_slug: "bootcamp-pro-2",
-                    meet_url: "https://meet.google.com/xyz-abc-def",
+                    title: "Session Live Bootcamp",
+                    course_slug: courses[0]?.slug || "bootcamp-pro-2",
+                    meet_url: courses[0]?.live_meet_url || "https://meet.google.com/xyz-abc-def",
                     replay_url: "",
-                    scheduled_at: new Date().toISOString(),
+                    scheduled_at: dateStr ? `${dateStr}T19:00:00.000Z` : new Date().toISOString(),
                     status: "upcoming"
                   })
                   setShowLiveModal(true)
                 }}
-                className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20"
-              >
-                <Plus className="size-4" />
-                Programmer un Direct
-              </button>
+                onEditEvent={(ev) => {
+                  setLiveForm({
+                    id: ev.id,
+                    title: ev.title,
+                    course_slug: ev.courseSlug || "bootcamp-pro-2",
+                    meet_url: ev.meetUrl || "https://meet.google.com",
+                    replay_url: ev.recordingUrl || "",
+                    scheduled_at: ev.date ? `${ev.date}T19:00:00.000Z` : new Date().toISOString(),
+                    status: ev.status
+                  })
+                  setShowLiveModal(true)
+                }}
+                onDeleteEvent={async (id) => {
+                  try {
+                    await supabase.from("bootcamp_sessions").delete().eq("id", id)
+                    await supabase.from("live_sessions").delete().eq("id", id)
+                    setAllSessions(prev => prev.filter(s => s.id !== id))
+                    setLives(prev => prev.filter(l => l.id !== id))
+                    showNotice("Session supprimée du calendrier.")
+                  } catch (e) {
+                    showNotice("Erreur lors de la suppression.")
+                  }
+                }}
+              />
             </div>
 
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase border-b border-slate-800">
-                  <tr>
-                    <th className="p-4">Session Live</th>
-                    <th className="p-4">Date & Heure</th>
-                    <th className="p-4">Lien Google Meet</th>
-                    <th className="p-4">Replay HD</th>
-                    <th className="p-4 text-right">Statut</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {lives.map(l => (
-                    <tr key={l.id || l.title} className="hover:bg-slate-800/30">
-                      <td className="p-4 font-bold text-white">{l.title}</td>
-                      <td className="p-4 text-slate-300">{new Date(l.scheduled_at).toLocaleString("fr-FR")}</td>
-                      <td className="p-4 font-mono text-primary truncate max-w-xs">{l.meet_url}</td>
-                      <td className="p-4 text-slate-400">{l.replay_url ? "Replay Disponible" : "En attente du direct"}</td>
-                      <td className="p-4 text-right">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                          {l.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {lives.length === 0 && (
+            {/* Tabular List of Direct Sessions */}
+            <div className="space-y-3 pt-4">
+              <h3 className="font-heading text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Liste des directes enregistrés ({lives.length})
+              </h3>
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl">
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase border-b border-slate-800">
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-slate-500">Aucun direct programmé.</td>
+                      <th className="p-4">Session Live</th>
+                      <th className="p-4">Date &amp; Heure</th>
+                      <th className="p-4">Lien Google Meet</th>
+                      <th className="p-4">Replay HD</th>
+                      <th className="p-4 text-right">Statut</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {lives.map(l => (
+                      <tr key={l.id || l.title} className="hover:bg-slate-800/30">
+                        <td className="p-4 font-bold text-white">{l.title}</td>
+                        <td className="p-4 text-slate-300">{new Date(l.scheduled_at).toLocaleString("fr-FR")}</td>
+                        <td className="p-4 font-mono text-primary truncate max-w-xs">{l.meet_url}</td>
+                        <td className="p-4 text-slate-400">{l.replay_url ? "Replay Disponible" : "En attente du direct"}</td>
+                        <td className="p-4 text-right">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-primary/10 text-primary border border-primary/30">
+                            {l.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {lives.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-slate-500">Aucun direct programmé.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
+
+            {/* Modal: Generate 7-Day Cohort */}
+            {showCohortModal && (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+                      <Zap className="size-5 text-[#D4AF37]" />
+                      Générer une Cohorte (7 Jours)
+                    </h3>
+                    <button onClick={() => setShowCohortModal(false)} className="text-slate-400 hover:text-white">✕</button>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <label className="text-slate-400 block mb-1 font-bold">Sélectionner le Bootcamp</label>
+                      <select
+                        value={cohortForm.courseId}
+                        onChange={(e) => setCohortForm({ ...cohortForm, courseId: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-primary cursor-pointer"
+                      >
+                        {courses.map(c => (
+                          <option key={c.id || c.slug} value={c.id || c.slug}>
+                            {c.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-slate-400 block mb-1 font-bold">Date du Premier Jour (Lundi de la cohorte)</label>
+                      <input
+                        type="date"
+                        value={cohortForm.startDate}
+                        onChange={(e) => setCohortForm({ ...cohortForm, startDate: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1 text-[11px] text-slate-400">
+                      <p>✨ Cette action va créer automatiquement <strong>7 sessions consécutives</strong> (du jour 1 au jour 7 à 19h00 GMT) avec les programmes et titres officiels.</p>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowCohortModal(false)}
+                        className="flex-1 py-2.5 rounded-xl border border-slate-800 hover:bg-slate-800 text-slate-300 font-bold"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateCohort(cohortForm.courseId, cohortForm.startDate)}
+                        className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#AA7C11] text-slate-950 font-black shadow-lg shadow-[#D4AF37]/20 hover:opacity-90 cursor-pointer"
+                      >
+                        Générer les 7 Sessions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Live Modal */}
             {showLiveModal && (
@@ -3690,6 +4025,218 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB NEWSLETTER & BROADCAST */}
+        {activeTab === "newsletter" && (
+          <div className="space-y-8 animate-fadeIn text-left">
+            
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+              <div>
+                <h2 className="font-heading text-xl font-bold text-white flex items-center gap-2.5">
+                  <Mail className="size-6 text-primary" />
+                  Newsletter &amp; Diffusion d'Emails
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">
+                  Diffusez vos analyses, prompts et dates de bootcamps directement par email via <strong>samba@leguideai.com</strong>.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Expéditeur : samba@leguideai.com
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Abonnés Newsletter</span>
+                <p className="text-2xl font-black text-white font-mono">{newsletterSubscribers.length}</p>
+                <span className="text-[10px] text-emerald-400 font-bold">100% Abonnés Actifs</span>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Serveur d'Envoi</span>
+                <p className="text-sm font-bold text-primary font-mono truncate">Resend (Cloudflare DNS)</p>
+                <span className="text-[10px] text-slate-400">DKIM &amp; SPF sécurisés</span>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Canal Principal</span>
+                <p className="text-sm font-bold text-white">Footer &amp; Leads Entrants</p>
+                <span className="text-[10px] text-blue-400 font-bold">Enregistrement automatique</span>
+              </div>
+            </div>
+
+            {/* 2 Columns: Email Composer + Subscribers List */}
+            <div className="grid gap-6 lg:grid-cols-12 items-start">
+              
+              {/* Left Column: Email Composer (7 Cols) */}
+              <div className="lg:col-span-7 rounded-3xl border border-slate-800 bg-slate-900/40 p-5 sm:p-6 shadow-2xl backdrop-blur-xl space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h3 className="font-heading text-base font-bold text-white flex items-center gap-2">
+                    <Sparkles className="size-4 text-primary" />
+                    Rédiger &amp; Diffuser une Campagne
+                  </h3>
+                  <span className="text-[10px] font-mono text-slate-500">Expéditeur : samba@leguideai.com</span>
+                </div>
+
+                <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-bold">Sujet de l'Email (Objet visible dans la boîte de réception)</label>
+                    <input
+                      type="text"
+                      required
+                      value={broadcastForm.subject}
+                      onChange={(e) => setBroadcastForm({ ...broadcastForm, subject: e.target.value })}
+                      placeholder="Ex: 🔥 Nouvelles Masterclasses IA & Dates du prochain Bootcamp..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-semibold outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-bold">Grand Titre de l'Email</label>
+                    <input
+                      type="text"
+                      value={broadcastForm.title}
+                      onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+                      placeholder="Ex: Nos dernières astuces et opportunités IA"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-slate-400 block mb-1 font-bold">Corps du Message (Supporte HTML &amp; Paragraphes)</label>
+                    <textarea
+                      rows={8}
+                      required
+                      value={broadcastForm.bodyHtml}
+                      onChange={(e) => setBroadcastForm({ ...broadcastForm, bodyHtml: e.target.value })}
+                      placeholder="Rédigez votre message ici..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-white font-mono text-xs outline-none focus:border-primary leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Feedback Message */}
+                  {broadcastResult && (
+                    <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold space-y-1">
+                      <p>✅ Envoi réussi à <strong>{broadcastResult.sentCount}</strong> abonné(s) !</p>
+                      {broadcastResult.failureCount > 0 && (
+                        <p className="text-amber-400 text-[11px]">⚠️ {broadcastResult.failureCount} échec(s) de délivrabilité.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      disabled={sendingBroadcast}
+                      onClick={async () => {
+                        setSendingBroadcast(true)
+                        try {
+                          const res = await fetch("/api/admin/newsletter/broadcast", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ ...broadcastForm, isTest: true })
+                          })
+                          const data = await res.json()
+                          if (res.ok && data.success) {
+                            showNotice("Email de test envoyé à samba@leguideai.com !")
+                          } else {
+                            showNotice(data.message || "Erreur lors du test.")
+                          }
+                        } catch (e) {
+                          showNotice("Erreur réseau.")
+                        } finally {
+                          setSendingBroadcast(false)
+                        }
+                      }}
+                      className="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                    >
+                      🧪 Tester vers samba@leguideai.com
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={sendingBroadcast || newsletterSubscribers.length === 0}
+                      className="w-full sm:flex-1 py-3 px-5 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-primary/20 transition-all disabled:opacity-50 cursor-pointer"
+                    >
+                      {sendingBroadcast ? (
+                        <span>Envoi en cours via Resend...</span>
+                      ) : (
+                        <>
+                          <Mail className="size-4" />
+                          <span>Diffuser à tous les {newsletterSubscribers.length} abonnés</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Right Column: Subscribers Table (5 Cols) */}
+              <div className="lg:col-span-5 rounded-3xl border border-slate-800 bg-slate-900/40 p-5 shadow-2xl backdrop-blur-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h3 className="font-heading text-sm font-bold text-white">
+                    Liste des Abonnés ({newsletterSubscribers.length})
+                  </h3>
+                  <button
+                    onClick={async () => {
+                      const res = await fetch("/api/newsletter")
+                      const data = await res.json()
+                      if (data.subscribers) setNewsletterSubscribers(data.subscribers)
+                    }}
+                    className="text-[11px] text-primary hover:underline font-bold"
+                  >
+                    Actualiser
+                  </button>
+                </div>
+
+                {newsletterSubscribers.length === 0 ? (
+                  <div className="text-center py-10 text-slate-500 text-xs">
+                    Aucun abonné enregistré pour le moment.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+                    {newsletterSubscribers.map((sub: any, idx: number) => (
+                      <div
+                        key={sub.id || sub.email || idx}
+                        className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-white truncate font-mono text-[11px]">{sub.email}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {sub.created_at ? new Date(sub.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "Inscrit récemment"}
+                            {sub.source ? ` · ${sub.source}` : ""}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            Actif
+                          </span>
+                          <button
+                            onClick={() => handleDeleteSubscriber(sub)}
+                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            title="Supprimer cet abonné"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
           </div>
         )}
 

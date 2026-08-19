@@ -8,9 +8,9 @@ import { FormationItem, FormationCategory, DEFAULT_FORMATIONS, DEFAULT_FORMATION
 function getBadgeClasses(badge: string | undefined) {
   const b = badge?.toLowerCase() || ""
   if (b.includes("demande")) return "bg-rose-500/20 text-rose-300 border-rose-500/40"
-  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-amber-500/20 text-amber-300 border-amber-500/40"
-  if (b.includes("nouveau")) return "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
-  if (b.includes("prospect")) return "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
+  if (b.includes("nouveau")) return "bg-blue-500/20 text-blue-300 border-blue-500/40"
+  if (b.includes("prospect")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
   return "bg-primary/20 text-primary border-primary/40"
 }
 
@@ -77,7 +77,7 @@ export function UdemyTabbedCourses() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-left">
           <div className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
-              <Sparkles className="size-3.5 text-amber-400" />
+              <Sparkles className="size-3.5 text-[#D4AF37]" />
              NOS FORMATIONS
             </span>
             <p className="text-xs md:text-sm text-slate-400 max-w-2xl">

@@ -67,8 +67,8 @@ export default function EntreprisesPage() {
             
             {/* Left Info Column */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20">
-                <Building2 className="size-3.5 text-emerald-400" />
+              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/10 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/30">
+                <Building2 className="size-3.5 text-[#D4AF37]" />
                 SOLUTIONS ENTREPRISES & INSTITUTIONS
               </span>
 
@@ -79,7 +79,7 @@ export default function EntreprisesPage() {
               {/* Key Metrics Pill Badges */}
               <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs font-semibold text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
-                  <Sparkles className="size-3.5 text-emerald-400" />
+                  <Sparkles className="size-3.5 text-[#D4AF37]" />
                   +40% de Productivité Équipe
                 </span>
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
@@ -87,7 +87,7 @@ export default function EntreprisesPage() {
                   Audit & Sécurité CISA
                 </span>
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
-                  <Award className="size-3.5 text-amber-400" />
+                  <Award className="size-3.5 text-[#D4AF37]" />
                   Accompagnement Sur-Mesure
                 </span>
               </div>
@@ -96,19 +96,19 @@ export default function EntreprisesPage() {
               <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={scrollToForm}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-7 py-3.5 text-xs md:text-sm shadow-xl transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black px-7 py-3.5 text-xs md:text-sm shadow-xl shadow-[#D4AF37]/25 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
                 >
                   <span>Demander un Devis B2B</span>
                   <ArrowRight className="size-4" />
                 </button>
 
                 <a
-                  href="https://wa.me/22675757273?text=Bonjour,%20nous%20souhaitons%20un%20devis%20de%20formation%20IA%20pour%20notre%20entreprise."
+                  href="https://wa.me/22605050577?text=Bonjour,%20nous%20souhaitons%20un%20devis%20de%20formation%20IA%20pour%20notre%20entreprise."
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/40 hover:bg-card text-foreground font-bold px-6 py-3.5 text-xs text-muted-foreground hover:text-foreground transition-all hover:scale-[1.01]"
                 >
-                  <PhoneCall className="size-4 text-emerald-400" />
+                  <PhoneCall className="size-4 text-[#D4AF37]" />
                   <span>Contacter par WhatsApp</span>
                 </a>
               </div>
@@ -116,7 +116,7 @@ export default function EntreprisesPage() {
 
             {/* Right Media Display */}
             <div className="lg:col-span-5 flex justify-center items-center">
-              <div className="relative rounded-3xl border border-emerald-500/30 bg-slate-950 p-3.5 shadow-2xl backdrop-blur-xl w-full max-w-[420px] group">
+              <div className="relative rounded-3xl border border-[#D4AF37]/40 bg-slate-950 p-3.5 shadow-2xl glow-gold backdrop-blur-xl w-full max-w-[420px] group">
                 <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-border/40 shadow-xl bg-slate-900">
                   <img
                     src="/images/b2b_enterprise_thumb.jpg"
@@ -126,8 +126,8 @@ export default function EntreprisesPage() {
                 </div>
                 
                 {/* Floating Badge */}
-                <div className="absolute -bottom-4 -left-4 rounded-2xl bg-slate-900/90 border border-emerald-500/40 p-3 shadow-2xl backdrop-blur-md flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <div className="absolute -bottom-4 -left-4 rounded-2xl bg-slate-900/90 border border-[#D4AF37]/40 p-3 shadow-2xl backdrop-blur-md flex items-center gap-3">
+                  <div className="size-10 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
                     <Award className="size-5" />
                   </div>
                   <div className="text-left">
@@ -159,9 +159,9 @@ export default function EntreprisesPage() {
           <div className="grid gap-8 md:grid-cols-3 items-stretch">
             
             {/* Card 1 */}
-            <div className="rounded-3xl border border-border/80 bg-card/40 p-8 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-emerald-500/40 transition-colors">
+            <div className="rounded-3xl border border-border/80 bg-card/40 p-8 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-[#D4AF37]/50 transition-colors">
               <div className="space-y-4 text-left">
-                <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                <div className="size-12 rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center">
                   <Users className="size-6" />
                 </div>
                 <h3 className="font-heading text-xl font-bold text-foreground">Formations d'Équipe Sur-Mesure</h3>
@@ -170,26 +170,26 @@ export default function EntreprisesPage() {
                 </p>
                 <ul className="space-y-2 pt-2 text-xs text-foreground/90">
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-emerald-400" />
+                    <Check className="size-3.5 text-[#D4AF37]" />
                     <span>Programme adapté aux cas d'usage réels</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-emerald-400" />
+                    <Check className="size-3.5 text-[#D4AF37]" />
                     <span>Prise en main ChatGPT, Claude & Gemini</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-emerald-400" />
+                    <Check className="size-3.5 text-[#D4AF37]" />
                     <span>Attestation de formation d'équipe</span>
                   </li>
                 </ul>
               </div>
-              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-emerald-500 text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-[#D4AF37] hover:text-[#ECC86B] text-xs font-bold text-foreground transition-all cursor-pointer">
                 Demander cette formation →
               </button>
             </div>
 
             {/* Card 2 */}
-            <div className="rounded-3xl border border-border/80 bg-card/40 p-8 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-primary/40 transition-colors">
+            <div className="rounded-3xl border border-border/80 bg-card/40 p-8 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-primary/50 transition-colors">
               <div className="space-y-4 text-left">
                 <div className="size-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
                   <ShieldCheck className="size-6" />
@@ -213,15 +213,15 @@ export default function EntreprisesPage() {
                   </li>
                 </ul>
               </div>
-              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-primary text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-primary hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer">
                 Demander un audit →
               </button>
             </div>
 
             {/* Card 3 */}
-            <div className="rounded-3xl border border-border/80 bg-card/40 p-8 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-purple-500/40 transition-colors">
+            <div className="rounded-3xl border border-border/80 bg-card/40 p-8 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-blue-500/50 transition-colors">
               <div className="space-y-4 text-left">
-                <div className="size-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center">
+                <div className="size-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
                   <Building2 className="size-6" />
                 </div>
                 <h3 className="font-heading text-xl font-bold text-foreground">Accompagnement Stratégique</h3>
@@ -230,20 +230,20 @@ export default function EntreprisesPage() {
                 </p>
                 <ul className="space-y-2 pt-2 text-xs text-foreground/90">
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-purple-400" />
+                    <Check className="size-3.5 text-blue-400" />
                     <span>Workflows d'automatisation Make & n8n</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-purple-400" />
+                    <Check className="size-3.5 text-blue-400" />
                     <span>Création d'assistants sur-mesure</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-purple-400" />
+                    <Check className="size-3.5 text-blue-400" />
                     <span>Suivi de projet et ROI mesurable</span>
                   </li>
                 </ul>
               </div>
-              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-purple-500 text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-blue-500 hover:text-blue-400 text-xs font-bold text-foreground transition-all cursor-pointer">
                 Planifier un entretien →
               </button>
             </div>
@@ -261,17 +261,17 @@ export default function EntreprisesPage() {
             
             {/* Left Info Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
-              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                DEVIS GRATUIT & RECTIFICATIF SOUS 24H
+              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+                DEVIS QUALIFIÉ SOUS 24H
               </span>
 
               <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                Remplissez ce formulaire court. Notre équipe analyseront vos besoins et vous recontacteront sous 24 heures ouvrées.
+                Remplissez ce formulaire court. Notre équipe analysera vos besoins et vous recontactera sous 24 heures ouvrées.
               </p>
 
               <div className="space-y-4 pt-2">
                 <div className="flex items-start gap-3 text-xs text-muted-foreground">
-                  <Mail className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <Mail className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
                   <div>
                     <div className="font-bold text-foreground">Contact Direct B2B</div>
                     <div>alfred@leguideai.com</div>
@@ -279,10 +279,10 @@ export default function EntreprisesPage() {
                 </div>
 
                 <div className="flex items-start gap-3 text-xs text-muted-foreground">
-                  <PhoneCall className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <PhoneCall className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
                   <div>
                     <div className="font-bold text-foreground">Ligne WhatsApp Officielle</div>
-                    <div>+226 75 75 72 73</div>
+                    <div>+226 0505 0577</div>
                   </div>
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function EntreprisesPage() {
                 
                 {status === "success" ? (
                   <div className="text-center space-y-4 py-8">
-                    <div className="inline-flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <div className="inline-flex size-14 items-center justify-center rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30">
                       <CheckCircle2 className="size-8" />
                     </div>
                     <h3 className="font-heading text-lg font-bold text-foreground">Demande envoyée avec succès !</h3>
@@ -352,7 +352,7 @@ export default function EntreprisesPage() {
                           required
                           value={form.phone}
                           onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                          placeholder="+225 07 00 00 00"
+                          placeholder="+226 0505 0577"
                           className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
@@ -372,7 +372,7 @@ export default function EntreprisesPage() {
                     <button
                       type="submit"
                       disabled={status === "loading"}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 text-xs shadow-xl disabled:opacity-50 transition-all cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black py-3.5 text-xs shadow-xl shadow-[#D4AF37]/25 disabled:opacity-50 transition-all cursor-pointer"
                     >
                       <Send className="size-4" />
                       {status === "loading" ? "Envoi en cours..." : "Envoyer la demande de devis B2B"}

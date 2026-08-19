@@ -136,7 +136,7 @@ export default function RessourcesPage() {
       <UdemyHeader />
 
       {/* 1. Section Tutoriels Vidéos Pratiques */}
-      <UdemyTabbedCourses />
+      {/* <UdemyTabbedCourses /> */}
 
       {/* 2. Section Prompts Métiers & Business Plans IA (Search & Filter) */}
       <section className="py-12 bg-background border-t border-border/50" id="prompts-templates">

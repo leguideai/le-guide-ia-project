@@ -14,7 +14,7 @@ export function UdemyBusinessBanner() {
             
             {/* Left Media Preview (Masqué sur mobile, affiché uniquement sur desktop lg:flex) */}
             <div className="hidden lg:flex lg:col-span-5 relative justify-center h-full order-2 lg:order-1">
-              <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 glow-emerald shadow-2xl w-full h-full min-h-[340px]">
+              <div className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/40 glow-gold shadow-2xl w-full h-full min-h-[340px]">
                 <img src="/images/b2b_enterprise_thumb.jpg" alt="Transformation IA d'Entreprise Le Guide IA B2B" className="w-full h-full object-cover rounded-2xl" />
               </div>
             </div>
@@ -22,8 +22,8 @@ export function UdemyBusinessBanner() {
             {/* Right Info Column (Contenu Texte B2B à droite) */}
             <div className="lg:col-span-7 space-y-6 text-left order-1 lg:order-2">
               
-              <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                <Building2 className="size-3.5 text-emerald-400" />
+              <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/10 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/30">
+                <Building2 className="size-3.5 text-[#D4AF37]" />
                 <span>Le Guide IA pour les Entreprises (B2B)</span>
               </div>
 
@@ -32,20 +32,20 @@ export function UdemyBusinessBanner() {
               </h2>
 
               <p className="text-xs md:text-sm text-slate-300 leading-relaxed max-w-xl">
-                Accompagnement sur-mesure pour les PME et grands groupes : intégration Google Workspace, Gemini, Copilot, refonte web et automatisation de processus métiers.
+                Accompagnement sur-mesure pour les PME, dirigeants et grands groupes : intégration Google Workspace, Gemini, Copilot, refonte web et automatisation de processus métiers.
               </p>
 
               <div className="space-y-2.5 text-xs font-semibold text-slate-200">
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
                   <span>Formations intra-entreprise sur-mesure adaptées à vos équipes</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
                   <span>Diagnostic de maturité digitale en 2 minutes avec devis qualifié</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
                   <span>Accompagnement par Alfred Dah (Auditeur CISA & Expert IA)</span>
                 </div>
               </div>
@@ -53,7 +53,7 @@ export function UdemyBusinessBanner() {
               <div className="pt-2">
                 <Link
                   href="/entreprises"
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-8 py-3.5 text-xs md:text-sm shadow-xl transition-all"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black px-8 py-3.5 text-xs md:text-sm shadow-xl shadow-[#D4AF37]/25 transition-all cursor-pointer"
                 >
                   <span>Demander un Diagnostic & Devis B2B</span>
                   <ArrowRight className="size-4" />

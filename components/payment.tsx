@@ -213,16 +213,16 @@ export function Payment() {
             })}
 
             {/* Visual payment warning & WhatsApp action */}
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs leading-relaxed">
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs leading-relaxed">
               <div className="flex gap-3 text-muted-foreground">
-                <Info className="size-4.5 text-emerald-500 shrink-0 mt-0.5" />
+                <Info className="size-4.5 text-primary shrink-0 mt-0.5" />
                 <p>{t("payment.form.warningNote")}</p>
               </div>
               <a
                 href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp PRO 2 et j'ai besoin d'assistance.")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0 flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs transition-colors shadow-sm"
+                className="shrink-0 flex items-center gap-2 rounded-lg bg-primary hover:opacity-90 text-primary-foreground font-bold px-4 py-2 text-xs transition-colors shadow-sm"
               >
                 Payer avec Alfred sur WhatsApp
               </a>
@@ -239,7 +239,7 @@ export function Payment() {
             >
               {status === "success" ? (
                 <div className="text-center py-8">
-                  <span className="inline-flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-4">
+                  <span className="inline-flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 mb-4">
                     <CheckCircle2 className="size-8" />
                   </span>
                   <h3 className="font-heading text-xl font-bold text-foreground">
@@ -252,7 +252,7 @@ export function Payment() {
                     href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je viens d'envoyer ma confirmation de paiement pour le Bootcamp PRO 2.\nNom: " + form.name + "\nMoyen: " + form.method)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 text-xs transition-transform active:scale-95 shadow-md"
+                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-6 py-3 text-xs transition-transform active:scale-95 shadow-md"
                   >
                     Contacter Alfred sur WhatsApp
                   </a>

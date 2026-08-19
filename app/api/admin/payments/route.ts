@@ -124,7 +124,7 @@ export async function POST(req: Request) {
       // Send official Access Confirmation Email via Resend
       if (resend) {
         try {
-          const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <onboarding@resend.dev>"
+          const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <samba@leguideai.com>"
           await resend.emails.send({
             from: fromEmail,
             to: [studentEmail],

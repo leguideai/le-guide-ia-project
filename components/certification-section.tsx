@@ -18,8 +18,8 @@ export function CertificationSection() {
             transition={{ duration: 0.6 }}
             className="lg:col-span-7 order-1 lg:order-1 space-y-6 text-left"
           >
-            <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/20">
-              <Sparkles className="size-3.5 text-amber-400" />
+            <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/10 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/30">
+              <Sparkles className="size-3.5 text-[#D4AF37]" />
               Valorisez votre Profil Professionnel
             </span>
 
@@ -33,15 +33,15 @@ export function CertificationSection() {
 
             <div className="space-y-3 pt-2 text-xs font-semibold text-foreground">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
                 <span>Certificat individuel avec identifiant de vérification unique</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
                 <span>Ajout direct sur votre profil LinkedIn et votre CV</span>
               </div>
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
                 <span>Garantie d'expertise signée par Alfred Dah (Auditeur CISA & Expert IA)</span>
               </div>
             </div>
@@ -56,14 +56,14 @@ export function CertificationSection() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="hidden lg:flex lg:col-span-5 order-2 lg:order-2 justify-center"
           >
-            <div className="rounded-3xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-slate-950 p-8 shadow-2xl backdrop-blur-2xl max-w-md w-full space-y-6 relative overflow-hidden group hover:border-amber-500/60 transition-colors">
+            <div className="rounded-3xl border border-[#D4AF37]/40 bg-gradient-to-br from-[#D4AF37]/15 via-slate-900/90 to-slate-950 p-8 shadow-2xl glow-gold backdrop-blur-2xl max-w-md w-full space-y-6 relative overflow-hidden group hover:border-[#D4AF37]/70 transition-colors">
               <div className="flex items-center justify-between border-b border-border/60 pb-4">
                 <div className="flex items-center gap-2">
                   <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
                   <span className="font-heading text-sm font-extrabold text-white">LE GUIDE <span className="text-primary">IA</span></span>
                 </div>
-                <span className="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full font-bold uppercase">
-                  Officiel & Dégagé
+                <span className="text-[9px] bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-slate-950 font-black border border-[#F3E5AB] px-2.5 py-1 rounded-full uppercase shadow-md">
+                  Officiel & Certifié
                 </span>
               </div>
 
@@ -71,9 +71,9 @@ export function CertificationSection() {
                 <motion.div
                   animate={{ y: [0, -8, 0] }}
                   transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                  className="inline-flex size-24 items-center justify-center rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.25)] mx-auto group-hover:scale-110 transition-transform duration-500"
+                  className="inline-flex size-24 items-center justify-center rounded-full bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/40 shadow-[0_0_35px_rgba(212,175,55,0.35)] mx-auto group-hover:scale-110 transition-transform duration-500"
                 >
-                  <Award className="size-12 text-amber-400" />
+                  <Award className="size-12 text-[#D4AF37]" />
                 </motion.div>
 
                 <div className="space-y-1.5">

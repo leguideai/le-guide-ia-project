@@ -8,7 +8,7 @@ function getResendClient() {
   return new Resend(apiKey)
 }
 
-const fromEmail = process.env.RESEND_FROM_EMAIL || 'Le Guide IA <onboarding@resend.dev>'
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'Le Guide IA <samba@leguideai.com>'
 
 export async function sendRegistrationEmail(name: string, email: string) {
   try {

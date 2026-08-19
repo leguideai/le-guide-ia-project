@@ -64,7 +64,7 @@ function InlineCountdown({ targetEndDate }: { targetEndDate?: string }) {
   if (!mounted || expired) return null
 
   return (
-    <span className="text-amber-400 font-bold ml-1">
+    <span className="text-[#ECC86B] font-bold ml-1">
       · Expire dans {timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m
     </span>
   )
@@ -85,6 +85,36 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
     offer_badge_text: "Offre Fondateur",
     offer_end_date: "2026-08-25T23:59:59Z"
   })
+
+  // Newsletter State
+  const [newsletterEmail, setNewsletterEmail] = useState("")
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [newsletterMessage, setNewsletterMessage] = useState("")
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newsletterEmail || !newsletterEmail.includes("@")) return
+    setNewsletterStatus("loading")
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail })
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setNewsletterStatus("success")
+        setNewsletterMessage(data.message || "Merci ! Vous êtes bien inscrit(e).")
+        setNewsletterEmail("")
+      } else {
+        setNewsletterStatus("error")
+        setNewsletterMessage(data.message || "Une erreur est survenue.")
+      }
+    } catch (err) {
+      setNewsletterStatus("error")
+      setNewsletterMessage("Erreur de connexion.")
+    }
+  }
 
   useEffect(() => {
     async function loadActiveCourse() {
@@ -166,15 +196,15 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   {/* Checklist Badges */}
                   <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-4 text-xs font-semibold text-slate-200">
                     <span className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
                       <span>Garantie satisfait ou remboursé</span>
                     </span>
                     <span className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
                       <span>Accès immédiat au groupe WhatsApp</span>
                     </span>
                     <span className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
                       <span>Certificat officiel LE GUIDE IA</span>
                     </span>
                   </div>
@@ -287,32 +317,63 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
             </div>
           </div>
 
-          {/* Column 4 - Visitor Statistics (Flag Counter) & Legal */}
-          <div className="flex flex-col items-center sm:items-start gap-4">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
-              Statistiques de visites
+          {/* Column 4 - Newsletter & Legal */}
+          <div className="flex flex-col items-center sm:items-start gap-3 w-full">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary">
+              Newsletter IA & Analyses
             </span>
-            <a href="https://info.flagcounter.com/vace" target="_blank" rel="noopener noreferrer" className="block transition-all hover:scale-[1.02] active:scale-95">
-              <img
-                src="https://s01.flagcounter.com/count/vace/bg_0f172a/txt_ffffff/border_0f172a/columns_2/maxflags_16/viewers_0/labels_0/pageviews_0/flags_0/percent_0/"
-                alt="Compteur de Visiteurs"
-                className="rounded-lg shadow-md border border-border/30"
-              />
-            </a>
+            <p className="text-xs text-muted-foreground leading-relaxed text-center sm:text-left">
+              Recevez nos veilles stratégiques, prompts exclusifs et dates des prochains bootcamps.
+            </p>
+
+            <form onSubmit={handleNewsletterSubmit} className="w-full space-y-2">
+              <div className="relative flex items-center w-full">
+                <input
+                  type="email"
+                  required
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder="Votre email pro..."
+                  disabled={newsletterStatus === "loading" || newsletterStatus === "success"}
+                  className="w-full bg-slate-900/90 border border-border/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-24 transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={newsletterStatus === "loading" || newsletterStatus === "success"}
+                  className="absolute right-1 px-3 py-1.5 rounded-lg bg-primary hover:opacity-90 text-slate-950 font-black text-xs transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {newsletterStatus === "loading" ? "..." : "S'abonner"}
+                </button>
+              </div>
+
+              {newsletterStatus === "success" && (
+                <p className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="size-3 shrink-0" />
+                  <span>{newsletterMessage}</span>
+                </p>
+              )}
+
+              {newsletterStatus === "error" && (
+                <p className="text-[11px] text-rose-400 font-bold">
+                  {newsletterMessage}
+                </p>
+              )}
+            </form>
+
             {/* Legal links */}
-            <ul className="flex flex-col items-center sm:items-start gap-2 text-xs font-semibold mt-1">
+            <ul className="flex flex-col items-center sm:items-start gap-1.5 text-xs font-semibold mt-2 pt-2 border-t border-border/30 w-full">
               <li>
-                <a href="/mentions-legales" className="text-muted-foreground transition-colors hover:text-white">
+                <a href="/mentions-legales" className="text-muted-foreground transition-colors hover:text-white text-[11px]">
                   Mentions légales
                 </a>
               </li>
               <li>
-                <a href="/politique-confidentialite" className="text-muted-foreground transition-colors hover:text-white">
+                <a href="/politique-confidentialite" className="text-muted-foreground transition-colors hover:text-white text-[11px]">
                   Politique de confidentialité
                 </a>
               </li>
               <li>
-                <a href="/conditions-generales" className="text-muted-foreground transition-colors hover:text-white">
+                <a href="/conditions-generales" className="text-muted-foreground transition-colors hover:text-white text-[11px]">
                   Conditions générales de vente
                 </a>
               </li>

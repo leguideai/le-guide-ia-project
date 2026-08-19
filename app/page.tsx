@@ -28,7 +28,7 @@ export default function Page() {
       <UdemySkillPathways />
 
       {/* 4. Section Formations & Masterclasses Vidéos avec Onglets */}
-      <UdemyTabbedCourses />
+      {/* <UdemyTabbedCourses /> */}
 
       {/* 5. Banner Le Guide IA Business (B2B) */}
       <UdemyBusinessBanner />

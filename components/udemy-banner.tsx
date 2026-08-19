@@ -41,15 +41,15 @@ export function UdemyBanner() {
               <div className="grid gap-4 sm:grid-cols-2 pt-2">
                 <div className="rounded-2xl border border-primary/20 bg-card/30 p-4 space-y-1.5 backdrop-blur-md">
                   <div className="flex items-center gap-2 text-xs font-bold text-white">
-                    <Zap className="size-4 text-amber-400" />
-                    <span>Pratique Métier Intensives</span>
+                    <Zap className="size-4 text-[#D4AF37]" />
+                    <span>Pratique Métier Intensive</span>
                   </div>
-                  <p className="text-[11px] text-slate-400">7 Sessions de direct live et exercices concrets.</p>
+                  <p className="text-[11px] text-slate-400">Sessions de direct live et cas d'usage professionnels concrets.</p>
                 </div>
 
                 <div className="rounded-2xl border border-primary/20 bg-card/30 p-4 space-y-1.5 backdrop-blur-md">
                   <div className="flex items-center gap-2 text-xs font-bold text-white">
-                    <Video className="size-4 text-emerald-400" />
+                    <Video className="size-4 text-blue-400" />
                     <span>Replays HD à vie</span>
                   </div>
                   <p className="text-[11px] text-slate-400">Enregistrements accessibles 24h/7j sur votre Espace Membre.</p>
@@ -57,7 +57,7 @@ export function UdemyBanner() {
 
                 <div className="rounded-2xl border border-primary/20 bg-card/30 p-4 space-y-1.5 backdrop-blur-md">
                   <div className="flex items-center gap-2 text-xs font-bold text-white">
-                    <Award className="size-4 text-indigo-400" />
+                    <Award className="size-4 text-[#D4AF37]" />
                     <span>Certificat Officiel</span>
                   </div>
                   <p className="text-[11px] text-slate-400">Attestation d'accomplissement valorisant votre CV.</p>
@@ -65,10 +65,10 @@ export function UdemyBanner() {
 
                 <div className="rounded-2xl border border-primary/20 bg-card/30 p-4 space-y-1.5 backdrop-blur-md">
                   <div className="flex items-center gap-2 text-xs font-bold text-white">
-                    <Users className="size-4 text-sky-400" />
-                    <span>Accompagnement VIP</span>
+                    <Users className="size-4 text-blue-400" />
+                    <span>Accompagnement Exclusif</span>
                   </div>
-                  <p className="text-[11px] text-slate-400">Groupe privé WhatsApp avec Alfred Dah et la communauté.</p>
+                  <p className="text-[11px] text-slate-400">Groupe privé WhatsApp avec Alfred Dah et le réseau des membres.</p>
                 </div>
               </div>
 
@@ -105,7 +105,7 @@ export function UdemyBanner() {
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
                 <div className="absolute bottom-4 left-4 right-4 bg-slate-950/90 backdrop-blur-md border border-border/60 rounded-2xl p-4 space-y-1">
                   <div className="flex items-center gap-2 text-xs font-bold text-white">
-                    <CheckCircle2 className="size-4 text-emerald-400" />
+                    <CheckCircle2 className="size-4 text-blue-400" />
                     <span>Bootcamp PRO 2 — Direct Live</span>
                   </div>
                   <p className="text-[10px] text-slate-400">Du 31 Août au 6 Septembre 2026 avec Alfred Dah</p>

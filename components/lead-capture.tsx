@@ -132,7 +132,7 @@ export function LeadCapture() {
 
             {status === "success" ? (
               <div className="text-center py-6">
-                <span className="inline-flex size-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-4">
+                <span className="inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 mb-4">
                   <CheckCircle2 className="size-6" />
                 </span>
                 <h3 className="font-heading text-lg font-bold text-foreground">

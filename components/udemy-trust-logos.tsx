@@ -39,7 +39,7 @@ export function UdemyTrustLogos() {
       role: "Génération de texte, Prompt Engineering avancé, Personas & Assistants sur-mesure.",
       icon: "🤖",
       image: "/images/tools/chatgpt.png",
-      gradient: "from-emerald-500/10 via-emerald-500/5 to-transparent"
+      gradient: "from-blue-600/10 via-primary/5 to-transparent"
     },
     {
       pillar: "models",

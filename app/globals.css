@@ -141,6 +141,40 @@
     box-shadow: 0 0 0 1px oklch(0.62 0.21 252 / 0.3), 0 0 40px -8px oklch(0.62 0.21 252 / 0.55);
   }
 
+  .glow-gold {
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4), 0 0 40px -8px rgba(212, 175, 55, 0.5);
+  }
+
+  .text-gold {
+    color: #ECC86B;
+  }
+
+  .text-gold-pure {
+    color: #D4AF37;
+  }
+
+  .bg-gold {
+    background-color: #D4AF37;
+  }
+
+  .bg-gold-subtle {
+    background-color: rgba(212, 175, 55, 0.12);
+  }
+
+  .border-gold {
+    border-color: rgba(212, 175, 55, 0.4);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #D4AF37 0%, #F5D77F 50%, #AA7C11 100%);
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #F5D77F 0%, #FFFFFF 25%, #D4AF37 60%, #B38728 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
   .text-glow {
     text-shadow: 0 0 28px oklch(0.62 0.21 252 / 0.55);
   }

@@ -32,7 +32,7 @@ function getOfferDetails(c: any) {
       const startFormatted = rawStart ? formatDateSafe(rawStart) : null
 
       const periodLabel = startFormatted
-        ? `Du ${startFormatted} au ${endFormatted}`
+        ? `${endFormatted}`
         : `Jusqu'au ${endFormatted}`
 
       return {
@@ -142,6 +142,14 @@ export function UdemySkillPathways() {
     const skills = parseCourseSkills(c)
     const offer = c.price === 0 ? null : getOfferDetails(c)
 
+    const isBusiness = Number(c.price) >= 140000 || String(c.slug).includes("business") || String(c.slug).includes("executif") || String(c.badge || "").toLowerCase().includes("vip") || String(c.badge || "").toLowerCase().includes("manager")
+
+    const badgeLabel = isBusiness 
+      ? "EXCLUSIVE MANAGERS" 
+      : (c.badge && !c.badge.toLowerCase().includes("vip") && !c.badge.toLowerCase().includes("executif"))
+        ? c.badge
+        : "PARCOURS CARRIÈRE & PROS"
+
     return {
       id: c.id,
       slug: c.slug,
@@ -149,47 +157,44 @@ export function UdemySkillPathways() {
       desc: c.description || c.subtitle,
       price: formatPriceStr(c.price || ""),
       originalPrice: formatPriceStr(c.original_price || ""),
-      badge: c.badge || "",
+      badge: badgeLabel,
       format: c.format || "",
       certificate: c.certificate || "",
       dates: datesText,
       skills: skills,
       offer: offer,
       pdfUrl: c.pdf_url || "",
-      icon: c.price === 0 ? Gift : Number(c.price) > 100000 || String(c.slug).includes("business") ? UserCheck : GraduationCap,
+      icon: isBusiness ? UserCheck : GraduationCap,
       href: `/bootcamp?course=${c.slug || c.id}`,
       image: c.thumbnail || c.poster || "",
       isFree: c.price === 0,
-      isVIP: Number(c.price) > 100000 || String(c.slug).includes("business"),
-      accentColor: c.price === 0 ? "emerald" : Number(c.price) > 100000 || String(c.slug).includes("business") ? "amber" : "blue",
+      isExclusiveManager: isBusiness,
+      accentColor: isBusiness ? "gold" : "blue",
     }
   })
 
   const getAccent = (color: string) => {
-    if (color === "emerald") {
+    if (color === "gold" || color === "amber") {
       return {
-        border: "border-emerald-500/50",
-        badge: "bg-emerald-500 text-slate-950 border border-emerald-300 font-black shadow-lg shadow-emerald-500/30",
-        btn: "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/20",
-        glow: "shadow-emerald-500/10",
-        price: "text-emerald-400"
-      }
-    }
-    if (color === "amber") {
-      return {
-        border: "border-amber-500/50",
-        badge: "bg-amber-400 text-slate-950 border border-amber-200 font-black shadow-lg shadow-amber-500/30",
-        btn: "bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20",
-        glow: "shadow-amber-500/10",
-        price: "text-amber-400"
+        accentColor: "gold",
+        border: "border-[#D4AF37]/50 hover:border-[#D4AF37]",
+        badge: "bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-slate-950 border border-[#F3E5AB]/80 font-black shadow-lg shadow-[#D4AF37]/30",
+        btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-lg shadow-[#D4AF37]/25",
+        glow: "shadow-[#D4AF37]/15",
+        price: "text-[#ECC86B]",
+        tag: "text-[#ECC86B] bg-[#D4AF37]/15 border border-[#D4AF37]/35",
+        iconColor: "text-[#D4AF37]"
       }
     }
     return {
-      border: "border-primary/50",
+      accentColor: "blue",
+      border: "border-blue-500/50 hover:border-blue-400/80",
       badge: "bg-blue-600 text-white border border-blue-400/60 font-black shadow-lg shadow-blue-500/30",
-      btn: "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20",
-      glow: "shadow-primary/10",
-      price: "text-primary"
+      btn: "bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-blue-500/20",
+      glow: "shadow-blue-500/10",
+      price: "text-blue-400",
+      tag: "text-blue-300 bg-blue-500/15 border-blue-500/30",
+      iconColor: "text-blue-400"
     }
   }
 
@@ -262,12 +267,12 @@ export function UdemySkillPathways() {
 
                         {/* Date de début et fin de l'offre */}
                         {item.offer && item.offer.periodLabel && (
-                          <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] pt-2 border-t border-border/40 text-slate-300">
+                          <div className="flex flex-wrap items-center  gap-1 text-[11px] pt-2 border-t border-border/40 text-slate-300">
                             <span className="text-slate-400 flex items-center gap-1.5 font-medium">
-                              <Clock className="size-3.5 text-amber-400 shrink-0" />
-                              <span>Validité de l'offre :</span>
+                              <Clock className="size-3.5 text-[#D4AF37] shrink-0" />
+                              <span>Offre valable jusqu'au :</span>
                             </span>
-                            <span className="font-bold text-amber-300">
+                            <span className="font-bold text-[#ECC86B]">
                               {item.offer.periodLabel}
                             </span>
                           </div>
@@ -282,12 +287,12 @@ export function UdemySkillPathways() {
                     {/* 1. Dates & Format Badge */}
                     {item.dates && (
                       <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl shadow-sm">
-                          <Calendar className="size-4 text-amber-400 shrink-0" />
+                        <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl shadow-sm ${accent.tag}`}>
+                          <Calendar className={`size-4 shrink-0 ${accent.iconColor}`} />
                           <span>Session : <strong>{item.dates}</strong></span>
                         </div>
                         <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-200 bg-slate-900 border border-slate-700 px-3 py-1.5 sm:py-2 rounded-xl">
-                          <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className={`size-2 rounded-full ${accent.accentColor === "gold" ? "bg-[#D4AF37]" : "bg-blue-400"} animate-pulse`} />
                           <span>{item.format}</span>
                         </div>
                       </div>

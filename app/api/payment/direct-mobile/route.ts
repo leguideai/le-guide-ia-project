@@ -3,7 +3,7 @@ import { supabaseServer } from "@/lib/supabase-server"
 import { Resend } from "resend"
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <onboarding@resend.dev>"
+const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <samba@leguideai.com>"
 
 export async function POST(req: Request) {
   try {

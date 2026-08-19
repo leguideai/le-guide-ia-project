@@ -73,8 +73,8 @@ export function UdemyHeader() {
     <header className="sticky top-0 z-50 w-full bg-slate-950/95 border-b border-border/80 backdrop-blur-xl">
       
       {/* Top Announcement Bar */}
-      <div className="bg-gradient-to-r from-primary/80 via-primary to-amber-500 text-primary-foreground text-[11px] font-extrabold py-1.5 px-4 text-center flex items-center justify-center gap-2">
-        <Sparkles className="size-3.5 animate-pulse" />
+      <div className="bg-gradient-to-r from-primary/90 via-blue-600 to-[#D4AF37] text-white text-[11px] font-extrabold py-1.5 px-4 text-center flex items-center justify-center gap-2">
+        <Sparkles className="size-3.5 animate-pulse text-[#F3E5AB]" />
         <span>{announcementText}</span>
         <Link href="/checkout/bootcamp-ia-pro" className="underline font-black hover:opacity-90 ml-1">
           {announcementCta}
@@ -113,16 +113,16 @@ export function UdemyHeader() {
                   <GraduationCap className="size-4 text-primary" />
                   <span>Bootcamps IA Live</span>
                 </Link>
-                <Link href="/formations" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
-                  <Sparkles className="size-4 text-cyan-400" />
+                {/* <Link href="/formations" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
+                  <Sparkles className="size-4 text-blue-400" />
                   <span>Nos Formations (À la demande)</span>
-                </Link>
+                </Link> */}
                 <Link href="/ressources" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
-                  <BookOpen className="size-4 text-purple-400" />
+                  <BookOpen className="size-4 text-[#D4AF37]" />
                   <span>Bibliothèque de Prompts</span>
                 </Link>
                 <Link href="/entreprises" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
-                  <Building2 className="size-4 text-emerald-400" />
+                  <Building2 className="size-4 text-blue-400" />
                   <span>Espace Entreprises (B2B)</span>
                 </Link>
               </div>
@@ -148,12 +148,12 @@ export function UdemyHeader() {
         {/* Nav Links & Actions */}
         <div className="flex items-center gap-3 shrink-0">
           
-          <Link href="/formations" className="hidden md:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
+          {/* <Link href="/formations" className="hidden md:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
             Nos Formations
-          </Link>
+          </Link> */}
 
           <Link href="/entreprises" className="hidden lg:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
-            Le Guide IA Business
+            Espace Entreprises
           </Link>
 
           {user ? (
@@ -243,7 +243,7 @@ export function UdemyHeader() {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-foreground hover:bg-secondary"
             >
-              <Building2 className="size-4 text-emerald-400" />
+              <Building2 className="size-4 text-blue-400" />
               <span>Espace Entreprises (B2B)</span>
             </Link>
           </div>

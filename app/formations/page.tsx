@@ -50,9 +50,9 @@ function LinkedinIcon({ className }: { className?: string }) {
 function getBadgeClasses(badge: string | undefined) {
   const b = badge?.toLowerCase() || ""
   if (b.includes("demande")) return "bg-rose-500/20 text-rose-300 border-rose-500/40"
-  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-amber-500/20 text-amber-300 border-amber-500/40"
-  if (b.includes("nouveau")) return "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
-  if (b.includes("prospect")) return "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
+  if (b.includes("nouveau")) return "bg-blue-500/20 text-blue-300 border-blue-500/40"
+  if (b.includes("prospect")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
   return "bg-primary/20 text-primary border-primary/40"
 }
 
@@ -338,19 +338,19 @@ function FormationsContent() {
           {/* Social Proof Badges */}
           <div className="flex items-center gap-3 sm:gap-6 flex-wrap text-xs sm:text-sm font-bold text-slate-300 pt-2">
             <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md">
-              <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
               <span><strong className="text-white">13 000+</strong> professionnels formés</span>
             </div>
             <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md">
-              <div className="flex text-amber-400">
+              <div className="flex text-[#D4AF37]">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="size-3.5 fill-amber-400 text-amber-400" />
+                  <Star key={i} className="size-3.5 fill-[#D4AF37] text-[#D4AF37]" />
                 ))}
               </div>
               <span><strong className="text-white">4.9/5</strong> avis vérifiés</span>
             </div>
             <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md">
-              <InfinityIcon className="size-4 text-cyan-400 shrink-0" />
+              <InfinityIcon className="size-4 text-primary shrink-0" />
               <span><strong className="text-white">Accès à vie</strong> &amp; Replays HD</span>
             </div>
           </div>
@@ -439,7 +439,7 @@ function FormationsContent() {
                   <div className="grid gap-2.5">
                     {f.features.map((feat, i) => (
                       <div key={i} className="flex items-start gap-3 text-xs sm:text-sm text-slate-200">
-                        <CheckCircle2 className="size-4 sm:size-5 text-emerald-400 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="size-4 sm:size-5 text-blue-400 shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </div>
                     ))}
@@ -468,7 +468,7 @@ function FormationsContent() {
                     {isEnrolled ? (
                       <Link
                         href="/dashboard"
-                        className="px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02]"
+                        className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02]"
                       >
                         <Play className="size-4" />
                         <span>Accéder à ma Formation</span>
@@ -575,7 +575,7 @@ function FormationsContent() {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="size-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="size-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0">
               <ShieldCheck className="size-6" />
             </div>
             <div className="space-y-1 text-left">

@@ -35,7 +35,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
     reviewsCount: "Avis apprenants certifiés",
     studentsCount: "Apprenants inscrits",
     badge: c.badge,
-    badgeColor: c.price === 0 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : c.price > 100000 ? "bg-primary/20 text-primary border-primary/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30",
+    badgeColor: c.price >= 140000 ? "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/30" : "bg-blue-600/20 text-blue-300 border border-blue-500/30",
     hours: c.price === 0 ? "Accès Libre" : "Session Intensive Live",
     schedule: c.dates || "19h00 GMT",
     oldPriceFcfa: c.price > 0 ? `${(c.price * 1.5).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "",
@@ -159,7 +159,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
                   <div className="space-y-2 pt-2 text-xs text-muted-foreground">
                     {course.highlights.map((h: string, idx: number) => (
                       <div key={idx} className="flex items-start gap-2">
-                        <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="size-3.5 text-primary shrink-0 mt-0.5" />
                         <span className="text-[11px] leading-tight">{h}</span>
                       </div>
                     ))}

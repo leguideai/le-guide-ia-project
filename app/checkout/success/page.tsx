@@ -13,9 +13,9 @@ export default function CheckoutSuccessPage() {
           <span className="font-heading text-lg font-extrabold tracking-tight">LE GUIDE <span className="text-primary">IA</span></span>
         </div>
 
-        <div className="rounded-3xl border border-emerald-500/30 bg-card/70 p-8 shadow-2xl backdrop-blur-xl text-center space-y-6">
+        <div className="rounded-3xl border border-primary/30 bg-card/70 p-8 shadow-2xl backdrop-blur-xl text-center space-y-6">
           
-          <div className="inline-flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-inner">
+          <div className="inline-flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shadow-inner">
             <CheckCircle2 className="size-9" />
           </div>
 
@@ -23,7 +23,7 @@ export default function CheckoutSuccessPage() {
             <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
               Félicitations & Bienvenue !
             </h1>
-            <p className="text-xs md:text-sm text-emerald-400 font-semibold">
+            <p className="text-xs md:text-sm text-primary font-semibold">
               Votre inscription au Bootcamp a été validée avec succès.
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function CheckoutSuccessPage() {
           </div>
 
           <div className="pt-4 border-t border-border/40 flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
-            <ShieldCheck className="size-3.5 text-emerald-400" />
+            <ShieldCheck className="size-3.5 text-primary" />
             <span>Paiement sécurisé & Facture transmise par email</span>
           </div>
 

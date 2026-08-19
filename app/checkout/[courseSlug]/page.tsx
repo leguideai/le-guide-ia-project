@@ -350,9 +350,9 @@ export default function CheckoutPage({ params }: PageProps) {
 
               {/* Mobile Money Direct Info Box & Ref Field */}
               {paymentMethod === "mobile_direct" && (
-                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-4">
+                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-4">
                   <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-primary flex items-center gap-1.5">
                       <Smartphone className="size-4" />
                       <span>Instructions de dépôt Mobile Money</span>
                     </h4>
@@ -361,15 +361,15 @@ export default function CheckoutPage({ params }: PageProps) {
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-emerald-500/30 shadow-md">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-primary/30 shadow-md">
                     <div>
-                      <div className="font-mono text-base text-emerald-400 font-extrabold tracking-wider mt-0.5">+226 75 75 72 73</div>
+                      <div className="font-mono text-base text-primary font-extrabold tracking-wider mt-0.5">+226 75 75 72 73</div>
                       <div className="text-[11px] text-muted-foreground font-medium">Nom du destinataire : Sanson Alfred Dah</div>
                     </div>
                     <button
                       type="button"
                       onClick={() => copyToClipboard("+22675757273")}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-slate-950 font-bold text-xs transition-all cursor-pointer border border-emerald-500/30"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground font-bold text-xs transition-all cursor-pointer border border-primary/30"
                       title="Copier le numéro"
                     >
                       {copiedNum === "+22675757273" ? (
@@ -396,7 +396,7 @@ export default function CheckoutPage({ params }: PageProps) {
                       value={transactionRef}
                       onChange={(e) => setTransactionRef(e.target.value)}
                       placeholder="Ex: REF-WAVE-8921 ou N° de téléphone expéditeur"
-                      className="w-full rounded-xl border border-emerald-500/40 bg-input/60 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+                      className="w-full rounded-xl border border-primary/40 bg-input/60 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all"
                     />
                   </div>
                 </div>
@@ -413,13 +413,15 @@ export default function CheckoutPage({ params }: PageProps) {
                   {loading 
                     ? "Traitement de votre inscription..." 
                     : paymentMethod === "mobile_direct"
-                    ? "Valider mon paiement Mobile Money"
-                    : "Payer par Carte Internationale"}
+                      ? "Valider mon paiement & Finaliser l'inscription"
+                      : "Payer en ligne & Accéder immédiatement"
+                  }
                 </span>
+                <ArrowRight className="size-4" />
               </button>
 
               <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground text-center pt-2">
-                <ShieldCheck className="size-3.5 text-emerald-400" />
+                <ShieldCheck className="size-3.5 text-primary" />
                 <span>Cryptage SSL 256-bit — Accès et confirmation immédiats</span>
               </div>
             </form>
@@ -430,7 +432,7 @@ export default function CheckoutPage({ params }: PageProps) {
             <div className="space-y-3 pb-4 border-b border-border">
               <div className="flex items-center gap-2">
                 {isBusiness ? (
-                  <UserCheck className="size-5 text-amber-400" />
+                  <UserCheck className="size-5 text-[#D4AF37]" />
                 ) : (
                   <GraduationCap className="size-5 text-primary" />
                 )}
@@ -453,7 +455,7 @@ export default function CheckoutPage({ params }: PageProps) {
               <div className="flex justify-between py-1 border-t border-border/60 pt-3">
                 <span className="font-bold text-foreground">Total à régler</span>
                 <div className="text-right">
-                  <div className="text-lg font-black text-primary">{coursePriceFcfa}</div>
+                  <div className={`text-lg font-black ${isBusiness ? "text-[#ECC86B]" : "text-primary"}`}>{coursePriceFcfa}</div>
                   <div className="text-[10px] text-muted-foreground">≈ {coursePriceUsd}</div>
                 </div>
               </div>
