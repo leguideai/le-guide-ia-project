@@ -5,11 +5,19 @@ import { Resend } from "resend"
 export const dynamic = "force-dynamic"
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <samba@leguideai.com>"
+const fromEmail = process.env.RESEND_FROM_EMAIL || "Alfred Dah — LE GUIDE IA <alfred@leguideai.com>"
 
 export async function POST(req: Request) {
   try {
-    const { subject, title, bodyHtml, recipientEmails, isTest = false } = await req.json()
+    const { 
+      subject, 
+      title, 
+      bodyHtml, 
+      recipientEmails, 
+      includePlatformMembers = false,
+      isTest = false,
+      testEmail = "alfred@leguideai.com"
+    } = await req.json()
 
     if (!subject || !bodyHtml) {
       return NextResponse.json({ message: "Le sujet et le contenu de l'email sont obligatoires." }, { status: 400 })
@@ -24,27 +32,51 @@ export async function POST(req: Request) {
 
     let targetEmails: string[] = []
 
-    if (recipientEmails && Array.isArray(recipientEmails) && recipientEmails.length > 0) {
-      targetEmails = recipientEmails
-    } else {
-      // Fetch all subscribers from newsletter_subscribers & leads
-      const { data: subs } = await supabaseServer.from("newsletter_subscribers").select("email").eq("status", "active")
-      if (subs && subs.length > 0) {
-        targetEmails = subs.map(s => s.email).filter(Boolean)
-      } else {
-        const { data: leads } = await supabaseServer.from("leads").select("email")
-        if (leads && leads.length > 0) {
-          targetEmails = Array.from(new Set(leads.map(l => l.email).filter(Boolean)))
-        }
-      }
-    }
-
     if (isTest) {
-      targetEmails = ["samba@leguideai.com"]
+      targetEmails = [testEmail || "alfred@leguideai.com"]
+    } else if (recipientEmails && Array.isArray(recipientEmails) && recipientEmails.length > 0) {
+      targetEmails = Array.from(new Set(recipientEmails.map((e: string) => e.toLowerCase().trim()).filter(Boolean)))
+    } else {
+      const emailSet = new Set<string>()
+
+      // 1. Fetch from newsletter_subscribers
+      try {
+        const { data: subs } = await supabaseServer
+          .from("newsletter_subscribers")
+          .select("email")
+          .eq("status", "active")
+        if (subs && subs.length > 0) {
+          subs.forEach(s => s.email && emailSet.add(s.email.toLowerCase().trim()))
+        }
+      } catch (e) {}
+
+      // 2. Fetch from registrations (where source = 'newsletter' or all registrations if includePlatformMembers is true)
+      try {
+        const query = supabaseServer.from("registrations").select("email")
+        if (!includePlatformMembers) {
+          query.eq("source", "newsletter")
+        }
+        const { data: regs } = await query
+        if (regs && regs.length > 0) {
+          regs.forEach(r => r.email && emailSet.add(r.email.toLowerCase().trim()))
+        }
+      } catch (e) {}
+
+      // 3. If includePlatformMembers is true, also fetch from profiles (registered users on platform)
+      if (includePlatformMembers) {
+        try {
+          const { data: profs } = await supabaseServer.from("profiles").select("email")
+          if (profs && profs.length > 0) {
+            profs.forEach(p => p.email && emailSet.add(p.email.toLowerCase().trim()))
+          }
+        } catch (e) {}
+      }
+
+      targetEmails = Array.from(emailSet).filter(e => e.includes("@"))
     }
 
     if (targetEmails.length === 0) {
-      return NextResponse.json({ message: "Aucun abonné trouvé pour cet envoi." }, { status: 400 })
+      return NextResponse.json({ message: "Aucun destinataire trouvé pour cette diffusion." }, { status: 400 })
     }
 
     let successCount = 0
@@ -73,8 +105,8 @@ export async function POST(req: Request) {
         </div>
 
         <div style="font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 32px;">
-          <p style="margin: 0;">Cet email a été envoyé par <strong>Samba Diop</strong> via <strong>LE GUIDE IA</strong>.</p>
-          <p style="margin: 4px 0 0 0;">Pour toute question, répondez directement à <a href="mailto:samba@leguideai.com" style="color: #0284c7;">samba@leguideai.com</a> ou WhatsApp: +226 0505 0577</p>
+          <p style="margin: 0;">Cet email a été envoyé par <strong>Alfred Dah</strong> via <strong>LE GUIDE IA</strong>.</p>
+          <p style="margin: 4px 0 0 0;">Pour toute question, répondez directement à <a href="mailto:alfred@leguideai.com" style="color: #0284c7; text-decoration: none;">alfred@leguideai.com</a> | WhatsApp: +226 0505 0577</p>
         </div>
       </div>
     `
@@ -85,6 +117,7 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: fromEmail,
           to: [email],
+          reply_to: "alfred@leguideai.com",
           subject: subject,
           html: fullHtml
         })
@@ -107,3 +140,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Erreur serveur lors de la diffusion." }, { status: 500 })
   }
 }
+

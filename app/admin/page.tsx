@@ -182,10 +182,13 @@ export default function SuperAdminDashboard() {
   const [showCohortModal, setShowCohortModal] = useState(false)
   const [cohortForm, setCohortForm] = useState({ courseId: "", startDate: "2026-08-31" })
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([])
+  const [newSubscriberEmail, setNewSubscriberEmail] = useState("")
+  const [addingSubscriber, setAddingSubscriber] = useState(false)
   const [broadcastForm, setBroadcastForm] = useState({
     subject: "🔥 Nouvelles Masterclasses & Astuces IA exclusives — LE GUIDE IA",
     title: "Nos dernières analyses et opportunités IA",
     bodyHtml: "<p>Bonjour à tous,</p><p>Voici les dernières actualités IA et les dates de nos prochains bootcamps.</p>",
+    includePlatformMembers: false,
     isTest: false
   })
   const [sendingBroadcast, setSendingBroadcast] = useState(false)
@@ -213,6 +216,24 @@ export default function SuperAdminDashboard() {
   const [paymentFilter, setPaymentFilter] = useState("all")
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
+
+  // Payment Edit & Delete State
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [editingPayment, setEditingPayment] = useState<PaymentRecord | null>(null)
+  const [savingPayment, setSavingPayment] = useState(false)
+  const [paymentForm, setPaymentForm] = useState({
+    id: "",
+    registration_id: "",
+    full_name: "",
+    email: "",
+    whatsapp: "",
+    country: "CI",
+    amount: 49000,
+    currency: "XOF",
+    method: "Mobile Money",
+    transaction_ref: "",
+    status: "pending_verification"
+  })
 
   // Formations Modals & Form State
   const [showFormationModal, setShowFormationModal] = useState(false)
@@ -1271,6 +1292,74 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  // Open Edit Payment Modal
+  function handleOpenEditPayment(payment: PaymentRecord) {
+    setEditingPayment(payment)
+    setPaymentForm({
+      id: payment.id,
+      registration_id: payment.registration_id || "",
+      full_name: payment.registrations?.full_name || "",
+      email: payment.registrations?.email || "",
+      whatsapp: payment.registrations?.whatsapp || "",
+      country: payment.registrations?.country || "CI",
+      amount: payment.amount || 49000,
+      currency: payment.currency || "XOF",
+      method: payment.method || "Mobile Money",
+      transaction_ref: payment.transaction_ref || "",
+      status: payment.status || "pending_verification"
+    })
+    setShowPaymentModal(true)
+  }
+
+  // Save / Update Payment & Registration
+  async function handleSavePayment(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingPayment(true)
+    try {
+      const res = await fetch("/api/admin/payments", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paymentForm)
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Inscription & Paiement mis à jour avec succès !")
+        setShowPaymentModal(false)
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de la mise à jour.")
+      }
+    } catch (err: any) {
+      alert("Erreur de communication : " + err.message)
+    } finally {
+      setSavingPayment(false)
+    }
+  }
+
+  // Delete Payment & Registration
+  async function handleDeletePayment(paymentId: string, registrationId?: string) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette inscription et son paiement ? Cette action est irréversible.")) return
+    setProcessingId(paymentId)
+    try {
+      const url = registrationId 
+        ? `/api/admin/payments?id=${paymentId}&registration_id=${registrationId}`
+        : `/api/admin/payments?id=${paymentId}`
+      const res = await fetch(url, { method: "DELETE" })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Inscription & Paiement supprimés avec succès.")
+        setPayments(prev => prev.filter(p => p.id !== paymentId))
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de la suppression")
+      }
+    } catch (err: any) {
+      alert("Erreur de suppression : " + err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
   // Handle Submissions Grading
   async function handleGradeSubmission() {
     if (!gradingSub) return
@@ -1604,7 +1693,7 @@ export default function SuperAdminDashboard() {
       const data = await res.json()
       if (res.ok && data.success) {
         setBroadcastResult(data)
-        showNotice(`Diffusion envoyée avec succès à ${data.sentCount} destinataire(s) via samba@leguideai.com !`)
+        showNotice(`Diffusion envoyée avec succès à ${data.sentCount} destinataire(s) via alfred@leguideai.com !`)
       } else {
         showNotice(data.message || "Erreur lors de l'envoi de la diffusion.")
       }
@@ -1612,6 +1701,33 @@ export default function SuperAdminDashboard() {
       showNotice("Erreur réseau lors de la diffusion.")
     } finally {
       setSendingBroadcast(false)
+    }
+  }
+
+  async function handleAddSubscriber(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newSubscriberEmail || !newSubscriberEmail.includes("@")) return
+    setAddingSubscriber(true)
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newSubscriberEmail, source: "admin_manual" })
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        showNotice(`Abonné "${newSubscriberEmail}" enregistré avec succès !`)
+        setNewSubscriberEmail("")
+        const rNews = await fetch("/api/newsletter")
+        const dNews = await rNews.json()
+        if (dNews.subscribers) setNewsletterSubscribers(dNews.subscribers)
+      } else {
+        showNotice(data.message || "Erreur lors de l'enregistrement.")
+      }
+    } catch (err) {
+      showNotice("Erreur réseau.")
+    } finally {
+      setAddingSubscriber(false)
     }
   }
 
@@ -1633,6 +1749,30 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  // Audience Computation
+  const newsletterEmailSet = useMemo(() => {
+    return new Set(newsletterSubscribers.map(s => s.email?.toLowerCase().trim()).filter(Boolean))
+  }, [newsletterSubscribers])
+
+  const nonSubscribedMembers = useMemo(() => {
+    const emails = new Set<string>()
+    users.forEach(u => {
+      if (u.email) {
+        const em = u.email.toLowerCase().trim()
+        if (!newsletterEmailSet.has(em)) emails.add(em)
+      }
+    })
+    payments.forEach(p => {
+      const em = p.registrations?.email?.toLowerCase().trim()
+      if (em && !newsletterEmailSet.has(em)) emails.add(em)
+    })
+    return Array.from(emails)
+  }, [users, payments, newsletterEmailSet])
+
+  const totalBroadcastRecipients = broadcastForm.includePlatformMembers
+    ? newsletterSubscribers.length + nonSubscribedMembers.length
+    : newsletterSubscribers.length
+
   if (unauthorized) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
@@ -1651,14 +1791,19 @@ export default function SuperAdminDashboard() {
   }
 
   const filteredPayments = payments.filter(p => {
-    const matchesSearch = searchQuery === "" || 
-      p.registrations?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.registrations?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.transaction_ref?.toLowerCase().includes(searchQuery.toLowerCase())
+    const q = searchQuery.toLowerCase().trim()
+    const matchesSearch = !q || 
+      p.registrations?.full_name?.toLowerCase().includes(q) ||
+      p.registrations?.email?.toLowerCase().includes(q) ||
+      p.registrations?.whatsapp?.toLowerCase().includes(q) ||
+      p.registrations?.country?.toLowerCase().includes(q) ||
+      p.method?.toLowerCase().includes(q) ||
+      p.transaction_ref?.toLowerCase().includes(q)
 
     const matchesFilter = paymentFilter === "all" || 
       p.status === paymentFilter || 
-      (paymentFilter === "pending_verification" && (p.status === "pending" || p.status === "pending_verification"))
+      (paymentFilter === "pending_verification" && (p.status === "pending" || p.status === "pending_verification")) ||
+      (paymentFilter === "rejected" && (p.status === "rejected" || p.status === "failed"))
     return matchesSearch && matchesFilter
   })
 
@@ -2013,7 +2158,7 @@ export default function SuperAdminDashboard() {
                 <span className="text-[10px] opacity-75">({courses.length})</span>
               </button>
 
-              <button
+              {/* <button
                 onClick={() => setActiveTab("formations")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
@@ -2024,7 +2169,7 @@ export default function SuperAdminDashboard() {
                   <span>Formations Vidéos</span>
                 </div>
                 <span className="text-[10px] opacity-75">({formations.length})</span>
-              </button>
+              </button> */}
 
               <button
                 onClick={() => setActiveTab("resources")}
@@ -4325,14 +4470,14 @@ export default function SuperAdminDashboard() {
                   Newsletter &amp; Diffusion d'Emails
                 </h2>
                 <p className="text-xs text-slate-400 mt-1">
-                  Diffusez vos analyses, prompts et dates de bootcamps directement par email via <strong>samba@leguideai.com</strong>.
+                  Diffusez vos analyses, prompts et dates de bootcamps directement par email via <strong>alfred@leguideai.com</strong>.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center gap-1.5">
                   <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Expéditeur : samba@leguideai.com
+                  Expéditeur : alfred@leguideai.com
                 </span>
               </div>
             </div>
@@ -4346,15 +4491,15 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Serveur d'Envoi</span>
-                <p className="text-sm font-bold text-primary font-mono truncate">Resend (Cloudflare DNS)</p>
-                <span className="text-[10px] text-slate-400">DKIM &amp; SPF sécurisés</span>
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Membres Non-Abonnés</span>
+                <p className="text-2xl font-black text-blue-400 font-mono">{nonSubscribedMembers.length}</p>
+                <span className="text-[10px] text-slate-400">Inscrits sur la plateforme</span>
               </div>
 
               <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Canal Principal</span>
-                <p className="text-sm font-bold text-white">Footer &amp; Leads Entrants</p>
-                <span className="text-[10px] text-blue-400 font-bold">Enregistrement automatique</span>
+                <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Serveur d'Envoi</span>
+                <p className="text-sm font-bold text-primary font-mono truncate">Resend (Cloudflare DNS)</p>
+                <span className="text-[10px] text-slate-400">DKIM &amp; SPF sécurisés</span>
               </div>
             </div>
 
@@ -4368,12 +4513,12 @@ export default function SuperAdminDashboard() {
                     <Sparkles className="size-4 text-primary" />
                     Rédiger &amp; Diffuser une Campagne
                   </h3>
-                  <span className="text-[10px] font-mono text-slate-500">Expéditeur : samba@leguideai.com</span>
+                  <span className="text-[10px] font-mono text-slate-500">Expéditeur : alfred@leguideai.com</span>
                 </div>
 
                 <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
                   <div>
-                    <label className="text-slate-400 block mb-1 font-bold">Sujet de l'Email (Objet visible dans la boîte de réception)</label>
+                    <label className="text-slate-400 block mb-1 font-bold">Sujet de l'Email (Objet visible dans la boîte de réception) *</label>
                     <input
                       type="text"
                       required
@@ -4396,7 +4541,7 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   <div>
-                    <label className="text-slate-400 block mb-1 font-bold">Corps du Message (Supporte HTML &amp; Paragraphes)</label>
+                    <label className="text-slate-400 block mb-1 font-bold">Corps du Message (Supporte HTML &amp; Paragraphes) *</label>
                     <textarea
                       rows={8}
                       required
@@ -4407,10 +4552,54 @@ export default function SuperAdminDashboard() {
                     />
                   </div>
 
+                  {/* Audience Selector & Non-Subscribers Platform Members Option */}
+                  <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        id="include_platform_members"
+                        checked={broadcastForm.includePlatformMembers}
+                        onChange={(e) => setBroadcastForm({ ...broadcastForm, includePlatformMembers: e.target.checked })}
+                        className="mt-0.5 size-4 rounded accent-primary cursor-pointer shrink-0"
+                      />
+                      <label htmlFor="include_platform_members" className="cursor-pointer space-y-0.5 select-none">
+                        <span className="font-bold text-white text-xs flex items-center gap-1.5">
+                          <Users className="size-3.5 text-blue-400 inline" />
+                          Inclure également les membres &amp; apprenants inscrits (Non-abonnés)
+                        </span>
+                        <span className="text-[11px] text-slate-400 block leading-relaxed">
+                          Optionnel : envoyez aussi cette campagne aux utilisateurs inscrits et participants qui ne sont pas encore abonnés à la newsletter (+{nonSubscribedMembers.length} membre{nonSubscribedMembers.length > 1 ? "s" : ""}).
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-900 text-[11px]">
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-300 font-mono">
+                        Abonnés Newsletter : <strong className="text-white">{newsletterSubscribers.length}</strong>
+                      </span>
+                      {broadcastForm.includePlatformMembers ? (
+                        <>
+                          <span className="text-slate-500 font-bold">+</span>
+                          <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 font-mono">
+                            Membres plateforme : <strong className="text-blue-300">{nonSubscribedMembers.length}</strong>
+                          </span>
+                          <span className="text-slate-500 font-bold">=</span>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono font-bold">
+                            Total ciblé : <strong className="text-emerald-300">{totalBroadcastRecipients} destinataire(s)</strong>
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-slate-500 text-[11px] italic">
+                          (Diffusion réservée aux {newsletterSubscribers.length} abonnés newsletter)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Feedback Message */}
                   {broadcastResult && (
                     <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold space-y-1">
-                      <p>✅ Envoi réussi à <strong>{broadcastResult.sentCount}</strong> abonné(s) !</p>
+                      <p>✅ Envoi réussi à <strong>{broadcastResult.sentCount}</strong> destinataire(s) !</p>
                       {broadcastResult.failureCount > 0 && (
                         <p className="text-amber-400 text-[11px]">⚠️ {broadcastResult.failureCount} échec(s) de délivrabilité.</p>
                       )}
@@ -4428,11 +4617,11 @@ export default function SuperAdminDashboard() {
                           const res = await fetch("/api/admin/newsletter/broadcast", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ ...broadcastForm, isTest: true })
+                            body: JSON.stringify({ ...broadcastForm, isTest: true, testEmail: "alfred@leguideai.com" })
                           })
                           const data = await res.json()
                           if (res.ok && data.success) {
-                            showNotice("Email de test envoyé à samba@leguideai.com !")
+                            showNotice("Email de test envoyé à alfred@leguideai.com !")
                           } else {
                             showNotice(data.message || "Erreur lors du test.")
                           }
@@ -4444,12 +4633,12 @@ export default function SuperAdminDashboard() {
                       }}
                       className="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition-all text-xs cursor-pointer"
                     >
-                      🧪 Tester vers samba@leguideai.com
+                      🧪 Tester vers alfred@leguideai.com
                     </button>
 
                     <button
                       type="submit"
-                      disabled={sendingBroadcast || newsletterSubscribers.length === 0}
+                      disabled={sendingBroadcast || totalBroadcastRecipients === 0}
                       className="w-full sm:flex-1 py-3 px-5 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-xl shadow-primary/20 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {sendingBroadcast ? (
@@ -4457,7 +4646,11 @@ export default function SuperAdminDashboard() {
                       ) : (
                         <>
                           <Mail className="size-4" />
-                          <span>Diffuser à tous les {newsletterSubscribers.length} abonnés</span>
+                          <span>
+                            {broadcastForm.includePlatformMembers
+                              ? `Diffuser aux ${totalBroadcastRecipients} destinataires (${newsletterSubscribers.length} abonnés + ${nonSubscribedMembers.length} membres)`
+                              : `Diffuser aux ${newsletterSubscribers.length} abonnés newsletter`}
+                          </span>
                         </>
                       )}
                     </button>
@@ -4465,7 +4658,7 @@ export default function SuperAdminDashboard() {
                 </form>
               </div>
 
-              {/* Right Column: Subscribers Table (5 Cols) */}
+              {/* Right Column: Subscribers Table & Manual Enrollment (5 Cols) */}
               <div className="lg:col-span-5 rounded-3xl border border-slate-800 bg-slate-900/40 p-5 shadow-2xl backdrop-blur-xl space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <h3 className="font-heading text-sm font-bold text-white">
@@ -4476,6 +4669,7 @@ export default function SuperAdminDashboard() {
                       const res = await fetch("/api/newsletter")
                       const data = await res.json()
                       if (data.subscribers) setNewsletterSubscribers(data.subscribers)
+                      showNotice("Liste des abonnés actualisée.")
                     }}
                     className="text-[11px] text-primary hover:underline font-bold"
                   >
@@ -4483,16 +4677,37 @@ export default function SuperAdminDashboard() {
                   </button>
                 </div>
 
+                {/* Formulaire d'ajout rapide d'un abonné */}
+                <form onSubmit={handleAddSubscriber} className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Ajouter un email abonné..."
+                    value={newSubscriberEmail}
+                    onChange={(e) => setNewSubscriberEmail(e.target.value)}
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-primary"
+                  />
+                  <button
+                    type="submit"
+                    disabled={addingSubscriber}
+                    className="px-3.5 py-2 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer shrink-0"
+                  >
+                    {addingSubscriber ? "..." : "+ Ajouter"}
+                  </button>
+                </form>
+
                 {newsletterSubscribers.length === 0 ? (
-                  <div className="text-center py-10 text-slate-500 text-xs">
-                    Aucun abonné enregistré pour le moment.
+                  <div className="text-center py-10 text-slate-500 text-xs bg-slate-950/40 rounded-2xl border border-slate-800/60 p-4">
+                    <Mail className="size-8 mx-auto text-slate-600 mb-2 opacity-50" />
+                    <p className="font-bold text-slate-300">Aucun abonné enregistré</p>
+                    <p className="text-[11px] text-slate-500 mt-1">Inscrivez un email ci-dessus ou via le formulaire footer du site.</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
                     {newsletterSubscribers.map((sub: any, idx: number) => (
                       <div
                         key={sub.id || sub.email || idx}
-                        className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex items-center justify-between gap-3 text-xs"
+                        className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex items-center justify-between gap-3 text-xs hover:border-slate-700 transition-colors"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="font-bold text-white truncate font-mono text-[11px]">{sub.email}</p>
@@ -4525,39 +4740,74 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* TAB 5: INSCRIPIIONS & PAIEMENTS MOBILE MONEY */}
+        {/* TAB 5: INSCRIPTIONS & VALIDATION DES PAIEMENTS */}
         {activeTab === "payments" && (
           <div className="space-y-6 animate-fadeIn">
-            {/* Search & Filter Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-              <div className="relative w-full sm:w-96">
+            {/* Header & Metrics Summary */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 backdrop-blur-md">
+              <div className="space-y-1">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <DollarSign className="size-5 text-emerald-400 shrink-0" />
+                  <span>Inscriptions &amp; Validation des Paiements</span>
+                </h3>
+                <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                  Consultez, modifiez, validez en 1-clic ou supprimez les inscriptions et virements Mobile Money.
+                </p>
+              </div>
+
+              {/* Status Badges Counts */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-xl bg-slate-800/80 border border-slate-700 text-[11px] font-bold text-slate-300">
+                  Total : <strong className="text-white">{payments.length}</strong>
+                </span>
+                <span className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-400">
+                  À vérifier : <strong className="text-amber-300">{payments.filter(p => p.status === "pending_verification" || p.status === "pending").length}</strong>
+                </span>
+                <span className="px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400">
+                  Confirmés : <strong className="text-emerald-300">{payments.filter(p => p.status === "confirmed").length}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Search & Filter Toolbar */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+              <div className="relative flex-1 sm:max-w-md">
                 <Search className="absolute left-3.5 top-3 size-4 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Rechercher un Nom, Email, Référence..."
+                  placeholder="Rechercher par nom, email, tél, référence..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:border-primary outline-none"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-primary outline-none transition-colors"
                 />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3.5 top-3 text-[11px] text-slate-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Filter className="size-4 text-slate-400" />
+              <div className="flex items-center gap-2">
+                <Filter className="size-4 text-slate-400 shrink-0" />
                 <select
                   value={paymentFilter}
                   onChange={e => setPaymentFilter(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-300 focus:border-primary outline-none"
+                  className="w-full sm:w-auto bg-slate-900 border border-slate-800 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-300 focus:border-primary outline-none cursor-pointer"
                 >
-                  <option value="all">Tous les Statuts</option>
-                  <option value="pending_verification">À vérifier (Mobile Money)</option>
-                  <option value="confirmed">Confirmés</option>
-                  <option value="pending">En attente</option>
+                  <option value="all">Tous les Statuts ({payments.length})</option>
+                  <option value="pending_verification">À vérifier / Mobile Money ({payments.filter(p => p.status === "pending_verification" || p.status === "pending").length})</option>
+                  <option value="confirmed">Confirmés / Payés ({payments.filter(p => p.status === "confirmed").length})</option>
+                  <option value="pending">En attente ({payments.filter(p => p.status === "pending").length})</option>
+                  <option value="rejected">Rejetés / Échoués ({payments.filter(p => p.status === "rejected" || p.status === "failed").length})</option>
                 </select>
               </div>
             </div>
 
-            {/* Payments Table */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl">
+            {/* 1. DESKTOP TABLE VIEW (Visible on Large Screens) */}
+            <div className="hidden lg:block rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-300">
                   <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
@@ -4565,75 +4815,296 @@ export default function SuperAdminDashboard() {
                       <th className="p-4">Participant</th>
                       <th className="p-4">Contact</th>
                       <th className="p-4">Montant</th>
-                      <th className="p-4">Méthode & Réf</th>
+                      <th className="p-4">Méthode &amp; Réf</th>
                       <th className="p-4">Statut</th>
                       <th className="p-4">Date</th>
-                      <th className="p-4 text-right">Actions 1-Clic</th>
+                      <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {filteredPayments.map(p => (
-                      <tr key={p.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="p-4 font-bold text-white">
-                          {p.registrations?.full_name || "Prospect Direct"}
-                        </td>
-                        <td className="p-4 space-y-0.5">
-                          <div className="text-slate-200">{p.registrations?.email || "N/A"}</div>
-                          <div className="text-[10px] text-slate-400">{p.registrations?.whatsapp || "N/A"} ({p.registrations?.country || "FR"})</div>
-                        </td>
-                        <td className="p-4 font-mono font-bold text-emerald-400">
-                          {p.amount ? p.amount.toLocaleString() : "99 000"} {p.currency || "XOF"}
-                        </td>
-                        <td className="p-4">
-                          <span className="font-bold text-slate-200 uppercase">{p.method}</span>
-                          {p.transaction_ref && (
-                            <div className="text-[10px] font-mono text-slate-400">Réf: {p.transaction_ref}</div>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                            p.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                            (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
-                            "bg-slate-800 text-slate-400 border-slate-700"
-                          }`}>
-                            {(p.status === "pending_verification" || p.status === "pending") ? "À vérifier" : p.status}
-                          </span>
-                        </td>
-                        <td className="p-4 text-slate-400 text-[11px]">
-                          {new Date(p.created_at).toLocaleDateString("fr-FR")}
-                        </td>
-                        <td className="p-4 text-right space-x-2">
-                          {p.status !== "confirmed" && (
-                            <button
-                              onClick={() => handlePaymentStatus(p.id, "confirmed")}
-                              disabled={processingId === p.id}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-[11px] hover:bg-emerald-400 transition-colors shadow-md cursor-pointer"
-                            >
-                              Valider & Envoyer Accès
-                            </button>
-                          )}
-                          {(p.status === "pending_verification" || p.status === "pending") && (
-                            <button
-                              onClick={() => handlePaymentStatus(p.id, "rejected")}
-                              disabled={processingId === p.id}
-                              className="px-2.5 py-1.5 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-[11px] hover:bg-red-500/30 transition-colors cursor-pointer"
-                            >
-                              Rejeter
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredPayments.map(p => {
+                      const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
+                      const initials = (p.registrations?.full_name || "P").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                      return (
+                        <tr key={p.id} className="hover:bg-slate-800/40 transition-colors group">
+                          {/* Participant */}
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="size-9 rounded-xl bg-primary/10 text-primary font-black flex items-center justify-center text-xs shrink-0 border border-primary/20">
+                                {initials}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="font-bold text-white truncate">{p.registrations?.full_name || "Prospect Direct"}</div>
+                                {p.registrations?.source && (
+                                  <div className="text-[10px] text-slate-500 truncate">{p.registrations.source}</div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Contact */}
+                          <td className="p-4 space-y-1">
+                            <div className="text-slate-200 truncate flex items-center gap-1.5">
+                              <Mail className="size-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{p.registrations?.email || "N/A"}</span>
+                            </div>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                              {cleanPhone ? (
+                                <a 
+                                  href={`https://wa.me/${cleanPhone}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+                                  title="Contacter sur WhatsApp"
+                                >
+                                  <MessageCircle className="size-3" />
+                                  <span>{p.registrations?.whatsapp}</span>
+                                </a>
+                              ) : (
+                                <span>{p.registrations?.whatsapp || "N/A"}</span>
+                              )}
+                              <span className="text-[10px] text-slate-500 font-mono">({p.registrations?.country || "CI"})</span>
+                            </div>
+                          </td>
+
+                          {/* Montant */}
+                          <td className="p-4">
+                            <div className="font-mono font-bold text-emerald-400 text-sm">
+                              {p.amount ? Number(p.amount).toLocaleString("fr-FR") : "49 000"} {p.currency || "XOF"}
+                            </div>
+                          </td>
+
+                          {/* Méthode & Réf */}
+                          <td className="p-4 space-y-0.5">
+                            <span className="font-bold text-slate-200 uppercase text-[11px] block">{p.method}</span>
+                            {p.transaction_ref ? (
+                              <div className="text-[10px] font-mono text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800/80 inline-block">
+                                Réf: {p.transaction_ref}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-500 italic">Sans réf</span>
+                            )}
+                          </td>
+
+                          {/* Statut */}
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${
+                              p.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                              (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
+                              "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                            }`}>
+                              {p.status === "confirmed" && <CheckCircle2 className="size-3" />}
+                              {(p.status === "pending_verification" || p.status === "pending") && <Clock className="size-3" />}
+                              {p.status === "confirmed" ? "Confirmé" : (p.status === "pending_verification" || p.status === "pending") ? "À vérifier" : p.status}
+                            </span>
+                          </td>
+
+                          {/* Date */}
+                          <td className="p-4 text-slate-400 text-[11px]">
+                            {new Date(p.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {p.status !== "confirmed" && (
+                                <button
+                                  onClick={() => handlePaymentStatus(p.id, "confirmed")}
+                                  disabled={processingId === p.id}
+                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-[11px] hover:bg-emerald-400 transition-colors shadow-md cursor-pointer flex items-center gap-1 shrink-0"
+                                  title="Valider le paiement et débloquer les accès"
+                                >
+                                  <CheckCircle2 className="size-3.5" />
+                                  <span>Valider</span>
+                                </button>
+                              )}
+                              {(p.status === "pending_verification" || p.status === "pending") && (
+                                <button
+                                  onClick={() => handlePaymentStatus(p.id, "rejected")}
+                                  disabled={processingId === p.id}
+                                  className="px-2 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 font-bold text-[11px] hover:bg-red-500/20 transition-colors cursor-pointer shrink-0"
+                                  title="Rejeter ce paiement"
+                                >
+                                  Rejeter
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleOpenEditPayment(p)}
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                                title="Modifier l'inscription &amp; paiement"
+                              >
+                                <Edit3 className="size-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeletePayment(p.id, p.registration_id)}
+                                disabled={processingId === p.id}
+                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
+                                title="Supprimer définitivement"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                     {filteredPayments.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-slate-500">
-                          Aucune transaction trouvée.
+                        <td colSpan={7} className="p-12 text-center text-slate-500">
+                          <DollarSign className="size-8 mx-auto text-slate-600 mb-2 opacity-60" />
+                          <p className="font-bold text-white text-xs">Aucune transaction trouvée</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">Modifiez vos filtres ou effectuez une autre recherche.</p>
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* 2. MOBILE & TABLET CARDS VIEW (Visible on Small/Medium Screens) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:hidden gap-4">
+              {filteredPayments.map(p => {
+                const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
+                const initials = (p.registrations?.full_name || "P").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                return (
+                  <div
+                    key={p.id}
+                    className="p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 shadow-lg relative overflow-hidden"
+                  >
+                    {/* Card Top: Participant + Status */}
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="size-10 rounded-xl bg-primary/10 text-primary font-black flex items-center justify-center text-xs shrink-0 border border-primary/20">
+                            {initials}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-bold text-white truncate" title={p.registrations?.full_name || "Prospect Direct"}>
+                              {p.registrations?.full_name || "Prospect Direct"}
+                            </h4>
+                            <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                              {p.registrations?.email || "N/A"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 inline-flex items-center gap-1 ${
+                          p.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                          (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
+                          "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                        }`}>
+                          {p.status === "confirmed" ? "Confirmé" : (p.status === "pending_verification" || p.status === "pending") ? "À vérifier" : p.status}
+                        </span>
+                      </div>
+
+                      {/* Contact & WhatsApp */}
+                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-2 text-xs">
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span className="text-slate-400 text-[11px]">WhatsApp :</span>
+                          {cleanPhone ? (
+                            <a 
+                              href={`https://wa.me/${cleanPhone}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 hover:underline flex items-center gap-1 font-bold"
+                            >
+                              <MessageCircle className="size-3" />
+                              <span>{p.registrations?.whatsapp}</span>
+                            </a>
+                          ) : (
+                            <span className="text-slate-500">N/A</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-slate-300">
+                          <span className="text-slate-400 text-[11px]">Pays :</span>
+                          <span className="font-bold text-white text-[11px]">{p.registrations?.country || "CI"}</span>
+                        </div>
+                      </div>
+
+                      {/* Montant, Méthode & Ref */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                          <span className="text-[10px] text-slate-400 block">Montant</span>
+                          <span className="font-mono font-bold text-emerald-400 text-xs">
+                            {p.amount ? Number(p.amount).toLocaleString("fr-FR") : "49 000"} {p.currency || "XOF"}
+                          </span>
+                        </div>
+                        <div className="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
+                          <span className="text-[10px] text-slate-400 block">Méthode</span>
+                          <span className="font-bold text-slate-200 text-[11px] uppercase truncate block">
+                            {p.method}
+                          </span>
+                        </div>
+                      </div>
+
+                      {p.transaction_ref && (
+                        <div className="text-[10px] font-mono text-slate-400 bg-slate-950/60 px-3 py-1.5 rounded-lg border border-slate-800/80 flex items-center justify-between">
+                          <span>Réf:</span>
+                          <span className="text-white font-bold">{p.transaction_ref}</span>
+                        </div>
+                      )}
+
+                      <div className="text-[10px] text-slate-500 text-right">
+                        Inscrit le {new Date(p.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                      </div>
+                    </div>
+
+                    {/* Actions Bar */}
+                    <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                      {/* 1-Click Validation / Reject buttons if pending */}
+                      {p.status !== "confirmed" && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handlePaymentStatus(p.id, "confirmed")}
+                            disabled={processingId === p.id}
+                            className="flex-1 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <CheckCircle2 className="size-3.5" />
+                            <span>Valider &amp; Débloquer</span>
+                          </button>
+                          {(p.status === "pending_verification" || p.status === "pending") && (
+                            <button
+                              onClick={() => handlePaymentStatus(p.id, "rejected")}
+                              disabled={processingId === p.id}
+                              className="px-3 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-bold text-xs hover:bg-red-500/20 transition-colors cursor-pointer"
+                            >
+                              Rejeter
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Edit & Delete row */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenEditPayment(p)}
+                          className="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Edit3 className="size-3" />
+                          <span>Modifier</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeletePayment(p.id, p.registration_id)}
+                          disabled={processingId === p.id}
+                          className="flex-1 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="size-3" />
+                          <span>Supprimer</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {filteredPayments.length === 0 && (
+                <div className="col-span-full p-12 text-center rounded-3xl bg-slate-900/30 border border-slate-800 text-slate-400">
+                  <DollarSign className="size-10 mx-auto text-slate-600 mb-3" />
+                  <p className="font-bold text-sm text-white">Aucune inscription trouvée</p>
+                  <p className="text-xs text-slate-500 mt-1">Modifiez vos critères de recherche ou vos filtres.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -5693,6 +6164,176 @@ export default function SuperAdminDashboard() {
                       <CheckCircle2 className="size-3.5" />
                     )}
                     <span>{editingTestimonialId ? "Mettre à jour" : "Enregistrer le témoignage"}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL ÉDITION INSCRIPTION & PAIEMENT */}
+        {showPaymentModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
+              <div className="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <DollarSign className="size-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-heading text-sm sm:text-lg font-black text-white truncate">
+                      Modifier l'Inscription &amp; Paiement
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-slate-400">Mettez à jour les informations du participant ou de la transaction</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors shrink-0"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSavePayment} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                {/* Participant Info */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Nom &amp; Prénom du Participant *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Jean Dupont"
+                      value={paymentForm.full_name}
+                      onChange={e => setPaymentForm({ ...paymentForm, full_name: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Adresse Email *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Ex: jean.dupont@email.com"
+                      value={paymentForm.email}
+                      onChange={e => setPaymentForm({ ...paymentForm, email: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* WhatsApp & Country */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Numéro WhatsApp (avec indicatif)</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: +225 0700000000"
+                      value={paymentForm.whatsapp}
+                      onChange={e => setPaymentForm({ ...paymentForm, whatsapp: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Pays de résidence</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: CI, BF, SN, FR..."
+                      value={paymentForm.country}
+                      onChange={e => setPaymentForm({ ...paymentForm, country: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* Amount & Currency */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Montant *</label>
+                    <input
+                      type="number"
+                      required
+                      value={paymentForm.amount}
+                      onChange={e => setPaymentForm({ ...paymentForm, amount: Number(e.target.value) })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Devise</label>
+                    <select
+                      value={paymentForm.currency}
+                      onChange={e => setPaymentForm({ ...paymentForm, currency: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary cursor-pointer"
+                    >
+                      <option value="XOF">XOF (FCFA)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="USD">USD ($)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Method & Ref */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Méthode de Paiement</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Wave, Orange Money, Moov, Carte..."
+                      value={paymentForm.method}
+                      onChange={e => setPaymentForm({ ...paymentForm, method: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Référence de Transaction</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: TX-984729"
+                      value={paymentForm.transaction_ref}
+                      onChange={e => setPaymentForm({ ...paymentForm, transaction_ref: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Statut du Paiement &amp; Accès *</label>
+                  <select
+                    value={paymentForm.status}
+                    onChange={e => setPaymentForm({ ...paymentForm, status: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary cursor-pointer"
+                  >
+                    <option value="pending_verification">À vérifier (Virement soumis en attente de vérification)</option>
+                    <option value="confirmed">Confirmé (Accès activé &amp; Payé)</option>
+                    <option value="pending">En attente (Non finalisé)</option>
+                    <option value="rejected">Rejeté (Paiement non valide / annulé)</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingPayment}
+                    className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg cursor-pointer flex items-center gap-1.5"
+                  >
+                    {savingPayment ? (
+                      <RefreshCw className="size-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="size-3.5" />
+                    )}
+                    <span>Enregistrer les modifications</span>
                   </button>
                 </div>
               </form>

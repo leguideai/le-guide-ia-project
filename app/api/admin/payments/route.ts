@@ -124,7 +124,7 @@ export async function POST(req: Request) {
       // Send official Access Confirmation Email via Resend
       if (resend) {
         try {
-          const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <samba@leguideai.com>"
+          const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <alfred@leguideai.com>"
           await resend.emails.send({
             from: fromEmail,
             to: [studentEmail],
@@ -185,6 +185,110 @@ export async function POST(req: Request) {
       success: true,
       message: `Statut du paiement mis à jour : ${status}`,
       payment: updatedPayment
+    })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+// PUT: Edit inscription & payment details
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json()
+    const {
+      id,
+      registration_id,
+      full_name,
+      email,
+      whatsapp,
+      country,
+      amount,
+      currency,
+      method,
+      transaction_ref,
+      status
+    } = body
+
+    if (!id) {
+      return NextResponse.json({ error: "ID du paiement requis." }, { status: 400 })
+    }
+
+    const emailClean = email ? email.toLowerCase().trim() : undefined
+
+    // 1. Update Payment record
+    const payUpdateData: any = {}
+    if (amount !== undefined) payUpdateData.amount = Number(amount)
+    if (currency !== undefined) payUpdateData.currency = currency
+    if (method !== undefined) payUpdateData.method = method
+    if (transaction_ref !== undefined) payUpdateData.transaction_ref = transaction_ref
+    if (status !== undefined) payUpdateData.status = status
+    if (emailClean) payUpdateData.user_email = emailClean
+
+    const { error: payErr } = await supabaseServer
+      .from("payments")
+      .update(payUpdateData)
+      .eq("id", id)
+
+    if (payErr) {
+      return NextResponse.json({ error: payErr.message }, { status: 500 })
+    }
+
+    // 2. Update Registration record if linked
+    if (registration_id) {
+      const regUpdateData: any = {}
+      if (full_name !== undefined) regUpdateData.full_name = full_name
+      if (emailClean !== undefined) regUpdateData.email = emailClean
+      if (whatsapp !== undefined) regUpdateData.whatsapp = whatsapp
+      if (country !== undefined) regUpdateData.country = country
+      if (status === "confirmed") regUpdateData.status = "paye"
+
+      await supabaseServer
+        .from("registrations")
+        .update(regUpdateData)
+        .eq("id", registration_id)
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Inscription et paiement mis à jour avec succès !"
+    })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+// DELETE: Delete an inscription / payment
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+    const registrationId = searchParams.get("registration_id")
+
+    if (!id) {
+      return NextResponse.json({ error: "ID du paiement requis." }, { status: 400 })
+    }
+
+    // 1. Delete payment
+    const { error: payErr } = await supabaseServer
+      .from("payments")
+      .delete()
+      .eq("id", id)
+
+    if (payErr) {
+      return NextResponse.json({ error: payErr.message }, { status: 500 })
+    }
+
+    // 2. Delete registration if registration_id is provided
+    if (registrationId) {
+      await supabaseServer
+        .from("registrations")
+        .delete()
+        .eq("id", registrationId)
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Paiement et inscription supprimés avec succès."
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

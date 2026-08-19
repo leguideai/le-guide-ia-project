@@ -3,7 +3,7 @@ import { supabaseServer } from "@/lib/supabase-server"
 import { Resend } from "resend"
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <samba@leguideai.com>"
+const fromEmail = process.env.RESEND_FROM_EMAIL || "Alfred Dah — LE GUIDE IA <alfred@leguideai.com>"
 
 export async function POST(req: Request) {
   try {
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: fromEmail,
           to: [emailClean],
-          reply_to: "samba@leguideai.com",
+          reply_to: "alfred@leguideai.com",
           subject: `⏳ Demande reçue — Activation sous 24h : ${courseTitle}`,
           text: `Bonjour ${fullName},\n\nNous avons bien enregistré votre demande d'accès pour la formation : ${courseTitle}.\nDétails : ${operatorName} - Référence : ${rawRef}.\n\nNotre équipe procède à la vérification sous 24h.\n\nÀ très vite,\nL'équipe LE GUIDE IA`,
           html: `

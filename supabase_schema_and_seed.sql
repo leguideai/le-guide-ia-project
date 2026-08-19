@@ -229,10 +229,28 @@ ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS submission_url TEXT;
 ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'En attente';
 ALTER TABLE public.submissions ADD COLUMN IF NOT EXISTS feedback TEXT;
 
+-- Table 14: NEWSLETTER SUBSCRIBERS
+CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  source TEXT DEFAULT 'footer_newsletter',
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'unsubscribed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- ====================================================================
 -- RLS POLICIES (ACCÈS PUBLIC EN LECTURE SEULE POUR LES VISITEURS)
 -- ====================================================================
+
+ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public SELECT Newsletter" ON public.newsletter_subscribers;
+CREATE POLICY "Public SELECT Newsletter" ON public.newsletter_subscribers FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public INSERT Newsletter" ON public.newsletter_subscribers;
+CREATE POLICY "Public INSERT Newsletter" ON public.newsletter_subscribers FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public ALL Newsletter" ON public.newsletter_subscribers;
+CREATE POLICY "Public ALL Newsletter" ON public.newsletter_subscribers FOR ALL USING (true);
 
 ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public SELECT Courses" ON public.courses;
