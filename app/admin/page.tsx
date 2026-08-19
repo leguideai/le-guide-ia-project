@@ -12,7 +12,7 @@ import {
   ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
   ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X,
-  Bot, Film, ShoppingBag, Zap, CalendarCheck
+  Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 
@@ -144,8 +144,19 @@ interface B2BRecord {
   created_at: string
 }
 
+interface TestimonialItem {
+  id?: string
+  name: string
+  role: string
+  country?: string
+  text: string
+  avatar_url?: string
+  image?: string
+  rating?: number
+}
+
 export default function SuperAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "newsletter" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
+  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "newsletter" | "testimonials" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
@@ -183,6 +194,19 @@ export default function SuperAdminDashboard() {
   const [payments, setPayments] = useState<PaymentRecord[]>([])
   const [submissions, setSubmissions] = useState<SubmissionRecord[]>([])
   const [b2bRequests, setB2bRequests] = useState<B2BRecord[]>([])
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([])
+  const [showTestimonialModal, setShowTestimonialModal] = useState(false)
+  const [editingTestimonialId, setEditingTestimonialId] = useState<string | null>(null)
+  const [savingTestimonial, setSavingTestimonial] = useState(false)
+  const [testimonialSearch, setTestimonialSearch] = useState("")
+  const [testimonialForm, setTestimonialForm] = useState<TestimonialItem>({
+    name: "",
+    role: "",
+    country: "Burkina Faso",
+    text: "",
+    avatar_url: "",
+    rating: 5
+  })
 
   // Filters & Notice
   const [searchQuery, setSearchQuery] = useState("")
@@ -756,10 +780,109 @@ export default function SuperAdminDashboard() {
       const resNews = await fetch("/api/newsletter")
       const dataNews = await resNews.json()
       if (dataNews.subscribers) setNewsletterSubscribers(dataNews.subscribers)
+
+      // 11. Testimonials
+      const resTestimonials = await fetch("/api/testimonials")
+      const dataTestimonials = await resTestimonials.json()
+      if (dataTestimonials.testimonials) setTestimonials(dataTestimonials.testimonials)
     } catch (err) {
       console.error("Fetch admin data error:", err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleOpenAddTestimonial() {
+    setEditingTestimonialId(null)
+    setTestimonialForm({
+      name: "",
+      role: "",
+      country: "Burkina Faso",
+      text: "",
+      avatar_url: "",
+      rating: 5
+    })
+    setShowTestimonialModal(true)
+  }
+
+  function handleOpenEditTestimonial(t: TestimonialItem) {
+    setEditingTestimonialId(t.id || null)
+    setTestimonialForm({
+      id: t.id,
+      name: t.name,
+      role: t.role || "",
+      country: t.country || "Burkina Faso",
+      text: t.text,
+      avatar_url: t.avatar_url || t.image || "",
+      rating: t.rating || 5
+    })
+    setShowTestimonialModal(true)
+  }
+
+  async function handleSaveTestimonial(e: React.FormEvent) {
+    e.preventDefault()
+    if (!testimonialForm.name.trim() || !testimonialForm.text.trim()) {
+      alert("Veuillez renseigner au minimum le nom et le texte du témoignage.")
+      return
+    }
+
+    setSavingTestimonial(true)
+    try {
+      if (editingTestimonialId) {
+        const res = await fetch("/api/testimonials", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingTestimonialId,
+            name: testimonialForm.name,
+            role: testimonialForm.role,
+            country: testimonialForm.country,
+            text: testimonialForm.text,
+            avatar_url: testimonialForm.avatar_url || null,
+          })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.message || "Erreur lors de la modification")
+        setNoticeMessage("Témoignage mis à jour avec succès !")
+      } else {
+        const res = await fetch("/api/testimonials", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: testimonialForm.name,
+            role: testimonialForm.role,
+            country: testimonialForm.country,
+            text: testimonialForm.text,
+            avatar_url: testimonialForm.avatar_url || null,
+          })
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.message || "Erreur lors de l'ajout")
+        setNoticeMessage("Nouveau témoignage ajouté avec succès !")
+      }
+
+      setShowTestimonialModal(false)
+      setEditingTestimonialId(null)
+      const resRefresh = await fetch("/api/testimonials")
+      const dataRefresh = await resRefresh.json()
+      if (dataRefresh.testimonials) setTestimonials(dataRefresh.testimonials)
+    } catch (err: any) {
+      alert("Erreur: " + err.message)
+    } finally {
+      setSavingTestimonial(false)
+    }
+  }
+
+  async function handleDeleteTestimonial(id: string) {
+    if (!confirm("Voulez-vous vraiment supprimer ce témoignage ?")) return
+    try {
+      const res = await fetch(`/api/testimonials?id=${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || "Erreur de suppression")
+      setTestimonials(prev => prev.filter(t => t.id !== id))
+      setNoticeMessage("Témoignage supprimé avec succès.")
+    } catch (err: any) {
+      alert("Erreur: " + err.message)
     }
   }
 
@@ -1756,6 +1879,19 @@ export default function SuperAdminDashboard() {
                 </button>
 
                 <button
+                  onClick={() => { setActiveTab("testimonials"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "testimonials" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Quote className="size-4 shrink-0" />
+                    <span>Avis & Témoignages</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({testimonials.length})</span>
+                </button>
+
+                <button
                   onClick={() => { setActiveTab("b2b"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     activeTab === "b2b" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
@@ -1812,8 +1948,8 @@ export default function SuperAdminDashboard() {
         </div>
       )}
 
-      {/* Desktop Sidebar (Left) */}
-      <aside className="w-64 border-r border-slate-800/80 bg-slate-950/60 p-4 hidden md:flex flex-col justify-between shrink-0">
+      {/* Desktop Sidebar (Left - Fixed on viewport) */}
+      <aside className="w-64 border-r border-slate-800/80 bg-slate-950/90 backdrop-blur-xl p-4 hidden md:flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto z-30">
         <div className="space-y-6 text-left">
           {/* Logo & Platform Info */}
           <div className="flex items-center gap-3 px-2">
@@ -1965,6 +2101,19 @@ export default function SuperAdminDashboard() {
                   <span>Newsletter & Diffusion</span>
                 </div>
                 <span className="text-[10px] opacity-75">({newsletterSubscribers.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab("testimonials")}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === "testimonials" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Quote className="size-4 shrink-0" />
+                  <span>Avis & Témoignages</span>
+                </div>
+                <span className="text-[10px] opacity-75">({testimonials.length})</span>
               </button>
 
               <button
@@ -3903,7 +4052,7 @@ export default function SuperAdminDashboard() {
                   Calendrier &amp; Planning des Sessions Bootcamps
                 </h2>
                 <p className="text-xs text-slate-400">
-                  Définissez les dates des prochaines cohortes de bootcamps, visioconférences Google Meet et replays.
+                  Définissez les dates des prochaines cohortes de bootcamps.
                 </p>
               </div>
               <div className="flex items-center gap-2.5 flex-wrap">
@@ -4714,6 +4863,141 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
+        {/* TAB: AVIS & TÉMOIGNAGES */}
+        {activeTab === "testimonials" && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 backdrop-blur-md">
+              <div className="space-y-1">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Quote className="size-5 text-primary shrink-0" />
+                  <span>Gestion des Avis & Témoignages</span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold">
+                    {testimonials.length}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                  Ajoutez, modifiez ou supprimez les recommandations affichées sur la page d'accueil et le carrousel.
+                </p>
+              </div>
+              <button
+                onClick={handleOpenAddTestimonial}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 shadow-lg shadow-primary/20 cursor-pointer w-full sm:w-auto shrink-0 transition-transform active:scale-95"
+              >
+                <Plus className="size-4" />
+                <span>Nouveau Témoignage</span>
+              </button>
+            </div>
+
+            {/* Search filter */}
+            <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800 rounded-2xl px-4 py-2.5 w-full sm:max-w-md focus-within:border-primary/50 transition-colors">
+              <Search className="size-4 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Rechercher par nom, profession ou mot-clé..."
+                value={testimonialSearch}
+                onChange={e => setTestimonialSearch(e.target.value)}
+                className="w-full bg-transparent text-xs text-white placeholder:text-slate-500 outline-none"
+              />
+              {testimonialSearch && (
+                <button 
+                  onClick={() => setTestimonialSearch("")}
+                  className="text-[11px] text-slate-400 hover:text-white shrink-0"
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+
+            {/* Testimonials Grid — Fully Responsive */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-5">
+              {testimonials
+                .filter(t => {
+                  if (!testimonialSearch.trim()) return true
+                  const q = testimonialSearch.toLowerCase()
+                  return (
+                    t.name?.toLowerCase().includes(q) ||
+                    t.role?.toLowerCase().includes(q) ||
+                    t.text?.toLowerCase().includes(q)
+                  )
+                })
+                .map((t, idx) => {
+                  const avatar = t.avatar_url || t.image
+                  const initials = t.name ? t.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "IA"
+                  return (
+                    <div
+                      key={t.id || idx}
+                      className="p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-4 hover:shadow-xl hover:shadow-primary/5 group relative overflow-hidden"
+                    >
+                      <div className="space-y-3">
+                        {/* Header: User details + rating */}
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {avatar ? (
+                              <img
+                                src={avatar}
+                                alt={t.name}
+                                className="size-11 rounded-full object-cover border-2 border-primary/40 shadow-sm shrink-0 bg-slate-950"
+                              />
+                            ) : (
+                              <div className="size-11 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 border-primary/40 text-xs shrink-0 uppercase">
+                                {initials}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-xs font-bold text-white truncate" title={t.name}>{t.name}</h4>
+                              <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5" title={t.role}>
+                                {t.role}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Stars */}
+                          <div className="shrink-0 flex items-center gap-0.5 text-amber-400 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="size-2.5 fill-amber-400 text-amber-400" />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Testimonial quote text */}
+                        <p className="break-words text-xs text-slate-300 italic leading-relaxed line-clamp-5 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80 group-hover:border-slate-700 transition-colors">
+                          "{t.text}"
+                        </p>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800/80 w-full">
+                        <button
+                          onClick={() => handleOpenEditTestimonial(t)}
+                          className="flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Edit3 className="size-3" /> Modifier
+                        </button>
+                        {t.id && (
+                          <button
+                            onClick={() => handleDeleteTestimonial(t.id!)}
+                            className="flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors border border-rose-500/20"
+                          >
+                            <Trash2 className="size-3" /> Supprimer
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+            </div>
+
+            {testimonials.length === 0 && (
+              <div className="p-12 text-center rounded-3xl bg-slate-900/30 border border-slate-800 text-slate-400">
+                <Quote className="size-10 mx-auto text-slate-600 mb-3" />
+                <p className="font-bold text-sm text-white">Aucun avis ou témoignage pour le moment</p>
+                <p className="text-xs text-slate-500 mt-1">Cliquez sur "Nouveau Témoignage" pour en ajouter un.</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB 9: SITE & HERO LANDING SETTINGS */}
         {activeTab === "settings" && (
           <div className="space-y-6 animate-fadeIn">
@@ -5310,6 +5594,108 @@ export default function SuperAdminDashboard() {
                   Fermer
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL GESTION DES TÉMOIGNAGES */}
+        {showTestimonialModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
+              <div className="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                    <Quote className="size-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-heading text-sm sm:text-lg font-black text-white truncate">
+                      {editingTestimonialId ? "Modifier le Témoignage" : "Nouveau Témoignage"}
+                    </h3>
+                    <p className="text-[11px] sm:text-xs text-slate-400">Avis d'apprenant affiché sur le site</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowTestimonialModal(false)}
+                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors shrink-0"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveTestimonial} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Nom & Prénom de l'apprenant *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Jean-Yves OUATTARA"
+                      value={testimonialForm.name}
+                      onChange={e => setTestimonialForm({ ...testimonialForm, name: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">Profession / Titre / Entreprise *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Expert Gouvernance IT · CISA"
+                      value={testimonialForm.role}
+                      onChange={e => setTestimonialForm({ ...testimonialForm, role: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <FileUploadField
+                    label="Photo de profil / Avatar de l'apprenant"
+                    value={testimonialForm.avatar_url || ""}
+                    onChange={(url) => setTestimonialForm(prev => ({ ...prev, avatar_url: url }))}
+                    bucket="course-posters"
+                    folder="testimonials"
+                    placeholder="https://... ou téléversez une image"
+                    accept="image/*"
+                    helperText="Format carré recommandé (JPG, PNG, WebP)"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Texte / Avis du témoignage *</label>
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="Saisissez ici le retour d'expérience complet..."
+                    value={testimonialForm.text}
+                    onChange={e => setTestimonialForm({ ...testimonialForm, text: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-primary leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowTestimonialModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingTestimonial}
+                    className="px-6 py-2 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 shadow-lg cursor-pointer flex items-center gap-1.5"
+                  >
+                    {savingTestimonial ? (
+                      <RefreshCw className="size-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="size-3.5" />
+                    )}
+                    <span>{editingTestimonialId ? "Mettre à jour" : "Enregistrer le témoignage"}</span>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

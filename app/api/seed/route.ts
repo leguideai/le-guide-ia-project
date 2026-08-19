@@ -406,28 +406,67 @@ async function seedDatabase() {
     // 6. Seed Testimonials
     const initialTestimonials = [
       {
-        name: "Sanson Alfred Dah",
-        role: "Auditeur CISA & Expert IA",
-        country: "Burkina Faso",
-        text: "Le Bootcamp m'a permis d'automatiser 60% des tâches répétitives de mon cabinet. Un gain de temps inestimable pour mes audits."
+        name: "John Tate",
+        role: "Lead Cyber Security Analyst at City of Nicos",
+        avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+        text: "J’ai étudié aux côtés d’Alfred et peux témoigner de son dynamisme et de son expertise exceptionnels. À la croisée de la gouvernance de l’IA et de la formation des dirigeants, il allie certification CISA, rigueur et sens de l’implémentation. Sa capacité à traduire des concepts complexes en recommandations pratiques est remarquable. Je le recommande sans réserve à toute organisation cherchant un leader en IA."
       },
       {
-        name: "Khadija Sy",
-        role: "Directrice E-Marketing",
-        country: "Sénégal",
-        text: "Grâce aux fiches de prompts et à la maîtrise de ChatGPT & Midjourney, nous avons multiplié notre création de contenu par 4 en 1 mois."
+        name: "W. Nadine Mariam YODA",
+        role: "Executive Officer | Senior Business Advisor | Operations | Supply Chain",
+        avatar_url: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&auto=format&fit=crop&q=80",
+        text: "J’ai participé au Bootcamp organisé par Alfred Dah et cette formation a déjà transformé ma manière de travailler. J’ai particulièrement apprécié son professionnalisme, sa générosité dans le partage des connaissances et son souci de voir les autres grandir. Je recommande très fortement LE GUIDE IA à tous ceux qui veulent faire de l’IA un tremplin professionnel ou d'affaires."
       },
       {
-        name: "Marc-Aurèle Kouassi",
-        role: "Consultant & Formateur",
-        country: "Côte d'Ivoire",
-        text: "Une formation 100% pratique ! Les replays et l'accès à l'Espace Membre me permettent de réviser chaque atelier à mon rythme."
+        name: "Marilyne OUEDRAOGO",
+        role: "Entrepreneure",
+        avatar_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+        text: "Alfred sait transformer une idée en opportunité concrète et rendre l’IA accessible et utile. Son accompagnement m'a permis de structurer mon Business Model Canvas, mon Business Plan et de clarifier ma proposition de valeur. Sa pédagogie, son sens stratégique et ses conseils pratiques sont de précieux atouts. Je le recommande vivement à tout entrepreneur souhaitant exploiter l'IA."
       },
       {
-        name: "Amadou Sow",
-        role: "Entrepreneur Tech",
-        country: "Mali",
-        text: "L'intégration des agents IA métiers avec Make m'a aidé à structurer l'assistance client de ma startup en moins de 48 heures."
+        name: "Emmanuel YODA",
+        role: "Professionnel / Participant au Bootcamp",
+        avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+        text: "J’ai suivi une formation en IA animée par l’Expert Alfred Dah. J’ai particulièrement apprécié sa maîtrise des outils, sa pédagogie et sa capacité à vulgariser des concepts complexes avec des cas concrets. Sa générosité dans le partage d'expérience est remarquable. Je le recommande vivement pour apprendre à utiliser l’IA efficacement."
+      },
+      {
+        name: "Rachidatou Kaboré",
+        role: "Analyste / Professionnelle",
+        avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80",
+        text: "Le Bootcamp Pro IA & Business est l’une des formations les plus concrètes que j’ai suivies. Chaque session débouche sur un livrable opérationnel et réutilisable : workflow automatisé, optimisation LinkedIn, stratégie sur-mesure. On repart avec des outils directement applicables dans son travail. Je recommande sincèrement Alfred Dah à tous les professionnels."
+      },
+      {
+        name: "Salamata Ouedraogo",
+        role: "Senior Education Specialist",
+        avatar_url: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&auto=format&fit=crop&q=80",
+        text: "En tant que IT Manager sur le projet PRD POCY, Alfred s’est distingué par son expertise technique solide, sa rigueur et son sens des responsabilités. Il sait concevoir des solutions efficaces, sécuriser les systèmes et accompagner les équipes avec pédagogie. Un manager visionnaire alliant leadership et innovation que je recommande vivement."
+      },
+      {
+        name: "Alain SEHR SEHR, M.Sc., SFPC",
+        role: "Professionnel / Participant au Bootcamp",
+        avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+        text: "Alfred Dah est l’un des formateurs les plus inspirants qu'il m'ait été donné de rencontrer. Au-delà du contenu technique d'excellence, il sait pousser chaque participant à dépasser ses limites et à appliquer concrètement l'IA. J'ai terminé ce Bootcamp avec une confiance renouvelée et des compétences immédiatement activables. Une recommandation absolue !"
+      },
+      {
+        name: "Cheikh Amadou Ba",
+        role: "IT Strategy & Cybersecurity Consultant | Former Regional IT Leader (USAID)",
+        avatar_url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+        text: "Ayant collaboré avec Alfred chez USAID, j’ai pu apprécier sa gestion exemplaire des systèmes critiques. Aujourd'hui, il applique cette même rigueur pour orienter les organisations vers les cas d'usage IA à forte valeur ajoutée. Il allie expertise technique, sécurité et efficacité opérationnelle. Je le recommande fortement."
+      },
+      {
+        name: "P. Landry K. KORAHIRE",
+        role: "Information Security Officer | GAZ Sud | ISO 27001 LI & LA",
+        avatar_url: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
+        image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80",
+        text: "J’ai eu le plaisir de travailler avec Alfred : une personne rigoureuse, hautement professionnelle et engagée. Son esprit d’équipe, son sens des responsabilités et son expertise technique en font un collaborateur particulièrement fiable. Je le recommande sans hésiter."
       }
     ]
 
@@ -446,24 +485,54 @@ async function seedDatabase() {
     // 7. Seed FAQs
     const initialFaqs = [
       {
-        category: "pricing",
-        question: "Quels sont les moyens de paiement acceptés pour s'inscrire ?",
-        answer: "Nous acceptons les paiements Mobile Money (Orange Money, Wave, Moov, MTN), les cartes bancaires (Visa, Mastercard) ainsi que les virements bancaires B2B."
+        category: "program",
+        question: "Dois-je avoir des compétences en programmation pour suivre vos formations ?",
+        answer: "Absolument aucun prérequis technique n'est requis. Nos Bootcamps et Masterclasses sont 100% axés sur les outils No-Code, les modèles de langage et l'IA générative appliquée (ChatGPT, Claude 3.5 Sonnet, Gemini, Midjourney, Canva IA, Make et n8n). Chaque concept est expliqué pas à pas avec des cas pratiques immédiatement applicables à votre métier ou entreprise."
       },
       {
         category: "program",
-        question: "Dois-je avoir des connaissances en programmation pour suivre le Bootcamp ?",
-        answer: "Aucun prérequis technique n'est nécessaire ! Le Bootcamp est 100% axé sur l'utilisation des outils No-Code et d'IA générative prêts à l'emploi (ChatGPT, Claude, Canva IA, Midjourney, Make)."
+        question: "Quelle est la différence entre vos Bootcamps interactifs et vos Masterclasses vidéos ?",
+        answer: "Nos Bootcamps sont des programmes intensifs en direct avec nos formateurs experts (dont Alfred Dah), comprenant des ateliers pratiques en temps réel, des devoirs corrigés et des sessions de questions/réponses en direct. Les Masterclasses vidéos sont des formations enregistrées en auto-formation que vous pouvez suivre à votre propre rythme depuis votre Espace Membre."
       },
       {
-        category: "logistics",
-        question: "Que se passe-t-il si je rate une session en direct sur Google Meet ?",
-        answer: "Toutes les sessions en direct sont enregistrées en Haute Définition et rendues disponibles dans votre Espace Membre sous 2 heures avec accès illimité."
+        category: "program",
+        question: "De quel matériel ou logiciel ai-je besoin pour participer aux cours ?",
+        answer: "Un simple ordinateur portable (ou smartphone/tablette) et une connexion Internet stable suffisent. Pour tous les outils d'IA utilisés durant nos formations (ChatGPT, Claude, Canva, etc.), nous vous formons sur les versions gratuites avant d'envisager des abonnements payants optionnels."
+      },
+      {
+        category: "program",
+        question: "Les formations et ressources sont-elles adaptées au contexte économique africain ?",
+        answer: "Oui, c'est l'ADN même du Guide IA. Tous nos cas d'usage, modèles de business plans, prompts métiers et stratégies d'automatisation sont conçus sur mesure pour répondre aux réalités économiques et professionnelles en Afrique francophone et de la diaspora (recrutement, commerce, marketing local, finance, etc.)."
+      },
+      {
+        category: "pricing",
+        question: "Quels sont les moyens de paiement acceptés sur la plateforme ?",
+        answer: "Nous proposons des solutions de paiement ultra-flexibles adaptées à chaque pays : Mobile Money instantané (Orange Money, Wave, MTN MoMo, Moov Money), cartes bancaires internationales (Visa, Mastercard) et virements bancaires professionnels (B2B) avec émission de facture proforma."
+      },
+      {
+        category: "pricing",
+        question: "Quand et comment ai-je accès à mon espace de formation après mon paiement ?",
+        answer: "Pour les paiements par carte bancaire, votre accès est activé automatiquement et instantanément. Pour les règlements par Mobile Money ou Virement, notre équipe administrative valide manuellement votre transaction sous 24 heures et vous recevez vos identifiants d'accès complets ainsi qu'un email de confirmation."
+      },
+      {
+        category: "pricing",
+        question: "Mon accès à l'Espace Membre et aux contenus est-il limité dans le temps ?",
+        answer: "Non, votre accès est illimité et à vie. Vous conservez un accès permanent à tous vos cours achetés, aux supports de formation, aux modèles téléchargeables ainsi qu'à toutes les futures mises à jour des cours sans aucun abonnement récurrent ni frais supplémentaire."
       },
       {
         category: "guarantee",
-        question: "Est-ce qu'un certificat officiel est délivré à la fin du Bootcamp ?",
-        answer: "Oui, un Certificat Officiel d'Aptitude IA & Automatisation signé par Alfred Dah est délivré à chaque apprenant ayant validé ses travaux pratiques."
+        question: "Délivrez-vous un certificat officiel à la fin de la formation ?",
+        answer: "Oui. Chaque apprenant ayant suivi l'intégralité des modules et validé ses projets pratiques reçoit un Certificat Officiel d'Aptitude & Compétences IA émis par Le Guide IA. Ce certificat vérifiable peut être téléchargé en haute résolution et ajouté directement à votre CV et profil LinkedIn."
+      },
+      {
+        category: "guarantee",
+        question: "Comment fonctionne le support et la communauté privée des apprenants ?",
+        answer: "Dès votre inscription, vous intégrez notre communauté privée WhatsApp d'apprenants et de professionnels. Vous pouvez y poser toutes vos questions techniques, échanger avec vos pairs, partager vos projets et bénéficier d'une assistance directe de nos formateurs tout au long de votre apprentissage."
+      },
+      {
+        category: "guarantee",
+        question: "Est-il possible d'inscrire plusieurs collaborateurs ou d'organiser une formation sur mesure pour mon entreprise ?",
+        answer: "Tout à fait. Nous proposons des offres d'accompagnement B2B et des sessions privées intra-entreprises adaptées aux objectifs spécifiques de vos équipes (marketing, finance, direction, RH). Vous pouvez nous contacter directement par email à alfred@leguideai.com ou sur WhatsApp au +226 05 05 05 77 pour recevoir un devis personnalisé."
       }
     ]
 
