@@ -43,6 +43,7 @@ export async function POST(req: Request) {
 
     // 2. Envoi d'un email de bienvenue officiel de la part de samba@leguideai.com
     if (resend) {
+      try {
         await resend.emails.send({
           from: fromEmail,
           to: [emailClean],

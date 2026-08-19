@@ -111,6 +111,7 @@ export async function POST(req: Request) {
     const operatorName = mobileOperator === "orange_money" ? "Orange Money" : mobileOperator === "mtn_momo" ? "MTN MoMo" : "Wave"
 
     if (resend) {
+      try {
         await resend.emails.send({
           from: fromEmail,
           to: [emailClean],
