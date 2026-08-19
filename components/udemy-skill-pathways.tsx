@@ -257,13 +257,7 @@ export function UdemySkillPathways() {
                               <span className="text-xs text-muted-foreground line-through font-semibold">{item.originalPrice}</span>
                             )}
                           </div>
-                          {item.offer && (
-                            <div className="self-start sm:self-auto">
-                              <span className="inline-flex items-center text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 border border-red-500/30 whitespace-nowrap">
-                                🔥 {item.offer.badgeText}
-                              </span>
-                            </div>
-                          )}
+                      
                         </div>
 
                         {/* Date de début et fin de l'offre */}
@@ -299,30 +293,6 @@ export function UdemySkillPathways() {
                       </div>
                     )}
 
-                    {/* 2. Compétences & Livrables Concrets (Garantis à la fin) */}
-                    {item.skills && item.skills.length > 0 && (
-                      <div className="space-y-3 pt-3 text-left bg-slate-950/50 p-3.5 sm:p-4 rounded-2xl border border-slate-800">
-                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-border/50">
-                          <div className="flex items-center gap-1.5">
-                            <Sparkles className="size-3.5 sm:size-4 text-amber-400 shrink-0" />
-                            <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">
-                              Compétences & Livrables :
-                            </span>
-                          </div>
-                          <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-full shrink-0">
-                            Garantis à la fin
-                          </span>
-                        </div>
-                        <ul className="space-y-2">
-                          {item.skills.map((skill: string, sIdx: number) => (
-                            <li key={sIdx} className="flex items-start gap-2 text-xs text-slate-200 leading-snug font-medium">
-                              <CheckCircle2 className="size-3.5 sm:size-4 text-emerald-400 shrink-0 mt-0.5" />
-                              <span>{skill}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
 
                   {/* Action Buttons Row */}
