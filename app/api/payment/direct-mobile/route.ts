@@ -111,11 +111,12 @@ export async function POST(req: Request) {
     const operatorName = mobileOperator === "orange_money" ? "Orange Money" : mobileOperator === "mtn_momo" ? "MTN MoMo" : "Wave"
 
     if (resend) {
-      try {
         await resend.emails.send({
           from: fromEmail,
           to: [emailClean],
+          reply_to: "samba@leguideai.com",
           subject: `⏳ Demande reçue — Activation sous 24h : ${courseTitle}`,
+          text: `Bonjour ${fullName},\n\nNous avons bien enregistré votre demande d'accès pour la formation : ${courseTitle}.\nDétails : ${operatorName} - Référence : ${rawRef}.\n\nNotre équipe procède à la vérification sous 24h.\n\nÀ très vite,\nL'équipe LE GUIDE IA`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; line-height: 1.6;">
               <div style="text-align: center; margin-bottom: 24px;">

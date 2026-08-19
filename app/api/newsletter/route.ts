@@ -43,11 +43,12 @@ export async function POST(req: Request) {
 
     // 2. Envoi d'un email de bienvenue officiel de la part de samba@leguideai.com
     if (resend) {
-      try {
         await resend.emails.send({
           from: fromEmail,
           to: [emailClean],
+          reply_to: "samba@leguideai.com",
           subject: "⚡ Bienvenue dans la Newsletter Officielle — LE GUIDE IA",
+          text: `Bonjour et bienvenue !\n\nMerci de vous être inscrit(e) à notre newsletter LE GUIDE IA. Vous recevrez nos veilles IA exclusives, prompts métiers et invitations à nos sessions live.\n\nÀ très vite,\nL'équipe LE GUIDE IA\nhttps://leguideai.com`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; line-height: 1.6;">
               <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #0284c7;">

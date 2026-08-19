@@ -19,10 +19,14 @@ export async function sendRegistrationEmail(name: string, email: string) {
     }
 
     const firstName = name.split(' ')[0]
+    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre inscription au Bootcamp PRO 2 par LE GUIDE IA a bien été enregistrée.\n\nDétails de la formation :\n- Dates : Du 31 Août au 6 Septembre 2026\n- Format : 7 Sessions intensives en direct + Replays\n- Instructeur : Alfred Dah (Expert CISA & IA)\n\nPour accéder à votre espace membre : https://leguideai.com/login\n\nÀ très bientôt,\nL'équipe LE GUIDE IA & Alfred Dah`
+
     const data = await resend.emails.send({
       from: fromEmail,
       to: email,
+      reply_to: 'samba@leguideai.com',
       subject: 'Confirmation de votre inscription au Bootcamp — LE GUIDE IA',
+      text: textContent,
       html: `
         <!DOCTYPE html>
         <html>
@@ -65,7 +69,8 @@ export async function sendRegistrationEmail(name: string, email: string) {
               <p>À très bientôt,<br><strong>L'équipe LE GUIDE IA & Alfred Dah</strong></p>
             </div>
             <div class="footer">
-              © 2026 LE GUIDE IA — Tous droits réservés.
+              © 2026 LE GUIDE IA — Tous droits réservés.<br>
+              Pour ne plus recevoir ces messages, répondez à cet email avec "Désinscription".
             </div>
           </div>
         </body>
@@ -88,10 +93,14 @@ export async function sendPaymentConfirmationEmail(name: string, email: string, 
     }
 
     const firstName = name.split(' ')[0]
+    const textContent = `Bonjour ${firstName},\n\nNous avons bien reçu votre demande de validation de paiement pour le Bootcamp PRO 2.\nMoyen de paiement : ${method}\nStatut : En cours de vérification par notre équipe (sous 24h)\n\nDès la validation, votre accès sera activé dans votre Espace Membre : https://leguideai.com/dashboard\n\nMerci pour votre confiance,\nL'équipe LE GUIDE IA`
+
     const data = await resend.emails.send({
       from: fromEmail,
       to: email,
+      reply_to: 'samba@leguideai.com',
       subject: 'Confirmation de paiement reçu — LE GUIDE IA',
+      text: textContent,
       html: `
         <!DOCTYPE html>
         <html>
@@ -183,10 +192,14 @@ export async function sendManualEnrollmentEmail(params: ManualEnrollmentEmailPar
     const loginUrl = `${siteUrl}/login`
     const dashboardUrl = `${siteUrl}/dashboard`
 
+    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre inscription au ${courseTitle} a été validée avec succès par l'administration Le Guide IA.\n\nAccédez à votre espace membre : ${loginUrl}\n\nÀ très vite,\nAlfred Dah & L'équipe Pédagogique LE GUIDE IA`
+
     const data = await resend.emails.send({
       from: fromEmail,
       to: email,
+      reply_to: 'samba@leguideai.com',
       subject: `🎉 Votre accès au ${courseTitle} est activé ! — LE GUIDE IA`,
+      text: textContent,
       html: `
         <!DOCTYPE html>
         <html>
