@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "motion/react"
 import { Mail, CheckCircle2 } from "lucide-react"
@@ -8,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
 import { supabase } from "@/lib/supabase"
+import { useUserEnrollments } from "@/lib/user-enrollments"
 
 const socials = [
   {
@@ -95,6 +97,7 @@ interface CtaFooterProps {
 export function CtaFooter({ hideCta = false }: CtaFooterProps) {
   const pathname = usePathname()
   const { t } = useLanguage()
+  const { isEnrolledInCourse, isPendingInCourse } = useUserEnrollments()
   const [activeCourse, setActiveCourse] = useState<any>(null)
 
   // Newsletter State
@@ -154,6 +157,8 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
     ? `${activeCourse.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA`
     : String(activeCourse?.price || "99 000 FCFA")
 
+  const isEnrolled = isEnrolledInCourse(activeCourse)
+
   return (
     <footer className="relative border-t border-border/60 bg-slate-950 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:py-16 md:px-8">
@@ -190,18 +195,51 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                 </p>
                 
                 <div className="pt-4 space-y-3">
-                  <div>
-                    <a
-                      href={`/bootcamp?course=${activeCourse?.slug || "bootcamp-ia-carriere"}`}
-                      className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
-                    >
-                      S'inscrire au {activeCourse?.title || "Bootcamp IA"} ({formattedPrice})
-                    </a>
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
+                    {isEnrolledInCourse(activeCourse) ? (
+                      <Link
+                        href="/dashboard"
+                        className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
+                      >
+                        <CheckCircle2 className="size-5" />
+                        <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
+                      </Link>
+                    ) : isPendingInCourse(activeCourse) ? (
+                      <Link
+                        href="/dashboard"
+                        className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
+                      >
+                        <CheckCircle2 className="size-5" />
+                        <span>⏳ Inscription en cours de validation · Espace Membre</span>
+                      </Link>
+                    ) : (
+                      <a
+                        href={`/bootcamp?course=${activeCourse?.slug || "bootcamp-ia-carriere"}`}
+                        className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
+                      >
+                        S'inscrire au {activeCourse?.title || "Bootcamp IA"} ({formattedPrice})
+                      </a>
+                    )}
                   </div>
                   
                   <div className="text-xs text-slate-300 flex flex-wrap gap-2 items-center">
-                    <span className="font-bold text-white">{activeCourse?.original_price || ""} {activeCourse?.offer_badge_text ? `• ${activeCourse.offer_badge_text}` : ""}</span>
-                    {activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
+                    {isEnrolledInCourse(activeCourse) ? (
+                      <span className="font-bold text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 className="size-3.5" />
+                        Accès complet activé à votre nom
+                      </span>
+                    ) : isPendingInCourse(activeCourse) ? (
+                      <span className="font-bold text-amber-300 flex items-center gap-1.5">
+                        <CheckCircle2 className="size-3.5 text-amber-400" />
+                        Paiement Mobile Money en cours de vérification sous 24h
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-bold text-white">{activeCourse?.original_price || ""} {activeCourse?.offer_badge_text ? `• ${activeCourse.offer_badge_text}` : ""}</span>
+                        {activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
+                      </>
+                    )}
                   </div>
 
                   {/* Checklist Badges */}

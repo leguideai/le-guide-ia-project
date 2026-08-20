@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react"
 
 import { supabase } from "@/lib/supabase"
 
 import { isCourseOpenForPublic } from "@/lib/courses-visibility"
+import { useUserEnrollments } from "@/lib/user-enrollments"
 
 export function UdemyHeroBanner() {
+  const { isEnrolledInCourse, isPendingInCourse } = useUserEnrollments()
   const [badge, setBadge] = useState("CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL")
   const [title, setTitle] = useState("Maîtrisez l'IA. Transformez votre carrière et votre business.")
   const [subtitle, setSubtitle] = useState("Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.")
@@ -19,6 +21,7 @@ export function UdemyHeroBanner() {
   const [heroFormat, setHeroFormat] = useState("🌍 100% En ligne")
   const [heroSessions, setHeroSessions] = useState("🎓 7 Sessions intensives")
   const [programmeUrl, setProgrammeUrl] = useState("/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf")
+  const [activeCourseObj, setActiveCourseObj] = useState<any>({ slug: "bootcamp-ia-pro", id: "bootcamp-ia-pro" })
 
   useEffect(() => {
     async function loadSettings() {
@@ -31,6 +34,7 @@ export function UdemyHeroBanner() {
         if (coursesData && coursesData.length > 0) {
           const openCourses = coursesData.filter(isCourseOpenForPublic)
           const c = openCourses[0] || coursesData[0]
+          setActiveCourseObj(c)
           if (c.thumbnail || c.poster) setPosterUrl(c.thumbnail || c.poster)
           if (c.dates) setDates(c.dates)
           if (c.pdf_url) setProgrammeUrl(c.pdf_url)
@@ -73,6 +77,9 @@ export function UdemyHeroBanner() {
     }
     loadSettings()
   }, [])
+
+  const isEnrolled = isEnrolledInCourse(activeCourseObj)
+  const isPending = isPendingInCourse(activeCourseObj)
 
   return (
     <section className="relative overflow-hidden bg-slate-950 py-4 md:py-6 lg:py-8">
@@ -124,13 +131,33 @@ export function UdemyHeroBanner() {
 
               {/* Desktop Action Buttons */}
               <div className="pt-2 flex flex-col gap-2.5 w-full">
-                <Link
-                  href="/checkout/bootcamp-ia-pro"
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
-                >
-                  <span>Rejoindre le Bootcamp</span>
-                  <ArrowRight className="size-4" />
-                </Link>
+                {isEnrolled ? (
+                  <Link
+                    href="/dashboard"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                  >
+                    <CheckCircle2 className="size-4" />
+                    <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                ) : isPending ? (
+                  <Link
+                    href="/dashboard"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                  >
+                    <Sparkles className="size-4 animate-pulse text-slate-950" />
+                    <span>⏳ Inscription en cours de validation · Espace Membre</span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/checkout/bootcamp-ia-pro"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                  >
+                    <span>Rejoindre le Bootcamp</span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                )}
 
                 <a
                   href={programmeUrl}
@@ -163,13 +190,33 @@ export function UdemyHeroBanner() {
 
               {/* Mobile Action Buttons (Visible only on < lg screens) */}
               <div className="flex flex-col gap-2.5 w-full max-w-[480px] lg:hidden">
-                <Link
-                  href="/checkout/bootcamp-ia-pro"
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-xl shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>Rejoindre le Bootcamp</span>
-                  <ArrowRight className="size-4" />
-                </Link>
+                {isEnrolled ? (
+                  <Link
+                    href="/dashboard"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-3.5 text-xs shadow-xl shadow-emerald-600/20 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <CheckCircle2 className="size-4" />
+                    <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                ) : isPending ? (
+                  <Link
+                    href="/dashboard"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-xl shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Sparkles className="size-4 animate-pulse text-slate-950" />
+                    <span>⏳ Inscription en cours de validation</span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/checkout/bootcamp-ia-pro"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-xl shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>Rejoindre le Bootcamp</span>
+                    <ArrowRight className="size-4" />
+                  </Link>
+                )}
 
                 <a
                   href={programmeUrl}

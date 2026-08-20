@@ -13,12 +13,7 @@ export async function GET() {
       .select(`
         *,
         registrations (
-          id,
-          full_name,
-          email,
-          whatsapp,
-          country,
-          source
+          *
         )
       `)
       .order("created_at", { ascending: false })
@@ -51,13 +46,126 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { paymentId, status } = await req.json()
+    const body = await req.json()
+    const { action, paymentId, status } = body
+
+    // Action 1: Inscription Manuelle d'un apprenant par l'admin
+    if (action === "manual_enroll") {
+      const { courseId, courseSlug, courseTitle, fullName, email, whatsapp, amount, sendEmail } = body
+      if (!email || !fullName || !courseSlug) {
+        return NextResponse.json({ error: "Email, Nom et Bootcamp requis." }, { status: 400 })
+      }
+
+      const emailClean = email.toLowerCase().trim()
+
+      // 1. Create or update registration
+      let registrationId: string | null = null
+      const { data: existingReg } = await supabaseServer
+        .from("registrations")
+        .select("id")
+        .eq("email", emailClean)
+        .maybeSingle()
+
+      const regPayload: any = {
+        full_name: fullName,
+        email: emailClean,
+        whatsapp: whatsapp || "",
+        country: "CI",
+        source: "admin_manual_enroll",
+        course_slug: courseSlug,
+        status: "paye"
+      }
+      if (courseId) regPayload.course_id = courseId
+
+      if (existingReg) {
+        registrationId = existingReg.id
+        await supabaseServer.from("registrations").update(regPayload).eq("id", existingReg.id)
+      } else {
+        const { data: newReg } = await supabaseServer.from("registrations").insert(regPayload).select("id").single()
+        if (newReg) registrationId = newReg.id
+      }
+
+      // 2. Create confirmed payment record
+      const ref = `ADM-${Date.now().toString().slice(-6)}`
+      await supabaseServer.from("payments").insert({
+        registration_id: registrationId,
+        amount: Number(amount) || 0,
+        currency: "XOF",
+        method: "admin_manual",
+        status: "confirmed",
+        transaction_ref: ref,
+        notes: courseTitle || courseSlug
+      })
+
+      // 3. Activate user_courses
+      await supabaseServer.from("user_courses").upsert({
+        user_email: emailClean,
+        course_slug: courseSlug,
+        course_id: courseId || null,
+        status: "active",
+        amount_paid: Number(amount) || 0,
+        payment_method: "admin_manual",
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_email,course_slug" })
+
+      // 4. Ensure Auth user exists
+      let tempPassword: string | undefined = undefined
+      let isNewAccount = false
+      try {
+        const { data: listData } = await supabaseServer.auth.admin.listUsers()
+        const existingUser = listData?.users?.find(u => u.email?.toLowerCase() === emailClean)
+        if (!existingUser) {
+          isNewAccount = true
+          tempPassword = `Lgi${Math.floor(1000 + Math.random() * 9000)}!2026`
+          await supabaseServer.auth.admin.createUser({
+            email: emailClean,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { full_name: fullName }
+          })
+        }
+      } catch (e) {}
+
+      // 5. Send access email if requested
+      if (sendEmail !== false && resend) {
+        try {
+          const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <alfred@leguideai.com>"
+          await resend.emails.send({
+            from: fromEmail,
+            to: [emailClean],
+            subject: `🎉 Inscription Confirmée : ${courseTitle || "Votre Bootcamp"}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
+                <h2 style="color: #16a34a;">Bonjour ${fullName},</h2>
+                <p>Vous avez été officiellement inscrit(e) au Bootcamp <strong>${courseTitle || courseSlug}</strong> par l'équipe d'administration LE GUIDE IA.</p>
+                <p>Vos accès aux replays, ressources et sessions en direct sont désormais <strong>100% ACTIFS</strong> sur votre espace membre.</p>
+                ${isNewAccount && tempPassword ? `
+                  <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                    <p><strong>Identifiants :</strong></p>
+                    <p>Email : <code>${emailClean}</code></p>
+                    <p>Mot de passe temporaire : <code>${tempPassword}</code></p>
+                  </div>
+                ` : ""}
+                <a href="https://leguideai.com/dashboard" style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 16px;">
+                  Accéder à mon Espace Membre →
+                </a>
+              </div>
+            `
+          })
+        } catch (e) {}
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Apprenant ${fullName} inscrit avec succès au Bootcamp !`
+      })
+    }
 
     if (!paymentId || !status) {
       return NextResponse.json({ error: "paymentId et status requis." }, { status: 400 })
     }
 
-    // 1. Update payment status
+    // Action 2: Update payment status (validation / confirmation)
     const { data: updatedPayment, error: payErr } = await supabaseServer
       .from("payments")
       .update({ status })
@@ -257,25 +365,29 @@ export async function PUT(req: Request) {
   }
 }
 
-// DELETE: Delete an inscription / payment
+// DELETE: Delete an inscription / payment and revoke course access
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
     const registrationId = searchParams.get("registration_id")
+    const email = searchParams.get("email")
+    const courseSlug = searchParams.get("course_slug")
 
-    if (!id) {
-      return NextResponse.json({ error: "ID du paiement requis." }, { status: 400 })
+    if (!id && !registrationId && !email) {
+      return NextResponse.json({ error: "Identifiant du paiement ou de l'inscription requis." }, { status: 400 })
     }
 
-    // 1. Delete payment
-    const { error: payErr } = await supabaseServer
-      .from("payments")
-      .delete()
-      .eq("id", id)
+    // 1. Delete payment if ID is provided
+    if (id) {
+      const { error: payErr } = await supabaseServer
+        .from("payments")
+        .delete()
+        .eq("id", id)
 
-    if (payErr) {
-      return NextResponse.json({ error: payErr.message }, { status: 500 })
+      if (payErr) {
+        console.warn("Payment delete note:", payErr.message)
+      }
     }
 
     // 2. Delete registration if registration_id is provided
@@ -286,9 +398,19 @@ export async function DELETE(req: Request) {
         .eq("id", registrationId)
     }
 
+    // 3. Delete or deactivate user_courses if email and course_slug are provided
+    if (email) {
+      const emailClean = email.toLowerCase().trim()
+      let ucQuery = supabaseServer.from("user_courses").delete().eq("user_email", emailClean)
+      if (courseSlug) {
+        ucQuery = ucQuery.eq("course_slug", courseSlug)
+      }
+      await ucQuery
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Paiement et inscription supprimés avec succès."
+      message: "Apprenant et inscription supprimés avec succès du Bootcamp."
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

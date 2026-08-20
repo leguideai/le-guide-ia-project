@@ -1,40 +1,59 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
 import { Resend } from "resend"
+import { sendAdminNewEnrollmentNotification } from "@/lib/email"
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const fromEmail = process.env.RESEND_FROM_EMAIL || "Alfred Dah — LE GUIDE IA <alfred@leguideai.com>"
 
 export async function POST(req: Request) {
   try {
-    const { courseSlug, courseTitle, price, fullName, email, whatsapp, country, transactionRef, mobileOperator } = await req.json()
+    const { 
+      courseSlug, 
+      courseTitle, 
+      courseId,
+      price, 
+      fullName, 
+      email, 
+      whatsapp, 
+      country, 
+      transactionRef, 
+      mobileOperator,
+      receiptUrl 
+    } = await req.json()
 
     if (!email || !fullName || !courseSlug) {
       return NextResponse.json({ message: "Champs obligatoires manquants." }, { status: 400 })
     }
 
     const emailClean = email.toLowerCase().trim()
-    const rawRef = transactionRef ? transactionRef.trim() : ""
+    let rawRef = transactionRef ? transactionRef.trim() : ""
 
-    if (!rawRef) {
-      return NextResponse.json({ message: "Veuillez renseigner la référence de transaction ou votre numéro expéditeur." }, { status: 400 })
+    if (!rawRef && !receiptUrl) {
+      return NextResponse.json({ message: "Veuillez fournir la référence de transaction ou téléverser votre capture d'écran de paiement." }, { status: 400 })
     }
 
-    // 1. Unicité de la référence de transaction : vérifier si elle existe déjà dans payments
-    const { data: existingPay } = await supabaseServer
-      .from("payments")
-      .select("id, transaction_ref")
-      .eq("transaction_ref", rawRef)
-      .maybeSingle()
-
-    if (existingPay) {
-      return NextResponse.json({
-        success: false,
-        message: "Cette référence de transaction a déjà été enregistrée par un autre participant. Veuillez vérifier votre référence ou contacter l'équipe support sur WhatsApp."
-      }, { status: 400 })
+    if (!rawRef && receiptUrl) {
+      rawRef = `REC-${Date.now().toString().slice(-6)}`
     }
 
-    // 2. Gestion de l'inscription dans 'registrations' (Select puis Insert/Update pour éviter l'erreur ON CONFLICT 42P10)
+    // 1. Unicité de la référence de transaction : vérifier si elle existe déjà dans payments (sauf auto-généré)
+    if (!rawRef.startsWith("REC-")) {
+      const { data: existingPay } = await supabaseServer
+        .from("payments")
+        .select("id, transaction_ref")
+        .eq("transaction_ref", rawRef)
+        .maybeSingle()
+
+      if (existingPay) {
+        return NextResponse.json({
+          success: false,
+          message: "Cette référence de transaction a déjà été enregistrée par un autre participant. Veuillez vérifier votre référence ou contacter l'équipe support sur WhatsApp."
+        }, { status: 400 })
+      }
+    }
+
+    // 2. Gestion de l'inscription dans 'registrations'
     let registrationId: string | null = null
     const { data: existingReg } = await supabaseServer
       .from("registrations")
@@ -42,28 +61,28 @@ export async function POST(req: Request) {
       .eq("email", emailClean)
       .maybeSingle()
 
+    const regPayload: any = {
+      full_name: fullName,
+      email: emailClean,
+      whatsapp,
+      country: country || "CI",
+      source: "checkout_mobile_direct",
+      course_slug: courseSlug,
+      status: "inscrit",
+      notes: receiptUrl ? JSON.stringify({ receipt_url: receiptUrl, course_slug: courseSlug, course_title: courseTitle, transaction_ref: rawRef }) : (courseTitle || courseSlug)
+    }
+    if (courseId) regPayload.course_id = courseId
+
     if (existingReg) {
       registrationId = existingReg.id
       await supabaseServer
         .from("registrations")
-        .update({
-          full_name: fullName,
-          whatsapp,
-          country: country || "CI",
-          source: "checkout_mobile_direct"
-        })
+        .update(regPayload)
         .eq("id", existingReg.id)
     } else {
       const { data: newReg, error: regErr } = await supabaseServer
         .from("registrations")
-        .insert({
-          full_name: fullName,
-          email: emailClean,
-          whatsapp,
-          country: country || "CI",
-          source: "checkout_mobile_direct",
-          status: "inscrit"
-        })
+        .insert(regPayload)
         .select("id")
         .single()
 
@@ -75,17 +94,22 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Enregistrement du paiement avec statut 'pending' (conforme à la contrainte CHECK de status: 'pending', 'confirmed', 'failed')
-    const { data: payment, error: payError } = await supabaseServer
+    // 3. Enregistrement du paiement avec statut 'pending'
+    const paymentPayload: any = {
+      registration_id: registrationId,
+      amount: price || 49000,
+      currency: "XOF",
+      method: `mobile_direct_${mobileOperator || "wave"}`,
+      status: "pending",
+      transaction_ref: rawRef,
+      course_title: courseTitle || courseSlug,
+      payment_method: "Mobile Money"
+    }
+    if (courseId) paymentPayload.course_id = courseId
+
+    let { data: payment, error: payError } = await supabaseServer
       .from("payments")
-      .insert({
-        registration_id: registrationId,
-        amount: price || 49000,
-        currency: "XOF",
-        method: `mobile_direct_${mobileOperator || "wave"}`,
-        status: "pending", // check constraint: pending, confirmed, failed
-        transaction_ref: rawRef,
-      })
+      .insert(paymentPayload)
       .select("id")
       .single()
 
@@ -162,8 +186,22 @@ export async function POST(req: Request) {
             </div>
           `,
         })
+
+        // 6. Envoi de la notification par email à l'administrateur
+        await sendAdminNewEnrollmentNotification({
+          fullName,
+          email: emailClean,
+          whatsapp,
+          country,
+          courseTitle: courseTitle || courseSlug,
+          courseSlug,
+          amount: price || 49000,
+          paymentMethod: `Mobile Money (${operatorName})`,
+          transactionRef: rawRef,
+          receiptUrl: receiptUrl || null
+        })
       } catch (emailErr) {
-        console.warn("Failed to send direct mobile pending email:", emailErr)
+        console.warn("Failed to send direct mobile pending email or admin notification:", emailErr)
       }
     }
 

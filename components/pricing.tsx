@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { Check, Sparkles, ArrowRight, Clock, AlertCircle, ShieldCheck } from "lucide-react"
+import { Check, Sparkles, ArrowRight, Clock, AlertCircle, ShieldCheck, CheckCircle2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { isCourseOpenForPublic } from "@/lib/courses-visibility"
+import { useUserEnrollments } from "@/lib/user-enrollments"
 
 interface PricingProps {
   selectedCourseId?: string
@@ -38,6 +39,7 @@ function getOfferEndTimestamp(rawDate?: string | null): number | null {
 }
 
 export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCourse, onSelectCourse }: PricingProps) {
+  const { isEnrolledInCourse, isPendingInCourse } = useUserEnrollments()
   const [dbCourses, setDbCourses] = useState<any[]>(courses || [])
   const [activeId, setActiveId] = useState<string>(selectedCourseId || "")
 
@@ -212,6 +214,9 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
         btn: "bg-primary hover:bg-primary/90 text-slate-950 font-black shadow-xl shadow-primary/25",
       }
 
+  const isEnrolled = isEnrolledInCourse(activeCourse)
+  const isPending = isPendingInCourse(activeCourse)
+
   return (
     <section className="py-16 bg-background relative overflow-hidden border-t border-border/50" id="tarifs">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
@@ -241,17 +246,25 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
             className={`relative rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-between z-10 transition-all ${
               isOfferExpired 
                 ? "border border-border/60 bg-card/20 opacity-75 grayscale-[0.4]" 
-                : theme.border
+                : isEnrolled
+                  ? "border-2 border-emerald-500/60 bg-slate-950 shadow-emerald-500/10 shadow-2xl"
+                  : isPending
+                    ? "border-2 border-amber-500/60 bg-slate-950 shadow-amber-500/10 shadow-2xl"
+                    : theme.border
             }`}
           >
             {/* Top Badge */}
             <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${
-              isOfferExpired 
-                ? "bg-slate-800 text-slate-400 border border-slate-700" 
-                : theme.badge
+              isEnrolled
+                ? "bg-emerald-600 text-white border border-emerald-400 font-bold"
+                : isPending
+                  ? "bg-amber-500 text-slate-950 border border-amber-300 font-black"
+                  : isOfferExpired 
+                    ? "bg-slate-800 text-slate-400 border border-slate-700" 
+                    : theme.badge
             }`}>
-              <Sparkles className="size-3.5" />
-              {isOfferExpired ? "OFFRE TERMINÉE" : current.offerBadge}
+              {isEnrolled ? <CheckCircle2 className="size-3.5" /> : isPending ? <Clock className="size-3.5 animate-pulse" /> : <Sparkles className="size-3.5" />}
+              {isEnrolled ? "VOUS ÊTES INSCRIT" : isPending ? "EN COURS DE VALIDATION" : isOfferExpired ? "OFFRE TERMINÉE" : current.offerBadge}
             </div>
 
             <div>
@@ -262,8 +275,24 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
                   </span>
                 </div>
 
-                {/* Dynamic Live Countdown Timer or Expiry Alert */}
-                {hasOfferEndDate && !isOfferExpired && (
+                {/* Enrolled Status Notice */}
+                {isEnrolled && (
+                  <div className="py-2 px-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2">
+                    <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                    <span>Votre inscription à ce Bootcamp est confirmée</span>
+                  </div>
+                )}
+
+                {/* Pending Status Notice */}
+                {isPending && (
+                  <div className="py-2 px-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-center gap-2">
+                    <Clock className="size-4 text-amber-400 shrink-0 animate-pulse" />
+                    <span>Votre paiement est en cours de vérification sous 24h</span>
+                  </div>
+                )}
+
+                {/* Dynamic Live Countdown Timer or Expiry Alert (only if not already enrolled/pending) */}
+                {!isEnrolled && !isPending && hasOfferEndDate && !isOfferExpired && (
                   <div className={`py-2 px-3 rounded-2xl border text-xs font-mono font-bold flex items-center justify-center gap-2 ${
                     isBusiness ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#F3E5AB]" : "bg-primary/15 border-primary/30 text-amber-300"
                   }`}>
@@ -274,7 +303,7 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
                   </div>
                 )}
 
-                {hasOfferEndDate && isOfferExpired && (
+                {!isEnrolled && !isPending && hasOfferEndDate && isOfferExpired && (
                   <div className="py-2 px-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center justify-center gap-2">
                     <AlertCircle className="size-4 text-rose-400 shrink-0" />
                     <span>Cette offre promotionnelle a expiré</span>
@@ -292,7 +321,7 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
                 <ul className="space-y-3.5">
                   {current.features.map((f: string, index: number) => (
                     <li key={index} className={`flex items-start gap-3 text-xs md:text-sm ${isOfferExpired ? "text-muted-foreground" : "text-foreground/95"}`}>
-                      <Check className={`size-4 shrink-0 mt-0.5 ${isOfferExpired ? "text-slate-600" : theme.checkColor}`} />
+                      <Check className={`size-4 shrink-0 mt-0.5 ${isEnrolled ? "text-emerald-400" : isPending ? "text-amber-400" : isOfferExpired ? "text-slate-600" : theme.checkColor}`} />
                       <span>{String(f).replace(/VIP/gi, "Exclusifs")}</span>
                     </li>
                   ))}
@@ -301,7 +330,25 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
             </div>
 
             <div className="mt-8">
-              {!isOfferExpired ? (
+              {isEnrolled ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="size-4" />
+                  <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : isPending ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl shadow-amber-500/25 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Clock className="size-4 animate-pulse" />
+                  <span>⏳ Inscription en cours de traitement · Suivre mon statut</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : !isOfferExpired ? (
                 <Link
                   href={current.offerCheckoutHref}
                   className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl text-sm transition-all shadow-xl active:scale-95 cursor-pointer ${theme.btn}`}
@@ -321,26 +368,26 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
             </div>
           </motion.div>
 
-          {/* Card 2: Prix Standard (Activé automatiquement quand l'offre expire) */}
+          {/* Card 2: Prix Standard */}
           <motion.div
             key={`standard-${activeId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
             className={`relative rounded-3xl p-6 md:p-8 shadow-xl flex flex-col justify-between transition-all ${
-              isOfferExpired 
+              isOfferExpired && !isEnrolled && !isPending
                 ? "border-2 border-primary glow-gold bg-slate-950 shadow-2xl z-20" 
                 : "border border-border/80 bg-card/40 backdrop-blur-xl"
             }`}
           >
             {/* Standard Badge on Card 2 */}
             <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${
-              isOfferExpired 
+              isOfferExpired && !isEnrolled && !isPending
                 ? "bg-primary text-slate-950 border border-amber-300 font-black" 
                 : "bg-secondary text-secondary-foreground border border-border"
             }`}>
               <ShieldCheck className="size-3.5" />
-              {isOfferExpired ? "TARIF OFFICIEL ACTIF" : "PRIX STANDARD"}
+              {isOfferExpired && !isEnrolled && !isPending ? "TARIF OFFICIEL ACTIF" : "PRIX STANDARD"}
             </div>
 
             <div>
@@ -351,7 +398,7 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
                   </span>
                 </div>
 
-                {isOfferExpired && (
+                {isOfferExpired && !isEnrolled && !isPending && (
                   <div className="py-2 px-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2">
                     <Check className="size-4 text-emerald-400 shrink-0" />
                     <span>Inscriptions ouvertes au tarif standard</span>
@@ -376,17 +423,37 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
             </div>
 
             <div className="mt-8">
-              <Link
-                href={current.standardCheckoutHref}
-                className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 cursor-pointer shadow-xl ${
-                  isOfferExpired 
-                    ? "bg-primary hover:bg-primary/90 text-slate-950 font-black shadow-primary/25" 
-                    : "bg-secondary/80 hover:bg-secondary text-foreground border border-border"
-                }`}
-              >
-                <span>Rejoindre au Tarif Standard ({current.standardPrice})</span>
-                <ArrowRight className="size-4" />
-              </Link>
+              {isEnrolled ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/30 active:scale-95 transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="size-4 text-emerald-400" />
+                  <span>✅ Accès Déjà Actif · Voir mes Formations</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : isPending ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Clock className="size-4 animate-pulse text-amber-400" />
+                  <span>⏳ Inscription en cours de validation · Suivre mon statut</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : (
+                <Link
+                  href={current.standardCheckoutHref}
+                  className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 cursor-pointer shadow-xl ${
+                    isOfferExpired 
+                      ? "bg-primary hover:bg-primary/90 text-slate-950 font-black shadow-primary/25" 
+                      : "bg-secondary/80 hover:bg-secondary text-foreground border border-border"
+                  }`}
+                >
+                  <span>Rejoindre au Tarif Standard ({current.standardPrice})</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              )}
             </div>
           </motion.div>
 

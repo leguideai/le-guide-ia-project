@@ -1,11 +1,17 @@
 "use client"
 
-import { Suspense, useState, useEffect, use } from "react"
+import { Suspense, useState, useEffect, use, useRef, useMemo } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { UdemyHeader } from "@/components/udemy-header"
 import { supabase } from "@/lib/supabase"
-import { ArrowLeft, ArrowRight, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check } from "lucide-react"
+import { useUserEnrollments } from "@/lib/user-enrollments"
+import { countries, getCountryFlag, Country } from "@/lib/countries"
+import { 
+  ArrowLeft, ArrowRight, ShieldCheck, Lock, CreditCard, Smartphone, 
+  CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check, 
+  Upload, Image as ImageIcon, X, ChevronDown, Search 
+} from "lucide-react"
 
 interface PageProps {
   params: Promise<{ courseSlug: string }>
@@ -40,6 +46,7 @@ function CheckoutContent({ params }: PageProps) {
   const { courseSlug } = use(params)
   const searchParams = useSearchParams()
   const requestedTier = searchParams.get("tier")
+  const { isEnrolledInCourse } = useUserEnrollments()
 
   const [courseData, setCourseData] = useState<any>(null)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe" | "paytech">("mobile_direct")
@@ -49,10 +56,72 @@ function CheckoutContent({ params }: PageProps) {
   const [fullName, setFullName] = useState("")
   const [whatsapp, setWhatsapp] = useState("")
   const [country, setCountry] = useState("Côte d'Ivoire")
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
+  const [countrySearch, setCountrySearch] = useState("")
+  const countryDropdownRef = useRef<HTMLDivElement>(null)
+
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copiedNum, setCopiedNum] = useState<string | null>(null)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
+
+  // Selected country object resolution
+  const selectedCountryObj = useMemo(() => {
+    return (
+      countries.find(
+        (c) => c.name.toLowerCase() === country.toLowerCase() || c.code.toLowerCase() === country.toLowerCase()
+      ) ||
+      countries.find((c) => c.name === "Côte d'Ivoire") ||
+      countries[0]
+    )
+  }, [country])
+
+  // Filtered countries list for searchable dropdown
+  const filteredCountries = useMemo(() => {
+    if (!countrySearch.trim()) return countries
+    const q = countrySearch.toLowerCase().trim()
+    return countries.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.code.toLowerCase().includes(q) ||
+        c.dial.includes(q)
+    )
+  }, [countrySearch])
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
+        setIsCountryDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError("L'image ne doit pas dépasser 10 Mo.")
+        return
+      }
+      setReceiptFile(file)
+      const previewUrl = URL.createObjectURL(file)
+      setReceiptPreview(previewUrl)
+      setError(null)
+    }
+  }
+
+  const handleRemoveReceipt = () => {
+    setReceiptFile(null)
+    if (receiptPreview) {
+      URL.revokeObjectURL(receiptPreview)
+      setReceiptPreview(null)
+    }
+  }
 
   // Fetch course from Supabase
   useEffect(() => {
@@ -86,6 +155,7 @@ function CheckoutContent({ params }: PageProps) {
     courseData?.title?.toLowerCase().includes("business")
 
   const courseTitle = courseData?.title || (isBusiness ? "Bootcamp IA & Business" : "Bootcamp IA & Carrière")
+  const isEnrolled = isEnrolledInCourse(courseData || { id: courseSlug, slug: courseSlug, title: courseTitle })
 
   // Price calculations
   const rawOfferPrice = courseData?.price !== undefined ? Number(courseData.price) : (isBusiness ? 149000 : 99000)
@@ -161,17 +231,49 @@ function CheckoutContent({ params }: PageProps) {
     setLoading(true)
     setError(null)
 
-    if (!transactionRef.trim()) {
-      setError("Veuillez saisir la référence ou le N° de dépôt Mobile Money.")
+    if (!transactionRef.trim() && !receiptFile) {
+      setError("Veuillez saisir la référence de transaction OU ajouter une capture d'écran de votre reçu de paiement.")
       setLoading(false)
       return
     }
 
     try {
+      let uploadedReceiptUrl: string | undefined = undefined
+
+      // 1. Upload receipt screenshot if provided
+      if (receiptFile) {
+        const formData = new FormData()
+        formData.append("file", receiptFile)
+        formData.append("folder", "receipts")
+        formData.append("bucket", "courses-pdf")
+
+        const uploadRes = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: formData
+        })
+        const uploadData = await uploadRes.json()
+        if (uploadData.url) {
+          uploadedReceiptUrl = uploadData.url
+        }
+      }
+
+      // 2. Submit payment declaration
       const res = await fetch("/api/payment/direct-mobile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseSlug, courseTitle, price, email, fullName, whatsapp, country, transactionRef, mobileOperator }),
+        body: JSON.stringify({ 
+          courseSlug, 
+          courseTitle, 
+          courseId: courseData?.id,
+          price, 
+          email, 
+          fullName, 
+          whatsapp, 
+          country, 
+          transactionRef, 
+          mobileOperator,
+          receiptUrl: uploadedReceiptUrl
+        }),
       })
       const data = await res.json()
 
@@ -259,7 +361,28 @@ function CheckoutContent({ params }: PageProps) {
               </p>
             </div>
 
-            {isLoggedIn && (
+            {isEnrolled && (
+              <div className="rounded-2xl border-2 border-emerald-500/60 bg-emerald-500/15 p-5 space-y-3 shadow-xl">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="size-6 text-emerald-400 shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-white text-sm sm:text-base">Vous êtes déjà inscrit(e) à ce Bootcamp !</h3>
+                    <p className="text-xs text-emerald-200 mt-0.5">
+                      Votre compte possède déjà l'accès actif à cette cohorte. Vous n'avez pas besoin de renouveler votre paiement.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-xl active:scale-95 transition-all cursor-pointer"
+                >
+                  <span>Accéder directement à mon Espace Membre</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            )}
+
+            {isLoggedIn && !isEnrolled && (
               <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center gap-3 text-xs text-emerald-300 shadow-lg shadow-emerald-500/5">
                 <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
                 <div>
@@ -286,7 +409,7 @@ function CheckoutContent({ params }: PageProps) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Votre nom complet"
-                  className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                  className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm sm:text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                 />
               </div>
 
@@ -299,7 +422,7 @@ function CheckoutContent({ params }: PageProps) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="vous@exemple.com"
-                    className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                    className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm sm:text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                   />
                 </div>
 
@@ -311,30 +434,92 @@ function CheckoutContent({ params }: PageProps) {
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
                     placeholder="+226 75 75 72 73"
-                    className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                    className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm sm:text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground/80">Pays de résidence</label>
-                <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
-                >
-                  <option value="Sénégal">Sénégal</option>
-                  <option value="Côte d'Ivoire">Côte d'Ivoire</option>
-                  <option value="Burkina Faso">Burkina Faso</option>
-                  <option value="Mali">Mali</option>
-                  <option value="Bénin">Bénin</option>
-                  <option value="Togo">Togo</option>
-                  <option value="Niger">Niger</option>
-                  <option value="Cameroun">Cameroun</option>
-                  <option value="France">France / Europe</option>
-                  <option value="Canada">Canada / USA</option>
-                  <option value="Autre">Autre pays</option>
-                </select>
+              {/* Pays de résidence (Sélecteur avec Drapeaux & Recherche de tous les pays) */}
+              <div className="space-y-1.5" ref={countryDropdownRef}>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-foreground/80">Pays de résidence *</label>
+                  <span className="text-[10px] text-muted-foreground">Sélectionnez avec drapeau</span>
+                </div>
+                
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                    className="w-full flex items-center justify-between rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm sm:text-xs text-foreground hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all cursor-pointer text-left"
+                  >
+                    <span className="flex items-center gap-2.5 truncate">
+                      <span className="text-lg leading-none">{getCountryFlag(selectedCountryObj.code)}</span>
+                      <span className="font-bold text-foreground truncate">{selectedCountryObj.name}</span>
+                      <span className="text-xs text-muted-foreground font-mono">({selectedCountryObj.dial})</span>
+                    </span>
+                    <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-200 ${isCountryDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {/* Popover Liste des Pays */}
+                  {isCountryDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1.5 w-full max-h-64 bg-card border border-border/90 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                      <div className="p-2.5 border-b border-border/80 sticky top-0 bg-card z-10">
+                        <div className="relative">
+                          <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={countrySearch}
+                            onChange={(e) => setCountrySearch(e.target.value)}
+                            placeholder="Rechercher un pays ou un code..."
+                            className="w-full bg-secondary/50 border border-border/80 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                            autoFocus
+                          />
+                          {countrySearch && (
+                            <button
+                              type="button"
+                              onClick={() => setCountrySearch("")}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground hover:text-foreground"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="overflow-y-auto divide-y divide-border/40 text-left max-h-52">
+                        {filteredCountries.map((c) => {
+                          const isSelected = country.toLowerCase() === c.name.toLowerCase() || country.toLowerCase() === c.code.toLowerCase()
+                          return (
+                            <button
+                              key={`country-${c.code}`}
+                              type="button"
+                              onClick={() => {
+                                setCountry(c.name)
+                                setIsCountryDropdownOpen(false)
+                                setCountrySearch("")
+                              }}
+                              className={`w-full px-3.5 py-2 text-xs flex items-center justify-between hover:bg-primary/10 transition-colors cursor-pointer text-left ${
+                                isSelected ? "bg-primary/15 text-primary font-bold" : "text-foreground"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2.5 truncate">
+                                <span className="text-base leading-none">{getCountryFlag(c.code)}</span>
+                                <span className="truncate">{c.name}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono">({c.dial})</span>
+                              </span>
+                              {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
+                            </button>
+                          )
+                        })}
+                        {filteredCountries.length === 0 && (
+                          <div className="p-4 text-center text-xs text-muted-foreground">
+                            Aucun pays trouvé pour &quot;{countrySearch}&quot;
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Payment Method Selector */}
@@ -447,18 +632,87 @@ function CheckoutContent({ params }: PageProps) {
                     </button>
                   </div>
 
-                  <div className="space-y-2 pt-1">
-                    <label className="text-xs font-bold text-foreground/90">
-                      ID de Transaction / N° du dépôt Mobile Money *
-                    </label>
+                  {/* Field 1: Transaction Ref */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-foreground/90">
+                        ID de Transaction / N° du dépôt
+                      </label>
+                      <span className="text-[10px] text-muted-foreground">
+                        {receiptFile ? "(Optionnel si capture fournie)" : "* Requis"}
+                      </span>
+                    </div>
                     <input
                       type="text"
-                      required
+                      required={!receiptFile}
                       value={transactionRef}
                       onChange={(e) => setTransactionRef(e.target.value)}
                       placeholder="Ex: REF-WAVE-8921 ou N° de téléphone expéditeur"
-                      className="w-full rounded-xl border border-primary/40 bg-input/60 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                      className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm sm:text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                     />
+                  </div>
+
+                  {/* Field 2: Screenshot / Receipt Upload */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-foreground/90 flex items-center gap-1.5">
+                        <ImageIcon className="size-3.5 text-primary" />
+                        <span>Capture d'écran du paiement</span>
+                      </label>
+                      <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        Recommandé
+                      </span>
+                    </div>
+
+                    {!receiptPreview ? (
+                      <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 bg-card/40 hover:bg-primary/5 cursor-pointer transition-all group">
+                        <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-2">
+                          <Upload className="size-4" />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">
+                          Cliquez pour ajouter la capture du reçu
+                        </span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">
+                          PNG, JPG, JPEG ou WEBP (Max 10 Mo)
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleReceiptChange}
+                          className="hidden"
+                        />
+                      </label>
+                    ) : (
+                      <div className="relative rounded-2xl border border-primary/40 bg-card p-3 flex items-center gap-3 shadow-md">
+                        <div className="size-16 rounded-xl overflow-hidden bg-slate-900 border border-primary/30 shrink-0">
+                          <img
+                            src={receiptPreview}
+                            alt="Aperçu reçu"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                            <CheckCircle2 className="size-3.5" />
+                            <span>Capture prête à être envoyée</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground truncate mt-0.5 font-mono">
+                            {receiptFile?.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {receiptFile ? `${(receiptFile.size / 1024).toFixed(0)} Ko` : ""}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveReceipt}
+                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+                          title="Supprimer cette capture"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

@@ -440,41 +440,45 @@ export default function DashboardPage() {
         .eq("user_email", userEmailClean)
         .eq("status", "active")
 
-      // 9. Fetch pending verification courses (Mobile Money pending admin approval)
-      const { data: pendingUcData } = await supabase
-        .from("user_courses")
-        .select("course_slug, created_at, payment_method, amount_paid")
-        .eq("user_email", userEmailClean)
-        .eq("status", "pending_verification")
+      // 9. Fetch unified confirmed & pending enrollments from API (bypasses RLS)
+      try {
+        const enrollRes = await fetch(`/api/user/enrollments?email=${encodeURIComponent(userEmailClean)}`)
+        const enrollData = await enrollRes.json()
 
-      if (pendingUcData && pendingUcData.length > 0) {
-        setPendingCourses(pendingUcData)
-      }
-
-      const isAdminUser = profData?.role === "admin" || profData?.role === "super_admin"
-      setIsAdmin(isAdminUser)
-
-      if (isAdminUser) {
-        // Admin sees all courses — store all course IDs & slugs
-        setUserEnrollments((cData || []).flatMap((c: any) => [c.id, c.slug]))
-      } else {
-        // Aggregate all course UUIDs and slugs from payments, registrations, and user_courses
-        const fromPayments = userPayments.flatMap((p: any) => [
-          p.registrations?.course_id,
-          p.registrations?.course_slug,
-          p.registrations?.courses?.id,
-          p.registrations?.courses?.slug
-        ])
-        const fromRegs = (regData || []).flatMap((r: any) => [r.course_id, r.course_slug])
-        const fromUserCourses = (ucData || []).map((uc: any) => uc.course_slug)
-
-        const allIdentifiers = Array.from(new Set([
-          ...fromPayments,
-          ...fromRegs,
-          ...fromUserCourses
-        ])).filter(Boolean) as string[]
-
-        setUserEnrollments(allIdentifiers)
+        if (enrollData && enrollData.success) {
+          if (enrollData.isAdmin) {
+            setIsAdmin(true)
+            setUserEnrollments((cData || []).flatMap((c: any) => [c.id, c.slug, c.title]))
+            setPendingCourses([])
+          } else {
+            setUserEnrollments(enrollData.confirmed || [])
+            const pendings = (enrollData.pending || []).map((slug: string) => ({
+              course_slug: slug,
+              created_at: new Date().toISOString(),
+              status: "pending_verification"
+            }))
+            setPendingCourses(pendings)
+          }
+        } else {
+          // Fallback if API fails
+          const isAdminUser = profData?.role === "admin" || profData?.role === "super_admin"
+          setIsAdmin(isAdminUser)
+          if (isAdminUser) {
+            setUserEnrollments((cData || []).flatMap((c: any) => [c.id, c.slug]))
+          } else {
+            const fromPayments = userPayments.flatMap((p: any) => [
+              p.registrations?.course_id,
+              p.registrations?.course_slug,
+              p.registrations?.courses?.id,
+              p.registrations?.courses?.slug
+            ])
+            const fromRegs = (regData || []).flatMap((r: any) => [r.course_id, r.course_slug])
+            const fromUserCourses = (ucData || []).map((uc: any) => uc.course_slug)
+            setUserEnrollments(Array.from(new Set([...fromPayments, ...fromRegs, ...fromUserCourses])).filter(Boolean) as string[])
+          }
+        }
+      } catch (apiErr) {
+        console.warn("Could not sync with /api/user/enrollments:", apiErr)
       }
 
       setLoading(false)
@@ -739,9 +743,23 @@ export default function DashboardPage() {
   }))
 
   // Separate enrolled (accessible) vs pending (awaiting admin verification) vs locked (not yet registered)
-  const pendingCourseSlugs = pendingCourses.map((pc: any) => pc.course_slug)
-  const isPendingCourse = (b: any) =>
-    !canAccess(b) && (pendingCourseSlugs.includes(b.slug) || pendingCourseSlugs.includes(b.dbId) || pendingCourseSlugs.includes(b.id))
+  const isPendingCourse = (b: any) => {
+    if (canAccess(b)) return false
+    const bSlugNorm = (b.slug || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+    const bTitleNorm = (b.title || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+    const bId = String(b.dbId || b.id || "")
+
+    return pendingCourses.some((pc: any) => {
+      const pSlug = String(pc.course_slug || "").toLowerCase()
+      const pSlugNorm = pSlug.replace(/[^a-z0-9]/g, "")
+      if (!pSlug) return false
+      if (bId && (pSlug === bId || pSlugNorm === bId)) return true
+      if (b.slug && (pSlug === b.slug || pSlugNorm === bSlugNorm)) return true
+      if (bSlugNorm && pSlugNorm && (bSlugNorm.includes(pSlugNorm) || pSlugNorm.includes(bSlugNorm))) return true
+      if (bTitleNorm && pSlugNorm && (bTitleNorm.includes(pSlugNorm) || pSlugNorm.includes(bTitleNorm))) return true
+      return false
+    })
+  }
 
   const enrolledBootcamps = displayedBootcamps.filter((b: any) => canAccess(b))
   const pendingBootcamps = displayedBootcamps.filter((b: any) => isPendingCourse(b))

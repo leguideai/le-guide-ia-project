@@ -12,7 +12,8 @@ import {
   ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
   ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X,
-  Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star
+  Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star,
+  Image as ImageIcon
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { AnalyticsChart } from "@/components/analytics-chart"
@@ -110,13 +111,18 @@ interface PaymentRecord {
   method: string
   status: string
   transaction_ref?: string
+  receipt_url?: string
+  notes?: string
   created_at: string
   registrations?: {
+    id?: string
     full_name?: string
     email?: string
     whatsapp?: string
     country?: string
     source?: string
+    course_id?: string
+    course_slug?: string
   }
 }
 
@@ -234,6 +240,22 @@ export default function SuperAdminDashboard() {
     method: "Mobile Money",
     transaction_ref: "",
     status: "pending_verification"
+  })
+
+  // Bootcamp Specific Learners Management State
+  const [selectedCourseForLearners, setSelectedCourseForLearners] = useState<BootcampCourse | null>(null)
+  const [showLearnersModal, setShowLearnersModal] = useState(false)
+  const [learnersSearch, setLearnersSearch] = useState("")
+  const [learnersStatusFilter, setLearnersStatusFilter] = useState<"all" | "confirmed" | "pending">("all")
+  const [previewScreenshotUrl, setPreviewScreenshotUrl] = useState<string | null>(null)
+  const [showManualEnrollModal, setShowManualEnrollModal] = useState(false)
+  const [savingManualEnroll, setSavingManualEnroll] = useState(false)
+  const [manualEnrollForm, setManualEnrollForm] = useState({
+    fullName: "",
+    email: "",
+    whatsapp: "",
+    amount: "99000",
+    sendEmail: true
   })
 
   // Formations Modals & Form State
@@ -1295,6 +1317,120 @@ export default function SuperAdminDashboard() {
       alert("Erreur de suppression : " + err.message)
     } finally {
       setProcessingId(null)
+    }
+  }
+
+  // Extract receipt / screenshot URL from payment record
+  function getPaymentReceiptUrl(p: PaymentRecord): string | null {
+    if (p.receipt_url && p.receipt_url.trim() !== "") return p.receipt_url
+    const regNotes = (p.registrations as any)?.notes
+    if (regNotes) {
+      if (typeof regNotes === "string" && (regNotes.startsWith("http://") || regNotes.startsWith("https://"))) return regNotes
+      try {
+        const parsed = JSON.parse(regNotes)
+        if (parsed?.receipt_url) return parsed.receipt_url
+      } catch (e) {}
+    }
+    if (p.notes) {
+      if (typeof p.notes === "string" && (p.notes.startsWith("http://") || p.notes.startsWith("https://"))) return p.notes
+      try {
+        const parsed = JSON.parse(p.notes)
+        if (parsed?.receipt_url) return parsed.receipt_url
+      } catch (e) {}
+    }
+    return null
+  }
+
+  // Get list of enrolled learners for a specific bootcamp course
+  function getCourseLearners(c: BootcampCourse): PaymentRecord[] {
+    const cId = String(c.id || "").toLowerCase().trim()
+    const cSlug = String(c.slug || "").toLowerCase().trim()
+    const cTitle = String(c.title || "").toLowerCase().trim()
+
+    return payments.filter(p => {
+      const regSlug = String((p.registrations as any)?.course_slug || "").toLowerCase().trim()
+      const regId = String((p.registrations as any)?.course_id || "").toLowerCase().trim()
+      const notesStr = String(p.notes || "").toLowerCase().trim()
+
+      if (cId && (regId === cId || notesStr.includes(cId))) return true
+      if (cSlug && (regSlug === cSlug || notesStr.includes(cSlug))) return true
+
+      if (cTitle.includes("carriere") || cSlug.includes("carriere") || cSlug.includes("pro")) {
+        if (regSlug.includes("carriere") || regSlug.includes("pro") || notesStr.includes("carriere") || notesStr.includes("pro")) return true
+      }
+      if (cTitle.includes("business") || cSlug.includes("business")) {
+        if (regSlug.includes("business") || notesStr.includes("business")) return true
+      }
+
+      return false
+    })
+  }
+
+  // Unenroll / Delete learner from specific course
+  async function handleUnenrollLearner(p: PaymentRecord, courseSlug?: string) {
+    const name = p.registrations?.full_name || p.registrations?.email || "cet apprenant"
+    if (!confirm(`Êtes-vous sûr de vouloir désinscrire définitivement ${name} de cette formation ? L'accès au Bootcamp sera révoqué immédiatement.`)) return
+
+    setProcessingId(p.id)
+    try {
+      const email = p.registrations?.email || ""
+      const url = `/api/admin/payments?id=${p.id}&registration_id=${p.registration_id || ""}&email=${encodeURIComponent(email)}&course_slug=${encodeURIComponent(courseSlug || "")}`
+      const res = await fetch(url, { method: "DELETE" })
+      const data = await res.json()
+      if (data.success) {
+        showNotice(`${name} a été désinscrit(e) avec succès du Bootcamp.`)
+        setPayments(prev => prev.filter(item => item.id !== p.id))
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de la désinscription.")
+      }
+    } catch (err: any) {
+      alert("Erreur de suppression : " + err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  // Handle Manual Enrollment by Admin
+  async function handleManualEnrollLearner(e: React.FormEvent) {
+    e.preventDefault()
+    if (!selectedCourseForLearners) return
+    setSavingManualEnroll(true)
+    try {
+      const res = await fetch("/api/admin/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "manual_enroll",
+          courseId: selectedCourseForLearners.id,
+          courseSlug: selectedCourseForLearners.slug,
+          courseTitle: selectedCourseForLearners.title,
+          fullName: manualEnrollForm.fullName,
+          email: manualEnrollForm.email,
+          whatsapp: manualEnrollForm.whatsapp,
+          amount: manualEnrollForm.amount,
+          sendEmail: manualEnrollForm.sendEmail
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice(`Apprenant ${manualEnrollForm.fullName} inscrit avec succès ! Accès activé.`)
+        setShowManualEnrollModal(false)
+        setManualEnrollForm({
+          fullName: "",
+          email: "",
+          whatsapp: "",
+          amount: "99000",
+          sendEmail: true
+        })
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de l'inscription manuelle.")
+      }
+    } catch (err: any) {
+      alert("Erreur de communication : " + err.message)
+    } finally {
+      setSavingManualEnroll(false)
     }
   }
 
@@ -2482,56 +2618,78 @@ export default function SuperAdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
-                    <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1">
+                  <div className="space-y-2 pt-2 border-t border-slate-200">
+                    {/* Primary Button: View & Manage Learners for this Bootcamp */}
+                    <button
+                      onClick={() => {
+                        setSelectedCourseForLearners(c)
+                        setShowLearnersModal(true)
+                        setLearnersSearch("")
+                        setLearnersStatusFilter("all")
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center justify-between shadow-xs transition-all cursor-pointer group/btn"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users className="size-4 text-emerald-200" />
+                        <span>Gérer les Apprenants</span>
+                      </div>
+                      <span className="bg-white/20 text-white text-[11px] font-black px-2 py-0.5 rounded-full">
+                        {getCourseLearners(c).length} inscrit{getCourseLearners(c).length > 1 ? "s" : ""}
+                      </span>
+                    </button>
+
+                    {/* Secondary Actions */}
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-0.5 bg-slate-100 border border-slate-200 rounded-xl p-0.5">
+                        <button
+                          onClick={() => handleMoveCourse(c, "up")}
+                          disabled={idx === 0}
+                          className="p-1 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
+                          title="Déplacer vers le haut"
+                        >
+                          <ArrowUp className="size-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleMoveCourse(c, "down")}
+                          disabled={idx === courses.length - 1}
+                          className="p-1 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
+                          title="Déplacer vers le bas"
+                        >
+                          <ArrowDown className="size-3.5" />
+                        </button>
+                      </div>
                       <button
-                        onClick={() => handleMoveCourse(c, "up")}
-                        disabled={idx === 0}
-                        className="p-1 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
-                        title="Déplacer vers le haut"
+                        onClick={() => openCourseDetails(c)}
+                        className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1"
+                        title="Voir les détails"
                       >
-                        <ArrowUp className="size-3.5" />
+                        <Eye className="size-3.5 text-primary" />
                       </button>
                       <button
-                        onClick={() => handleMoveCourse(c, "down")}
-                        disabled={idx === courses.length - 1}
-                        className="p-1 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
-                        title="Déplacer vers le bas"
+                        onClick={() => { setCourseForm(c); setShowCourseModal(true) }}
+                        className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1"
                       >
-                        <ArrowDown className="size-3.5" />
+                        <Edit3 className="size-3" /> Modifier
                       </button>
+                      {(c.id || c.slug) && (
+                        <button
+                          onClick={() => openCourseSessions(c)}
+                          className="flex-1 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 text-xs font-bold hover:bg-primary hover:text-primary-foreground flex items-center justify-center gap-1 transition-all"
+                          title="Gérer les Sessions Live"
+                        >
+                          <Calendar className="size-3" /> Sessions
+                        </button>
+                      )}
+                      {c.id && (
+                        <button
+                          onClick={() => handleDeleteCourse(c.id!)}
+                          className="p-2 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
                     </div>
-                    <button
-                      onClick={() => openCourseDetails(c)}
-                      className="p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-200 flex items-center justify-center gap-1"
-                      title="Voir les détails"
-                    >
-                      <Eye className="size-3.5 text-primary" />
-                    </button>
-                    <button
-                      onClick={() => { setCourseForm(c); setShowCourseModal(true) }}
-                      className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-200 flex items-center justify-center gap-1"
-                    >
-                      <Edit3 className="size-3" /> Modifier
-                    </button>
-                    {(c.id || c.slug) && (
-                      <button
-                        onClick={() => openCourseSessions(c)}
-                        className="flex-1 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 text-xs font-bold hover:bg-primary hover:text-primary-foreground flex items-center justify-center gap-1 transition-all"
-                        title="Gérer les Sessions Live"
-                      >
-                        <Calendar className="size-3" /> Sessions
-                      </button>
-                    )}
-                    {c.id && (
-                      <button
-                        onClick={() => handleDeleteCourse(c.id!)}
-                        className="p-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -3311,6 +3469,438 @@ export default function SuperAdminDashboard() {
                     </button>
                   </div>
 
+                </div>
+              </div>
+            )}
+
+            {/* ===== MODAL GESTION DES APPRENANTS DU BOOTCAMP ===== */}
+            {showLearnersModal && selectedCourseForLearners && (() => {
+              const allCourseLearners = getCourseLearners(selectedCourseForLearners)
+              const confirmedCount = allCourseLearners.filter(p => p.status === "confirmed").length
+              const pendingCount = allCourseLearners.filter(p => p.status === "pending_verification" || p.status === "pending").length
+              const totalRevenue = allCourseLearners
+                .filter(p => p.status === "confirmed")
+                .reduce((acc, p) => acc + (Number(p.amount) || 0), 0)
+
+              const filteredCourseLearners = allCourseLearners.filter(p => {
+                const searchLower = learnersSearch.toLowerCase().trim()
+                const matchesSearch = !searchLower || 
+                  (p.registrations?.full_name || "").toLowerCase().includes(searchLower) ||
+                  (p.registrations?.email || "").toLowerCase().includes(searchLower) ||
+                  (p.registrations?.whatsapp || "").toLowerCase().includes(searchLower) ||
+                  (p.transaction_ref || "").toLowerCase().includes(searchLower)
+
+                if (!matchesSearch) return false
+
+                if (learnersStatusFilter === "confirmed") return p.status === "confirmed"
+                if (learnersStatusFilter === "pending") return p.status === "pending_verification" || p.status === "pending"
+                return true
+              })
+
+              return (
+                <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+                  <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-5 sm:p-7 max-w-5xl w-full space-y-5 max-h-[92vh] overflow-y-auto flex flex-col">
+                    
+                    {/* Modal Top Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="size-12 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                          <img 
+                            src={selectedCourseForLearners.thumbnail || selectedCourseForLearners.poster || "/images/bootcamp_pro_thumb.jpg"} 
+                            alt={selectedCourseForLearners.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                              Bootcamp Officiel
+                            </span>
+                            <span className="text-xs text-slate-500 font-mono">
+                              {selectedCourseForLearners.dates || "Session Live"}
+                            </span>
+                          </div>
+                          <h3 className="font-heading text-lg sm:text-xl font-bold text-slate-800 mt-0.5">
+                            Apprenants : {selectedCourseForLearners.title}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualEnrollForm({
+                              fullName: "",
+                              email: "",
+                              whatsapp: "",
+                              amount: String(selectedCourseForLearners.price || "99000").replace(/[^0-9]/g, "") || "99000",
+                              sendEmail: true
+                            })
+                            setShowManualEnrollModal(true)
+                          }}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                        >
+                          <UserPlus className="size-3.5" />
+                          <span>Inscrire un Apprenant</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowLearnersModal(false)
+                            setSelectedCourseForLearners(null)
+                          }}
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs"
+                          title="Fermer"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Stats Metric Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bg-[#F8FAFC] border border-slate-200 rounded-2xl p-3">
+                        <span className="text-[11px] text-slate-500 font-medium block">Total Inscrits</span>
+                        <span className="font-heading text-xl font-black text-slate-800 mt-0.5 block">
+                          {allCourseLearners.length}
+                        </span>
+                      </div>
+                      <div className="bg-emerald-50/50 border border-emerald-200/80 rounded-2xl p-3">
+                        <span className="text-[11px] text-emerald-700 font-medium block">Accès Validés</span>
+                        <span className="font-heading text-xl font-black text-emerald-700 mt-0.5 block">
+                          {confirmedCount}
+                        </span>
+                      </div>
+                      <div className="bg-amber-50/50 border border-amber-200/80 rounded-2xl p-3">
+                        <span className="text-[11px] text-amber-800 font-medium block">À Valider (Mobile)</span>
+                        <span className="font-heading text-xl font-black text-amber-800 mt-0.5 block">
+                          {pendingCount}
+                        </span>
+                      </div>
+                      <div className="bg-blue-50/50 border border-blue-200/80 rounded-2xl p-3">
+                        <span className="text-[11px] text-blue-700 font-medium block">Revenus Confirmés</span>
+                        <span className="font-heading text-base sm:text-lg font-black text-blue-700 mt-0.5 block font-mono">
+                          {totalRevenue.toLocaleString("fr-FR")} FCFA
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Filters & Search Toolbar */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                      <div className="relative w-full sm:w-80">
+                        <Search className="size-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Rechercher par nom, email, réf..."
+                          value={learnersSearch}
+                          onChange={e => setLearnersSearch(e.target.value)}
+                          className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-400"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                        <button
+                          onClick={() => setLearnersStatusFilter("all")}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                            learnersStatusFilter === "all"
+                              ? "bg-slate-900 text-white shadow-xs"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }`}
+                        >
+                          Tous ({allCourseLearners.length})
+                        </button>
+                        <button
+                          onClick={() => setLearnersStatusFilter("confirmed")}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                            learnersStatusFilter === "confirmed"
+                              ? "bg-emerald-600 text-white shadow-xs"
+                              : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          }`}
+                        >
+                          Validés ({confirmedCount})
+                        </button>
+                        <button
+                          onClick={() => setLearnersStatusFilter("pending")}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                            learnersStatusFilter === "pending"
+                              ? "bg-amber-600 text-white shadow-xs"
+                              : "bg-amber-50 text-amber-800 hover:bg-amber-100"
+                          }`}
+                        >
+                          En attente ({pendingCount})
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Learners Table View */}
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs flex-1">
+                      <div className="overflow-x-auto max-h-[50vh]">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead className="bg-[#F8FAFC] text-slate-600 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 sticky top-0 z-10">
+                            <tr>
+                              <th className="p-3.5">Apprenant</th>
+                              <th className="p-3.5">WhatsApp</th>
+                              <th className="p-3.5">Date</th>
+                              <th className="p-3.5">Montant &amp; Réf</th>
+                              <th className="p-3.5 text-center">Preuve (Reçu)</th>
+                              <th className="p-3.5">Statut</th>
+                              <th className="p-3.5 text-right">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {filteredCourseLearners.map(p => {
+                              const receiptUrl = getPaymentReceiptUrl(p)
+                              const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
+                              const initials = (p.registrations?.full_name || "A").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                              const isConfirmed = p.status === "confirmed"
+                              const isPending = p.status === "pending_verification" || p.status === "pending"
+
+                              return (
+                                <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                                  {/* Apprenant */}
+                                  <td className="p-3.5">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="size-8 rounded-xl bg-primary/15 text-slate-950 font-black flex items-center justify-center text-[10px] shrink-0 border border-primary/20">
+                                        {initials}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <div className="font-bold text-slate-800 truncate">
+                                          {p.registrations?.full_name || "Apprenant"}
+                                        </div>
+                                        <div className="text-[11px] text-slate-500 truncate">
+                                          {p.registrations?.email || "Email non renseigné"}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  {/* WhatsApp */}
+                                  <td className="p-3.5">
+                                    {cleanPhone ? (
+                                      <a
+                                        href={`https://wa.me/${cleanPhone}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg text-[11px]"
+                                        title="Ouvrir WhatsApp"
+                                      >
+                                        <MessageCircle className="size-3 text-emerald-600" />
+                                        <span>{p.registrations?.whatsapp}</span>
+                                      </a>
+                                    ) : (
+                                      <span className="text-slate-400 text-[11px]">N/A</span>
+                                    )}
+                                  </td>
+
+                                  {/* Date */}
+                                  <td className="p-3.5 text-[11px] text-slate-500 font-mono">
+                                    {p.created_at ? new Date(p.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "-"}
+                                  </td>
+
+                                  {/* Montant & Ref */}
+                                  <td className="p-3.5">
+                                    <div className="font-mono font-bold text-slate-800">
+                                      {p.amount ? Number(p.amount).toLocaleString("fr-FR") : "0"} {p.currency || "XOF"}
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 flex items-center gap-1 font-mono mt-0.5">
+                                      <span className="truncate max-w-[120px]">{p.transaction_ref || p.method}</span>
+                                    </div>
+                                  </td>
+
+                                  {/* Preuve Capture (Reçu) */}
+                                  <td className="p-3.5 text-center">
+                                    {receiptUrl ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => setPreviewScreenshotUrl(receiptUrl)}
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/30 font-bold text-[10px] transition-all cursor-pointer shadow-2xs"
+                                        title="Voir la capture d'écran du paiement"
+                                      >
+                                        <ImageIcon className="size-3.5" />
+                                        <span>Voir Capture</span>
+                                      </button>
+                                    ) : (
+                                      <span className="text-[10px] text-slate-400 italic">Aucune</span>
+                                    )}
+                                  </td>
+
+                                  {/* Statut */}
+                                  <td className="p-3.5">
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                                      isConfirmed 
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                                        : isPending 
+                                          ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse" 
+                                          : "bg-rose-50 text-rose-700 border-rose-200"
+                                    }`}>
+                                      {isConfirmed ? <CheckCircle2 className="size-3" /> : isPending ? <Clock className="size-3" /> : <XCircle className="size-3" />}
+                                      <span>{isConfirmed ? "Actif / Payé" : isPending ? "À Valider" : p.status}</span>
+                                    </span>
+                                  </td>
+
+                                  {/* Actions */}
+                                  <td className="p-3.5 text-right">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      {/* Bouton Valider l'accès si en attente */}
+                                      {!isConfirmed && (
+                                        <button
+                                          type="button"
+                                          onClick={() => handlePaymentStatus(p.id, "confirmed")}
+                                          disabled={processingId === p.id}
+                                          className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer flex items-center gap-1"
+                                          title="Valider le paiement et activer les accès au Bootcamp"
+                                        >
+                                          <CheckCircle2 className="size-3" />
+                                          <span>Valider</span>
+                                        </button>
+                                      )}
+
+                                      {/* Bouton Modifier détails & référence */}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenEditPayment(p)}
+                                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                                        title="Modifier la référence ou le paiement"
+                                      >
+                                        <Edit3 className="size-3.5" />
+                                      </button>
+
+                                      {/* Bouton Désinscrire / Supprimer */}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUnenrollLearner(p, selectedCourseForLearners.slug)}
+                                        disabled={processingId === p.id}
+                                        className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-colors cursor-pointer"
+                                        title="Désinscrire cet apprenant du Bootcamp"
+                                      >
+                                        <Trash2 className="size-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+
+                            {filteredCourseLearners.length === 0 && (
+                              <tr>
+                                <td colSpan={7} className="p-8 text-center text-slate-500">
+                                  <Users className="size-8 mx-auto text-slate-400 mb-2" />
+                                  <p className="font-bold text-slate-800 text-xs">Aucun apprenant trouvé pour cette sélection.</p>
+                                  <p className="text-[11px] text-slate-500 mt-0.5">Cliquez sur &quot;Inscrire un Apprenant&quot; pour ajouter un participant manuellement.</p>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* ===== MODAL INSCRIPTION MANUELLE D'UN APPRENANT ===== */}
+            {showManualEnrollModal && selectedCourseForLearners && (
+              <div className="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <h3 className="font-heading text-base font-bold text-slate-800 flex items-center gap-2">
+                      <UserPlus className="size-5 text-emerald-600" />
+                      Inscrire un Apprenant au Bootcamp
+                    </h3>
+                    <button onClick={() => setShowManualEnrollModal(false)} className="text-slate-400 hover:text-slate-700">
+                      <X className="size-4" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleManualEnrollLearner} className="space-y-3.5 text-xs">
+                    <div>
+                      <span className="text-[11px] text-slate-500 font-bold block mb-1">Bootcamp cible</span>
+                      <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 font-bold text-slate-800">
+                        {selectedCourseForLearners.title}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-slate-700 block mb-1 font-bold">Nom complet de l'apprenant *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Jean Dupont"
+                        value={manualEnrollForm.fullName}
+                        onChange={e => setManualEnrollForm({ ...manualEnrollForm, fullName: e.target.value })}
+                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-slate-700 block mb-1 font-bold">Adresse Email de connexion *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="jean.dupont@email.com"
+                        value={manualEnrollForm.email}
+                        onChange={e => setManualEnrollForm({ ...manualEnrollForm, email: e.target.value })}
+                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600 font-mono"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-slate-700 block mb-1 font-bold">N° WhatsApp (avec indicatif)</label>
+                        <input
+                          type="tel"
+                          placeholder="+226 75 00 00 00"
+                          value={manualEnrollForm.whatsapp}
+                          onChange={e => setManualEnrollForm({ ...manualEnrollForm, whatsapp: e.target.value })}
+                          className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-700 block mb-1 font-bold">Montant réglé (FCFA)</label>
+                        <input
+                          type="number"
+                          placeholder="99000"
+                          value={manualEnrollForm.amount}
+                          onChange={e => setManualEnrollForm({ ...manualEnrollForm, amount: e.target.value })}
+                          className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <label className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/80 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={manualEnrollForm.sendEmail}
+                        onChange={e => setManualEnrollForm({ ...manualEnrollForm, sendEmail: e.target.checked })}
+                        className="size-4 text-emerald-600 rounded"
+                      />
+                      <span className="text-[11px] text-emerald-900 font-medium leading-tight">
+                        Envoyer automatiquement l'email officiel avec les identifiants et le lien d'accès à l'espace membre.
+                      </span>
+                    </label>
+
+                    <div className="flex gap-2 pt-2 border-t border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setShowManualEnrollModal(false)}
+                        className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={savingManualEnroll}
+                        className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                      >
+                        <UserPlus className="size-4" />
+                        <span>{savingManualEnroll ? "Inscription en cours..." : "Confirmer l'inscription"}</span>
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}
@@ -4624,6 +5214,7 @@ export default function SuperAdminDashboard() {
                       <th className="p-4">Contact</th>
                       <th className="p-4">Montant</th>
                       <th className="p-4">Méthode &amp; Réf</th>
+                      <th className="p-4 text-center">Preuve (Reçu)</th>
                       <th className="p-4">Statut</th>
                       <th className="p-4">Date</th>
                       <th className="p-4 text-right">Actions</th>
@@ -4633,6 +5224,7 @@ export default function SuperAdminDashboard() {
                     {filteredPayments.map(p => {
                       const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
                       const initials = (p.registrations?.full_name || "P").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                      const receiptUrl = getPaymentReceiptUrl(p)
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
                           {/* Participant */}
@@ -4693,6 +5285,23 @@ export default function SuperAdminDashboard() {
                               </div>
                             ) : (
                               <span className="text-[10px] text-slate-400 italic">Sans réf</span>
+                            )}
+                          </td>
+
+                          {/* Preuve Capture (Reçu) */}
+                          <td className="p-4 text-center">
+                            {receiptUrl ? (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewScreenshotUrl(receiptUrl)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/30 font-bold text-[10px] transition-all cursor-pointer shadow-2xs"
+                                title="Voir la capture d'écran du reçu de paiement"
+                              >
+                                <ImageIcon className="size-3.5" />
+                                <span>Voir Reçu</span>
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 italic">Aucun</span>
                             )}
                           </td>
 
@@ -4759,7 +5368,7 @@ export default function SuperAdminDashboard() {
                     })}
                     {filteredPayments.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-slate-500">
+                        <td colSpan={8} className="p-8 text-center text-slate-500">
                           <DollarSign className="size-8 mx-auto text-slate-400 mb-2" />
                           <p className="font-bold text-slate-800 text-xs">Aucune transaction trouvée</p>
                           <p className="text-[11px] text-slate-500 mt-0.5">Modifiez vos filtres ou effectuez une autre recherche.</p>
@@ -4776,6 +5385,7 @@ export default function SuperAdminDashboard() {
               {filteredPayments.map(p => {
                 const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
                 const initials = (p.registrations?.full_name || "P").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                const receiptUrl = getPaymentReceiptUrl(p)
                 return (
                   <div
                     key={p.id}
@@ -4846,6 +5456,18 @@ export default function SuperAdminDashboard() {
                           </span>
                         </div>
                       </div>
+
+                      {/* Preuve Capture Button on Mobile */}
+                      {receiptUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewScreenshotUrl(receiptUrl)}
+                          className="w-full py-2 px-3 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/30 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <ImageIcon className="size-4" />
+                          <span>Voir la Capture de Paiement (Reçu)</span>
+                        </button>
+                      )}
 
                       {p.transaction_ref && (
                         <div className="text-[10px] font-mono text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 flex items-center justify-between">
@@ -6123,6 +6745,33 @@ export default function SuperAdminDashboard() {
                   </div>
                 </div>
 
+                {/* Receipt Screenshot Preview if available */}
+                {editingPayment && getPaymentReceiptUrl(editingPayment) && (
+                  <div className="p-3 rounded-2xl bg-[#F8FAFC] border border-slate-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-11 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 shrink-0">
+                        <img
+                          src={getPaymentReceiptUrl(editingPayment)!}
+                          alt="Preuve"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-bold text-slate-800 block">Capture d'écran du reçu jointe</span>
+                        <span className="text-[10px] text-slate-500 block">Vérifiez les montants déclarés par l'apprenant.</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewScreenshotUrl(getPaymentReceiptUrl(editingPayment)!)}
+                      className="px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shrink-0"
+                    >
+                      <Eye className="size-3.5" />
+                      <span>Zoomer</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Status */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">Statut du Paiement &amp; Accès *</label>
@@ -6160,6 +6809,53 @@ export default function SuperAdminDashboard() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ===== MODAL ZOOM PLEIN ÉCRAN PREUVE DE PAIEMENT (GLOBAL) ===== */}
+        {previewScreenshotUrl && (
+          <div 
+            className="fixed inset-0 z-[999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+            onClick={() => setPreviewScreenshotUrl(null)}
+          >
+            <div 
+              className="relative bg-white rounded-3xl p-4 sm:p-5 max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col space-y-3"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h4 className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <ImageIcon className="size-4 text-primary" />
+                  <span>Preuve de Paiement / Reçu Mobile Money</span>
+                </h4>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={previewScreenshotUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Ouvrir en taille réelle dans un nouvel onglet"
+                  >
+                    <ExternalLink className="size-3.5" />
+                    <span>Ouvrir l'original</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewScreenshotUrl(null)}
+                    className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 flex items-center justify-center max-h-[72vh] p-2">
+                <img
+                  src={previewScreenshotUrl}
+                  alt="Capture de paiement"
+                  className="max-h-[68vh] w-auto max-w-full object-contain rounded-xl shadow-lg"
+                />
+              </div>
             </div>
           </div>
         )}

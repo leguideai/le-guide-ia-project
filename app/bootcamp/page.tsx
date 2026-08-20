@@ -9,12 +9,14 @@ import { Testimonials } from "@/components/testimonials"
 import { CtaFooter } from "@/components/cta-footer"
 import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
 import { GridBackground } from "@/components/grid-background"
-import { GraduationCap, UserCheck, Gift, ArrowRight, Sparkles, CheckCircle2, Calendar, Globe, Download } from "lucide-react"
+import { GraduationCap, UserCheck, Gift, ArrowRight, Sparkles, CheckCircle2, Calendar, Globe, Download, Clock } from "lucide-react"
 
 import { supabase } from "@/lib/supabase"
 import { isCourseOpenForPublic, getCourseVisibilityStatus } from "@/lib/courses-visibility"
+import { useUserEnrollments } from "@/lib/user-enrollments"
 
 function BootcampContent() {
+  const { isEnrolledInCourse, isPendingInCourse } = useUserEnrollments()
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
   const [dbCourses, setDbCourses] = useState<any[]>([])
 
@@ -179,8 +181,28 @@ function BootcampContent() {
                   
                   {/* Header Row */}
                   <div className="space-y-4">
-                    {/* Expired / Closed Notice if viewed directly */}
-                    {!isCourseOpenForPublic(active) && (
+                    {/* Already Enrolled Banner */}
+                    {isEnrolledInCourse(active) && (
+                      <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2.5">
+                        <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
+                        <div>
+                          <strong>Inscription confirmée :</strong> Vous êtes déjà inscrit(e) à ce Bootcamp. Vos replays et salons d'entraide sont disponibles dans votre espace membre.
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pending Verification Banner */}
+                    {isPendingInCourse(active) && (
+                      <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2.5">
+                        <Clock className="size-4 shrink-0 text-amber-400 animate-pulse" />
+                        <div>
+                          <strong>Demande d'inscription reçue :</strong> Votre virement Mobile Money est en cours de vérification sous moins de 24h. Vous pouvez suivre l'état d'activation sur votre espace membre.
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Expired / Closed Notice if viewed directly and not enrolled */}
+                    {!isEnrolledInCourse(active) && !isPendingInCourse(active) && !isCourseOpenForPublic(active) && (
                       <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2.5">
                         <Sparkles className="size-4 shrink-0 text-amber-400" />
                         <div>
@@ -204,7 +226,9 @@ function BootcampContent() {
                         <div className={`font-heading text-2xl md:text-3xl font-black ${theme.priceText}`}>
                           {active.price > 0 ? `${Number(active.price).toLocaleString("fr-FR")} ${active.currency || "FCFA"}` : "GRATUIT"}
                         </div>
-                        <div className={theme.badgeText}>{getBadgeLabel(active)}</div>
+                        <div className={theme.badgeText}>
+                          {isEnrolledInCourse(active) ? "INSCRIPTION ACTIVE" : isPendingInCourse(active) ? "EN COURS DE VALIDATION" : getBadgeLabel(active)}
+                        </div>
                       </div>
                     </div>
 
@@ -240,7 +264,25 @@ function BootcampContent() {
 
                 {/* CTA Action Buttons Row (Spacious & Clean Layout) */}
                 <div className="pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center gap-3">
-                  {isCourseOpenForPublic(active) ? (
+                  {isEnrolledInCourse(active) ? (
+                    <Link
+                      href="/dashboard"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-600/25 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <CheckCircle2 className="size-4" />
+                      <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  ) : isPendingInCourse(active) ? (
+                    <Link
+                      href="/dashboard"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-black bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl shadow-amber-500/25 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Clock className="size-4 animate-pulse" />
+                      <span>⏳ Inscription en cours de traitement · Espace Membre</span>
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  ) : isCourseOpenForPublic(active) ? (
                     <Link
                       href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}`}
                       className={`w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm transition-all hover:scale-[1.01] active:scale-95 cursor-pointer ${theme.btn}`}

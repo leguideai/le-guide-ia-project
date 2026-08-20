@@ -1,84 +1,187 @@
 "use client"
 
+import { Suspense } from "react"
 import Link from "next/link"
-import { CheckCircle2, ArrowRight, Mail, ShieldCheck, LayoutDashboard } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { CheckCircle2, ArrowRight, Mail, ShieldCheck, LayoutDashboard, Clock, MessageCircle } from "lucide-react"
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
+  const searchParams = useSearchParams()
+  const method = searchParams.get("method") || "mobile_direct"
+  const ref = searchParams.get("ref") || ""
+
+  const isMobileDirect = method.startsWith("mobile_direct") || method === "mobile_direct"
+
   return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 relative overflow-hidden">
       <div className="w-full max-w-lg space-y-6">
         
+        {/* Header Logo */}
         <div className="flex items-center justify-center gap-2 mb-4">
           <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
           <span className="font-heading text-lg font-extrabold tracking-tight">LE GUIDE <span className="text-primary">IA</span></span>
         </div>
 
-        <div className="rounded-3xl border border-primary/30 bg-card/70 p-8 shadow-2xl backdrop-blur-xl text-center space-y-6">
+        <div className="rounded-3xl border border-primary/30 bg-card/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl text-center space-y-6">
           
-          <div className="inline-flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shadow-inner">
-            <CheckCircle2 className="size-9" />
-          </div>
+          {isMobileDirect ? (
+            /* MOBILE MONEY DIRECT : VERIFICATION SOUS 24H */
+            <>
+              <div className="inline-flex size-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-inner">
+                <Clock className="size-9 animate-pulse" />
+              </div>
 
-          <div className="space-y-2">
-            <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
-              Félicitations & Bienvenue !
-            </h1>
-            <p className="text-xs md:text-sm text-primary font-semibold">
-              Votre inscription au Bootcamp a été validée avec succès.
-            </p>
-          </div>
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[11px] font-black uppercase text-amber-400">
+                  <Clock className="size-3" />
+                  <span>Vérification administrative sous 24h</span>
+                </div>
+                <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
+                  Demande d'Inscription Reçue !
+                </h1>
+                <p className="text-xs md:text-sm text-amber-400 font-semibold">
+                  Votre transfert Mobile Money a bien été soumis à notre équipe.
+                </p>
+              </div>
 
-          <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
-            Votre compte apprenant et l'accès à votre formation ont été générés automatiquement. Vous allez recevoir un email de confirmation contenant vos identifiants d'accès.
-          </p>
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
+                Nous avons bien enregistré votre déclaration et votre justificatif de paiement. Un email de confirmation récapitulatif vous a été envoyé. Notre équipe procède actuellement à la vérification de la transaction pour <strong className="text-foreground">valider vos accès sous moins de 24h</strong>.
+              </p>
 
-          <div className="rounded-2xl bg-secondary/50 p-4 border border-border/60 text-left space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-              <Mail className="size-4 text-primary" />
-              <span>Prochaines étapes :</span>
-            </div>
-            <ul className="space-y-2 text-xs text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">1.</span>
-                <span>Vérifiez votre boîte de réception email (et le dossier Spams si nécessaire).</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">2.</span>
-                <span>Connectez-vous à votre Espace Membre pour consulter le programme et les replays.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">3.</span>
-                <span>Rejoignez le groupe WhatsApp privé via le lien dans votre tableau de bord.</span>
-              </li>
-            </ul>
-          </div>
+              {ref && (
+                <div className="p-2.5 rounded-xl bg-secondary/60 border border-border/80 text-xs font-mono text-foreground flex items-center justify-center gap-2">
+                  <span className="text-muted-foreground">Référence déclarée :</span>
+                  <strong className="text-primary font-bold">{ref}</strong>
+                </div>
+              )}
 
-          <div className="pt-2 space-y-3">
-            <Link
-              href="/dashboard"
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-xl transition-all cursor-pointer"
-            >
-              <LayoutDashboard className="size-4" />
-              <span>Accéder à mon Espace Membre</span>
-              <ArrowRight className="size-4" />
-            </Link>
+              <div className="rounded-2xl bg-secondary/50 p-4 border border-border/60 text-left space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <Mail className="size-4 text-primary" />
+                  <span>Prochaines étapes :</span>
+                </div>
+                <ul className="space-y-2 text-xs text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">1.</span>
+                    <span>Un <strong>email récapitulatif</strong> de votre demande vous a été transmis (vérifiez aussi vos spams).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">2.</span>
+                    <span>Nous vérifions la réception de votre virement Mobile Money sous <strong>moins de 24h ouvrées</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">3.</span>
+                    <span>Dès validation par l'administrateur, vous recevrez un <strong>second email contenant vos identifiants d'accès officiels</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">4.</span>
+                    <span>Votre formation apparaît avec le badge <em>« En cours de vérification »</em> dans votre Espace Membre.</span>
+                  </li>
+                </ul>
+              </div>
 
-            <Link
-              href="/"
-              className="inline-block text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Retourner à l'accueil
-            </Link>
-          </div>
+              <div className="pt-2 space-y-2.5">
+                <Link
+                  href="/dashboard"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-xl transition-all cursor-pointer"
+                >
+                  <LayoutDashboard className="size-4" />
+                  <span>Suivre sur mon Espace Membre</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+
+                <a
+                  href={`https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens d'effectuer mon inscription Mobile Money avec la référence ${ref || "soumise"}. Pouvez-vous vérifier ma transaction ? Merci !`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold py-2.5 text-xs transition-all shadow-md active:scale-95"
+                >
+                  <MessageCircle className="size-4" />
+                  <span>Accélérer la validation sur WhatsApp</span>
+                </a>
+              </div>
+            </>
+          ) : (
+            /* STRIPE / CARTE : ACCÈS IMMÉDIAT */
+            <>
+              <div className="inline-flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-inner">
+                <CheckCircle2 className="size-9" />
+              </div>
+
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-black uppercase text-emerald-400">
+                  <CheckCircle2 className="size-3" />
+                  <span>Accès Débloqué</span>
+                </div>
+                <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
+                  Félicitations &amp; Bienvenue !
+                </h1>
+                <p className="text-xs md:text-sm text-emerald-400 font-semibold">
+                  Votre paiement par carte a été validé avec succès.
+                </p>
+              </div>
+
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
+                Votre compte apprenant et l'accès à votre formation ont été générés automatiquement. Vous allez recevoir un email de confirmation contenant vos identifiants d'accès.
+              </p>
+
+              <div className="rounded-2xl bg-secondary/50 p-4 border border-border/60 text-left space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <Mail className="size-4 text-primary" />
+                  <span>Prochaines étapes :</span>
+                </div>
+                <ul className="space-y-2 text-xs text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">1.</span>
+                    <span>Vérifiez votre boîte de réception email (et le dossier Spams si nécessaire).</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">2.</span>
+                    <span>Connectez-vous à votre Espace Membre pour consulter le programme et les replays.</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary font-bold">3.</span>
+                    <span>Rejoignez le groupe WhatsApp privé via le lien dans votre tableau de bord.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-2 space-y-3">
+                <Link
+                  href="/dashboard"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-xl transition-all cursor-pointer"
+                >
+                  <LayoutDashboard className="size-4" />
+                  <span>Accéder à mon Espace Membre</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            </>
+          )}
 
           <div className="pt-4 border-t border-border/40 flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
             <ShieldCheck className="size-3.5 text-primary" />
-            <span>Paiement sécurisé & Facture transmise par email</span>
+            <span>Paiement sécurisé · Suivi des inscriptions Le Guide IA</span>
           </div>
 
         </div>
 
       </div>
     </main>
+  )
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-xs text-muted-foreground flex items-center gap-2">
+          <Clock className="size-4 animate-spin text-primary" />
+          <span>Chargement de la confirmation...</span>
+        </div>
+      </main>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }

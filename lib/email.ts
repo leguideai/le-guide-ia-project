@@ -323,3 +323,159 @@ export async function sendManualEnrollmentEmail(params: ManualEnrollmentEmailPar
     return { success: false, error }
   }
 }
+
+export interface AdminNewEnrollmentParams {
+  fullName: string
+  email: string
+  whatsapp?: string
+  country?: string
+  courseTitle: string
+  courseSlug?: string
+  amount?: number | string
+  paymentMethod?: string
+  transactionRef?: string
+  receiptUrl?: string | null
+}
+
+export async function sendAdminNewEnrollmentNotification(params: AdminNewEnrollmentParams) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping admin notification: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const {
+      fullName,
+      email,
+      whatsapp,
+      country,
+      courseTitle,
+      amount = "49 000 FCFA",
+      paymentMethod = "Mobile Money Direct",
+      transactionRef = "Non spécifiée",
+      receiptUrl
+    } = params
+
+    const adminEmails = [
+      process.env.ADMIN_NOTIFICATION_EMAIL,
+      process.env.ADMIN_EMAIL,
+      'alfred@leguideai.com',
+      'contact@leguideai.com'
+    ].filter(Boolean) as string[]
+
+    const targetAdmins = Array.from(new Set(adminEmails))
+    const cleanPhone = (whatsapp || '').replace(/[^0-9]/g, '')
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leguideai.com'
+    const adminUrl = `${siteUrl}/admin`
+    const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
+
+    const textContent = `🚨 NOUVELLE INSCRIPTION BOOTCAMP À VALIDER !\n\nApprenant : ${fullName}\nEmail : ${email}\nWhatsApp : ${whatsapp || 'N/A'}\nPays : ${country || 'N/A'}\nFormation : ${courseTitle}\nMontant déclaré : ${formattedAmount}\nMéthode : ${paymentMethod}\nRéférence : ${transactionRef}\nPreuve : ${receiptUrl || 'Aucune capture'}\n\nAccédez au portail admin pour valider en 1 clic : ${adminUrl}`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: targetAdmins,
+      replyTo: email,
+      subject: `🚨 [Nouveau Paiement à Valider] ${fullName} — ${courseTitle}`,
+      text: textContent,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Notification Administrateur</title>
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0f19; color: #e2e8f0; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; }
+            .header { background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); padding: 28px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; }
+            .header p { margin: 4px 0 0; font-size: 13px; color: #fee2e2; }
+            .content { padding: 28px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+            .badge { display: inline-block; background-color: #fef3c7; color: #92400e; font-weight: 800; font-size: 11px; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; margin-bottom: 16px; }
+            .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; background-color: #1f2937; border-radius: 10px; overflow: hidden; }
+            .info-table td { padding: 12px 16px; border-bottom: 1px solid #374151; font-size: 13px; }
+            .info-table td.label { color: #9ca3af; font-weight: 600; width: 35%; }
+            .info-table td.value { color: #f9fafb; font-weight: 700; }
+            .receipt-box { background-color: #1f2937; border: 1px dashed #4b5563; border-radius: 10px; padding: 14px; text-align: center; margin: 16px 0; }
+            .cta-admin { display: block; background: #2563eb; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 24px; border-radius: 10px; text-align: center; font-size: 14px; margin: 24px 0 12px; }
+            .cta-wa { display: block; background: #16a34a; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; text-align: center; font-size: 13px; }
+            .footer { background-color: #0b0f19; padding: 20px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #1f2937; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>LE GUIDE IA · Administration</h1>
+              <p>Nouvelle demande d'inscription et paiement reçus</p>
+            </div>
+            <div class="content">
+              <div class="badge">⏳ En attente de votre validation (Mobile Money)</div>
+              <p style="margin-top: 0;">Un participant vient d'effectuer une déclaration de paiement pour le Bootcamp suivant :</p>
+              <h2 style="color: #38bdf8; font-size: 18px; margin: 0 0 16px;">${courseTitle}</h2>
+
+              <table class="info-table">
+                <tr>
+                  <td class="label">Apprenant</td>
+                  <td class="value">${fullName}</td>
+                </tr>
+                <tr>
+                  <td class="label">Email</td>
+                  <td class="value"><a href="mailto:${email}" style="color: #38bdf8; text-decoration: none;">${email}</a></td>
+                </tr>
+                <tr>
+                  <td class="label">WhatsApp</td>
+                  <td class="value">${whatsapp || 'Non renseigné'} ${cleanPhone ? `(<a href="https://wa.me/${cleanPhone}" style="color: #4ade80;">Contacter</a>)` : ''}</td>
+                </tr>
+                <tr>
+                  <td class="label">Pays</td>
+                  <td class="value">${country || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td class="label">Montant</td>
+                  <td class="value" style="color: #4ade80;">${formattedAmount}</td>
+                </tr>
+                <tr>
+                  <td class="label">Moyen de paiement</td>
+                  <td class="value">${paymentMethod}</td>
+                </tr>
+                <tr>
+                  <td class="label">Référence déclarée</td>
+                  <td class="value" style="font-family: monospace;">${transactionRef}</td>
+                </tr>
+              </table>
+
+              ${receiptUrl ? `
+                <div class="receipt-box">
+                  <span style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 8px;">📸 Preuve de paiement jointe :</span>
+                  <a href="${receiptUrl}" target="_blank" style="color: #38bdf8; font-weight: bold; text-decoration: underline;">
+                    Voir la capture d'écran / Reçu de virement
+                  </a>
+                </div>
+              ` : ''}
+
+              <a href="${adminUrl}" class="cta-admin">
+                Accéder à l'Administration &amp; Valider l'accès en 1-clic
+              </a>
+
+              ${cleanPhone ? `
+                <a href="https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Bonjour ${fullName}, j'ai bien reçu votre demande d'inscription au Bootcamp ${courseTitle}. Je procède à la validation de votre accès. Bienvenue !`)}" class="cta-wa">
+                  Écrire directement à l'apprenant sur WhatsApp
+                </a>
+              ` : ''}
+            </div>
+            <div class="footer">
+              Système de Notification Automatique · LE GUIDE IA
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending admin enrollment notification email:', error)
+    return { success: false, error }
+  }
+}
+
