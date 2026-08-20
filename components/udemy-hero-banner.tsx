@@ -7,6 +7,8 @@ import { ArrowRight, Sparkles } from "lucide-react"
 
 import { supabase } from "@/lib/supabase"
 
+import { isCourseOpenForPublic } from "@/lib/courses-visibility"
+
 export function UdemyHeroBanner() {
   const [badge, setBadge] = useState("CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL")
   const [title, setTitle] = useState("Maîtrisez l'IA. Transformez votre carrière et votre business.")
@@ -25,10 +27,10 @@ export function UdemyHeroBanner() {
           .from("courses")
           .select("*")
           .order("sequence_order", { ascending: true })
-          .limit(1)
 
         if (coursesData && coursesData.length > 0) {
-          const c = coursesData[0]
+          const openCourses = coursesData.filter(isCourseOpenForPublic)
+          const c = openCourses[0] || coursesData[0]
           if (c.thumbnail || c.poster) setPosterUrl(c.thumbnail || c.poster)
           if (c.dates) setDates(c.dates)
           if (c.pdf_url) setProgrammeUrl(c.pdf_url)

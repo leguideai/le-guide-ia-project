@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { GraduationCap, UserCheck, Gift, ArrowRight, Calendar, CheckCircle2, Sparkles, Download, Clock } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { isCourseOpenForPublic } from "@/lib/courses-visibility"
 import { Select } from "@base-ui/react"
 
 const MONTHS_FR = [
@@ -128,7 +129,7 @@ export function UdemySkillPathways() {
     loadCourses()
   }, [])
 
-  const pathways = dbCourses.map(c => {
+  const pathways = dbCourses.filter(isCourseOpenForPublic).map(c => {
     const datesText = c.dates
       ? c.dates
       : (c.start_date && c.end_date)

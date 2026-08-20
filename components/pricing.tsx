@@ -5,35 +5,75 @@ import Link from "next/link"
 import { motion } from "motion/react"
 import { Check, Sparkles, ArrowRight, Clock } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { isCourseOpenForPublic } from "@/lib/courses-visibility"
 
 interface PricingProps {
   selectedCourseId?: string
+  courses?: any[]
+  activeCourse?: any
+  onSelectCourse?: (id: string) => void
 }
 
-export function Pricing({ selectedCourseId }: PricingProps) {
-  const [dbCourses, setDbCourses] = useState<any[]>([])
+export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCourse, onSelectCourse }: PricingProps) {
+  const [dbCourses, setDbCourses] = useState<any[]>(courses || [])
   const [activeId, setActiveId] = useState<string>(selectedCourseId || "")
 
   useEffect(() => {
+    if (courses && courses.length > 0) {
+      setDbCourses(courses)
+    }
+  }, [courses])
+
+  useEffect(() => {
     async function loadCourses() {
-      let { data, error } = await supabase.from("courses").select("*").order("sequence_order", { ascending: true }).order("created_at", { ascending: true })
-      if (error || !data || data.length === 0) {
-        const res = await supabase.from("courses").select("*").order("created_at", { ascending: true })
-        data = res.data
-      }
-      if (data && data.length > 0) {
-        setDbCourses(data)
-        if (!activeId) setActiveId(data[0].id)
-      }
+      if (courses && courses.length > 0) return
+
+      try {
+        const res = await fetch("/api/admin/courses")
+        const data = await res.json()
+        if (data?.courses && data.courses.length > 0) {
+          const publicOnly = data.courses.filter(isCourseOpenForPublic)
+          setDbCourses(publicOnly.length > 0 ? publicOnly : data.courses)
+          if (!activeId) setActiveId(publicOnly[0]?.id || data.courses[0]?.id)
+          return
+        }
+      } catch (e) {}
+
+      try {
+        let { data, error } = await supabase.from("courses").select("*").order("sequence_order", { ascending: true }).order("created_at", { ascending: true })
+        if (error || !data || data.length === 0) {
+          const res = await supabase.from("courses").select("*").order("created_at", { ascending: true })
+          data = res.data
+        }
+        if (data && data.length > 0) {
+          const publicCourses = data.filter(isCourseOpenForPublic)
+          setDbCourses(publicCourses.length > 0 ? publicCourses : data)
+          if (!activeId) setActiveId(publicCourses[0]?.id || data[0]?.id)
+        }
+      } catch (e) {}
     }
     loadCourses()
   }, [])
 
   useEffect(() => {
-    if (selectedCourseId) setActiveId(selectedCourseId)
+    if (selectedCourseId) {
+      setActiveId(selectedCourseId)
+    }
   }, [selectedCourseId])
 
-  const activeCourse = dbCourses.find(c => c.id === activeId || c.slug === activeId) || dbCourses[0]
+  const allCourses = (courses && courses.length > 0) ? courses : dbCourses
+  const publicCourses = allCourses.filter(isCourseOpenForPublic)
+  const displayCourses = publicCourses.length > 0 ? publicCourses : allCourses
+
+  const activeCourse = propActiveCourse || displayCourses.find(c => 
+    c.id === activeId || 
+    c.slug === activeId || 
+    c.id === selectedCourseId || 
+    c.slug === selectedCourseId ||
+    (selectedCourseId && String(c.slug || "").toLowerCase().includes(String(selectedCourseId).toLowerCase())) ||
+    (selectedCourseId && String(selectedCourseId).toLowerCase().includes(String(c.slug || "").toLowerCase())) ||
+    (activeId && String(c.slug || "").toLowerCase().includes(String(activeId).toLowerCase()))
+  ) || displayCourses[0]
 
   function formatPrice(val: any, currency = "FCFA") {
     if (val === undefined || val === null || val === "") return ""
@@ -59,52 +99,48 @@ export function Pricing({ selectedCourseId }: PricingProps) {
     return String(val || "")
   }
 
-  const current = {
-    title: activeCourse?.title || "BOOTCAMP IA",
-    subtitle: activeCourse?.description || activeCourse?.subtitle || "",
-    founderPrice: formatPrice(activeCourse?.price, activeCourse?.currency),
-    founderApprox: "",
-    standardPrice: formatStandardPrice(activeCourse?.price, activeCourse?.original_price, activeCourse?.currency),
-    standardApprox: "",
-    expireText: activeCourse?.badge || "",
-    targetDateIso: "",
-    standardDateText: activeCourse?.dates ? `Session : ${activeCourse.dates}` : "",
-    checkoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT") ? "/register-account" : `/checkout/${activeCourse?.slug || activeCourse?.id}`,
-    features: (activeCourse?.features && Array.isArray(activeCourse.features)) ? activeCourse.features : []
-  }
-
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-
-  useEffect(() => {
-    if (!current.targetDateIso) return
-
-    const updateTimer = () => {
-      const targetDate = new Date(current.targetDateIso).getTime()
-      const now = new Date().getTime()
-      const difference = targetDate - now
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000)
-        setTimeLeft({ days, hours, minutes, seconds })
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-      }
-    }
-
-    updateTimer()
-    const timer = setInterval(updateTimer, 1000)
-    return () => clearInterval(timer)
-  }, [activeId, current.targetDateIso])
-
   const isBusiness = Number(activeCourse?.price) >= 140000 || 
     String(activeCourse?.slug || "").includes("business") || 
     String(activeCourse?.slug || "").includes("exec") || 
     String(activeCourse?.title || "").toLowerCase().includes("business") ||
     String(activeCourse?.badge || "").toLowerCase().includes("vip") ||
     String(activeCourse?.badge || "").toLowerCase().includes("manager")
+
+  const defaultBusinessFeatures = [
+    "Business Model Canvas IA et structuration de modèle économique",
+    "Génération de 100+ prompts stratégiques Business & Vente",
+    "Workflows d'automatisation de tâches & prospection (Make / n8n)",
+    "Stratégie de contenu & Plan éditorial 90 jours prêt à publier",
+    "Accompagnement VIP Exécutif pour Dirigeants & Certificat Officiel"
+  ]
+
+  const defaultCarriereFeatures = [
+    "6 sessions en direct live interactives avec Alfred Dah",
+    "Replays vidéo HD téléchargeables sous 12h",
+    "Exercices pratiques & Ateliers concrets en direct",
+    "Groupe d'entraide & accompagnement personnalisé",
+    "Certificat officiel Le Guide IA individuel et vérifiable"
+  ]
+
+  const activeFeatures = (activeCourse?.features && Array.isArray(activeCourse.features) && activeCourse.features.length > 0)
+    ? activeCourse.features
+    : isBusiness
+    ? defaultBusinessFeatures
+    : defaultCarriereFeatures
+
+  const current = {
+    title: activeCourse?.title || (isBusiness ? "BOOTCAMP IA & BUSINESS" : "BOOTCAMP IA & CARRIÈRE"),
+    subtitle: activeCourse?.description || activeCourse?.subtitle || "",
+    founderPrice: formatPrice(activeCourse?.price || (isBusiness ? 149000 : 99000), activeCourse?.currency),
+    founderApprox: "",
+    standardPrice: formatStandardPrice(activeCourse?.price || (isBusiness ? 149000 : 99000), activeCourse?.original_price || (isBusiness ? "199 000 FCFA" : "149 000 FCFA"), activeCourse?.currency),
+    standardApprox: "",
+    expireText: activeCourse?.badge || "",
+    targetDateIso: "",
+    standardDateText: activeCourse?.dates ? `Session : ${activeCourse.dates}` : isBusiness ? "Session : 14 au 19 Septembre 2026" : "Session : 31 Août au 6 Septembre 2026",
+    checkoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT") ? "/register-account" : `/checkout/${activeCourse?.slug || activeCourse?.id || (isBusiness ? "bootcamp-business-exec" : "bootcamp-pro-2")}`,
+    features: activeFeatures
+  }
 
   const badgeText = isBusiness 
     ? "EXCLUSIVE MANAGERS" 
@@ -137,10 +173,42 @@ export function Pricing({ selectedCourseId }: PricingProps) {
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
         {/* Left-Aligned Header */}
-        <div className="space-y-3 text-left">
-          <span className={`inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest px-3.5 py-1.5 rounded-full border ${isBusiness ? "text-[#ECC86B] bg-[#D4AF37]/10 border-[#D4AF37]/30" : "text-primary bg-primary/10 border-primary/20"}`}>
-            TARIFS OFFICIELS · {current.title.toUpperCase()}
-          </span>
+        <div className="space-y-4 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <span className={`inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest px-3.5 py-1.5 rounded-full border ${isBusiness ? "text-[#ECC86B] bg-[#D4AF37]/10 border-[#D4AF37]/30" : "text-primary bg-primary/10 border-primary/20"}`}>
+              TARIFS OFFICIELS · {current.title.toUpperCase()}
+            </span>
+
+            {/* Formula switcher buttons if multiple courses exist */}
+            {displayCourses.length > 1 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {displayCourses.map(c => {
+                  const isCurActive = (activeCourse?.id === c.id || activeCourse?.slug === c.slug)
+                  const isCurBusiness = Number(c.price) >= 140000 || String(c.slug || "").includes("business") || String(c.title || "").toLowerCase().includes("business")
+                  return (
+                    <button
+                      key={c.id || c.slug}
+                      onClick={() => {
+                        const targetId = c.id || c.slug
+                        setActiveId(targetId)
+                        if (onSelectCourse) onSelectCourse(targetId)
+                      }}
+                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer border shrink-0 ${
+                        isCurActive
+                          ? isCurBusiness
+                            ? "bg-[#D4AF37] text-slate-950 border-[#F3E5AB] font-black shadow-lg shadow-[#D4AF37]/30 scale-[1.02]"
+                            : "bg-blue-600 text-white border-blue-400 font-bold shadow-lg shadow-blue-500/30 scale-[1.02]"
+                          : "bg-card/60 border-border/70 text-muted-foreground hover:text-foreground hover:bg-card font-semibold"
+                      }`}
+                    >
+                      <span>{c.title}</span>
+                      <span className="opacity-80">({c.price > 0 ? `${Number(c.price).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT"})</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
       
           <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
             Profitez du tarif officiel garanti avec accès complet aux sessions en direct, aux replays HD et au certificat d'accomplissement.

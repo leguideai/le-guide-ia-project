@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Star, Clock, Award, ArrowRight, Zap, CheckCircle2, ShieldCheck, User, Users, PlayCircle, Sparkles, Lock } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { isCourseOpenForPublic } from "@/lib/courses-visibility"
 
 interface CourseCatalogProps {
   activeCategory: string
@@ -24,7 +25,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
     loadCourses()
   }, [])
 
-  const courses = dbCourses.map(c => ({
+  const courses = dbCourses.filter(isCourseOpenForPublic).map(c => ({
     id: c.slug || c.id,
     category: c.price === 0 ? "free" : c.price > 100000 ? "business" : "pro",
     title: c.title,

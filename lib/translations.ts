@@ -195,7 +195,7 @@ export const translations: Record<string, any> = {
         countriesLabel: "représentés parmi les participants",
         followers: "8 000",
         followersLabel: "abonnés LinkedIn (à jour)",
-        target: "500+",
+        target: "600+",
         targetLabel: "professionnels formés"
       }
     },
@@ -528,7 +528,7 @@ export const translations: Record<string, any> = {
         countriesLabel: "represented among participants",
         followers: "6,326",
         followersLabel: "LinkedIn followers (up to date)",
-        target: "500+",
+        target: "600+",
         targetLabel: "professionals trained"
       }
     },

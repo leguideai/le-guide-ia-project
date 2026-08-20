@@ -12,6 +12,7 @@ import { GridBackground } from "@/components/grid-background"
 import { GraduationCap, UserCheck, Gift, ArrowRight, Sparkles, CheckCircle2, Calendar, Globe, Download } from "lucide-react"
 
 import { supabase } from "@/lib/supabase"
+import { isCourseOpenForPublic, getCourseVisibilityStatus } from "@/lib/courses-visibility"
 
 export default function BootcampPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
@@ -36,7 +37,8 @@ export default function BootcampPage() {
               return
             }
           }
-          setSelectedCourseId(data[0].id)
+          const publicOnly = data.filter(isCourseOpenForPublic)
+          setSelectedCourseId((publicOnly[0] || data[0]).id)
           return
         }
       } catch (e) {}
@@ -55,7 +57,8 @@ export default function BootcampPage() {
               return
             }
           }
-          setSelectedCourseId(data.courses[0].id)
+          const publicOnly = data.courses.filter(isCourseOpenForPublic)
+          setSelectedCourseId((publicOnly[0] || data.courses[0]).id)
         }
       } catch (e) {}
     }
@@ -138,7 +141,7 @@ export default function BootcampPage() {
 
           {/* Dynamic Formula Selector Tabs from Supabase */}
           <div className="flex items-center justify-start gap-2 border-b border-border/70 pb-3 overflow-x-auto no-scrollbar">
-            {dbCourses.map((c) => {
+            {dbCourses.filter(isCourseOpenForPublic).map((c) => {
               const isCurActive = active?.id === c.id
               const isCurBusiness = isBusinessCourse(c)
               return (
@@ -176,6 +179,16 @@ export default function BootcampPage() {
                   
                   {/* Header Row */}
                   <div className="space-y-4">
+                    {/* Expired / Closed Notice if viewed directly */}
+                    {!isCourseOpenForPublic(active) && (
+                      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2.5">
+                        <Sparkles className="size-4 shrink-0 text-amber-400" />
+                        <div>
+                          <strong>Session clôturée :</strong> Les inscriptions pour cette cohorte sont terminées. Les membres inscrits peuvent accéder aux replays et ressources directement sur leur espace membre.
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-5">
                       <div className="space-y-1 text-left">
                   
@@ -227,13 +240,23 @@ export default function BootcampPage() {
 
                 {/* CTA Action Buttons Row (Spacious & Clean Layout) */}
                 <div className="pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center gap-3">
-                  <Link
-                    href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}`}
-                    className={`w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm transition-all hover:scale-[1.01] active:scale-95 cursor-pointer ${theme.btn}`}
-                  >
-                    <span>Réserver ma place maintenant</span>
-                    <ArrowRight className="size-4" />
-                  </Link>
+                  {isCourseOpenForPublic(active) ? (
+                    <Link
+                      href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}`}
+                      className={`w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm transition-all hover:scale-[1.01] active:scale-95 cursor-pointer ${theme.btn}`}
+                    >
+                      <span>Réserver ma place maintenant</span>
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/dashboard"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-bold bg-primary text-slate-950 hover:opacity-90 transition-all cursor-pointer shadow-lg"
+                    >
+                      <span>Accéder à l'Espace Membre (Replays)</span>
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  )}
 
                   <a
                     href={active?.pdf_url || active?.programme_url || "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"}
@@ -269,7 +292,12 @@ export default function BootcampPage() {
       </section>
 
       {/* Grille Tarifs Complète */}
-      <Pricing selectedCourseId={selectedCourseId} />
+      <Pricing 
+        activeCourse={active}
+        selectedCourseId={selectedCourseId} 
+        courses={dbCourses} 
+        onSelectCourse={(id) => setSelectedCourseId(id)} 
+      />
 
       {/* Témoignages des alumni */}
       <Testimonials />
