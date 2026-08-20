@@ -28,13 +28,12 @@ export async function POST(req: Request) {
       const session = await stripeRes.json()
 
       if (session.payment_status === "paid" || session.status === "complete") {
-        const result = await fulfillStripeCheckout(session)
+        const result: any = await fulfillStripeCheckout(session)
         return NextResponse.json({
           success: true,
           status: "confirmed",
-          courseTitle: result.courseTitle,
-          email: result.email,
-          isNewAccount: result.isNewAccount
+          courseTitle: result?.courseTitle,
+          email: result?.email
         })
       } else {
         return NextResponse.json({
