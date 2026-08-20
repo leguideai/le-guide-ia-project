@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import { UdemyHeader } from "@/components/udemy-header"
 import { supabase } from "@/lib/supabase"
-import { ArrowLeft, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check } from "lucide-react"
+import { ArrowLeft, ArrowRight, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check } from "lucide-react"
 
 interface PageProps {
   params: Promise<{ courseSlug: string }>
