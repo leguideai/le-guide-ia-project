@@ -195,7 +195,7 @@ export const translations: Record<string, any> = {
         countriesLabel: "représentés parmi les participants",
         followers: "8 000",
         followersLabel: "abonnés LinkedIn (à jour)",
-        target: "500+",
+        target: "600+",
         targetLabel: "professionnels formés"
       }
     },
@@ -339,7 +339,7 @@ export const translations: Record<string, any> = {
         countriesLabel: "représentés parmi les participants",
         followers: "8 000",
         followersLabel: "abonnés LinkedIn (à jour)",
-        target: "500+",
+        target: "600+",
         targetLabel: "professionnels formés"
       }
     },
@@ -597,11 +597,11 @@ export const translations: Record<string, any> = {
       desc2: "My goal is simple: to make AI practical, accessible, and useful so that you work better, boost productivity, and build more career opportunities.",
       quote: "Your professional future no longer depends only on your skills. It also depends on your ability to work with AI.",
       stats: {
-        countries: "21+ countries",
+        countries: "26+ countries",
         countriesLabel: "represented among participants",
         followers: "6,326",
         followersLabel: "LinkedIn followers (up to date)",
-        target: "500+",
+        target: "600+",
         targetLabel: "professionals trained"
       }
     },
