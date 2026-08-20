@@ -72,7 +72,7 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: fromEmail,
           to: [emailClean],
-          reply_to: "alfred@leguideai.com",
+          replyTo: "alfred@leguideai.com",
           subject: "⚡ Bienvenue dans la Newsletter Officielle — LE GUIDE IA",
           text: `Bonjour et bienvenue !\n\nMerci de vous être inscrit(e) à la newsletter LE GUIDE IA. Vous recevrez nos veilles IA exclusives, prompts métiers et invitations à nos sessions live.\n\nÀ très vite,\nAlfred Dah · LE GUIDE IA\nhttps://leguideai.com`,
           html: `

@@ -624,6 +624,9 @@ export default function DashboardPage() {
 
     // Default 7-day schedule for both bootcamps if DB sessions not yet populated
     if (evs.length === 0) {
+      const carriereCourse = dbCourses.find((c: any) => c.slug === "bootcamp-pro-2" || c.id === "bootcamp-pro-2")
+      const businessCourse = dbCourses.find((c: any) => c.slug === "bootcamp-business-exec" || c.id === "bootcamp-business-exec")
+
       const defaultScheduleCarriere = [
         { day: "2026-08-31", num: 1, title: "Session 1 : Les Fondations de l'IA & Prompt Engineering Avancé" },
         { day: "2026-09-01", num: 2, title: "Session 2 : Maîtrise de Claude 3.5 Sonnet & ChatGPT 4o" },
@@ -639,7 +642,7 @@ export default function DashboardPage() {
           id: `carriere-s${s.num}`,
           courseId: "bootcamp-pro-2",
           courseSlug: "bootcamp-pro-2",
-          courseTitle: "Bootcamp IA & Carrière",
+          courseTitle: carriereCourse?.title || "Bootcamp IA & Carrière",
           track: "carriere",
           sessionNumber: s.num,
           title: s.title,
@@ -647,9 +650,9 @@ export default function DashboardPage() {
           date: s.day,
           startTime: "19:00",
           endTime: "21:00",
-          instructor: "Alfred Dah (Auditeur CISA)",
-          meetUrl: "https://meet.google.com",
-          whatsappUrl: "https://wa.me/22605050577",
+          instructor: carriereCourse?.instructor || "Alfred Dah (Auditeur CISA)",
+          meetUrl: carriereCourse?.live_meet_url || "https://meet.google.com",
+          whatsappUrl: carriereCourse?.whatsapp_url || "https://wa.me/22605050577",
           status: "upcoming"
         })
       })
@@ -669,7 +672,7 @@ export default function DashboardPage() {
           id: `business-s${s.num}`,
           courseId: "bootcamp-business-exec",
           courseSlug: "bootcamp-business-exec",
-          courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
+          courseTitle: businessCourse?.title || "Bootcamp IA & Business (Exclusive Managers)",
           track: "business",
           sessionNumber: s.num,
           title: s.title,
@@ -677,9 +680,9 @@ export default function DashboardPage() {
           date: s.day,
           startTime: "19:00",
           endTime: "21:00",
-          instructor: "Alfred Dah (Auditeur CISA)",
-          meetUrl: "https://meet.google.com",
-          whatsappUrl: "https://wa.me/22605050577",
+          instructor: businessCourse?.instructor || "Alfred Dah (Auditeur CISA)",
+          meetUrl: businessCourse?.live_meet_url || "https://meet.google.com",
+          whatsappUrl: businessCourse?.whatsapp_url || "https://wa.me/22605050577",
           status: "upcoming"
         })
       })
@@ -941,8 +944,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
+      <div className="min-h-screen bg-[#F4F6F8] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-sm font-semibold text-slate-600">
           <Sparkles className="size-5 text-primary animate-spin" />
           <span>Chargement de votre Espace Membre...</span>
         </div>
@@ -952,29 +955,29 @@ export default function DashboardPage() {
 
   if (isEmailUnverified) {
     return (
-      <main className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
+      <main className="min-h-screen bg-[#F4F6F8] text-slate-800 flex items-center justify-center p-4 relative overflow-hidden">
         <div className="w-full max-w-md space-y-6 text-center">
           <div className="flex items-center justify-center gap-2">
             <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
-            <span className="font-heading text-lg font-black tracking-tight text-white">
+            <span className="font-heading text-lg font-black tracking-tight text-slate-800">
               LE GUIDE <span className="text-primary">IA</span>
             </span>
           </div>
 
-          <div className="rounded-3xl border border-amber-500/30 bg-slate-900/80 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl space-y-5">
-            <div className="size-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+          <div className="rounded-3xl border border-amber-200/90 bg-white p-6 sm:p-8 shadow-sm space-y-5">
+            <div className="size-14 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center mx-auto text-amber-700">
               <Mail className="size-7 animate-pulse" />
             </div>
 
             <div className="space-y-2">
-              <h2 className="font-heading text-xl font-bold text-white">Vérification de votre Email requise</h2>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Un lien d'activation a été envoyé à <strong className="text-primary font-bold">{user?.email}</strong>. Veuillez cliquer sur ce lien dans votre boîte de réception pour débloquer votre accès à l'Espace Membre.
+              <h2 className="font-heading text-xl font-bold text-slate-800">Vérification de votre Email requise</h2>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Un lien d'activation a été envoyé à <strong className="text-primary font-semibold">{user?.email}</strong>. Veuillez cliquer sur ce lien dans votre boîte de réception pour débloquer votre accès à l'Espace Membre.
               </p>
             </div>
 
             {resendStatus && (
-              <div className={`p-3 rounded-xl text-xs font-bold ${resendStatus.includes("succès") ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/20"}`}>
+              <div className={`p-3 rounded-xl text-xs font-semibold ${resendStatus.includes("succès") ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-rose-50 text-rose-800 border border-rose-200"}`}>
                 {resendStatus}
               </div>
             )}
@@ -983,7 +986,7 @@ export default function DashboardPage() {
               <button
                 onClick={handleResendVerification}
                 disabled={resendingEmail}
-                className="w-full py-3 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/20"
+                className="w-full py-3 rounded-xl bg-primary text-white font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
                 <RefreshCw className={`size-4 ${resendingEmail ? "animate-spin" : ""}`} />
                 <span>{resendingEmail ? "Envoi en cours..." : "Renvoyer l'email de confirmation"}</span>
@@ -991,14 +994,14 @@ export default function DashboardPage() {
 
               <button
                 onClick={() => window.location.reload()}
-                className="w-full py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-white font-bold text-xs hover:bg-slate-700 transition-all cursor-pointer"
+                className="w-full py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-all cursor-pointer"
               >
                 J'ai déjà validé mon email (Actualiser)
               </button>
 
               <button
                 onClick={handleLogout}
-                className="w-full py-2 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
               >
                 Se déconnecter
               </button>
@@ -1010,12 +1013,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#F4F6F8] text-slate-800 flex flex-col md:flex-row selection:bg-primary/20">
       {/* Mobile Top Header for Espace Membre */}
-      <div className="md:hidden sticky top-0 z-40 bg-slate-950/95 border-b border-border px-4 py-3 flex items-center justify-between backdrop-blur-xl">
+      <div className="md:hidden sticky top-0 z-40 bg-white/95 border-b border-slate-200 px-4 py-3 flex items-center justify-between backdrop-blur-xl shadow-xs">
         <Link href="/" className="flex items-center gap-2">
           <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-7 rounded-lg object-cover" />
-          <span className="font-heading text-sm font-black tracking-tight text-white">
+          <span className="font-heading text-sm font-black tracking-tight text-slate-800">
             LE GUIDE <span className="text-primary">IA</span>
           </span>
         </Link>
@@ -1027,7 +1030,7 @@ export default function DashboardPage() {
           </span>
           <button
             onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 hover:text-white transition-colors"
+            className="p-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors"
             aria-label="Menu Espace Membre"
           >
             {mobileSidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -1037,14 +1040,14 @@ export default function DashboardPage() {
 
       {/* Mobile Navigation Drawer Overlay */}
       {mobileSidebarOpen && (
-        <div className="md:hidden fixed inset-0 top-[57px] z-50 bg-slate-950/98 backdrop-blur-2xl p-5 overflow-y-auto space-y-5 animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className="md:hidden fixed inset-0 top-[57px] z-50 bg-white/98 backdrop-blur-2xl p-5 overflow-y-auto space-y-5 animate-in fade-in slide-in-from-top-4 duration-200 shadow-xl border-b border-slate-200">
           {/* User profile */}
-          <div className="rounded-2xl border border-border/80 bg-secondary/40 p-3.5 flex items-center gap-3">
-            <div className="size-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-sm border border-white/20 shrink-0 shadow-md">
+          <div className="rounded-2xl border border-slate-200 bg-[#F4F6F8] p-3.5 flex items-center gap-3">
+            <div className="size-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm border border-white/20 shrink-0 shadow-xs">
               {(fullName || user?.email || "U").substring(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1 text-left">
-              <p className="text-sm font-bold text-foreground truncate">{fullName || "Membre Apprenant"}</p>
+              <p className="text-sm font-bold text-slate-800 truncate">{fullName || "Membre Apprenant"}</p>
               <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
                 <ShieldCheck className="size-3" /> Espace Membre
               </span>
@@ -1065,8 +1068,8 @@ export default function DashboardPage() {
                   }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -1075,7 +1078,7 @@ export default function DashboardPage() {
                   </div>
                   {item.badge && (
                     <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
-                      isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary border border-primary/20"
+                      isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary border border-primary/20"
                     }`}>
                       {item.badge}
                     </span>
@@ -1086,12 +1089,12 @@ export default function DashboardPage() {
           </nav>
 
           {/* Bottom Actions */}
-          <div className="pt-4 border-t border-border/60 space-y-2">
+          <div className="pt-4 border-t border-slate-200 space-y-2">
             {(profile?.role === "admin" || profile?.role === "super_admin") && (
               <Link
                 href="/admin"
                 onClick={() => setMobileSidebarOpen(false)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black text-slate-950 bg-primary shadow-md"
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold text-white bg-primary shadow-xs"
               >
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="size-4" />
@@ -1103,7 +1106,7 @@ export default function DashboardPage() {
             <Link
               href="/"
               onClick={() => setMobileSidebarOpen(false)}
-              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100"
             >
               <ExternalLink className="size-3.5" />
               <span>Voir le site public</span>
@@ -1113,7 +1116,7 @@ export default function DashboardPage() {
                 setMobileSidebarOpen(false)
                 handleLogout()
               }}
-              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10"
+              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 cursor-pointer"
             >
               <LogOut className="size-3.5" />
               <span>Déconnexion</span>
@@ -1123,24 +1126,24 @@ export default function DashboardPage() {
       )}
 
       {/* Desktop Sidebar Navigation (Fixed full height on desktop) */}
-      <aside className="hidden md:flex w-64 border-r border-border bg-card/40 backdrop-blur-xl p-4 flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto">
+      <aside className="hidden md:flex w-64 border-r border-slate-200/90 bg-white p-4 flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto shadow-xs">
         <div className="space-y-5">
           
           {/* Brand Logo inside Dashboard Sidebar */}
           <Link href="/" className="flex items-center gap-2.5 px-2 py-1 hover:opacity-90 transition-opacity">
             <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
-            <span className="font-heading text-base font-black tracking-tight text-white">
+            <span className="font-heading text-base font-black tracking-tight text-slate-800">
               LE GUIDE <span className="text-primary">IA</span>
             </span>
           </Link>
 
           {/* User Profile Summary Card */}
-          <div className="rounded-2xl border border-border/80 bg-secondary/40 p-3 flex items-center gap-3">
-            <div className="size-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-black text-xs border border-white/20 shrink-0 shadow-md">
+          <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-3 flex items-center gap-3">
+            <div className="size-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs border border-white/20 shrink-0 shadow-xs">
               {(fullName || user?.email || "U").substring(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1 text-left">
-              <p className="text-xs font-bold text-foreground truncate">{fullName || "Membre Apprenant"}</p>
+              <p className="text-xs font-bold text-slate-800 truncate">{fullName || "Membre Apprenant"}</p>
               <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
                 <ShieldCheck className="size-3" /> Espace Membre
               </span>
@@ -1158,8 +1161,8 @@ export default function DashboardPage() {
                   onClick={() => setActiveTab(item.id as TabType)}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1168,7 +1171,7 @@ export default function DashboardPage() {
                   </div>
                   {item.badge && (
                     <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
-                      isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary border border-primary/20"
+                      isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary border border-primary/20"
                     }`}>
                       {item.badge}
                     </span>
@@ -1179,11 +1182,11 @@ export default function DashboardPage() {
           </nav>
         </div>
 
-        <div className="pt-4 border-t border-border/60 space-y-2">
+        <div className="pt-4 border-t border-slate-200 space-y-2">
           {(profile?.role === "admin" || profile?.role === "super_admin") && (
             <Link
               href="/admin"
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-primary hover:opacity-90 shadow-md transition-all"
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:opacity-90 shadow-xs transition-all"
             >
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-4" />
@@ -1194,14 +1197,14 @@ export default function DashboardPage() {
           )}
           <Link
             href="/"
-            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
+            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors"
           >
             <ExternalLink className="size-3.5" />
             <span>Voir le site public</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
           >
             <LogOut className="size-3.5" />
             <span>Déconnexion</span>
@@ -1210,23 +1213,23 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 space-y-8 overflow-y-auto max-w-6xl mx-auto w-full text-left">
+      <main className="flex-1 p-4 md:p-8 space-y-8 overflow-y-auto max-w-6xl mx-auto w-full text-left bg-[#F4F6F8]">
         
         {/* Admin Quick Banner */}
         {(profile?.role === "admin" || profile?.role === "super_admin") && (
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-blue-500/10 border border-primary/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+          <div className="p-4 rounded-2xl bg-white border border-slate-200/90 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-primary text-slate-950 flex items-center justify-center font-black shrink-0 shadow-md">
+              <div className="size-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
                 👑
               </div>
               <div>
-                <h4 className="font-bold text-sm text-white">Privilèges Administrateur Détectés ({profile.role})</h4>
-                <p className="text-xs text-slate-300">Vous êtes connecté en tant que gestionnaire. Ouvrez la console pour gérer les étudiants, cours et paiements.</p>
+                <h4 className="font-bold text-sm text-slate-800">Privilèges Administrateur Détectés ({profile.role})</h4>
+                <p className="text-xs text-slate-500">Vous êtes connecté en tant que gestionnaire. Ouvrez la console pour gérer les étudiants, cours et paiements.</p>
               </div>
             </div>
             <Link
               href="/admin"
-              className="px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 transition-opacity whitespace-nowrap shadow-lg shadow-primary/20"
+              className="px-5 py-2.5 rounded-xl bg-primary text-white font-bold text-xs hover:opacity-90 transition-opacity whitespace-nowrap shadow-xs"
             >
               Ouvrir le Portail Super Admin →
             </Link>
@@ -1236,18 +1239,18 @@ export default function DashboardPage() {
         {/* TAB 1: OVERVIEW */}
         {activeTab === "overview" && (
           <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
               <div>
-                <h1 className="font-heading text-2xl font-bold text-foreground">
+                <h1 className="font-heading text-2xl font-bold text-slate-800">
                   Ravi de vous revoir, {fullName.split(" ")[0] || "Apprenant"} 👋
                 </h1>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Bienvenue dans votre Espace Membre LE GUIDE IA. Retrouvez toutes les dates de vos sessions Google Meet, masterclasses exclusives et prochaines cohortes à venir.
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3.5 py-1.5 rounded-full">
-                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3.5 py-1.5 rounded-full shadow-xs">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                   Compte Actif
                 </span>
               </div>
@@ -1255,19 +1258,19 @@ export default function DashboardPage() {
 
             {/* 0. Notification Formation(s) en attente de validation administrative Mobile Money */}
             {pendingCourses.length > 0 && (
-              <div className="p-5 rounded-3xl bg-[#D4AF37]/10 border border-[#D4AF37]/35 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left shadow-lg glow-gold">
+              <div className="p-5 rounded-3xl bg-amber-50/80 border border-amber-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left shadow-xs">
                 <div className="flex items-start gap-3.5">
-                  <Clock className="size-5 text-[#D4AF37] shrink-0 mt-0.5 animate-pulse" />
+                  <Clock className="size-5 text-amber-700 shrink-0 mt-0.5 animate-pulse" />
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-[#ECC86B] bg-[#D4AF37]/20 px-2.5 py-0.5 rounded-full border border-[#D4AF37]/40">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
                         Vérification sous 24h
                       </span>
-                      <h4 className="font-bold text-xs sm:text-sm text-white">
+                      <h4 className="font-bold text-xs sm:text-sm text-slate-800">
                         {pendingCourses.length === 1 ? "1 formation en cours de validation administrative" : `${pendingCourses.length} formations en cours de validation`}
                       </h4>
                     </div>
-                    <p className="text-xs text-slate-300 leading-relaxed">
+                    <p className="text-xs text-slate-600 leading-relaxed">
                       Votre déclaration de virement Mobile Money est en cours de vérification par l'équipe d'administration Le Guide IA. Vos accès seront automatiquement débloqués dans votre espace membre sous 24h ouvrées.
                     </p>
                   </div>
@@ -1277,7 +1280,7 @@ export default function DashboardPage() {
                   href="https://wa.me/22605050577?text=Bonjour%20Alfred%2C%20je%20viens%20de%20v%C3%A9rifier%20mon%20Dashboard%20et%20je%20souhaite%20acc%C3%A9l%C3%A9rer%20la%20validation%20de%20mon%20virement%20Mobile%20Money."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black text-xs flex items-center justify-center gap-2 shrink-0 transition-all shadow-md active:scale-95"
+                  className="px-4 py-2.5 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold text-xs flex items-center justify-center gap-2 shrink-0 transition-all shadow-xs active:scale-95"
                 >
                   <MessageCircle className="size-4" />
                   <span>Accélérer sur WhatsApp</span>
@@ -1287,9 +1290,9 @@ export default function DashboardPage() {
 
             {/* 1. CALENDRIER OFFICIEL DES BOOTCAMPS & DIRECTS */}
             <div className="space-y-4 pt-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left border-b border-border/60 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left border-b border-slate-200 pb-3">
                 <div>
-                  <h4 className="font-heading text-xl sm:text-2xl font-black text-foreground flex items-center gap-2.5">
+                  <h4 className="font-heading text-xl sm:text-2xl font-black text-slate-800 flex items-center gap-2.5">
                     <Calendar className="size-6 text-primary" />
                     Calendrier Officiel des Bootcamps &amp; Directs
                   </h4>
@@ -1312,50 +1315,50 @@ export default function DashboardPage() {
             {selectedBootcamp === null ? (
               /* Master View: List of Enrolled Bootcamps */
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
                   <div>
-                    <h1 className="font-heading text-2xl font-bold text-foreground">Mes Formations & Bootcamps Inscrits</h1>
-                    <p className="text-xs text-muted-foreground mt-1">Sélectionnez une formation pour accéder au lien, supports PDF et exercices pratiques.</p>
+                    <h1 className="font-heading text-2xl font-bold text-slate-800">Mes Formations &amp; Bootcamps Inscrits</h1>
+                    <p className="text-xs text-slate-500 mt-1">Sélectionnez une formation pour accéder au lien, supports PDF et exercices pratiques.</p>
                   </div>
                 </div>
 
                 {/* ─── Formations accessibles ─── */}
                 {enrolledBootcamps.length > 0 && (
                   <div className="space-y-4">
-                    <h2 className="font-heading text-base font-bold text-foreground">Mes formations actives</h2>
+                    <h2 className="font-heading text-base font-bold text-slate-800">Mes formations actives</h2>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {enrolledBootcamps.map((bootcamp: any) => (
                         <div
                           key={bootcamp.dbId}
-                          className="rounded-3xl border border-border/80 bg-card/40 overflow-hidden flex flex-col justify-between hover:border-primary/40 transition-all shadow-xl group text-left"
+                          className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden flex flex-col justify-between hover:border-primary/40 hover:shadow-md transition-all shadow-xs group text-left"
                         >
                           <div className="space-y-3 p-5">
-                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-border/60 mb-2">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/90 mb-2">
                               <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                               <div className="absolute top-2.5 left-2.5">
-                                <span className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-md shadow-md border ${
-                                  bootcamp.isFree ? "bg-emerald-500 text-slate-950 border-emerald-400"
-                                  : bootcamp.status === "active" ? "bg-emerald-500 text-slate-950 border-emerald-400"
-                                  : bootcamp.status === "completed" ? "bg-blue-600 text-white border-blue-400"
-                                  : "bg-amber-500 text-slate-950 border-amber-400"
+                                <span className={`text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow-xs border ${
+                                  bootcamp.isFree ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  : bootcamp.status === "active" ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  : bootcamp.status === "completed" ? "bg-blue-50 text-blue-800 border-blue-200"
+                                  : "bg-amber-50 text-amber-800 border-amber-200"
                                 }`}>
                                   {bootcamp.isFree ? "Gratuit" : bootcamp.status === "active" ? "Actif" : bootcamp.status === "completed" ? "Replays HD" : "À venir"}
                                 </span>
                               </div>
                             </div>
                             <div className="space-y-1.5">
-                              <h3 className="font-heading text-base font-bold text-foreground group-hover:text-primary transition-colors leading-snug">{bootcamp.title}</h3>
-                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
+                              <h3 className="font-heading text-base font-bold text-slate-800 group-hover:text-primary transition-colors leading-snug">{bootcamp.title}</h3>
+                              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
                             </div>
-                            <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
-                              <div><strong>Dates :</strong> {bootcamp.dates}</div>
-                              <div><strong>Formateur :</strong> {bootcamp.instructor}</div>
+                            <div className="text-[11px] text-slate-500 space-y-1 pt-1">
+                              <div><strong className="text-slate-700">Dates :</strong> {bootcamp.dates}</div>
+                              <div><strong className="text-slate-700">Formateur :</strong> {bootcamp.instructor}</div>
                             </div>
                           </div>
                           <div className="p-5 pt-0">
                             <button
                               onClick={() => { setSelectedBootcamp(bootcamp); setSelectedLesson(bootcamp.lessons[0]) }}
-                              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all cursor-pointer"
+                              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
                             >
                               <PlayCircle className="size-4" />
                               <span>Accéder à la formation</span>
@@ -1371,8 +1374,8 @@ export default function DashboardPage() {
                 {pendingBootcamps.length > 0 && (
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-3">
-                      <h2 className="font-heading text-base font-bold text-foreground">Formations en cours de validation</h2>
-                      <span className="text-[10px] font-black text-[#ECC86B] bg-[#D4AF37]/10 border border-[#D4AF37]/30 px-2.5 py-1 rounded-full animate-pulse">
+                      <h2 className="font-heading text-base font-bold text-slate-800">Formations en cours de validation</h2>
+                      <span className="text-[10px] font-black text-amber-900 bg-amber-100/90 border border-amber-300/80 px-2.5 py-1 rounded-full animate-pulse">
                         ⏳ Activation sous 24h
                       </span>
                     </div>
@@ -1380,30 +1383,30 @@ export default function DashboardPage() {
                       {pendingBootcamps.map((bootcamp: any) => (
                         <div
                           key={bootcamp.dbId}
-                          className="rounded-3xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#D4AF37]/10 via-card/60 to-card/90 overflow-hidden flex flex-col justify-between transition-all shadow-xl text-left"
+                          className="rounded-3xl border border-amber-200/90 bg-gradient-to-b from-amber-50/50 via-white to-white overflow-hidden flex flex-col justify-between transition-all shadow-xs text-left"
                         >
                           <div className="space-y-3 p-5">
-                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-[#D4AF37]/30 mb-2">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-amber-200/80 mb-2">
                               <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover opacity-80" />
-                              <div className="absolute inset-0 bg-slate-950/40 flex items-center justify-center">
-                                <span className="bg-[#D4AF37] text-slate-950 px-3 py-1.5 rounded-xl font-black text-xs shadow-lg flex items-center gap-1.5 border border-[#F3E5AB]">
+                              <div className="absolute inset-0 bg-slate-900/30 flex items-center justify-center">
+                                <span className="bg-[#D4AF37] text-slate-950 px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1.5 border border-[#F3E5AB]">
                                   <Clock className="size-3.5" />
                                   Vérification administrative
                                 </span>
                               </div>
                             </div>
                             <div className="space-y-1.5">
-                              <h3 className="font-heading text-base font-bold text-foreground leading-snug">{bootcamp.title}</h3>
-                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
+                              <h3 className="font-heading text-base font-bold text-slate-800 leading-snug">{bootcamp.title}</h3>
+                              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
                             </div>
-                            <div className="p-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[11px] text-[#ECC86B] leading-relaxed">
+                            <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed">
                               ⏳ Votre virement Mobile Money est en cours de vérification. Vos vidéos et ressources seront débloquées sous moins de 24h ouvrées.
                             </div>
                           </div>
 
                           <div className="p-5 pt-0 space-y-2">
-                            <div className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#ECC86B] font-bold py-2.5 text-xs">
-                              <Clock className="size-3.5 animate-pulse text-[#D4AF37]" />
+                            <div className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-100/90 border border-amber-300/80 text-amber-900 font-bold py-2.5 text-xs">
+                              <Clock className="size-3.5 animate-pulse text-amber-700" />
                               <span>Validation en cours...</span>
                             </div>
 
@@ -1411,7 +1414,7 @@ export default function DashboardPage() {
                               href={`https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens de vérifier mon dashboard pour la formation "${bootcamp.title}". Mon paiement Mobile Money est en cours de validation. Pouvez-vous vérifier mon virement ? Merci !`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black py-2 text-xs transition-all shadow-md active:scale-95"
+                              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold py-2 text-xs transition-all shadow-xs active:scale-95"
                             >
                               <MessageCircle className="size-3.5" />
                               <span>Accélérer sur WhatsApp</span>
@@ -1425,35 +1428,35 @@ export default function DashboardPage() {
                 {lockedBootcamps.length > 0 && (
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-3">
-                      <h2 className="font-heading text-base font-bold text-foreground">Autres formations disponibles</h2>
-                      <span className="text-[10px] font-bold text-muted-foreground bg-secondary/60 border border-border px-2.5 py-1 rounded-full">Non inscrit</span>
+                      <h2 className="font-heading text-base font-bold text-slate-800">Autres formations disponibles</h2>
+                      <span className="text-[10px] font-semibold text-slate-600 bg-white border border-slate-200 px-2.5 py-1 rounded-full shadow-2xs">Non inscrit</span>
                     </div>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {lockedBootcamps.map((bootcamp: any) => (
                         <div
                           key={bootcamp.dbId}
-                          className="rounded-3xl border border-border/40 bg-gradient-to-b from-slate-900/40 to-slate-950/60 overflow-hidden flex flex-col justify-between transition-all shadow-xl text-left"
+                          className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden flex flex-col justify-between transition-all shadow-xs hover:shadow-md text-left"
                         >
                           <div className="space-y-3 p-5">
-                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-border/40 mb-2">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 mb-2">
                               <img src={bootcamp.poster} alt={bootcamp.title} className="w-full h-full object-cover" />
                               <div className="absolute top-2.5 left-2.5">
-                                <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-md shadow-md border bg-primary/20 text-primary border-primary/30">Formule Payante</span>
+                                <span className="text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow-xs border bg-primary/10 text-primary border-primary/20">Formule Payante</span>
                               </div>
                             </div>
                             <div className="space-y-1.5">
-                              <h3 className="font-heading text-base font-bold text-foreground leading-snug">{bootcamp.title}</h3>
-                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
+                              <h3 className="font-heading text-base font-bold text-slate-800 leading-snug">{bootcamp.title}</h3>
+                              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
                             </div>
-                            <div className="text-[11px] text-muted-foreground space-y-1 pt-1">
-                              <div><strong>Dates :</strong> {bootcamp.dates}</div>
-                              <div><strong>Formateur :</strong> {bootcamp.instructor}</div>
+                            <div className="text-[11px] text-slate-500 space-y-1 pt-1">
+                              <div><strong className="text-slate-700">Dates :</strong> {bootcamp.dates}</div>
+                              <div><strong className="text-slate-700">Formateur :</strong> {bootcamp.instructor}</div>
                             </div>
                           </div>
                           <div className="p-5 pt-0">
                             <a
                               href={`/bootcamp?course=${bootcamp.slug}`}
-                              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all"
+                              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all"
                             >
                               <span>Réserver ma place →</span>
                             </a>
@@ -1468,7 +1471,7 @@ export default function DashboardPage() {
               /* Detail View: Video Player & Lessons for selectedBootcamp */
               <div className="space-y-6">
                 {/* Top Bar with Back Button */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
                   <button
                     onClick={() => setSelectedBootcamp(null)}
                     className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline cursor-pointer"
@@ -1488,11 +1491,11 @@ export default function DashboardPage() {
                 <div className="grid gap-6 lg:grid-cols-3">
                   {/* Left: Active Video Player or Upcoming Session Countdown */}
                   <div className="lg:col-span-2 space-y-4">
-                    <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-950 border border-border shadow-2xl">
+                    <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
                       {selectedBootcamp.status === "upcoming" || selectedLesson.isUpcoming ? (
                         /* Upcoming Session Countdown Frame (No video iframe) */
                         <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-amber-500/20">
-                          <div className="size-14 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-lg">
+                          <div className="size-14 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-sm">
                             <Clock className="size-7 animate-pulse" />
                           </div>
                           <div className="space-y-1.5 max-w-md">
@@ -1502,7 +1505,7 @@ export default function DashboardPage() {
                             <h3 className="font-heading text-lg md:text-xl font-bold text-white">
                               {selectedLesson.title}
                             </h3>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
+                            <p className="text-xs text-slate-300 leading-relaxed">
                               Cette session aura lieu en direct sur Google Meet ({
                                 selectedLesson.scheduledAt
                                   ? new Date(selectedLesson.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " à " + new Date(selectedLesson.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
@@ -1513,22 +1516,22 @@ export default function DashboardPage() {
 
                           {/* Live Ticking Countdown Timer */}
                           <div className="flex items-center gap-2 pt-2">
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-lg">
+                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
                               <span className="font-heading text-base font-black text-amber-400 font-mono leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
-                              <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Jours</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Jours</span>
                             </div>
                             <span className="text-amber-400 font-bold text-sm">:</span>
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-lg">
+                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
                               <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
-                              <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Heures</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Heures</span>
                             </div>
                             <span className="text-amber-400 font-bold text-sm">:</span>
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-lg">
+                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
                               <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                              <span className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5">Min</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Min</span>
                             </div>
                             <span className="text-amber-400 font-bold text-sm">:</span>
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-lg">
+                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
                               <span className="font-heading text-base font-black text-amber-400 font-mono leading-none animate-pulse">{String(timeLeft.seconds).padStart(2, '0')}</span>
                               <span className="text-[9px] font-bold text-amber-400/80 uppercase mt-0.5">Sec</span>
                             </div>
@@ -1538,7 +1541,7 @@ export default function DashboardPage() {
                             href={selectedLesson.meetUrl || DEFAULT_MEET_URL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 text-xs shadow-lg shadow-emerald-500/20 transition-all mt-2 cursor-pointer"
+                            className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all mt-2 cursor-pointer"
                           >
                             <Video className="size-4" />
                             <span>Rejoindre la Session Live sur Google Meet</span>
@@ -1556,52 +1559,52 @@ export default function DashboardPage() {
                       )}
                     </div>
 
-                    <div className="rounded-3xl border border-border bg-card/40 p-6 space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-4">
+                    <div className="rounded-3xl border border-slate-200/90 bg-white p-6 space-y-4 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20 uppercase">
                               Module {selectedLesson.num}
                             </span>
                             {selectedLesson.scheduledDate && (
-                              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
                                 <Calendar className="size-3" />
                                 <span>{selectedLesson.scheduledDate}</span>
                               </span>
                             )}
                           </div>
-                          <h2 className="font-heading text-lg font-bold text-foreground">
+                          <h2 className="font-heading text-lg font-bold text-slate-800">
                             {selectedLesson.title}
                           </h2>
                         </div>
 
-                        <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border ${
+                        <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border ${
                           selectedLesson.isLive
-                            ? "bg-red-500/10 text-red-400 border-red-500/30 animate-pulse"
+                            ? "bg-red-50 text-red-700 border-red-200 animate-pulse"
                             : selectedLesson.isUpcoming
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            ? "bg-amber-50 text-amber-800 border-amber-200"
+                            : "bg-emerald-50 text-emerald-800 border-emerald-200"
                         }`}>
                           {selectedLesson.isLive ? "🟢 En Direct Maintenant" : selectedLesson.isUpcoming ? "🕒 Session à venir" : "🎬 Replay Disponible"}
                         </span>
                       </div>
 
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-xs text-slate-600 leading-relaxed">
                         {selectedLesson.description}
                       </p>
 
                       {/* PDF Attachment (Available ONLY for past/completed sessions) */}
-                      <div className="pt-3 border-t border-border/40 flex items-center justify-between gap-3">
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
                         {selectedLesson.pdfName ? (
                           selectedLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? (
-                            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                              <FileText className="size-4 text-muted-foreground/60" />
-                              <span>Support PDF du cours : <strong className="text-amber-400 font-bold">🔒 Disponible immédiatement après la session live</strong></span>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                              <FileText className="size-4 text-slate-400" />
+                              <span>Support PDF du cours : <strong className="text-amber-700 font-semibold">🔒 Disponible immédiatement après la session live</strong></span>
                             </div>
                           ) : (
                             <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                                <FileText className="size-4 text-purple-400" />
+                              <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+                                <FileText className="size-4 text-purple-600" />
                                 <span>Support PDF du cours : {selectedLesson.pdfName}</span>
                               </div>
                               <a
@@ -1615,32 +1618,32 @@ export default function DashboardPage() {
                             </div>
                           )
                         ) : (
-                          <span className="text-xs text-muted-foreground">Aucun support PDF attaché pour ce module.</span>
+                          <span className="text-xs text-slate-500">Aucun support PDF attaché pour ce module.</span>
                         )}
                       </div>
 
                       {/* Exercise & Homework Submission Section */}
                       {selectedLesson.exercise && (
-                        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3 mt-3 text-left">
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/20 pb-2.5">
+                        <div className="rounded-2xl border border-amber-200/90 bg-amber-50/70 p-4 space-y-3 mt-3 text-left">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
                                 {selectedLesson.exercise.type === 'devoir-a-rendre' ? '📝 Devoir à rendre' : selectedLesson.exercise.type === 'cas-pratique' ? '💼 Cas Pratique Métier' : '⚡ Challenge Prompt'}
                               </span>
-                              <h4 className="text-xs font-bold text-foreground">{selectedLesson.exercise.title}</h4>
+                              <h4 className="text-xs font-bold text-slate-800">{selectedLesson.exercise.title}</h4>
                             </div>
 
-                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-300">
+                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-900">
                               <Clock className="size-3.5" />
                               <span>Date limite : {selectedLesson.exercise.deadline}</span>
                             </div>
                           </div>
 
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-                            <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border shrink-0 ${
+                            <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border shrink-0 ${
                               submittedExerciseIds.includes(selectedLesson.exercise.title) || selectedLesson.exercise.status === 'submitted'
-                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : "bg-rose-50 text-rose-800 border-rose-200"
                             }`}>
                               {submittedExerciseIds.includes(selectedLesson.exercise.title) || selectedLesson.exercise.status === 'submitted' ? "✓ Travail Soumis sur la plateforme" : "⏳ En attente de rendu"}
                             </span>
@@ -1651,7 +1654,7 @@ export default function DashboardPage() {
                                 title: selectedLesson.exercise!.title,
                                 deadline: selectedLesson.exercise!.deadline
                               })}
-                              className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2 text-xs shadow-md transition-all cursor-pointer"
+                              className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 text-xs shadow-2xs transition-all cursor-pointer"
                             >
                               <Upload className="size-3.5" />
                               <span>{submittedExerciseIds.includes(selectedLesson.exercise.title) ? "Modifier mon rendu" : "Soumettre ma réponse sur la plateforme"}</span>
@@ -1665,14 +1668,13 @@ export default function DashboardPage() {
                   {/* Right: Modules & Lessons Playlist for selectedBootcamp */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between pb-1">
-                      <h3 className="font-heading text-sm font-bold text-foreground">Sommaire de la formation</h3>
-                      <span className="text-xs font-bold text-muted-foreground">{selectedBootcamp.lessons.length} sessions</span>
+                      <h3 className="font-heading text-sm font-bold text-slate-800">Sommaire de la formation</h3>
+                      <span className="text-xs font-semibold text-slate-500">{selectedBootcamp.lessons.length} sessions</span>
                     </div>
 
                     <div className="space-y-2 max-h-[640px] lg:max-h-[680px] overflow-y-auto scrollbar-thin pr-1.5 pb-6">
                       {selectedBootcamp.lessons.map((lesson) => {
                         const isSelected = selectedLesson.id === lesson.id
-                        const isUpcoming = lesson.isUpcoming || selectedBootcamp.status === "upcoming"
 
                         return (
                           <div
@@ -1680,29 +1682,33 @@ export default function DashboardPage() {
                             onClick={() => setSelectedLesson(lesson)}
                             className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
                               isSelected
-                                ? "bg-primary/10 border-primary shadow-md"
-                                : "bg-card/40 border-border/80 hover:bg-card/70"
+                                ? "bg-primary/10 border-primary shadow-xs"
+                                : "bg-white border-slate-200/90 hover:bg-[#F4F6F8] shadow-2xs"
                             }`}
                           >
-                            <div className="size-7 rounded-xl bg-card border border-border flex items-center justify-center font-mono text-xs font-bold text-primary shrink-0 mt-0.5">
+                            <div className={`size-7 rounded-xl border flex items-center justify-center font-mono text-xs font-bold shrink-0 mt-0.5 ${
+                              isSelected
+                                ? "bg-primary text-white border-primary"
+                                : "bg-[#F4F6F8] border-slate-200 text-primary"
+                            }`}>
                               {lesson.num}
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <h4 className={`text-xs font-bold leading-snug line-clamp-2 ${isSelected ? "text-primary" : "text-foreground"}`}>
+                              <h4 className={`text-xs font-bold leading-snug line-clamp-2 ${isSelected ? "text-primary" : "text-slate-800"}`}>
                                 {lesson.title}
                               </h4>
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1 flex-wrap">
+                              <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1 flex-wrap">
                                 <Clock className="size-3" />
                                 <span>{lesson.duration}</span>
                                 <span>·</span>
-                                <span className={lesson.isLive ? "text-red-400 font-bold animate-pulse" : lesson.isUpcoming ? "text-amber-400 font-bold" : "text-emerald-400 font-bold"}>
+                                <span className={lesson.isLive ? "text-red-600 font-bold animate-pulse" : lesson.isUpcoming ? "text-amber-700 font-bold" : "text-emerald-700 font-bold"}>
                                   {lesson.isLive ? "En Direct" : lesson.isUpcoming ? "À venir" : "Replay HD"}
                                 </span>
                               </div>
                               {lesson.scheduledDate && (
-                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-400/90 mt-1">
-                                  <Calendar className="size-3 shrink-0 text-emerald-400" />
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-800 mt-1">
+                                  <Calendar className="size-3 shrink-0 text-emerald-600" />
                                   <span className="truncate">{lesson.scheduledDate}</span>
                                 </div>
                               )}
@@ -1721,34 +1727,34 @@ export default function DashboardPage() {
         {/* TAB 3: RESOURCES (1-Click Copy, Downloads & Bonus Media) */}
         {activeTab === "resources" && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <div>
-                <h1 className="font-heading text-2xl font-bold text-foreground">Bibliothèque de Ressources Apprenants</h1>
-                <p className="text-xs text-muted-foreground mt-1">Accédez à tous vos prompts, business plans, exercices pratiques et vidéos bonus classés par Bootcamp.</p>
+                <h1 className="font-heading text-2xl font-bold text-slate-800">Bibliothèque de Ressources Apprenants</h1>
+                <p className="text-xs text-slate-500 mt-1">Accédez à tous vos prompts, business plans, exercices pratiques et vidéos bonus classés par Bootcamp.</p>
               </div>
 
               <div className="relative w-full max-w-xs">
-                <Search className="size-4 text-muted-foreground absolute left-3 top-2.5" />
+                <Search className="size-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={resourceSearch}
                   onChange={(e) => setResourceSearch(e.target.value)}
                   placeholder="Rechercher une ressource..."
-                  className="w-full rounded-xl border border-border bg-input/40 pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary"
+                  className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-primary shadow-2xs"
                 />
               </div>
             </div>
 
             {/* Filter Controls Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card/40 border border-border/80 p-4 rounded-2xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-2xl shadow-xs">
               {/* Filter 1: Bootcamp Selection */}
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Rattachement par Bootcamp :</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Rattachement par Bootcamp :</span>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     onClick={() => setSelectedBootcampFilter("all")}
-                    className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                      selectedBootcampFilter === "all" ? "bg-primary text-primary-foreground" : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      selectedBootcampFilter === "all" ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                     }`}
                   >
                     Tous mes Bootcamps
@@ -1757,8 +1763,8 @@ export default function DashboardPage() {
                     <button
                       key={b.id}
                       onClick={() => setSelectedBootcampFilter(b.id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                        selectedBootcampFilter === b.id ? "bg-primary text-primary-foreground" : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        selectedBootcampFilter === b.id ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                       }`}
                     >
                       {b.title.split("—")[0]}
@@ -1769,7 +1775,7 @@ export default function DashboardPage() {
 
               {/* Filter 2: Type Selection */}
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Type de ressource :</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Type de ressource :</span>
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     { id: "all", label: "Tous" },
@@ -1782,7 +1788,7 @@ export default function DashboardPage() {
                       key={t.id}
                       onClick={() => setSelectedResourceTypeFilter(t.id)}
                       className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        selectedResourceTypeFilter === t.id ? "bg-primary/20 text-primary border border-primary/30" : "bg-secondary/40 text-muted-foreground hover:text-foreground"
+                        selectedResourceTypeFilter === t.id ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                       }`}
                     >
                       {t.label}
@@ -1794,40 +1800,40 @@ export default function DashboardPage() {
 
             {/* Resources Grid */}
             {filteredResources.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-border rounded-3xl p-6">
-                <p className="text-xs text-muted-foreground">Aucune ressource ne correspond à vos filtres actuels.</p>
+              <div className="text-center py-12 border border-dashed border-slate-300 rounded-3xl p-6 bg-white">
+                <p className="text-xs text-slate-500">Aucune ressource ne correspond à vos filtres actuels.</p>
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
                 {filteredResources.map((item) => (
-                  <div key={item.id} className="rounded-3xl border border-border/80 bg-card/40 p-6 flex flex-col justify-between space-y-4 hover:border-primary/40 transition-colors shadow-lg text-left">
+                  <div key={item.id} className="rounded-3xl border border-slate-200/90 bg-white p-6 flex flex-col justify-between space-y-4 hover:border-primary/40 hover:shadow-md transition-all shadow-xs text-left">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
+                        <span className={`text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full border ${
                           item.type === 'prompt'
-                            ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                            ? "bg-purple-50 text-purple-800 border-purple-200"
                             : item.type === 'business-plan'
-                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                            ? "bg-blue-50 text-blue-800 border-blue-200"
                             : item.type === 'exercise'
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : "bg-amber-50 text-amber-800 border-amber-200"
                         }`}>
                           {item.type === 'prompt' ? "Prompt Métier" : item.type === 'business-plan' ? "Business Plan" : item.type === 'exercise' ? "Exercice & Fichier" : "Vidéo Bonus"}
                         </span>
 
                         {item.bootcampName && (
-                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+                          <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
                             {item.bootcampName}
                           </span>
                         )}
                       </div>
-                      <h4 className="font-heading text-base font-bold text-foreground">{item.title.fr}</h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{item.desc.fr}</p>
+                      <h4 className="font-heading text-base font-bold text-slate-800">{item.title.fr}</h4>
+                      <p className="text-xs text-slate-600 leading-relaxed">{item.desc.fr}</p>
                     </div>
 
-                    <div className="space-y-3 pt-2 border-t border-border/40">
+                    <div className="space-y-3 pt-2 border-t border-slate-100">
                       {item.type === 'bonus-video' ? (
-                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-border shadow-md">
+                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xs">
                           <iframe
                             src={`${item.videoUrl}?autoplay=0`}
                             title={item.title.fr}
@@ -1837,7 +1843,7 @@ export default function DashboardPage() {
                           />
                         </div>
                       ) : (
-                        <div className="rounded-xl bg-slate-950/80 border border-border/60 p-3 max-h-36 overflow-y-auto text-[11px] font-mono text-slate-300 whitespace-pre-wrap scrollbar-thin select-all">
+                        <div className="rounded-xl bg-[#F4F6F8] border border-slate-200/90 p-3 max-h-36 overflow-y-auto text-[11px] font-mono text-slate-700 whitespace-pre-wrap scrollbar-thin select-all">
                           {item.content.fr}
                         </div>
                       )}
@@ -1845,7 +1851,7 @@ export default function DashboardPage() {
                       {item.type === 'prompt' && (
                         <button
                           onClick={() => handleCopyPrompt(item.id, item.content.fr)}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md transition-all cursor-pointer"
+                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
                         >
                           {copiedPromptId === item.id ? <Check className="size-4 stroke-[3]" /> : <Copy className="size-4" />}
                           <span>{copiedPromptId === item.id ? "Prompt Copié !" : "Copier le Prompt"}</span>
@@ -1857,7 +1863,7 @@ export default function DashboardPage() {
                           href={`https://wa.me/22675757273?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20membre%20et%20souhaite%20recevoir%20le%20modele%20de%20Business%20Plan%20complet%20pour%20:%20${encodeURIComponent(item.title.fr)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs shadow-md transition-all"
+                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs shadow-xs transition-all"
                         >
                           <Download className="size-4" />
                           <span>Télécharger le Business Plan (DOCX / PDF)</span>
@@ -1867,12 +1873,12 @@ export default function DashboardPage() {
                       {item.type === 'exercise' && (
                         <div className="space-y-2">
                           {item.deadline && (
-                            <div className="flex flex-wrap items-center justify-between text-[11px] font-bold text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20 gap-2">
+                            <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200 gap-2">
                               <span className="flex items-center gap-1.5">
-                                <Clock className="size-3.5 text-amber-400" />
+                                <Clock className="size-3.5 text-amber-700" />
                                 <span>Date limite de rendu : {item.deadline}</span>
                               </span>
-                              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
                                 {item.exerciseType === 'devoir-a-rendre' ? '📝 Devoir à rendre' : '💼 Cas Pratique'}
                               </span>
                             </div>
@@ -1882,7 +1888,7 @@ export default function DashboardPage() {
                             <a
                               href={item.downloadUrl || "#"}
                               download
-                              className="flex items-center justify-center gap-1.5 rounded-xl bg-secondary/80 hover:bg-secondary text-foreground font-bold py-2.5 text-xs border border-border shadow-sm transition-all"
+                              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#F4F6F8] hover:bg-slate-200 text-slate-800 font-bold py-2.5 text-xs border border-slate-200 shadow-2xs transition-all"
                             >
                               <Download className="size-3.5 text-primary" />
                               <span>Télécharger Sujet ({item.fileSize || "PDF"})</span>
@@ -1894,7 +1900,7 @@ export default function DashboardPage() {
                                 title: item.title.fr,
                                 deadline: item.deadline
                               })}
-                              className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 text-xs shadow-md transition-all cursor-pointer"
+                              className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 text-xs shadow-2xs transition-all cursor-pointer"
                             >
                               <Upload className="size-3.5" />
                               <span>{submittedExerciseIds.includes(item.id) ? "✓ Rendu Soumis" : "Soumettre sur la plateforme"}</span>
@@ -1914,30 +1920,30 @@ export default function DashboardPage() {
         {activeTab === "certificates" && (
           <div className="space-y-6">
             <div>
-              <h1 className="font-heading text-2xl font-bold text-foreground">Mes Certificats Officiels</h1>
-              <p className="text-xs text-muted-foreground mt-1">Générez et vérifiez vos attestations certifiées délivrées par LE GUIDE IA.</p>
+              <h1 className="font-heading text-2xl font-bold text-slate-800">Mes Certificats Officiels</h1>
+              <p className="text-xs text-slate-500 mt-1">Générez et vérifiez vos attestations certifiées délivrées par LE GUIDE IA.</p>
             </div>
 
-            <div className="rounded-3xl border border-primary/30 bg-card/40 p-8 text-center space-y-5 max-w-xl mx-auto shadow-2xl">
-              <div className="inline-flex size-16 items-center justify-center rounded-full bg-primary/20 text-primary border border-primary/30 shadow-inner">
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-8 text-center space-y-5 max-w-xl mx-auto shadow-xs">
+              <div className="inline-flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shadow-2xs">
                 <Award className="size-8" />
               </div>
               
               <div className="space-y-2">
-                <h3 className="font-heading text-xl font-extrabold text-foreground">Certificat Officiel — Bootcamp IA Pro 2</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <h3 className="font-heading text-xl font-bold text-slate-800">Certificat Officiel — Bootcamp IA Pro 2</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Attestation de compétences délivrée par Alfred Dah (Auditeur CISA &amp; Expert IA). Valide pour LinkedIn et valorisation professionnelle.
                 </p>
               </div>
 
               <div className="pt-2 flex flex-col items-center gap-3">
-                <span className="text-xs font-bold px-3 py-1 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                <span className="text-xs font-semibold px-3 py-1 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-200">
                   Statut : Certificat Validé &amp; Délivré
                 </span>
 
                 <button
                   onClick={() => setIsCertModalOpen(true)}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-black px-6 py-3 text-xs shadow-lg transition-all cursor-pointer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold px-6 py-3 text-xs shadow-xs transition-all cursor-pointer"
                 >
                   <FileCheck className="size-4" />
                   <span>Visualiser &amp; Imprimer mon Certificat</span>
@@ -1951,12 +1957,12 @@ export default function DashboardPage() {
         {activeTab === "invoices" && (
           <div className="space-y-6">
             <div>
-              <h1 className="font-heading text-2xl font-bold text-foreground">Mes Factures &amp; Reçus</h1>
-              <p className="text-xs text-muted-foreground mt-1">Téléchargez vos factures d'achat et reçus d'inscription officiels.</p>
+              <h1 className="font-heading text-2xl font-bold text-slate-800">Mes Factures &amp; Reçus</h1>
+              <p className="text-xs text-slate-500 mt-1">Téléchargez vos factures d'achat et reçus d'inscription officiels.</p>
             </div>
 
-            <div className="rounded-3xl border border-border bg-card/40 overflow-hidden shadow-xl">
-              <div className="p-4 border-b border-border bg-secondary/30 text-xs font-bold text-muted-foreground grid grid-cols-4">
+            <div className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs">
+              <div className="p-4 border-b border-slate-200 bg-[#F4F6F8] text-xs font-bold text-slate-600 grid grid-cols-4">
                 <span>Description</span>
                 <span>Date</span>
                 <span>Montant</span>
@@ -1966,21 +1972,21 @@ export default function DashboardPage() {
               {(() => {
                 if (userInvoices.length === 0) {
                   return (
-                    <div className="p-8 text-center text-xs text-muted-foreground space-y-1">
-                      <p className="font-bold text-foreground">Aucune facture enregistrée dans Supabase</p>
+                    <div className="p-8 text-center text-xs text-slate-500 space-y-1">
+                      <p className="font-bold text-slate-700">Aucune facture enregistrée dans Supabase</p>
                       <p>Les factures et reçus d'inscription officiels apparaîtront automatiquement ici dès qu'un versement est confirmé.</p>
                     </div>
                   )
                 }
 
                 return userInvoices.map((inv: any) => (
-                  <div key={inv.id} className="p-4 grid grid-cols-4 text-xs items-center border-b border-border/40 hover:bg-slate-900/30 transition-colors">
+                  <div key={inv.id} className="p-4 grid grid-cols-4 text-xs items-center border-b border-slate-100 hover:bg-[#F4F6F8]/60 transition-colors">
                     <div>
-                      <p className="font-bold text-foreground">{inv.title}</p>
-                      <p className="text-[10px] text-muted-foreground">{inv.method}</p>
+                      <p className="font-bold text-slate-800">{inv.title}</p>
+                      <p className="text-[10px] text-slate-500">{inv.method}</p>
                     </div>
-                    <span className="text-muted-foreground">{inv.date}</span>
-                    <span className="font-mono font-bold text-foreground">{inv.amount}</span>
+                    <span className="text-slate-600">{inv.date}</span>
+                    <span className="font-mono font-bold text-slate-800">{inv.amount}</span>
                     <div className="text-right flex items-center justify-end gap-2">
                       <button
                         onClick={() => {
@@ -2004,52 +2010,52 @@ export default function DashboardPage() {
         {activeTab === "profile" && (
           <div className="space-y-6 max-w-2xl">
             <div>
-              <h1 className="font-heading text-2xl font-bold text-foreground">Mon Profil Apprenant</h1>
-              <p className="text-xs text-muted-foreground mt-1">Vos coordonnées officielles affichées sur vos certificats et factures.</p>
+              <h1 className="font-heading text-2xl font-bold text-slate-800">Mon Profil Apprenant</h1>
+              <p className="text-xs text-slate-500 mt-1">Vos coordonnées officielles affichées sur vos certificats et factures.</p>
             </div>
 
             {profileError && (
-              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-400 animate-in fade-in duration-200">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 flex items-start gap-3 text-xs text-rose-800 animate-in fade-in duration-200">
                 <AlertCircle className="size-4 shrink-0 mt-0.5" />
                 <span>{profileError}</span>
               </div>
             )}
 
             {saveSuccess && (
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex items-center gap-3 text-xs text-emerald-400 animate-in fade-in duration-200">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 flex items-center gap-3 text-xs text-emerald-800 animate-in fade-in duration-200">
                 <CheckCircle2 className="size-4 shrink-0" />
                 <span>Profil mis à jour avec succès.</span>
               </div>
             )}
 
-            <form onSubmit={handleSaveProfile} className="rounded-3xl border border-border bg-card/40 p-6 md:p-8 space-y-4 shadow-xl">
+            <form onSubmit={handleSaveProfile} className="rounded-3xl border border-slate-200/90 bg-white p-6 md:p-8 space-y-4 shadow-xs">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground/80">Nom complet (affiché sur le certificat)</label>
+                <label className="text-xs font-semibold text-slate-700">Nom complet (affiché sur le certificat)</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Ex: Mass Diop"
-                  className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground/80">Adresse Email</label>
+                <label className="text-xs font-semibold text-slate-700">Adresse Email</label>
                 <input
                   type="email"
                   disabled
                   value={user?.email || ""}
-                  className="w-full rounded-xl border border-border bg-secondary/40 px-3.5 py-2.5 text-xs text-muted-foreground cursor-not-allowed"
+                  className="w-full rounded-xl border border-slate-200 bg-[#F4F6F8] px-3.5 py-2.5 text-xs text-slate-500 cursor-not-allowed"
                 />
               </div>
 
               {/* Numéro WhatsApp avec Drapeaux & Indicatifs Internationaux */}
               <div className="space-y-1.5" ref={profileCountryDropdownRef}>
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground/80">Numéro WhatsApp</label>
-                  <span className="text-[10px] text-muted-foreground">
+                  <label className="text-xs font-semibold text-slate-700">Numéro WhatsApp</label>
+                  <span className="text-[10px] text-slate-500">
                     {profileCountry.name} ({profileCountry.dial})
                   </span>
                 </div>
@@ -2059,12 +2065,12 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => setIsProfileCountryDropdownOpen(!isProfileCountryDropdownOpen)}
-                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-l-xl border border-r-0 border-border bg-slate-950 text-xs font-bold text-foreground hover:bg-slate-800 transition-all cursor-pointer shrink-0 z-10"
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-l-xl border border-r-0 border-slate-200 bg-[#F4F6F8] text-xs font-semibold text-slate-800 hover:bg-slate-100 transition-all cursor-pointer shrink-0 z-10"
                     title={`Changer de pays (${profileCountry.name})`}
                   >
                     <span className="text-base leading-none">{getCountryFlag(profileCountry.code)}</span>
-                    <span className="font-mono text-slate-300">{profileCountry.dial}</span>
-                    <ChevronDown className={`size-3.5 text-muted-foreground transition-transform duration-200 ${isProfileCountryDropdownOpen ? "rotate-180" : ""}`} />
+                    <span className="font-mono text-slate-700">{profileCountry.dial}</span>
+                    <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isProfileCountryDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {/* Phone Input */}
@@ -2073,35 +2079,35 @@ export default function DashboardPage() {
                     value={profilePhone}
                     onChange={(e) => handleProfilePhoneChange(e.target.value)}
                     placeholder={currentProfilePhoneRule?.placeholder || "70 12 34 56"}
-                    className={`w-full rounded-r-xl border bg-input/40 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${
+                    className={`w-full rounded-r-xl border bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all shadow-2xs ${
                       rawProfilePhoneDigits.length > 0 && isProfilePhoneValid
-                        ? "border-emerald-500/60 focus:ring-1 focus:ring-emerald-500"
+                        ? "border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                         : rawProfilePhoneDigits.length > 0 && !isProfilePhoneValid
-                        ? "border-amber-500/60 focus:ring-1 focus:ring-amber-500"
-                        : "border-border focus:ring-1 focus:ring-primary"
+                        ? "border-amber-500 focus:ring-1 focus:ring-amber-500"
+                        : "border-slate-200 focus:ring-1 focus:ring-primary"
                     }`}
                   />
 
                   {/* Country Dropdown */}
                   {isProfileCountryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
                       {/* Search */}
-                      <div className="p-2 border-b border-slate-800 sticky top-0 bg-slate-950">
+                      <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
                         <div className="relative">
-                          <Search className="size-3.5 text-muted-foreground absolute left-2.5 top-2.5" />
+                          <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                           <input
                             type="text"
                             value={profileCountrySearch}
                             onChange={(e) => setProfileCountrySearch(e.target.value)}
                             placeholder="Rechercher un pays ou indicatif..."
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                            className="w-full bg-[#F4F6F8] border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
                             autoFocus
                           />
                         </div>
                       </div>
 
                       {/* Country List */}
-                      <div className="overflow-y-auto divide-y divide-slate-800/40 text-left">
+                      <div className="overflow-y-auto divide-y divide-slate-100 text-left">
                         {filteredProfileCountries.map((c) => {
                           const isSelected = c.code === profileCountry.code
                           return (
@@ -2116,15 +2122,15 @@ export default function DashboardPage() {
                                   setProfilePhone(formatPhoneNumber(profilePhone, c.code))
                                 }
                               }}
-                              className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-900 transition-colors cursor-pointer text-left ${
-                                isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-300"
+                              className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
+                                isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
                               }`}
                             >
                               <span className="flex items-center gap-2 truncate">
                                 <span className="text-base">{getCountryFlag(c.code)}</span>
                                 <span className="truncate">{c.name}</span>
                               </span>
-                              <span className="font-mono text-slate-400 font-bold ml-2 shrink-0">
+                              <span className="font-mono text-slate-500 font-semibold ml-2 shrink-0">
                                 {c.dial}
                               </span>
                             </button>
@@ -2139,16 +2145,16 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between text-[10px] pt-0.5">
                   {rawProfilePhoneDigits.length > 0 ? (
                     isProfilePhoneValid ? (
-                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <span className="text-emerald-700 font-semibold flex items-center gap-1">
                         <Check className="size-3" /> Numéro valide pour {profileCountry.name}
                       </span>
                     ) : (
-                      <span className="text-amber-400 flex items-center gap-1 font-semibold">
+                      <span className="text-amber-700 flex items-center gap-1 font-semibold">
                         <AlertCircle className="size-3" /> {currentProfilePhoneRule ? `Format : ${currentProfilePhoneRule.formatExample} (${rawProfilePhoneDigits.length}/${Array.isArray(currentProfilePhoneRule.expectedLength) ? currentProfilePhoneRule.expectedLength.join(' ou ') : currentProfilePhoneRule.expectedLength})` : "Format incomplet"}
                       </span>
                     )
                   ) : (
-                    <span className="text-muted-foreground">
+                    <span className="text-slate-500">
                       Format conseillé : {currentProfilePhoneRule ? `${profileCountry.dial} ${currentProfilePhoneRule.placeholder}` : `${profileCountry.dial} ...`}
                     </span>
                   )}
@@ -2158,46 +2164,46 @@ export default function DashboardPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {/* Pays de résidence (Sélecteur avec Drapeaux & Recherche) */}
                 <div className="space-y-1.5" ref={countryResidenceDropdownRef}>
-                  <label className="text-xs font-bold text-foreground/80">Pays de résidence</label>
+                  <label className="text-xs font-semibold text-slate-700">Pays de résidence</label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setIsCountryResidenceDropdownOpen(!isCountryResidenceDropdownOpen)}
-                      className="w-full flex items-center justify-between rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground hover:bg-slate-900 transition-all cursor-pointer text-left"
+                      className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
                     >
                       <span className="flex items-center gap-2 truncate">
                         {selectedResidenceCountryObj ? (
                           <>
                             <span className="text-base leading-none">{getCountryFlag(selectedResidenceCountryObj.code)}</span>
-                            <span className="font-semibold text-foreground">{selectedResidenceCountryObj.name}</span>
+                            <span className="font-semibold text-slate-800">{selectedResidenceCountryObj.name}</span>
                           </>
                         ) : country ? (
-                          <span className="font-semibold text-foreground">{country}</span>
+                          <span className="font-semibold text-slate-800">{country}</span>
                         ) : (
-                          <span className="text-muted-foreground">Sélectionnez votre pays...</span>
+                          <span className="text-slate-400">Sélectionnez votre pays...</span>
                         )}
                       </span>
-                      <ChevronDown className={`size-3.5 text-muted-foreground transition-transform duration-200 ${isCountryResidenceDropdownOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isCountryResidenceDropdownOpen ? "rotate-180" : ""}`} />
                     </button>
 
                     {/* Popover Dropdown Pays */}
                     {isCountryResidenceDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-                        <div className="p-2 border-b border-slate-800 sticky top-0 bg-slate-950">
+                      <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                        <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
                           <div className="relative">
-                            <Search className="size-3.5 text-muted-foreground absolute left-2.5 top-2.5" />
+                            <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                             <input
                               type="text"
                               value={countryResidenceSearch}
                               onChange={(e) => setCountryResidenceSearch(e.target.value)}
                               placeholder="Rechercher un pays..."
-                              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                              className="w-full bg-[#F4F6F8] border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
                               autoFocus
                             />
                           </div>
                         </div>
 
-                        <div className="overflow-y-auto divide-y divide-slate-800/40 text-left">
+                        <div className="overflow-y-auto divide-y divide-slate-100 text-left">
                           {filteredResidenceCountries.map((c) => {
                             const isSelected = country.toLowerCase() === c.name.toLowerCase() || country.toLowerCase() === c.code.toLowerCase()
                             return (
@@ -2209,8 +2215,8 @@ export default function DashboardPage() {
                                   setIsCountryResidenceDropdownOpen(false)
                                   setCountryResidenceSearch("")
                                 }}
-                                className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-900 transition-colors cursor-pointer text-left ${
-                                  isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-300"
+                                className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
+                                  isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
                                 }`}
                               >
                                 <span className="flex items-center gap-2 truncate">
@@ -2229,57 +2235,57 @@ export default function DashboardPage() {
 
                 {/* Ville */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground/80">Ville</label>
+                  <label className="text-xs font-semibold text-slate-700">Ville</label>
                   <input
                     type="text"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Ouagadougou, Abidjan, Dakar, Paris..."
-                    className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                   />
                 </div>
               </div>
 
               {/* Secteur d'activité / Profession (Sélecteur par Catégories Design) */}
               <div className="space-y-1.5" ref={sectorDropdownRef}>
-                <label className="text-xs font-bold text-foreground/80">Secteur d'activité / Profession</label>
+                <label className="text-xs font-semibold text-slate-700">Secteur d'activité / Profession</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
-                    className="w-full flex items-center justify-between rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground hover:bg-slate-900 transition-all cursor-pointer text-left"
+                    className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
                   >
-                    <span className="truncate font-semibold text-foreground">
-                      {sector || <span className="text-muted-foreground font-normal">Sélectionnez votre secteur ou métier...</span>}
+                    <span className="truncate font-semibold text-slate-800">
+                      {sector || <span className="text-slate-400 font-normal">Sélectionnez votre secteur ou métier...</span>}
                     </span>
-                    <ChevronDown className={`size-3.5 text-muted-foreground transition-transform duration-200 ${isSectorDropdownOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isSectorDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {/* Popover Dropdown Secteur */}
                   {isSectorDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-full max-h-72 bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-                      <div className="p-2 border-b border-slate-800 sticky top-0 bg-slate-950 z-10">
+                    <div className="absolute top-full left-0 mt-1 w-full max-h-72 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                      <div className="p-2 border-b border-slate-100 sticky top-0 bg-white z-10">
                         <div className="relative">
-                          <Search className="size-3.5 text-muted-foreground absolute left-2.5 top-2.5" />
+                          <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                           <input
                             type="text"
                             value={sectorSearch}
                             onChange={(e) => setSectorSearch(e.target.value)}
                             placeholder="Rechercher un métier ou domaine..."
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                            className="w-full bg-[#F4F6F8] border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
                             autoFocus
                           />
                         </div>
                       </div>
 
-                      <div className="overflow-y-auto divide-y divide-slate-800/40 text-left">
+                      <div className="overflow-y-auto divide-y divide-slate-100 text-left">
                         {filteredSectorsByCategory.map((group) => (
                           <div key={group.category} className="py-1">
                             {/* Distinct Visible Category Header */}
-                            <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-primary bg-slate-900/90 sticky top-0 border-y border-slate-800/60">
+                            <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-primary bg-[#F4F6F8] sticky top-0 border-y border-slate-100">
                               {group.category}
                             </div>
-                            <div className="divide-y divide-slate-900/40">
+                            <div className="divide-y divide-slate-100">
                               {group.options.map((opt) => {
                                 const isSelected = sector === opt
                                 return (
@@ -2291,8 +2297,8 @@ export default function DashboardPage() {
                                       setIsSectorDropdownOpen(false)
                                       setSectorSearch("")
                                     }}
-                                    className={`w-full px-4 py-2 text-xs flex items-center justify-between hover:bg-slate-900 transition-colors cursor-pointer text-left ${
-                                      isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-300"
+                                    className={`w-full px-4 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
+                                      isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
                                     }`}
                                   >
                                     <span className="truncate">{opt}</span>
@@ -2316,7 +2322,7 @@ export default function DashboardPage() {
                       value={sector === "Autre secteur d'activité" ? "" : sector}
                       onChange={(e) => setSector(e.target.value || "Autre secteur d'activité")}
                       placeholder="Précisez votre profession ou domaine exact..."
-                      className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
                     />
                   </div>
                 )}
@@ -2325,7 +2331,7 @@ export default function DashboardPage() {
               <button
                 type="submit"
                 disabled={savingProfile || (rawProfilePhoneDigits.length > 0 && !isProfilePhoneValid)}
-                className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-6 py-3 text-xs shadow-md disabled:opacity-50 transition-all cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold px-6 py-3 text-xs shadow-xs disabled:opacity-50 transition-all cursor-pointer"
               >
                 {savingProfile ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                 <span>Sauvegarder les modifications</span>
@@ -2338,35 +2344,35 @@ export default function DashboardPage() {
 
       {/* Official Certificate Modal */}
       {isCertModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-primary/30 rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl text-left relative overflow-hidden">
-            <div className="border-4 border-amber-500/40 p-6 rounded-2xl bg-slate-950 text-center space-y-4 relative">
-              <div className="flex items-center justify-between border-b border-border/60 pb-3">
-                <span className="font-heading text-sm font-black tracking-tight text-white">LE GUIDE <span className="text-primary">IA</span></span>
-                <span className="text-[10px] font-mono text-muted-foreground">ID : CERT-2026-{user?.id?.substring(0, 6) || "9876"}</span>
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200/90 rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-xl text-left relative overflow-hidden">
+            <div className="border-4 border-[#D4AF37] p-6 rounded-2xl bg-amber-50/20 text-center space-y-4 relative">
+              <div className="flex items-center justify-between border-b border-amber-200/80 pb-3">
+                <span className="font-heading text-sm font-black tracking-tight text-slate-800">LE GUIDE <span className="text-primary">IA</span></span>
+                <span className="text-[10px] font-mono text-slate-500">ID : CERT-2026-{user?.id?.substring(0, 6) || "9876"}</span>
               </div>
 
               <div className="space-y-2 py-4">
-                <span className="text-xs uppercase tracking-widest text-amber-400 font-extrabold">CERTIFICAT DE RÉUSSITE OFFICIEL</span>
-                <p className="text-xs text-muted-foreground">Ce certificat est décerné à</p>
-                <h2 className="font-heading text-2xl md:text-3xl font-black text-white">{fullName || "NOM DE L'APPRENANT"}</h2>
-                <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                <span className="text-xs uppercase tracking-widest text-amber-800 font-extrabold">CERTIFICAT DE RÉUSSITE OFFICIEL</span>
+                <p className="text-xs text-slate-500">Ce certificat est décerné à</p>
+                <h2 className="font-heading text-2xl md:text-3xl font-black text-slate-800">{fullName || "NOM DE L'APPRENANT"}</h2>
+                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
                   Pour avoir complété avec succès le programme intensif de formation professionnelle
                   <strong className="text-primary block mt-1">BOOTCAMP IA PRO 2 — MAÎTRISE DE L'IA PRATIQUE</strong>
                 </p>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-border/60 text-xs">
+              <div className="flex items-center justify-between pt-4 border-t border-amber-200/80 text-xs">
                 <div className="text-left space-y-0.5">
-                  <span className="text-[10px] text-muted-foreground block">Formateur &amp; Auditeur</span>
-                  <span className="font-bold text-white">Alfred Dah (CISA)</span>
+                  <span className="text-[10px] text-slate-500 block">Formateur &amp; Auditeur</span>
+                  <span className="font-bold text-slate-800">Alfred Dah (CISA)</span>
                 </div>
-                <div className="size-14 rounded-lg bg-white p-1 flex items-center justify-center">
+                <div className="size-14 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shadow-xs">
                   <img src="/Logo%20avatar.png" alt="QR" className="size-12 object-cover rounded" />
                 </div>
                 <div className="text-right space-y-0.5">
-                  <span className="text-[10px] text-muted-foreground block">Date de délivrance</span>
-                  <span className="font-bold text-white">6 Septembre 2026</span>
+                  <span className="text-[10px] text-slate-500 block">Date de délivrance</span>
+                  <span className="font-bold text-slate-800">6 Septembre 2026</span>
                 </div>
               </div>
             </div>
@@ -2374,13 +2380,13 @@ export default function DashboardPage() {
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setIsCertModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-white transition-colors"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 transition-colors"
               >
                 Fermer
               </button>
               <button
                 onClick={() => window.print()}
-                className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-4 py-2 rounded-xl text-xs shadow-md"
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs"
               >
                 <Printer className="size-4" />
                 <span>Imprimer / Sauvegarder (PDF)</span>
@@ -2392,35 +2398,35 @@ export default function DashboardPage() {
 
       {/* Invoice Modal */}
       {isInvoiceModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-border rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-2xl text-left">
-            <div className="flex items-center justify-between border-b border-border pb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200/90 rounded-3xl max-w-lg w-full p-6 space-y-6 shadow-xl text-left">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
-                <h3 className="font-heading text-lg font-bold text-white">Facture Officielle / Reçu</h3>
-                <span className="text-[10px] text-muted-foreground font-mono">Réf: {selectedInvoice?.ref || "FACT-2026-0899"}</span>
+                <h3 className="font-heading text-lg font-bold text-slate-800">Facture Officielle / Reçu</h3>
+                <span className="text-[10px] text-slate-500 font-mono">Réf: {selectedInvoice?.ref || "FACT-2026-0899"}</span>
               </div>
-              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">PAYÉ</span>
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">PAYÉ</span>
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Client :</span>
-                <span className="font-bold text-white">{fullName || user?.email}</span>
+                <span className="text-slate-500">Client :</span>
+                <span className="font-semibold text-slate-800">{fullName || user?.email}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Désignation :</span>
-                <span className="font-bold text-white">{selectedInvoice?.title || "Bootcamp IA Pro 2"}</span>
+                <span className="text-slate-500">Désignation :</span>
+                <span className="font-semibold text-slate-800">{selectedInvoice?.title || "Bootcamp IA Pro 2"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Moyen de règlement :</span>
-                <span className="font-bold text-white">{selectedInvoice?.method || "Mobile Money / Wave"}</span>
+                <span className="text-slate-500">Moyen de règlement :</span>
+                <span className="font-semibold text-slate-800">{selectedInvoice?.method || "Mobile Money / Wave"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Date de règlement :</span>
-                <span className="font-bold text-white">{selectedInvoice?.date || "Août 2026"}</span>
+                <span className="text-slate-500">Date de règlement :</span>
+                <span className="font-semibold text-slate-800">{selectedInvoice?.date || "Août 2026"}</span>
               </div>
-              <div className="flex justify-between border-t border-border pt-3 text-sm">
-                <span className="font-bold text-white">Montant Total :</span>
+              <div className="flex justify-between border-t border-slate-200 pt-3 text-sm">
+                <span className="font-bold text-slate-800">Montant Total :</span>
                 <span className="font-bold text-primary font-mono">{selectedInvoice?.amount || "99 000 FCFA"}</span>
               </div>
             </div>
@@ -2428,13 +2434,13 @@ export default function DashboardPage() {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setIsInvoiceModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-muted-foreground hover:text-white"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
               >
                 Fermer
               </button>
               <button
                 onClick={() => window.print()}
-                className="flex items-center gap-2 bg-primary text-primary-foreground font-bold px-4 py-2 rounded-xl text-xs"
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-xs"
               >
                 <Printer className="size-4" />
                 <span>Imprimer la facture</span>
@@ -2446,19 +2452,19 @@ export default function DashboardPage() {
 
       {/* Interactive Platform Homework Submission Modal */}
       {submittingExercise && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-primary/40 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-6 shadow-2xl text-left relative overflow-hidden">
-            <div className="flex items-start justify-between border-b border-border/60 pb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200/90 rounded-3xl max-w-xl w-full p-6 md:p-8 space-y-6 shadow-xl text-left relative overflow-hidden">
+            <div className="flex items-start justify-between border-b border-slate-200 pb-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
                   SOUMISSION D'EXERCICE SUR LA PLATEFORME
                 </span>
-                <h3 className="font-heading text-lg font-bold text-white">
+                <h3 className="font-heading text-lg font-bold text-slate-800">
                   {submittingExercise.title}
                 </h3>
                 {submittingExercise.deadline && (
-                  <p className="text-xs text-amber-400 font-semibold flex items-center gap-1.5 pt-0.5">
-                    <Clock className="size-3.5" />
+                  <p className="text-xs text-amber-900 font-semibold flex items-center gap-1.5 pt-0.5">
+                    <Clock className="size-3.5 text-amber-700" />
                     <span>Date limite de rendu : {submittingExercise.deadline}</span>
                   </p>
                 )}
@@ -2469,7 +2475,7 @@ export default function DashboardPage() {
                   setSelectedFile(null)
                   setSubmissionComment("")
                 }}
-                className="text-muted-foreground hover:text-white text-lg font-bold p-1 cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -2477,11 +2483,11 @@ export default function DashboardPage() {
 
             {submissionSuccessMsg ? (
               <div className="py-8 text-center space-y-3">
-                <div className="size-14 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-lg">
+                <div className="size-14 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center mx-auto shadow-xs">
                   <CheckCircle2 className="size-8 stroke-[2.5]" />
                 </div>
-                <h4 className="font-heading text-xl font-bold text-white">Travail Soumis avec Succès !</h4>
-                <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                <h4 className="font-heading text-xl font-bold text-slate-800">Travail Soumis avec Succès !</h4>
+                <p className="text-xs text-slate-600 max-w-md mx-auto">
                   Votre fichier et vos notes ont été enregistrés sur la plateforme. Votre formateur (Alfred Dah) examinera votre rendu sous 48h.
                 </p>
               </div>
@@ -2489,10 +2495,10 @@ export default function DashboardPage() {
               <form onSubmit={handleSubmitAssignment} className="space-y-4">
                 {/* File Upload Drop Area */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-foreground block">
+                  <label className="text-xs font-semibold text-slate-700 block">
                     1. Sélectionner votre fichier (PDF, Vidéo MP4, Excel XLSX, Word DOCX, JSON, ZIP)
                   </label>
-                  <div className="relative border-2 border-dashed border-primary/30 hover:border-primary bg-slate-950/60 p-6 rounded-2xl text-center space-y-3 transition-colors">
+                  <div className="relative border-2 border-dashed border-slate-300 hover:border-primary bg-[#F4F6F8] p-6 rounded-2xl text-center space-y-3 transition-colors">
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx,.xlsx,.xls,.mp4,.mov,.avi,.json,.zip,.rar"
@@ -2507,10 +2513,10 @@ export default function DashboardPage() {
                       <Upload className="size-6" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white">
+                      <p className="text-xs font-bold text-slate-800">
                         {selectedFile ? selectedFile.name : "Cliquez ou glissez-déposez votre fichier de travail ici"}
                       </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                      <p className="text-[10px] text-slate-500 mt-0.5">
                         {selectedFile
                           ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB · Type: ${selectedFile.type || "Fichier"}`
                           : "Formats acceptés : PDF, Vidéo MP4/MOV, Excel, DOCX, JSON, ZIP (Max 500 MB)"}
@@ -2520,7 +2526,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedFile(null)}
-                        className="relative z-20 text-[10px] text-rose-400 hover:underline font-bold cursor-pointer"
+                        className="relative z-20 text-[10px] text-rose-600 hover:underline font-semibold cursor-pointer"
                       >
                         Changer / Supprimer ce fichier
                       </button>
@@ -2530,7 +2536,7 @@ export default function DashboardPage() {
 
                 {/* Optional Comments for Instructor */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground block">
+                  <label className="text-xs font-semibold text-slate-700 block">
                     2. Remarques ou explications complémentaires pour le formateur (Optionnel)
                   </label>
                   <textarea
@@ -2538,11 +2544,11 @@ export default function DashboardPage() {
                     value={submissionComment}
                     onChange={(e) => setSubmissionComment(e.target.value)}
                     placeholder="Décrivez succinctement la méthodologie ou les hypothèses utilisées pour cet exercice..."
-                    className="w-full rounded-xl border border-border bg-input/40 p-3 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary resize-none"
+                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-primary resize-none shadow-2xs"
                   />
                 </div>
 
-                <div className="pt-2 flex items-center justify-end gap-3 border-t border-border/60">
+                <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => {
@@ -2550,14 +2556,14 @@ export default function DashboardPage() {
                       setSelectedFile(null)
                       setSubmissionComment("")
                     }}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-muted-foreground hover:text-white transition-colors cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
                     disabled={isSubmittingWork || (!selectedFile && !submissionComment.trim())}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-black px-6 py-2.5 text-xs shadow-lg disabled:opacity-50 transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold px-6 py-2.5 text-xs shadow-xs disabled:opacity-50 transition-all cursor-pointer"
                   >
                     {isSubmittingWork ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
                     <span>{isSubmittingWork ? "Envoi en cours..." : "Valider et soumettre mon travail"}</span>

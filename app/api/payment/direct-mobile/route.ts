@@ -115,7 +115,7 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: fromEmail,
           to: [emailClean],
-          reply_to: "alfred@leguideai.com",
+          replyTo: "alfred@leguideai.com",
           subject: `⏳ Demande reçue — Activation sous 24h : ${courseTitle}`,
           text: `Bonjour ${fullName},\n\nNous avons bien enregistré votre demande d'accès pour la formation : ${courseTitle}.\nDétails : ${operatorName} - Référence : ${rawRef}.\n\nNotre équipe procède à la vérification sous 24h.\n\nÀ très vite,\nL'équipe LE GUIDE IA`,
           html: `

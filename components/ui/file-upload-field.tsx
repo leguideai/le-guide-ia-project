@@ -14,6 +14,7 @@ interface FileUploadFieldProps {
   placeholder?: string
   preview?: "image" | "none"
   hint?: string
+  helperText?: string
 }
 
 export function FileUploadField({
@@ -25,7 +26,8 @@ export function FileUploadField({
   folder = "uploads",
   placeholder = "https://... ou téléversez un fichier",
   preview = "image",
-  hint
+  hint,
+  helperText
 }: FileUploadFieldProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -181,8 +183,8 @@ export function FileUploadField({
       )}
 
       {/* Hint */}
-      {hint && !error && (
-        <p className="text-[10px] text-slate-500">{hint}</p>
+      {(hint || helperText) && !error && (
+        <p className="text-[10px] text-slate-500">{hint || helperText}</p>
       )}
 
       {/* Image Preview */}

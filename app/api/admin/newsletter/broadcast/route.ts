@@ -117,7 +117,7 @@ export async function POST(req: Request) {
         await resend.emails.send({
           from: fromEmail,
           to: [email],
-          reply_to: "alfred@leguideai.com",
+          replyTo: "alfred@leguideai.com",
           subject: subject,
           html: fullHtml
         })

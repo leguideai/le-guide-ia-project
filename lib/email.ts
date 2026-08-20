@@ -8,7 +8,7 @@ function getResendClient() {
   return new Resend(apiKey)
 }
 
-const fromEmail = process.env.RESEND_FROM_EMAIL || 'Le Guide IA <samba@leguideai.com>'
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'Le Guide IA <alfred@leguideai.com>'
 
 export async function sendRegistrationEmail(name: string, email: string) {
   try {
@@ -24,7 +24,7 @@ export async function sendRegistrationEmail(name: string, email: string) {
     const data = await resend.emails.send({
       from: fromEmail,
       to: email,
-      reply_to: 'samba@leguideai.com',
+      replyTo: 'alfred@leguideai.com',
       subject: 'Confirmation de votre inscription au Bootcamp — LE GUIDE IA',
       text: textContent,
       html: `
@@ -98,7 +98,7 @@ export async function sendPaymentConfirmationEmail(name: string, email: string, 
     const data = await resend.emails.send({
       from: fromEmail,
       to: email,
-      reply_to: 'samba@leguideai.com',
+      replyTo: 'alfred@leguideai.com',
       subject: 'Confirmation de paiement reçu — LE GUIDE IA',
       text: textContent,
       html: `
@@ -197,7 +197,7 @@ export async function sendManualEnrollmentEmail(params: ManualEnrollmentEmailPar
     const data = await resend.emails.send({
       from: fromEmail,
       to: email,
-      reply_to: 'samba@leguideai.com',
+      replyTo: 'alfred@leguideai.com',
       subject: `🎉 Votre accès au ${courseTitle} est activé ! — LE GUIDE IA`,
       text: textContent,
       html: `
