@@ -2450,20 +2450,22 @@ export default function SuperAdminDashboard() {
             {/* Courses List */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {courses.map((c, idx) => (
-                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-4 relative group hover:border-slate-700 transition-all">
+                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-4 relative group hover:border-slate-300 hover:shadow-md transition-all">
                   <div className="space-y-3 cursor-pointer" onClick={() => openCourseDetails(c)}>
-                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-white border border-slate-200">
+                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
                       <img src={c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg"} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                        <span className="bg-white text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
+                        <span className="bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 shadow-xs px-2 py-0.5 rounded-md text-[10px] font-black">
                           #{c.sequence_order || idx + 1}
                         </span>
-                        <span className="bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase">
-                          {c.badge}
-                        </span>
+                        {c.badge && (
+                          <span className="bg-primary text-slate-950 px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-xs">
+                            {c.badge}
+                          </span>
+                        )}
                       </div>
-                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="bg-white text-slate-800 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 shadow-xl">
+                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                        <span className="bg-white text-slate-900 font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-lg border border-white/40 flex items-center gap-1.5 scale-95 group-hover:scale-100 transition-transform">
                           <Eye className="size-3.5 text-primary" /> Voir les Détails
                         </span>
                       </div>
@@ -2475,8 +2477,8 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div className="flex items-center justify-between text-xs font-mono pt-2 border-t border-slate-200">
-                      <span className="font-bold text-emerald-400">{c.price}</span>
-                      <span className="text-slate-500 line-through text-[10px]">{c.original_price}</span>
+                      <span className="font-extrabold text-emerald-700">{c.price}</span>
+                      <span className="text-slate-400 line-through text-[10px]">{c.original_price}</span>
                     </div>
                   </div>
 
@@ -4744,7 +4746,7 @@ export default function SuperAdminDashboard() {
                                 <Edit3 className="size-3.5" />
                               </button>
                               <button
-                                onClick={() => handleDeletePayment(p)}
+                                onClick={() => handleDeletePayment(p.id, p.registration_id)}
                                 className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                                 title="Supprimer définitivement l'inscription"
                               >
