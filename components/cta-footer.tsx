@@ -27,45 +27,63 @@ const socials = [
   },
 ]
 
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
+
 function InlineCountdown({ targetEndDate }: { targetEndDate?: string }) {
-  const [targetTime, setTargetTime] = useState<number>(new Date(targetEndDate || "2026-08-25T23:59:59Z").getTime())
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    if (targetEndDate) {
-      const parsed = Date.parse(targetEndDate)
-      if (!isNaN(parsed)) setTargetTime(parsed)
-    }
-  }, [targetEndDate])
-
-  useEffect(() => {
     setMounted(true)
+    const targetTime = getOfferEndTimestamp(targetEndDate)
+    if (!targetTime) return
+
     const updateCountdown = () => {
       const now = new Date().getTime()
       const distance = targetTime - now
 
-      if (distance < 0) {
+      if (distance <= 0) {
         setExpired(true)
       } else {
+        setExpired(false)
         const days = Math.floor(distance / (1000 * 60 * 60 * 24))
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-        setTimeLeft({ days, hours, minutes })
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+        setTimeLeft({ days, hours, minutes, seconds })
       }
     }
 
     updateCountdown()
     const timer = setInterval(updateCountdown, 1000)
     return () => clearInterval(timer)
-  }, [targetTime])
+  }, [targetEndDate])
 
-  if (!mounted || expired) return null
+  if (!mounted || !targetEndDate || expired) return null
 
   return (
     <span className="text-[#ECC86B] font-bold ml-1">
-      · Expire dans {timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m
+      · Expire dans {timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
     </span>
   )
 }
@@ -77,14 +95,7 @@ interface CtaFooterProps {
 export function CtaFooter({ hideCta = false }: CtaFooterProps) {
   const pathname = usePathname()
   const { t } = useLanguage()
-  const [activeCourse, setActiveCourse] = useState<any>({
-    title: "Bootcamp IA & Carrière",
-    slug: "bootcamp-ia-carriere",
-    price: 99000,
-    original_price: "149 000 FCFA",
-    offer_badge_text: "Offre Fondateur",
-    offer_end_date: "2026-08-25T23:59:59Z"
-  })
+  const [activeCourse, setActiveCourse] = useState<any>(null)
 
   // Newsletter State
   const [newsletterEmail, setNewsletterEmail] = useState("")
@@ -139,9 +150,9 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
     { label: "Entreprises (B2B)", href: "/entreprises" },
   ]
 
-  const formattedPrice = typeof activeCourse.price === "number"
+  const formattedPrice = typeof activeCourse?.price === "number"
     ? `${activeCourse.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA`
-    : String(activeCourse.price || "99 000 FCFA")
+    : String(activeCourse?.price || "99 000 FCFA")
 
   return (
     <footer className="relative border-t border-border/60 bg-slate-950 overflow-hidden">
@@ -175,22 +186,22 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   "{t("ctaFooter.title")}"
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-                  L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le <strong className="text-white font-bold">{activeCourse.title}</strong> pour maîtriser les outils indispensables à votre réussite.
+                  L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le <strong className="text-white font-bold">{activeCourse?.title || "Bootcamp IA"}</strong> pour maîtriser les outils indispensables à votre réussite.
                 </p>
                 
                 <div className="pt-4 space-y-3">
                   <div>
                     <a
-                      href={`/bootcamp?course=${activeCourse.slug || "bootcamp-ia-carriere"}`}
+                      href={`/bootcamp?course=${activeCourse?.slug || "bootcamp-ia-carriere"}`}
                       className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
                     >
-                      S'inscrire au {activeCourse.title} ({formattedPrice})
+                      S'inscrire au {activeCourse?.title || "Bootcamp IA"} ({formattedPrice})
                     </a>
                   </div>
                   
                   <div className="text-xs text-slate-300 flex flex-wrap gap-2 items-center">
-                    <span className="font-bold text-white">{activeCourse.original_price || "149 000 FCFA"} • {activeCourse.offer_badge_text || "Offre Fondateur"}</span>
-                    <InlineCountdown targetEndDate={activeCourse.offer_end_date} />
+                    <span className="font-bold text-white">{activeCourse?.original_price || ""} {activeCourse?.offer_badge_text ? `• ${activeCourse.offer_badge_text}` : ""}</span>
+                    {activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
                   </div>
 
                   {/* Checklist Badges */}

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { Suspense, useState, useEffect, use } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { UdemyHeader } from "@/components/udemy-header"
 import { supabase } from "@/lib/supabase"
 import { ArrowLeft, ArrowRight, ShieldCheck, Lock, CreditCard, Smartphone, CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check } from "lucide-react"
@@ -13,17 +14,34 @@ interface PageProps {
 // Mettre à true pour réactiver PayTech quand vous aurez les documents NINEA / RC
 const ENABLE_PAYTECH = false
 
-export default function CheckoutPage({ params }: PageProps) {
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  
+  // Format YYYY-MM-DD -> Inclut toute la journée jusqu'à 23:59:59.999
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
+
+function CheckoutContent({ params }: PageProps) {
   const { courseSlug } = use(params)
+  const searchParams = useSearchParams()
+  const requestedTier = searchParams.get("tier")
 
-  const isBusiness = courseSlug === "bootcamp-ia-business"
-  const courseTitle = isBusiness ? "Bootcamp IA Business" : "Bootcamp IA Pro"
-  const coursePriceFcfa = isBusiness ? "199 000 FCFA" : "99 000 FCFA"
-  const coursePriceUsd = isBusiness ? "300 € / $330" : "150 € / $165"
-  const courseSchedule = isBusiness 
-    ? "Lun-Ven 19h-21h GMT + Dimanche 16h-21h GMT" 
-    : "Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT"
-
+  const [courseData, setCourseData] = useState<any>(null)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe" | "paytech">("mobile_direct")
   const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov" | "mtn">("wave")
   const [transactionRef, setTransactionRef] = useState("")
@@ -36,7 +54,50 @@ export default function CheckoutPage({ params }: PageProps) {
   const [error, setError] = useState<string | null>(null)
   const [copiedNum, setCopiedNum] = useState<string | null>(null)
 
-  const price = isBusiness ? 199000 : 99000
+  // Fetch course from Supabase
+  useEffect(() => {
+    async function fetchCourse() {
+      try {
+        const { data, error } = await supabase
+          .from("courses")
+          .select("*")
+          .or(`slug.eq.${courseSlug},id.eq.${courseSlug}`)
+          .maybeSingle()
+
+        if (data) {
+          setCourseData(data)
+        }
+      } catch (err) {
+        console.warn("Could not fetch course in checkout:", err)
+      }
+    }
+    fetchCourse()
+  }, [courseSlug])
+
+  // Check if special offer has expired (after the entire last day is exhausted)
+  const targetTimestamp = getOfferEndTimestamp(courseData?.offer_end_date)
+  const isOfferExpired = targetTimestamp !== null && new Date().getTime() > targetTimestamp
+
+  // Active Tier: if offer expired, standard tier is forced
+  const isStandardTier = requestedTier === "standard" || isOfferExpired
+
+  const isBusiness = courseSlug?.includes("business") || 
+    courseData?.slug?.includes("business") || 
+    courseData?.title?.toLowerCase().includes("business")
+
+  const courseTitle = courseData?.title || (isBusiness ? "Bootcamp IA & Business" : "Bootcamp IA & Carrière")
+
+  // Price calculations
+  const rawOfferPrice = courseData?.price !== undefined ? Number(courseData.price) : (isBusiness ? 149000 : 99000)
+  const rawStandardPrice = courseData?.original_price
+    ? parseFloat(String(courseData.original_price).replace(/[^0-9.]/g, "")) || Math.round(rawOfferPrice * 1.5)
+    : Math.round(rawOfferPrice * 1.5)
+
+  const price = isStandardTier ? rawStandardPrice : rawOfferPrice
+  const coursePriceFcfa = `${price.toLocaleString("fr-FR")} FCFA`
+  const approxUsd = Math.round(price / 655)
+  const coursePriceUsd = `≈ ${approxUsd} € / $${Math.round(approxUsd * 1.1)}`
+  const courseSchedule = courseData?.dates || (isBusiness ? "Lun-Ven 19h-21h GMT + Dimanche 16h-21h GMT" : "Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT")
 
   useEffect(() => {
     async function loadUserData() {
@@ -467,4 +528,16 @@ export default function CheckoutPage({ params }: PageProps) {
     </div>
   </main>
 )
+}
+
+export default function CheckoutPage(props: PageProps) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center text-primary font-bold text-sm">
+        Chargement de la commande...
+      </div>
+    }>
+      <CheckoutContent {...props} />
+    </Suspense>
+  )
 }

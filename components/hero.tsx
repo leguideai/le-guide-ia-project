@@ -8,24 +8,66 @@ import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
 import { supabase } from "@/lib/supabase"
 
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
+
 function CountdownTimer() {
   const { t } = useLanguage()
-  // Target date is August 20, 2026 at 23:59:59 GMT
-  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
+  const [targetDate, setTargetDate] = useState<number | null>(null)
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [expired, setExpired] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    async function loadTargetDate() {
+      try {
+        const { data } = await supabase
+          .from("courses")
+          .select("offer_end_date, price, currency")
+          .not("offer_end_date", "is", null)
+          .order("sequence_order", { ascending: true })
+          .limit(1)
+
+        if (data && data.length > 0 && data[0].offer_end_date) {
+          const parsed = getOfferEndTimestamp(data[0].offer_end_date)
+          if (parsed) setTargetDate(parsed)
+        }
+      } catch (err) {}
+    }
+    loadTargetDate()
+  }, [])
+
+  useEffect(() => {
     setMounted(true)
+    if (!targetDate) return
+
     const updateCountdown = () => {
       const now = new Date().getTime()
       const distance = targetDate - now
 
-      if (distance < 0) {
+      if (distance <= 0) {
         setExpired(true)
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
       } else {
+        setExpired(false)
         const days = Math.floor(distance / (1000 * 60 * 60 * 24))
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
@@ -39,12 +81,12 @@ function CountdownTimer() {
     return () => clearInterval(timer)
   }, [targetDate])
 
-  if (!mounted) return null
+  if (!mounted || !targetDate) return null
 
   if (expired) {
     return (
-      <div className="mt-6 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center font-heading text-sm font-bold text-destructive">
-        L'offre fondateur à 149 900 FCFA / 262 USD est expirée.
+      <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-center font-heading text-xs font-bold text-rose-400">
+        L'offre promotionnelle a expiré. Les inscriptions se poursuivent au tarif standard.
       </div>
     )
   }

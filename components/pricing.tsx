@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { Check, Sparkles, ArrowRight, Clock } from "lucide-react"
+import { Check, Sparkles, ArrowRight, Clock, AlertCircle, ShieldCheck } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { isCourseOpenForPublic } from "@/lib/courses-visibility"
 
@@ -14,9 +14,42 @@ interface PricingProps {
   onSelectCourse?: (id: string) => void
 }
 
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  
+  // Format YYYY-MM-DD (ex: "2026-08-20") -> épuise toute la journée jusqu'à 23:59:59.999
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  // Format avec heure 00:00:00 -> Repousser à la fin de cette même journée
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
+
 export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCourse, onSelectCourse }: PricingProps) {
   const [dbCourses, setDbCourses] = useState<any[]>(courses || [])
   const [activeId, setActiveId] = useState<string>(selectedCourseId || "")
+
+  // Countdown timer state
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  })
+  const [isOfferExpired, setIsOfferExpired] = useState(false)
+  const [hasOfferEndDate, setHasOfferEndDate] = useState(false)
 
   useEffect(() => {
     if (courses && courses.length > 0) {
@@ -75,6 +108,39 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     (activeId && String(c.slug || "").toLowerCase().includes(String(activeId).toLowerCase()))
   ) || displayCourses[0]
 
+  // Dynamic Live Countdown Engine based on activeCourse.offer_end_date (with full last day exhausted)
+  useEffect(() => {
+    const targetTime = getOfferEndTimestamp(activeCourse?.offer_end_date)
+    if (!targetTime) {
+      setHasOfferEndDate(false)
+      setIsOfferExpired(false)
+      return
+    }
+
+    setHasOfferEndDate(true)
+
+    const calculateCountdown = () => {
+      const now = new Date().getTime()
+      const diff = targetTime - now
+
+      if (diff <= 0) {
+        setIsOfferExpired(true)
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      } else {
+        setIsOfferExpired(false)
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+        setTimeLeft({ days, hours, minutes, seconds })
+      }
+    }
+
+    calculateCountdown()
+    const interval = setInterval(calculateCountdown, 1000)
+    return () => clearInterval(interval)
+  }, [activeCourse?.offer_end_date])
+
   function formatPrice(val: any, currency = "FCFA") {
     if (val === undefined || val === null || val === "") return ""
     if (typeof val === "number") {
@@ -114,21 +180,17 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     title: activeCourse?.title || "",
     subtitle: activeCourse?.description || activeCourse?.subtitle || "",
     founderPrice: formatPrice(activeCourse?.price || 0, activeCourse?.currency),
-    founderApprox: "",
     standardPrice: formatStandardPrice(activeCourse?.price || 0, activeCourse?.original_price || "", activeCourse?.currency),
-    standardApprox: "",
-    expireText: activeCourse?.badge || "",
-    targetDateIso: "",
+    offerBadge: activeCourse?.offer_badge_text || (isBusiness ? "OFFRE EXCLUSIVE VIP" : "OFFRE SPÉCIALE FONDATEUR"),
     standardDateText: activeCourse?.dates ? `Session : ${activeCourse.dates}` : "",
-    checkoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT") ? "/register-account" : `/checkout/${activeCourse?.slug || activeCourse?.id || ""}`,
+    offerCheckoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT")
+      ? "/register-account" 
+      : `/checkout/${activeCourse?.slug || activeCourse?.id || ""}?tier=offer`,
+    standardCheckoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT")
+      ? "/register-account" 
+      : `/checkout/${activeCourse?.slug || activeCourse?.id || ""}?tier=standard`,
     features: activeFeatures
   }
-
-  const badgeText = isBusiness 
-    ? "EXCLUSIVE MANAGERS" 
-    : (activeCourse?.badge && !activeCourse.badge.toLowerCase().includes("vip") && !activeCourse.badge.toLowerCase().includes("executif"))
-      ? activeCourse.badge
-      : "PARCOURS CARRIÈRE & PROS"
 
   const theme = isBusiness
     ? {
@@ -141,13 +203,13 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
         btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-xl shadow-[#D4AF37]/25",
       }
     : {
-        border: "border-2 border-blue-500/80 glow-blue bg-slate-950",
-        badge: "bg-blue-600 text-white border border-blue-400 font-black",
+        border: "border-2 border-primary glow-blue bg-slate-950",
+        badge: "bg-primary text-slate-950 border border-amber-300 font-black",
         priceColor: "text-white",
-        expireColor: "text-blue-300",
-        expireIcon: "text-blue-400",
-        checkColor: "text-blue-400",
-        btn: "bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-xl shadow-blue-500/25",
+        expireColor: "text-amber-300",
+        expireIcon: "text-primary",
+        checkColor: "text-primary",
+        btn: "bg-primary hover:bg-primary/90 text-slate-950 font-black shadow-xl shadow-primary/25",
       }
 
   return (
@@ -162,43 +224,66 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
             </span>
           </div>
       
-          <p className="text-xs md:text-sm text-muted-foreground ">
-            Profitez du tarif officiel garanti avec accès complet aux sessions en direct, aux replays HD et au certificat d'accomplissement.
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Profitez de votre place officielle avec accès complet aux sessions en direct, aux replays HD à vie et au certificat d'accomplissement.
           </p>
         </div>
 
-        {/* 2 Cards Grid: Offre Fondateur vs Prix Standard */}
+        {/* 2 Cards Grid: Offre Spéciale vs Prix Standard */}
         <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto items-stretch pt-6 md:pt-8">
           
-          {/* Card 1: Offre Actuelle (Highlight) */}
+          {/* Card 1: Offre Spéciale / Fondateur (Avec décompteur) */}
           <motion.div
             key={`founder-${activeId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className={`relative rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-between z-10 ${theme.border}`}
+            className={`relative rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-between z-10 transition-all ${
+              isOfferExpired 
+                ? "border border-border/60 bg-card/20 opacity-75 grayscale-[0.4]" 
+                : theme.border
+            }`}
           >
             {/* Top Badge */}
-            <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${theme.badge}`}>
+            <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${
+              isOfferExpired 
+                ? "bg-slate-800 text-slate-400 border border-slate-700" 
+                : theme.badge
+            }`}>
               <Sparkles className="size-3.5" />
-              {badgeText}
+              {isOfferExpired ? "OFFRE TERMINÉE" : current.offerBadge}
             </div>
 
             <div>
-              <div className="text-center mt-4 mb-6 space-y-2">
+              <div className="text-center mt-4 mb-6 space-y-3">
                 <div className="flex items-center justify-center gap-2 pt-2">
-                  <span className={`font-heading text-4xl md:text-5xl font-black ${theme.priceColor}`}>{current.founderPrice}</span>
-                  {current.founderApprox && (
-                    <span className="text-xs font-bold text-muted-foreground bg-card/80 border border-border/60 rounded-full px-2.5 py-1">
-                      {current.founderApprox}
-                    </span>
-                  )}
+                  <span className={`font-heading text-4xl md:text-5xl font-black ${isOfferExpired ? "text-slate-500 line-through" : theme.priceColor}`}>
+                    {current.founderPrice}
+                  </span>
                 </div>
 
+                {/* Dynamic Live Countdown Timer or Expiry Alert */}
+                {hasOfferEndDate && !isOfferExpired && (
+                  <div className={`py-2 px-3 rounded-2xl border text-xs font-mono font-bold flex items-center justify-center gap-2 ${
+                    isBusiness ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#F3E5AB]" : "bg-primary/15 border-primary/30 text-amber-300"
+                  }`}>
+                    <Clock className="size-4 animate-pulse shrink-0 text-primary" />
+                    <span>
+                      Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong>
+                    </span>
+                  </div>
+                )}
+
+                {hasOfferEndDate && isOfferExpired && (
+                  <div className="py-2 px-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center justify-center gap-2">
+                    <AlertCircle className="size-4 text-rose-400 shrink-0" />
+                    <span>Cette offre promotionnelle a expiré</span>
+                  </div>
+                )}
+
                 {current.standardDateText && (
-                  <div className={`text-xs font-extrabold uppercase tracking-wide flex items-center justify-center gap-1.5 pt-1 ${theme.expireColor}`}>
-                    <Clock className={`size-3.5 animate-pulse ${theme.expireIcon}`} />
-                    <span>{current.standardDateText}</span>
+                  <div className="text-xs text-muted-foreground font-medium pt-1">
+                    {current.standardDateText}
                   </div>
                 )}
               </div>
@@ -206,8 +291,8 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
               <div className="border-t border-border/70 pt-6">
                 <ul className="space-y-3.5">
                   {current.features.map((f: string, index: number) => (
-                    <li key={index} className="flex items-start gap-3 text-xs md:text-sm text-foreground/95">
-                      <Check className={`size-4 shrink-0 mt-0.5 ${theme.checkColor}`} />
+                    <li key={index} className={`flex items-start gap-3 text-xs md:text-sm ${isOfferExpired ? "text-muted-foreground" : "text-foreground/95"}`}>
+                      <Check className={`size-4 shrink-0 mt-0.5 ${isOfferExpired ? "text-slate-600" : theme.checkColor}`} />
                       <span>{String(f).replace(/VIP/gi, "Exclusifs")}</span>
                     </li>
                   ))}
@@ -216,32 +301,63 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
             </div>
 
             <div className="mt-8">
-              <Link
-                href={current.checkoutHref}
-                className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl text-sm transition-all shadow-xl active:scale-95 cursor-pointer ${theme.btn}`}
-              >
-                <span>Rejoindre le Bootcamp ({current.founderPrice})</span>
-                <ArrowRight className="size-4" />
-              </Link>
+              {!isOfferExpired ? (
+                <Link
+                  href={current.offerCheckoutHref}
+                  className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl text-sm transition-all shadow-xl active:scale-95 cursor-pointer ${theme.btn}`}
+                >
+                  <span>Profiter de l'Offre ({current.founderPrice})</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm bg-slate-800/80 text-slate-500 font-bold border border-slate-700/60 cursor-not-allowed select-none"
+                >
+                  <span>Offre Expirée · Tarif Standard Uniquement</span>
+                </button>
+              )}
             </div>
           </motion.div>
 
-          {/* Card 2: Prix Standard */}
+          {/* Card 2: Prix Standard (Activé automatiquement quand l'offre expire) */}
           <motion.div
             key={`standard-${activeId}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="relative rounded-3xl border border-border/80 bg-card/40 backdrop-blur-xl p-6 md:p-8 shadow-xl flex flex-col justify-between"
+            className={`relative rounded-3xl p-6 md:p-8 shadow-xl flex flex-col justify-between transition-all ${
+              isOfferExpired 
+                ? "border-2 border-primary glow-gold bg-slate-950 shadow-2xl z-20" 
+                : "border border-border/80 bg-card/40 backdrop-blur-xl"
+            }`}
           >
+            {/* Standard Badge on Card 2 */}
+            <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${
+              isOfferExpired 
+                ? "bg-primary text-slate-950 border border-amber-300 font-black" 
+                : "bg-secondary text-secondary-foreground border border-border"
+            }`}>
+              <ShieldCheck className="size-3.5" />
+              {isOfferExpired ? "TARIF OFFICIEL ACTIF" : "PRIX STANDARD"}
+            </div>
+
             <div>
-              <div className="text-center mt-4 mb-6 space-y-2">
-                <span className="text-xs font-extrabold uppercase tracking-widest text-muted-foreground">
-                  PRIX STANDARD
-                </span>
-                <div className="flex items-center justify-center gap-2 pt-1">
-                  <span className="font-heading text-3xl md:text-4xl font-black text-foreground">{current.standardPrice}</span>
+              <div className="text-center mt-4 mb-6 space-y-3">
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <span className={`font-heading text-4xl md:text-5xl font-black ${isOfferExpired ? "text-white" : "text-foreground"}`}>
+                    {current.standardPrice}
+                  </span>
                 </div>
+
+                {isOfferExpired && (
+                  <div className="py-2 px-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2">
+                    <Check className="size-4 text-emerald-400 shrink-0" />
+                    <span>Inscriptions ouvertes au tarif standard</span>
+                  </div>
+                )}
+
                 <div className="text-xs text-muted-foreground font-semibold pt-1">
                   {current.standardDateText}
                 </div>
@@ -251,7 +367,7 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
                 <ul className="space-y-3.5">
                   {current.features.map((f: string, index: number) => (
                     <li key={index} className="flex items-start gap-3 text-xs md:text-sm text-muted-foreground">
-                      <Check className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+                      <Check className={`size-4 shrink-0 mt-0.5 ${isOfferExpired ? "text-primary" : "text-muted-foreground"}`} />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -261,10 +377,15 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
 
             <div className="mt-8">
               <Link
-                href={current.checkoutHref}
-                className="w-full flex h-12 items-center justify-center gap-2 rounded-xl bg-secondary/80 hover:bg-secondary text-foreground font-bold text-xs md:text-sm border border-border transition-all active:scale-95 cursor-pointer"
+                href={current.standardCheckoutHref}
+                className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 cursor-pointer shadow-xl ${
+                  isOfferExpired 
+                    ? "bg-primary hover:bg-primary/90 text-slate-950 font-black shadow-primary/25" 
+                    : "bg-secondary/80 hover:bg-secondary text-foreground border border-border"
+                }`}
               >
-                <span>Choisir l'accès ({current.standardPrice})</span>
+                <span>Rejoindre au Tarif Standard ({current.standardPrice})</span>
+                <ArrowRight className="size-4" />
               </Link>
             </div>
           </motion.div>
@@ -275,3 +396,4 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     </section>
   )
 }
+

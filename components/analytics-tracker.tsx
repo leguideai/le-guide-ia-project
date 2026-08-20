@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { Suspense, useEffect, useRef } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 
 function getOrCreateVisitorId(): string {
@@ -39,7 +39,7 @@ function detectDevice(): "mobile" | "tablet" | "desktop" {
   return "desktop"
 }
 
-export function AnalyticsTracker() {
+function AnalyticsTrackerInner() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const lastTrackedRef = useRef<{ path: string; time: number }>({ path: "", time: 0 })
@@ -97,4 +97,12 @@ export function AnalyticsTracker() {
   }, [pathname, searchParams])
 
   return null
+}
+
+export function AnalyticsTracker() {
+  return (
+    <Suspense fallback={null}>
+      <AnalyticsTrackerInner />
+    </Suspense>
+  )
 }

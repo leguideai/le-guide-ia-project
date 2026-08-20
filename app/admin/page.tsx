@@ -2637,7 +2637,7 @@ export default function SuperAdminDashboard() {
                             type="date"
                             value={courseForm.offer_end_date ? courseForm.offer_end_date.substring(0, 10) : ""}
                             onChange={e => setCourseForm({ ...courseForm, offer_end_date: e.target.value })}
-                            className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400 font-bold text-amber-300"
+                            className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-bold"
                           />
                         </div>
                         <div>
