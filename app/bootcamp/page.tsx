@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { UdemyHeader } from "@/components/udemy-header"
@@ -14,7 +14,7 @@ import { GraduationCap, UserCheck, Gift, ArrowRight, Sparkles, CheckCircle2, Cal
 import { supabase } from "@/lib/supabase"
 import { isCourseOpenForPublic, getCourseVisibilityStatus } from "@/lib/courses-visibility"
 
-export default function BootcampPage() {
+function BootcampContent() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
   const [dbCourses, setDbCourses] = useState<any[]>([])
 
@@ -174,8 +174,8 @@ export default function BootcampPage() {
             >
               <div className="grid gap-8 lg:grid-cols-12 items-stretch">
                 
-                {/* Left Column: Details & Program Features */}
-                <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+                {/* Left Column: Details & Program Features (Order 2 on mobile, Order 1 on desktop) */}
+                <div className="order-2 lg:order-1 lg:col-span-7 flex flex-col justify-between space-y-6">
                   
                   {/* Header Row */}
                   <div className="space-y-4">
@@ -271,9 +271,9 @@ export default function BootcampPage() {
 
               </div>
 
-              {/* Right Column: Official Poster Display (3:4 Vertical Ratio) */}
-              <div className="lg:col-span-5 flex justify-center items-center">
-                <div className={`rounded-2xl bg-slate-950 p-3 shadow-2xl backdrop-blur-xl w-full max-w-[340px] border ${theme.posterBorder}`}>
+              {/* Right Column: Official Poster Display (Order 1 on mobile, Order 2 on desktop) */}
+              <div className="order-1 lg:order-2 lg:col-span-5 flex justify-center items-center">
+                <div className={`rounded-2xl bg-slate-950 p-3 shadow-2xl backdrop-blur-xl w-full max-w-[340px] sm:max-w-[380px] lg:max-w-[340px] border ${theme.posterBorder}`}>
                   <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-border/40 shadow-xl bg-slate-950 group">
                     <img
                       src={active?.poster || active?.thumbnail || "/images/bootcamp_pro_poster.jpg"}
@@ -308,5 +308,17 @@ export default function BootcampPage() {
       <ScrollToTop />
       <WhatsAppFloat />
     </main>
+  )
+}
+
+export default function BootcampPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center text-primary font-bold text-sm">
+        Chargement des bootcamps...
+      </div>
+    }>
+      <BootcampContent />
+    </Suspense>
   )
 }
