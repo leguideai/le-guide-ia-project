@@ -187,18 +187,18 @@ export function FileUploadField({
         <p className="text-[10px] text-slate-500">{hint || helperText}</p>
       )}
 
-      {/* Image Preview */}
+      {/* Image Preview Compact */}
       {preview === "image" && value && value.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i) && (
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-200 bg-[#F4F6F8]">
+        <div className="relative w-full h-28 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center p-1.5 group">
           <img
             src={value}
             alt="Aperçu"
-            className="w-full h-full object-contain"
+            className="max-h-full max-w-full object-contain rounded-lg shadow-2xs"
             onError={e => { (e.target as HTMLImageElement).style.display = "none" }}
           />
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-slate-900/60 backdrop-blur-xs transition-opacity">
-            <a href={value} target="_blank" rel="noopener noreferrer" className="text-white text-xs font-bold flex items-center gap-1">
-              <ExternalLink className="size-3.5" /> Voir en plein écran
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-slate-950/60 backdrop-blur-xs transition-opacity rounded-xl">
+            <a href={value} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-900 text-xs font-bold flex items-center gap-1.5 shadow-md">
+              <ExternalLink className="size-3.5 text-primary" /> Voir en plein écran
             </a>
           </div>
         </div>

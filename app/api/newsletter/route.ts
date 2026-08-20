@@ -37,33 +37,52 @@ export async function POST(req: Request) {
       if (!insErr) {
         saved = true
       } else {
-        // Retry with minimal fields if columns differ
         const { error: retryErr } = await supabaseServer
           .from("newsletter_subscribers")
-          .upsert({
+          .insert({
             email: emailClean,
-            status: "active"
-          }, { onConflict: "email" })
+            status: "active",
+            source: source,
+            created_at: nowIso
+          })
         if (!retryErr) saved = true
       }
     } catch (dbErr) {
       console.warn("newsletter_subscribers insert error:", dbErr)
     }
 
-    // Fallback: enregistrement dans registrations si newsletter_subscribers n'existe pas encore
-    if (!saved) {
-      try {
-        await supabaseServer.from("registrations").upsert({
-          full_name: name || "Abonné Newsletter",
-          email: emailClean,
-          source: "newsletter",
-          status: "prospect",
-          created_at: nowIso
-        }, { onConflict: "email" })
+    // Toujours enregistrer dans registrations en secours pour ne jamais perdre d'email
+    try {
+      const { data: existing } = await supabaseServer
+        .from("registrations")
+        .select("id")
+        .eq("email", emailClean)
+        .maybeSingle()
+
+      if (existing) {
+        await supabaseServer
+          .from("registrations")
+          .update({
+            full_name: name || "Abonné Newsletter",
+            source: "newsletter",
+            status: "active"
+          })
+          .eq("id", existing.id)
         saved = true
-      } catch (fallbackErr) {
-        console.warn("Fallback registrations insert error:", fallbackErr)
+      } else {
+        await supabaseServer
+          .from("registrations")
+          .insert({
+            full_name: name || "Abonné Newsletter",
+            email: emailClean,
+            source: "newsletter",
+            status: "active",
+            created_at: nowIso
+          })
+        saved = true
       }
+    } catch (fallbackErr) {
+      console.warn("Fallback registrations insert error:", fallbackErr)
     }
 
     // 2. Envoi d'un email de bienvenue officiel de la part d'Alfred Dah
@@ -152,12 +171,12 @@ export async function GET() {
       console.warn("Failed querying newsletter_subscribers table:", e)
     }
 
-    // B. Source 2: registrations avec source = 'newsletter'
+    // B. Source 2: registrations avec source = 'newsletter' ou 'footer_newsletter'
     try {
       const { data: regNews } = await supabaseServer
         .from("registrations")
         .select("*")
-        .eq("source", "newsletter")
+        .or("source.ilike.%newsletter%,status.eq.newsletter,source.eq.footer_newsletter")
 
       if (regNews && regNews.length > 0) {
         regNews.forEach(r => {
@@ -169,7 +188,7 @@ export async function GET() {
                 email: em,
                 name: r.full_name || null,
                 status: "active",
-                source: "footer_newsletter",
+                source: r.source || "footer_newsletter",
                 created_at: r.created_at || new Date().toISOString()
               })
             }

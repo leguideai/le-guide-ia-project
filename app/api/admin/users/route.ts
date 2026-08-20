@@ -37,6 +37,8 @@ export async function POST(req: Request) {
     const userName = body.userName || body.name || body.fullName || body.full_name
     const paymentMethod = body.paymentMethod || body.payment_method
     const transactionRef = body.transactionRef || body.transaction_ref
+    const whatsapp = body.whatsapp || body.phone
+    const receiptUrl = body.receiptUrl || body.receipt_url
     const courseTitleOverride = body.course_title || body.courseTitle
     const amountPaidOverride = body.amount_paid || body.amountPaid || body.amount
 
@@ -154,14 +156,25 @@ export async function POST(req: Request) {
 
         const { data: existingReg, error: selErr } = await queryReg.maybeSingle()
 
+        const regNotes = JSON.stringify({
+          course_slug: courseSlugFinal,
+          course_title: courseTitle,
+          receipt_url: receiptUrl || undefined,
+          manual_enroll: true,
+          enrolled_at: new Date().toISOString()
+        })
+
         if (!selErr && existingReg) {
           regId = existingReg.id
           await supabaseServer
             .from("registrations")
             .update({
+              full_name: resolvedFullName,
+              whatsapp: whatsapp || "",
               status: "paye",
               ...(courseId ? { course_id: courseId } : {}),
-              course_slug: courseSlugFinal
+              course_slug: courseSlugFinal,
+              notes: regNotes
             })
             .eq("id", regId)
         } else {
@@ -170,30 +183,17 @@ export async function POST(req: Request) {
             .insert({
               full_name: resolvedFullName,
               email: emailClean,
+              whatsapp: whatsapp || "",
               ...(courseId ? { course_id: courseId } : {}),
               course_slug: courseSlugFinal,
               status: "paye",
-              source: "admin_manual_enroll"
+              source: "admin_manual_enroll",
+              notes: regNotes
             })
             .select()
             .single()
 
-          if (regErr && (regErr.message.includes("column") || regErr.code === "42703")) {
-            const { data: fbReg } = await supabaseServer
-              .from("registrations")
-              .insert({
-                full_name: resolvedFullName,
-                email: emailClean,
-                status: "paye",
-                source: "admin_manual_enroll"
-              })
-              .select()
-              .single()
-
-            if (fbReg) regId = fbReg.id
-          } else if (newReg) {
-            regId = newReg.id
-          }
+          if (newReg) regId = newReg.id
         }
       } catch (err) {
         console.error("Registration error:", err)
@@ -213,6 +213,10 @@ export async function POST(req: Request) {
             method: methodLabel,
             status: "confirmed",
             transaction_ref: refCode,
+            course_id: courseId || null,
+            course_title: courseTitle,
+            payment_method: methodLabel,
+            confirmed_at: new Date().toISOString(),
             created_at: new Date().toISOString()
           })
       }

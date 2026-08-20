@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     // Action 1: Inscription Manuelle d'un apprenant par l'admin
     if (action === "manual_enroll") {
-      const { courseId, courseSlug, courseTitle, fullName, email, whatsapp, amount, sendEmail } = body
+      const { courseId, courseSlug, courseTitle, fullName, email, whatsapp, amount, receiptUrl, sendEmail } = body
       if (!email || !fullName || !courseSlug) {
         return NextResponse.json({ error: "Email, Nom et Bootcamp requis." }, { status: 400 })
       }
@@ -73,9 +73,16 @@ export async function POST(req: Request) {
         country: "CI",
         source: "admin_manual_enroll",
         course_slug: courseSlug,
-        status: "paye"
+        course_id: courseId || null,
+        status: "paye",
+        notes: JSON.stringify({
+          course_slug: courseSlug,
+          course_title: courseTitle || courseSlug,
+          receipt_url: receiptUrl || undefined,
+          manual_enroll: true,
+          enrolled_at: new Date().toISOString()
+        })
       }
-      if (courseId) regPayload.course_id = courseId
 
       if (existingReg) {
         registrationId = existingReg.id
@@ -94,7 +101,10 @@ export async function POST(req: Request) {
         method: "admin_manual",
         status: "confirmed",
         transaction_ref: ref,
-        notes: courseTitle || courseSlug
+        course_id: courseId || null,
+        course_title: courseTitle || courseSlug,
+        payment_method: "Admin Manuel",
+        confirmed_at: new Date().toISOString()
       })
 
       // 3. Activate user_courses

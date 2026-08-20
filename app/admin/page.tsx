@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
@@ -13,7 +13,8 @@ import {
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
   ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X,
   Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star,
-  Image as ImageIcon
+  Image as ImageIcon, Bold, Italic, Underline, List, ListOrdered, Heading2, Heading3,
+  Link2, Minus, MousePointerClick, AlertCircle, Code, AlignLeft, Send
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { AnalyticsChart } from "@/components/analytics-chart"
@@ -113,6 +114,9 @@ interface PaymentRecord {
   transaction_ref?: string
   receipt_url?: string
   notes?: string
+  course_id?: string
+  course_title?: string
+  payment_method?: string
   created_at: string
   registrations?: {
     id?: string
@@ -123,6 +127,7 @@ interface PaymentRecord {
     source?: string
     course_id?: string
     course_slug?: string
+    notes?: string
   }
 }
 
@@ -187,7 +192,13 @@ export default function SuperAdminDashboard() {
   const [lives, setLives] = useState<LiveSession[]>([])
   const [allSessions, setAllSessions] = useState<BootcampSession[]>([])
   const [showCohortModal, setShowCohortModal] = useState(false)
-  const [cohortForm, setCohortForm] = useState({ courseId: "", startDate: "" })
+  const [cohortForm, setCohortForm] = useState({
+    courseId: "",
+    startDate: "",
+    sessionCount: 6,
+    startTime: "19:00",
+    durationMinutes: 120
+  })
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([])
   const [newSubscriberEmail, setNewSubscriberEmail] = useState("")
   const [addingSubscriber, setAddingSubscriber] = useState(false)
@@ -198,6 +209,35 @@ export default function SuperAdminDashboard() {
     includePlatformMembers: false,
     isTest: false
   })
+  const [editorViewMode, setEditorViewMode] = useState<"write" | "preview">("write")
+  const newsletterBodyRef = useRef<HTMLTextAreaElement>(null)
+
+  function insertFormatting(before: string, after: string = "", placeholder: string = "") {
+    const textarea = newsletterBodyRef.current
+    if (!textarea) {
+      setBroadcastForm(prev => ({
+        ...prev,
+        bodyHtml: (prev.bodyHtml || "") + before + placeholder + after
+      }))
+      return
+    }
+
+    const start = textarea.selectionStart || 0
+    const end = textarea.selectionEnd || 0
+    const currentText = broadcastForm.bodyHtml || ""
+    const selectedText = currentText.substring(start, end)
+    const replacement = selectedText ? `${before}${selectedText}${after}` : `${before}${placeholder}${after}`
+
+    const nextText = currentText.substring(0, start) + replacement + currentText.substring(end)
+    setBroadcastForm(prev => ({ ...prev, bodyHtml: nextText }))
+
+    setTimeout(() => {
+      textarea.focus()
+      const newCursorPos = start + before.length + (selectedText ? selectedText.length : placeholder.length)
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 50)
+  }
+
   const [sendingBroadcast, setSendingBroadcast] = useState(false)
   const [broadcastResult, setBroadcastResult] = useState<any>(null)
   const [users, setUsers] = useState<UserProfile[]>([])
@@ -250,13 +290,79 @@ export default function SuperAdminDashboard() {
   const [previewScreenshotUrl, setPreviewScreenshotUrl] = useState<string | null>(null)
   const [showManualEnrollModal, setShowManualEnrollModal] = useState(false)
   const [savingManualEnroll, setSavingManualEnroll] = useState(false)
+  const [showLearnerEmailSuggestions, setShowLearnerEmailSuggestions] = useState(false)
+  const [showLearnerNameSuggestions, setShowLearnerNameSuggestions] = useState(false)
   const [manualEnrollForm, setManualEnrollForm] = useState({
+    courseSlug: "",
     fullName: "",
     email: "",
     whatsapp: "",
+    paymentMethod: "Wave Mobile Money",
+    transactionRef: "",
     amount: "99000",
+    receiptUrl: "",
     sendEmail: true
   })
+
+  // Compile all unique platform learners from profiles, users, registrations and payments
+  const allLearnerSuggestions = useMemo(() => {
+    const map = new Map<string, { email: string; fullName: string; whatsapp: string; avatar?: string }>()
+
+    // 1. From users table (Profiles)
+    users.forEach((u: any) => {
+      const email = u.email?.toLowerCase().trim()
+      if (!email) return
+      const name = u.full_name || u.name || u.user_metadata?.full_name || ""
+      const phone = u.whatsapp || u.phone || u.user_metadata?.whatsapp || ""
+      const avatar = u.avatar_url || ""
+      map.set(email, { email, fullName: name, whatsapp: phone, avatar })
+    })
+
+    // 2. From payments & registrations
+    payments.forEach((p: any) => {
+      const r = p.registrations
+      const email = (r?.email || p.user_email)?.toLowerCase().trim()
+      if (!email) return
+      const existing = map.get(email)
+      const name = r?.full_name || existing?.fullName || ""
+      const phone = r?.whatsapp || p.phone || existing?.whatsapp || ""
+      const avatar = existing?.avatar || ""
+      map.set(email, { email, fullName: name, whatsapp: phone, avatar })
+    })
+
+    return Array.from(map.values())
+  }, [users, payments])
+
+  // Filtered suggestions for Email input
+  const filteredEmailSuggestions = useMemo(() => {
+    const q = (manualEnrollForm.email || "").toLowerCase().trim()
+    if (!q) return allLearnerSuggestions.slice(0, 5)
+    return allLearnerSuggestions.filter(l =>
+      l.email.toLowerCase().includes(q) ||
+      l.fullName.toLowerCase().includes(q)
+    ).slice(0, 5)
+  }, [allLearnerSuggestions, manualEnrollForm.email])
+
+  // Filtered suggestions for Name input
+  const filteredNameSuggestions = useMemo(() => {
+    const q = (manualEnrollForm.fullName || "").toLowerCase().trim()
+    if (!q) return allLearnerSuggestions.slice(0, 5)
+    return allLearnerSuggestions.filter(l =>
+      l.fullName.toLowerCase().includes(q) ||
+      l.email.toLowerCase().includes(q)
+    ).slice(0, 5)
+  }, [allLearnerSuggestions, manualEnrollForm.fullName])
+
+  const handleSelectLearnerSuggestion = (l: { email: string; fullName: string; whatsapp: string }) => {
+    setManualEnrollForm(prev => ({
+      ...prev,
+      email: l.email,
+      fullName: l.fullName || prev.fullName,
+      whatsapp: l.whatsapp || prev.whatsapp
+    }))
+    setShowLearnerEmailSuggestions(false)
+    setShowLearnerNameSuggestions(false)
+  }
 
   // Formations Modals & Form State
   const [showFormationModal, setShowFormationModal] = useState(false)
@@ -481,14 +587,27 @@ export default function SuperAdminDashboard() {
     status: "upcoming"
   })
 
-  // Manual Enroll Form
+  // Manual Enroll Form (Dashboard Tab 1)
   const [enrollEmail, setEnrollEmail] = useState("")
   const [enrollFullName, setEnrollFullName] = useState("")
+  const [enrollWhatsapp, setEnrollWhatsapp] = useState("")
   const [enrollCourse, setEnrollCourse] = useState("")
   const [enrollPaymentMethod, setEnrollPaymentMethod] = useState("")
   const [enrollTransactionRef, setEnrollTransactionRef] = useState("")
+  const [enrollReceiptUrl, setEnrollReceiptUrl] = useState("")
   const [enrollSendEmail, setEnrollSendEmail] = useState(true)
   const [showEmailSuggestions, setShowEmailSuggestions] = useState(false)
+  const [showEnrollNameSuggestions, setShowEnrollNameSuggestions] = useState(false)
+
+  // Auto-default enrollCourse to currently open/active bootcamp
+  useEffect(() => {
+    if (courses.length > 0 && !enrollCourse) {
+      const activeCourse = courses.find(c => c.status === "published" || (c as any).status === "open" || (c as any).is_active) || courses[0]
+      if (activeCourse?.slug) {
+        setEnrollCourse(activeCourse.slug)
+      }
+    }
+  }, [courses, enrollCourse])
 
   // Storage Upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null)
@@ -705,7 +824,13 @@ export default function SuperAdminDashboard() {
       // 2. Courses (Bootcamps Live)
       const resCourses = await fetch("/api/admin/courses")
       const dataCourses = await resCourses.json()
-      if (dataCourses.courses) setCourses(dataCourses.courses)
+      if (dataCourses.courses) {
+        setCourses(dataCourses.courses)
+        const activeCourse = dataCourses.courses.find((c: any) => c.status === "open" || c.status === "published" || c.is_active) || dataCourses.courses[0]
+        if (activeCourse?.slug) {
+          setEnrollCourse(prev => prev || activeCourse.slug)
+        }
+      }
 
       // 2.b Formations Vidéos (À la demande)
       const resFormations = await fetch("/api/admin/formations")
@@ -1204,9 +1329,11 @@ export default function SuperAdminDashboard() {
           action: "enroll_course",
           userEmail: enrollEmail,
           userName: enrollFullName,
+          whatsapp: enrollWhatsapp,
           courseSlug: enrollCourse,
           paymentMethod: enrollPaymentMethod,
           transactionRef: enrollTransactionRef,
+          receiptUrl: enrollReceiptUrl,
           sendEmail: enrollSendEmail
         })
       })
@@ -1215,10 +1342,14 @@ export default function SuperAdminDashboard() {
         showNotice(data.message)
         setEnrollEmail("")
         setEnrollFullName("")
+        setEnrollWhatsapp("")
+        setEnrollCourse("")
         setEnrollPaymentMethod("")
         setEnrollTransactionRef("")
+        setEnrollReceiptUrl("")
         setEnrollSendEmail(true)
         setShowEmailSuggestions(false)
+        setShowEnrollNameSuggestions(false)
         fetchAllData()
       } else {
         alert(data.error || "Erreur lors de l'inscription manuelle.")
@@ -1348,18 +1479,36 @@ export default function SuperAdminDashboard() {
     const cTitle = String(c.title || "").toLowerCase().trim()
 
     return payments.filter(p => {
+      const payCourseId = String(p.course_id || "").toLowerCase().trim()
+      const payCourseTitle = String(p.course_title || "").toLowerCase().trim()
       const regSlug = String((p.registrations as any)?.course_slug || "").toLowerCase().trim()
       const regId = String((p.registrations as any)?.course_id || "").toLowerCase().trim()
+      const regNotes = String((p.registrations as any)?.notes || "").toLowerCase().trim()
       const notesStr = String(p.notes || "").toLowerCase().trim()
 
-      if (cId && (regId === cId || notesStr.includes(cId))) return true
-      if (cSlug && (regSlug === cSlug || notesStr.includes(cSlug))) return true
+      // Direct matches
+      if (cId && (payCourseId === cId || regId === cId || notesStr.includes(cId) || regNotes.includes(cId))) return true
+      if (cSlug && (regSlug === cSlug || payCourseTitle.includes(cSlug) || notesStr.includes(cSlug) || regNotes.includes(cSlug))) return true
+      if (cTitle && (payCourseTitle.includes(cTitle) || regNotes.includes(cTitle) || notesStr.includes(cTitle))) return true
 
+      // Fuzzy category matching (Carrière / Pro)
       if (cTitle.includes("carriere") || cSlug.includes("carriere") || cSlug.includes("pro")) {
-        if (regSlug.includes("carriere") || regSlug.includes("pro") || notesStr.includes("carriere") || notesStr.includes("pro")) return true
+        if (
+          regSlug.includes("carriere") || regSlug.includes("pro") ||
+          payCourseTitle.includes("carriere") || payCourseTitle.includes("pro") ||
+          notesStr.includes("carriere") || notesStr.includes("pro") ||
+          regNotes.includes("carriere") || regNotes.includes("pro")
+        ) return true
       }
-      if (cTitle.includes("business") || cSlug.includes("business")) {
-        if (regSlug.includes("business") || notesStr.includes("business")) return true
+
+      // Fuzzy category matching (Business / Exec)
+      if (cTitle.includes("business") || cSlug.includes("business") || cSlug.includes("exec")) {
+        if (
+          regSlug.includes("business") || regSlug.includes("exec") ||
+          payCourseTitle.includes("business") || payCourseTitle.includes("exec") ||
+          notesStr.includes("business") || notesStr.includes("exec") ||
+          regNotes.includes("business") || regNotes.includes("exec")
+        ) return true
       }
 
       return false
@@ -1391,36 +1540,46 @@ export default function SuperAdminDashboard() {
     }
   }
 
-  // Handle Manual Enrollment by Admin
+  // Handle Manual Enrollment by Admin (Modal)
   async function handleManualEnrollLearner(e: React.FormEvent) {
     e.preventDefault()
-    if (!selectedCourseForLearners) return
+    if (!manualEnrollForm.email) return
+    const targetSlug = manualEnrollForm.courseSlug || selectedCourseForLearners?.slug || "bootcamp-ia-pro"
+    const targetCourse = courses.find(c => c.slug === targetSlug || c.id === targetSlug) || selectedCourseForLearners
+
     setSavingManualEnroll(true)
     try {
-      const res = await fetch("/api/admin/payments", {
+      const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "manual_enroll",
-          courseId: selectedCourseForLearners.id,
-          courseSlug: selectedCourseForLearners.slug,
-          courseTitle: selectedCourseForLearners.title,
-          fullName: manualEnrollForm.fullName,
-          email: manualEnrollForm.email,
+          action: "enroll_course",
+          userEmail: manualEnrollForm.email,
+          userName: manualEnrollForm.fullName,
           whatsapp: manualEnrollForm.whatsapp,
-          amount: manualEnrollForm.amount,
+          courseSlug: targetSlug,
+          courseTitle: targetCourse?.title || targetSlug,
+          courseId: targetCourse?.id || null,
+          paymentMethod: manualEnrollForm.paymentMethod || "Inscription Manuelle (Admin)",
+          transactionRef: manualEnrollForm.transactionRef || `ADM-${Date.now().toString().slice(-6)}`,
+          amountPaid: manualEnrollForm.amount,
+          receiptUrl: manualEnrollForm.receiptUrl,
           sendEmail: manualEnrollForm.sendEmail
         })
       })
       const data = await res.json()
       if (data.success) {
-        showNotice(`Apprenant ${manualEnrollForm.fullName} inscrit avec succès ! Accès activé.`)
+        showNotice(data.message || `Apprenant ${manualEnrollForm.fullName || manualEnrollForm.email} inscrit avec succès ! Accès activé.`)
         setShowManualEnrollModal(false)
         setManualEnrollForm({
+          courseSlug: "",
           fullName: "",
           email: "",
           whatsapp: "",
+          paymentMethod: "Wave Mobile Money",
+          transactionRef: "",
           amount: "99000",
+          receiptUrl: "",
           sendEmail: true
         })
         fetchAllData()
@@ -1580,12 +1739,20 @@ export default function SuperAdminDashboard() {
   }, [allSessions, courses])
 
   // Generate Cohort Handler for Admin
-  async function handleGenerateCohort(courseId: string, startDateStr: string) {
+  async function handleGenerateCohort(
+    courseId: string,
+    startDateStr: string,
+    customSessionCount?: number,
+    startTimeStr: string = "19:00",
+    durationMinutes: number = 120
+  ) {
     const course = courses.find(c => c.id === courseId || c.slug === courseId) || courses[0]
     if (!course || !startDateStr) return
 
     const start = new Date(startDateStr)
-    const sessionCount = course.session_count && Number(course.session_count) > 0 ? Number(course.session_count) : 7
+    const sessionCount = customSessionCount && Number(customSessionCount) > 0
+      ? Number(customSessionCount)
+      : (cohortForm.sessionCount && Number(cohortForm.sessionCount) > 0 ? Number(cohortForm.sessionCount) : 6)
     
     // Check if course has lessons defined in Supabase
     let courseLessons: string[] = []
@@ -1593,12 +1760,23 @@ export default function SuperAdminDashboard() {
       courseLessons = (course as any).lessons.map((l: any) => typeof l === "string" ? l : (l.title || `Module`))
     }
 
+    const [startHourStr, startMinStr] = (startTimeStr || "19:00").split(":")
+    const startHour = parseInt(startHourStr, 10) || 19
+    const startMin = parseInt(startMinStr, 10) || 0
+    const duration = Number(durationMinutes) || 120
+
+    const endTotalMinutes = startHour * 60 + startMin + duration
+    const endHour = Math.floor(endTotalMinutes / 60) % 24
+    const endMin = endTotalMinutes % 60
+    const formattedEndTime = `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}:00Z`
+    const formattedStartTime = `${String(startHour).padStart(2, "0")}:${String(startMin).padStart(2, "0")}:00Z`
+
     const payload = Array.from({ length: sessionCount }, (_, idx) => {
       const cur = new Date(start)
       cur.setDate(start.getDate() + idx)
       const datePart = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`
-      const sched = `${datePart}T19:00:00Z`
-      const end = `${datePart}T21:00:00Z`
+      const sched = `${datePart}T${formattedStartTime}`
+      const end = `${datePart}T${formattedEndTime}`
 
       const sessionTitle = courseLessons[idx] 
         ? `Session ${idx + 1} : ${courseLessons[idx]}`
@@ -1618,9 +1796,28 @@ export default function SuperAdminDashboard() {
     })
 
     try {
+      // 1. Sauvegarder les sessions dans bootcamp_sessions
       const { data, error } = await supabase.from("bootcamp_sessions").insert(payload).select()
       if (!error && data) {
         setAllSessions(prev => [...prev, ...data])
+        
+        // 2. Mettre à jour le nombre de sessions du bootcamp dans Supabase
+        try {
+          if (course.id) {
+            await supabase
+              .from("courses")
+              .update({ 
+                session_count: sessionCount,
+                dates: `Du ${start.toLocaleDateString("fr-FR", { day: "numeric", month: "long" })} au ${new Date(start.getTime() + (sessionCount - 1) * 86400000).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`
+              })
+              .eq("id", course.id)
+          }
+
+          setCourses(prev => prev.map(c => (c.id === course.id || c.slug === course.slug) ? { ...c, session_count: sessionCount } : c))
+        } catch (updateErr) {
+          console.warn("Could not update course session count:", updateErr)
+        }
+
         showNotice(`Cohorte de ${sessionCount} sessions générée avec succès pour ${course.title} !`)
         setShowCohortModal(false)
       } else {
@@ -2404,100 +2601,203 @@ export default function SuperAdminDashboard() {
                 Inscrivez manuellement un étudiant, attribuez un mode de règlement et générez immédiatement un reçu/facture dans son espace membre.
               </p>
 
-              <form onSubmit={handleManualEnroll} className="space-y-3 pt-2">
-                {/* Email avec Autocomplétion Suggerée des Élèves */}
+              <form onSubmit={handleManualEnroll} className="space-y-3.5 pt-2">
+                {/* Nom complet avec suggestions */}
                 <div className="relative">
-                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Email de l'apprenant * (suggestion automatique)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold text-slate-700">Nom complet du participant</label>
+                    {allLearnerSuggestions.length > 0 && (
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {allLearnerSuggestions.length} membre{allLearnerSuggestions.length > 1 ? "s" : ""} enregistré{allLearnerSuggestions.length > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </div>
                   <input
-                    type="email"
-                    required
-                    placeholder="Tapez l'adresse email du participant..."
-                    value={enrollEmail}
+                    type="text"
+                    placeholder="Ex: Jean Dupont"
+                    value={enrollFullName}
+                    onFocus={() => setShowEnrollNameSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowEnrollNameSuggestions(false), 200)}
                     onChange={e => {
-                      setEnrollEmail(e.target.value)
-                      setShowEmailSuggestions(true)
+                      setEnrollFullName(e.target.value)
+                      setShowEnrollNameSuggestions(true)
                     }}
-                    onFocus={() => setShowEmailSuggestions(true)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
+                    className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-primary focus:bg-white outline-none transition-colors"
                   />
 
-                  {/* Suggestions Dropdown */}
-                  {showEmailSuggestions && enrollEmail.trim().length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-slate-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto p-1 text-xs">
-                      {(() => {
-                        const query = enrollEmail.toLowerCase()
-                        const matches = users.filter(u =>
-                          u.email?.toLowerCase().includes(query) || u.full_name?.toLowerCase().includes(query)
-                        )
-                        if (matches.length === 0) {
-                          return (
-                            <div className="p-2.5 text-slate-500 text-center italic text-[11px]">
-                              Aucun compte élève existant ne correspond à "{enrollEmail}". L'inscription créera un nouveau reçu et un compte d'accès pour cet email.
-                            </div>
-                          )
-                        }
-                        return matches.map(u => (
-                          <button
-                            key={u.id}
-                            type="button"
-                            onClick={() => {
-                              setEnrollEmail(u.email || "")
-                              if (u.full_name) setEnrollFullName(u.full_name)
-                              setShowEmailSuggestions(false)
-                            }}
-                            className="w-full text-left p-2.5 rounded-xl hover:bg-slate-100 flex items-center justify-between transition-colors"
-                          >
-                            <div>
-                              <span className="font-bold text-slate-800 block">{u.full_name || "Élève sans nom"}</span>
-                              <span className="text-[10px] text-slate-500 font-mono">{u.email}</span>
-                            </div>
-                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
-                              {u.role}
-                            </span>
-                          </button>
-                        ))
-                      })()}
-                    </div>
+                  {/* Name Suggestions Dropdown */}
+                  {showEnrollNameSuggestions && (
+                    (() => {
+                      const q = enrollFullName.toLowerCase().trim()
+                      const matches = q
+                        ? allLearnerSuggestions.filter(l => l.fullName.toLowerCase().includes(q) || l.email.toLowerCase().includes(q)).slice(0, 5)
+                        : allLearnerSuggestions.slice(0, 5)
+                      if (matches.length === 0) return null
+                      return (
+                        <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto divide-y divide-slate-100 text-xs">
+                          <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>Membres suggérés</span>
+                            <button type="button" onClick={() => setShowEnrollNameSuggestions(false)} className="text-slate-400 hover:text-slate-600">
+                              <X className="size-3" />
+                            </button>
+                          </div>
+                          {matches.map((l, idx) => {
+                            const initials = (l.fullName || l.email || "A").substring(0, 2).toUpperCase()
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onMouseDown={() => {
+                                  setEnrollFullName(l.fullName || "")
+                                  setEnrollEmail(l.email || "")
+                                  if (l.whatsapp) setEnrollWhatsapp(l.whatsapp)
+                                  setShowEnrollNameSuggestions(false)
+                                  setShowEmailSuggestions(false)
+                                }}
+                                className="w-full text-left p-2.5 hover:bg-emerald-50/70 flex items-center justify-between gap-2 transition-colors cursor-pointer"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="size-7 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-200">
+                                    {initials}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="font-bold text-slate-800 text-xs block truncate">{l.fullName || "Sans nom renseigné"}</span>
+                                    <span className="text-[10px] text-slate-500 font-mono truncate block">{l.email}</span>
+                                  </div>
+                                </div>
+                                {l.whatsapp && (
+                                  <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
+                                    {l.whatsapp}
+                                  </span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )
+                    })()
                   )}
                 </div>
 
-                {/* Nom complet de l'apprenant */}
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Nom complet du participant (Optionnel)</label>
+                {/* Email avec Autocomplétion Suggerée des Élèves */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold text-slate-700">Email de l'apprenant *</label>
+                    <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                      <Sparkles className="size-3" /> Remplissage automatique
+                    </span>
+                  </div>
                   <input
-                    type="text"
-                    placeholder="Ex: Jean Dupont (recommandé pour personnaliser l'email et le certificat)"
-                    value={enrollFullName}
-                    onChange={e => setEnrollFullName(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
+                    type="email"
+                    required
+                    placeholder="jean.dupont@email.com"
+                    value={enrollEmail}
+                    onFocus={() => setShowEmailSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowEmailSuggestions(false), 200)}
+                    onChange={e => {
+                      const val = e.target.value
+                      setEnrollEmail(val)
+                      const matched = allLearnerSuggestions.find(l => l.email.toLowerCase() === val.toLowerCase().trim())
+                      if (matched) {
+                        if (matched.fullName) setEnrollFullName(matched.fullName)
+                        if (matched.whatsapp) setEnrollWhatsapp(matched.whatsapp)
+                      }
+                      setShowEmailSuggestions(true)
+                    }}
+                    className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-primary focus:bg-white outline-none font-mono transition-colors"
                   />
+
+                  {/* Suggestions Dropdown */}
+                  {showEmailSuggestions && (
+                    (() => {
+                      const q = enrollEmail.toLowerCase().trim()
+                      const matches = q
+                        ? allLearnerSuggestions.filter(l => l.email.toLowerCase().includes(q) || l.fullName.toLowerCase().includes(q)).slice(0, 5)
+                        : allLearnerSuggestions.slice(0, 5)
+                      if (matches.length === 0) return null
+                      return (
+                        <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto divide-y divide-slate-100 text-xs">
+                          <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>Apprenants suggérés (Cliquer pour préremplir)</span>
+                            <button type="button" onClick={() => setShowEmailSuggestions(false)} className="text-slate-400 hover:text-slate-600">
+                              <X className="size-3" />
+                            </button>
+                          </div>
+                          {matches.map((l, idx) => {
+                            const initials = (l.fullName || l.email || "A").substring(0, 2).toUpperCase()
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onMouseDown={() => {
+                                  setEnrollEmail(l.email || "")
+                                  if (l.fullName) setEnrollFullName(l.fullName)
+                                  if (l.whatsapp) setEnrollWhatsapp(l.whatsapp)
+                                  setShowEmailSuggestions(false)
+                                  setShowEnrollNameSuggestions(false)
+                                }}
+                                className="w-full text-left p-2.5 hover:bg-emerald-50/70 flex items-center justify-between gap-2 transition-colors cursor-pointer"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="size-7 rounded-lg bg-primary/20 text-slate-900 font-bold text-[10px] flex items-center justify-center shrink-0 border border-primary/30">
+                                    {initials}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="font-bold text-slate-800 text-xs block truncate">{l.fullName || "Utilisateur sans nom"}</span>
+                                    <span className="text-[10px] text-slate-500 font-mono truncate block">{l.email}</span>
+                                  </div>
+                                </div>
+                                {l.whatsapp && (
+                                  <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
+                                    {l.whatsapp}
+                                  </span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )
+                    })()
+                  )}
                 </div>
 
-                {/* Sélection du Bootcamp dynamique */}
-                <div>
-                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Bootcamp concerné *</label>
-                  <select
-                    value={enrollCourse}
-                    onChange={e => setEnrollCourse(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                  >
-                    <option value="">Sélectionner une formation...</option>
-                    {courses.map(c => (
-                      <option key={c.id || c.slug} value={c.slug}>
-                        {c.title} {c.price ? `(${c.price})` : ""}
-                      </option>
-                    ))}
-                  </select>
+                {/* N° WhatsApp & Bootcamp concerné */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">N° WhatsApp (avec indicatif)</label>
+                    <input
+                      type="tel"
+                      placeholder="+226 75 00 00 00"
+                      value={enrollWhatsapp}
+                      onChange={e => setEnrollWhatsapp(e.target.value)}
+                      className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-primary focus:bg-white outline-none transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Bootcamp concerné *</label>
+                    <select
+                      value={enrollCourse}
+                      onChange={e => setEnrollCourse(e.target.value)}
+                      className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-primary focus:bg-white outline-none transition-colors cursor-pointer"
+                    >
+                      <option value="">Sélectionner une formation...</option>
+                      {courses.map(c => (
+                        <option key={c.id || c.slug} value={c.slug}>
+                          {c.title} {c.price ? `(${c.price})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Mode de règlement & Référence (Optionnels) */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Moyen de paiement (Optionnel)</label>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Moyen de paiement (Optionnel)</label>
                     <select
                       value={enrollPaymentMethod}
                       onChange={e => setEnrollPaymentMethod(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
+                      className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-primary focus:bg-white outline-none transition-colors cursor-pointer"
                     >
                       <option value="">Sélectionner un moyen (optionnel)</option>
                       <option value="Wave Mobile Money">Wave</option>
@@ -2511,35 +2811,52 @@ export default function SuperAdminDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Référence Transaction (Optionnel)</label>
+                    <label className="text-[11px] font-bold text-slate-700 block mb-1">Référence Transaction (Optionnel)</label>
                     <input
                       type="text"
                       placeholder="ex: Ref Wave, OM, N° Virement"
                       value={enrollTransactionRef}
                       onChange={e => setEnrollTransactionRef(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500 font-mono"
+                      className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-primary focus:bg-white outline-none font-mono transition-colors"
                     />
                   </div>
                 </div>
 
+                {/* Preuve de virement / Reçu Upload */}
+                <div>
+                  <FileUploadField
+                    label="Preuve de virement / Reçu Mobile Money (Optionnel)"
+                    value={enrollReceiptUrl || ""}
+                    onChange={url => setEnrollReceiptUrl(url)}
+                    accept="image/*,application/pdf"
+                    bucket="courses-pdf"
+                    folder="receipts"
+                    placeholder="Sélectionnez ou glissez la capture du reçu..."
+                    hint="Formats acceptés : PNG, JPG, JPEG, PDF (max 10MB)"
+                  />
+                </div>
+
                 {/* Checkbox Envoyer Email de confirmation */}
-                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#F4F6F8] border border-slate-200/80 cursor-pointer text-xs text-slate-700 hover:text-white transition-colors">
+                <label className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/80 cursor-pointer text-xs text-slate-700">
                   <input
                     type="checkbox"
                     checked={enrollSendEmail}
                     onChange={e => setEnrollSendEmail(e.target.checked)}
-                    className="size-4 rounded accent-primary cursor-pointer"
+                    className="size-4 rounded text-emerald-600 accent-emerald-600 cursor-pointer"
                   />
-                  <Mail className="size-4 text-primary shrink-0" />
-                  <span>Envoyer automatiquement l'email de confirmation d'inscription et d'accès</span>
+                  <Mail className="size-4 text-emerald-700 shrink-0" />
+                  <span className="text-[11px] text-emerald-900 font-medium leading-tight">
+                    Envoyer automatiquement l'email officiel avec les identifiants et le lien d'accès à l'espace membre.
+                  </span>
                 </label>
 
                 <button
                   type="submit"
                   disabled={processingId === "enroll"}
-                  className="w-full py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity mt-2 shadow-lg shadow-primary/10 cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {processingId === "enroll" ? "Inscription & Envoi de l'email..." : "Valider l'Inscription et Débloquer Accès"}
+                  <UserPlus className="size-4" />
+                  <span>{processingId === "enroll" ? "Inscription & Envoi de l'email..." : "Valider l'Inscription et Débloquer Accès"}</span>
                 </button>
               </form>
             </div>
@@ -3531,10 +3848,14 @@ export default function SuperAdminDashboard() {
                           type="button"
                           onClick={() => {
                             setManualEnrollForm({
+                              courseSlug: selectedCourseForLearners.slug,
                               fullName: "",
                               email: "",
                               whatsapp: "",
+                              paymentMethod: "Wave Mobile Money",
+                              transactionRef: "",
                               amount: String(selectedCourseForLearners.price || "99000").replace(/[^0-9]/g, "") || "99000",
+                              receiptUrl: "",
                               sendEmail: true
                             })
                             setShowManualEnrollModal(true)
@@ -3805,7 +4126,7 @@ export default function SuperAdminDashboard() {
             {/* ===== MODAL INSCRIPTION MANUELLE D'UN APPRENANT ===== */}
             {showManualEnrollModal && selectedCourseForLearners && (
               <div className="fixed inset-0 z-60 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
+                <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                     <h3 className="font-heading text-base font-bold text-slate-800 flex items-center gap-2">
                       <UserPlus className="size-5 text-emerald-600" />
@@ -3817,35 +4138,173 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   <form onSubmit={handleManualEnrollLearner} className="space-y-3.5 text-xs">
+                    {/* Bootcamp concerné */}
                     <div>
-                      <span className="text-[11px] text-slate-500 font-bold block mb-1">Bootcamp cible</span>
-                      <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 font-bold text-slate-800">
-                        {selectedCourseForLearners.title}
-                      </div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Bootcamp concerné *</label>
+                      <select
+                        value={manualEnrollForm.courseSlug || selectedCourseForLearners.slug}
+                        onChange={e => setManualEnrollForm({ ...manualEnrollForm, courseSlug: e.target.value })}
+                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-emerald-600 focus:bg-white outline-none transition-colors cursor-pointer"
+                      >
+                        {courses.map(c => (
+                          <option key={c.id || c.slug} value={c.slug}>
+                            {c.title} {c.price ? `(${c.price})` : ""}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
-                    <div>
-                      <label className="text-slate-700 block mb-1 font-bold">Nom complet de l'apprenant *</label>
+                    {/* Nom Complet Input with Suggestions */}
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-slate-700 font-bold">Nom complet de l'apprenant *</label>
+                        {allLearnerSuggestions.length > 0 && (
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {allLearnerSuggestions.length} membre{allLearnerSuggestions.length > 1 ? "s" : ""} enregistré{allLearnerSuggestions.length > 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
                       <input
                         type="text"
                         required
                         placeholder="Ex: Jean Dupont"
                         value={manualEnrollForm.fullName}
-                        onChange={e => setManualEnrollForm({ ...manualEnrollForm, fullName: e.target.value })}
-                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600"
+                        onFocus={() => setShowLearnerNameSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowLearnerNameSuggestions(false), 200)}
+                        onChange={e => {
+                          setManualEnrollForm({ ...manualEnrollForm, fullName: e.target.value })
+                          setShowLearnerNameSuggestions(true)
+                        }}
+                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600 focus:bg-white transition-colors"
                       />
+
+                      {/* Name Suggestions Dropdown */}
+                      {showLearnerNameSuggestions && filteredNameSuggestions.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                          <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>Membres suggérés</span>
+                            <button
+                              type="button"
+                              onClick={() => setShowLearnerNameSuggestions(false)}
+                              className="text-slate-400 hover:text-slate-600"
+                            >
+                              <X className="size-3" />
+                            </button>
+                          </div>
+                          {filteredNameSuggestions.map((l, idx) => {
+                            const initials = (l.fullName || l.email || "A").substring(0, 2).toUpperCase()
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onMouseDown={() => handleSelectLearnerSuggestion(l)}
+                                className="w-full text-left px-3 py-2 hover:bg-emerald-50/70 transition-colors flex items-center justify-between gap-2.5 cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="size-7 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-200">
+                                    {initials}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="font-bold text-slate-800 text-xs truncate group-hover:text-emerald-900">
+                                      {l.fullName || "Sans nom renseigné"}
+                                    </div>
+                                    <div className="text-[11px] text-slate-500 font-mono truncate">
+                                      {l.email}
+                                    </div>
+                                  </div>
+                                </div>
+                                {l.whatsapp && (
+                                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
+                                    {l.whatsapp}
+                                  </span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
 
-                    <div>
-                      <label className="text-slate-700 block mb-1 font-bold">Adresse Email de connexion *</label>
+                    {/* Email Input with Suggestions and Auto-Fill */}
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-slate-700 font-bold">Adresse Email de connexion *</label>
+                        <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                          <Sparkles className="size-3" /> Remplissage automatique
+                        </span>
+                      </div>
                       <input
                         type="email"
                         required
                         placeholder="jean.dupont@email.com"
                         value={manualEnrollForm.email}
-                        onChange={e => setManualEnrollForm({ ...manualEnrollForm, email: e.target.value })}
-                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600 font-mono"
+                        onFocus={() => setShowLearnerEmailSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowLearnerEmailSuggestions(false), 200)}
+                        onChange={e => {
+                          const val = e.target.value
+                          setManualEnrollForm(prev => {
+                            // Auto-match if exact email typed
+                            const matched = allLearnerSuggestions.find(l => l.email.toLowerCase() === val.toLowerCase().trim())
+                            if (matched) {
+                              return {
+                                ...prev,
+                                email: val,
+                                fullName: matched.fullName || prev.fullName,
+                                whatsapp: matched.whatsapp || prev.whatsapp
+                              }
+                            }
+                            return { ...prev, email: val }
+                          })
+                          setShowLearnerEmailSuggestions(true)
+                        }}
+                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600 focus:bg-white font-mono transition-colors"
                       />
+
+                      {/* Email Suggestions Dropdown */}
+                      {showLearnerEmailSuggestions && filteredEmailSuggestions.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                          <div className="px-3 py-1.5 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>Apprenants suggérés (Cliquer pour préremplir)</span>
+                            <button
+                              type="button"
+                              onClick={() => setShowLearnerEmailSuggestions(false)}
+                              className="text-slate-400 hover:text-slate-600"
+                            >
+                              <X className="size-3" />
+                            </button>
+                          </div>
+                          {filteredEmailSuggestions.map((l, idx) => {
+                            const initials = (l.fullName || l.email || "A").substring(0, 2).toUpperCase()
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onMouseDown={() => handleSelectLearnerSuggestion(l)}
+                                className="w-full text-left px-3 py-2 hover:bg-emerald-50/70 transition-colors flex items-center justify-between gap-2.5 cursor-pointer group"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="size-7 rounded-lg bg-primary/20 text-slate-900 font-bold text-[10px] flex items-center justify-center shrink-0 border border-primary/30">
+                                    {initials}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="font-bold text-slate-800 text-xs truncate group-hover:text-emerald-900">
+                                      {l.fullName || "Utilisateur sans nom"}
+                                    </div>
+                                    <div className="text-[11px] text-slate-500 font-mono truncate">
+                                      {l.email}
+                                    </div>
+                                  </div>
+                                </div>
+                                {l.whatsapp && (
+                                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
+                                    {l.whatsapp}
+                                  </span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -3869,6 +4328,51 @@ export default function SuperAdminDashboard() {
                           className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-emerald-600 font-mono"
                         />
                       </div>
+                    </div>
+
+                    {/* Mode de règlement & Référence */}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Moyen de paiement (Optionnel)</label>
+                        <select
+                          value={manualEnrollForm.paymentMethod}
+                          onChange={e => setManualEnrollForm({ ...manualEnrollForm, paymentMethod: e.target.value })}
+                          className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-emerald-600 focus:bg-white outline-none transition-colors cursor-pointer"
+                        >
+                          <option value="Wave Mobile Money">Wave</option>
+                          <option value="Orange Money">Orange Money</option>
+                          <option value="Moov Money">Moov Money</option>
+                          <option value="MTN Mobile Money">MTN Mobile Money</option>
+                          <option value="Virement Bancaire">Virement Bancaire</option>
+                          <option value="Espèces / Cash">Espèces / Cash</option>
+                          <option value="Offert / Gratuit">Offert / Gratuit</option>
+                          <option value="Carte Bancaire">Carte Bancaire</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Référence Transaction (Optionnel)</label>
+                        <input
+                          type="text"
+                          placeholder="ex: Ref Wave, OM, N° Virement"
+                          value={manualEnrollForm.transactionRef}
+                          onChange={e => setManualEnrollForm({ ...manualEnrollForm, transactionRef: e.target.value })}
+                          className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:border-emerald-600 focus:bg-white outline-none font-mono transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Preuve de paiement Upload */}
+                    <div>
+                      <FileUploadField
+                        label="Preuve de virement / Reçu Mobile Money (Optionnel)"
+                        value={manualEnrollForm.receiptUrl || ""}
+                        onChange={url => setManualEnrollForm(prev => ({ ...prev, receiptUrl: url }))}
+                        accept="image/*,application/pdf"
+                        bucket="courses-pdf"
+                        folder="receipts"
+                        placeholder="Sélectionnez ou glissez la capture du reçu..."
+                        hint="Formats acceptés : PNG, JPG, JPEG, PDF (max 10MB)"
+                      />
                     </div>
 
                     <label className="flex items-center gap-2.5 p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/80 cursor-pointer">
@@ -4599,16 +5103,20 @@ export default function SuperAdminDashboard() {
               <div className="flex items-center gap-2.5 flex-wrap">
                 <button
                   onClick={() => {
+                    const defaultCourse = courses.find(c => c.status === "published" || (c as any).status === "open" || (c as any).is_active) || courses[0]
                     setCohortForm({
-                      courseId: courses[0]?.id || courses[0]?.slug || "",
-                      startDate: new Date().toISOString().split("T")[0]
+                      courseId: defaultCourse?.id || defaultCourse?.slug || "",
+                      startDate: new Date().toISOString().split("T")[0],
+                      sessionCount: defaultCourse?.session_count && Number(defaultCourse.session_count) > 0 ? Number(defaultCourse.session_count) : 6,
+                      startTime: "19:00",
+                      durationMinutes: 120
                     })
                     setShowCohortModal(true)
                   }}
                   className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#AA7C11] text-slate-950 font-black text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 cursor-pointer"
                 >
                   <Zap className="size-4" />
-                  Générer Cohorte (7 Jours)
+                  Générer une Cohorte
                 </button>
 
                 <button
@@ -4674,65 +5182,32 @@ export default function SuperAdminDashboard() {
               />
             </div>
 
-            {/* Tabular List of Direct Sessions */}
-            <div className="space-y-3 pt-4">
-              <h3 className="font-heading text-sm font-bold text-slate-700 uppercase tracking-wider">
-                Liste des directes enregistrés ({lives.length})
-              </h3>
-              <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl">
-                <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="bg-[#F4F6F8] text-slate-600 font-bold uppercase border-b border-slate-200">
-                    <tr>
-                      <th className="p-4">Session Live</th>
-                      <th className="p-4">Date &amp; Heure</th>
-                      <th className="p-4">Lien Google Meet</th>
-                      <th className="p-4">Replay HD</th>
-                      <th className="p-4 text-right">Statut</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200/80">
-                    {lives.map(l => (
-                      <tr key={l.id || l.title} className="hover:bg-[#F4F6F8]/60">
-                        <td className="p-4 font-bold text-slate-800">{l.title}</td>
-                        <td className="p-4 text-slate-700">{new Date(l.scheduled_at).toLocaleString("fr-FR")}</td>
-                        <td className="p-4 font-mono text-primary truncate max-w-xs">{l.meet_url}</td>
-                        <td className="p-4 text-slate-500">{l.replay_url ? "Replay Disponible" : "En attente du direct"}</td>
-                        <td className="p-4 text-right">
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-primary/10 text-primary border border-primary/30">
-                            {l.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {lives.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="p-8 text-center text-slate-500">Aucun direct programmé.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Modal: Generate 7-Day Cohort */}
+            {/* Modal: Generate Cohort (Configurable Days / Sessions) */}
             {showCohortModal && (
-              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+              <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto">
                   <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                    <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <h3 className="font-heading text-base font-bold text-slate-800 flex items-center gap-2">
                       <Zap className="size-5 text-[#D4AF37]" />
-                      Générer une Cohorte (7 Jours)
+                      Générer une Cohorte de Sessions
                     </h3>
-                    <button onClick={() => setShowCohortModal(false)} className="text-slate-600 hover:text-slate-900">✕</button>
+                    <button onClick={() => setShowCohortModal(false)} className="text-slate-400 hover:text-slate-700">✕</button>
                   </div>
 
-                  <div className="space-y-4 text-xs">
+                  <div className="space-y-3.5 text-xs">
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">Sélectionner le Bootcamp</label>
+                      <label className="text-slate-700 block mb-1 font-bold">Sélectionner le Bootcamp *</label>
                       <select
                         value={cohortForm.courseId}
-                        onChange={(e) => setCohortForm({ ...cohortForm, courseId: e.target.value })}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-bold outline-none focus:border-primary placeholder:text-slate-500 cursor-pointer"
+                        onChange={(e) => {
+                          const selectedC = courses.find(c => c.id === e.target.value || c.slug === e.target.value)
+                          setCohortForm({ 
+                            ...cohortForm, 
+                            courseId: e.target.value,
+                            sessionCount: selectedC?.session_count && Number(selectedC.session_count) > 0 ? Number(selectedC.session_count) : (cohortForm.sessionCount || 6)
+                          })
+                        }}
+                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 font-bold outline-none focus:border-primary focus:bg-white placeholder:text-slate-500 cursor-pointer"
                       >
                         {courses.map(c => (
                           <option key={c.id || c.slug} value={c.id || c.slug}>
@@ -4742,34 +5217,71 @@ export default function SuperAdminDashboard() {
                       </select>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-slate-700 block mb-1 font-bold">Nombre de Sessions / Jours *</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          required
+                          value={cohortForm.sessionCount}
+                          onChange={(e) => setCohortForm({ ...cohortForm, sessionCount: parseInt(e.target.value) || 1 })}
+                          className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 font-bold outline-none focus:border-primary focus:bg-white"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">Par défaut : 6 sessions</span>
+                      </div>
+
+                      <div>
+                        <label className="text-slate-700 block mb-1 font-bold">Heure de début (GMT) *</label>
+                        <input
+                          type="time"
+                          required
+                          value={cohortForm.startTime || "19:00"}
+                          onChange={(e) => setCohortForm({ ...cohortForm, startTime: e.target.value })}
+                          className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 font-bold outline-none focus:border-primary focus:bg-white"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-0.5 block">Heure de direct</span>
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">Date du Premier Jour (Lundi de la cohorte)</label>
+                      <label className="text-slate-700 block mb-1 font-bold">Date du Premier Jour (Lancement de la cohorte) *</label>
                       <input
                         type="date"
+                        required
                         value={cohortForm.startDate}
                         onChange={(e) => setCohortForm({ ...cohortForm, startDate: e.target.value })}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-bold outline-none focus:border-primary placeholder:text-slate-500"
+                        className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 font-bold outline-none focus:border-primary focus:bg-white placeholder:text-slate-500"
                       />
                     </div>
 
-                    <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1 text-[11px] text-slate-500">
-                      <p>✨ Cette action va créer automatiquement <strong>7 sessions consécutives</strong> (du jour 1 au jour 7 à 19h00 GMT) avec les programmes et titres officiels.</p>
+                    <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/90 space-y-1 text-[11px] text-amber-900 leading-relaxed">
+                      <p>
+                        ✨ Cette action va créer automatiquement <strong>{cohortForm.sessionCount || 6} sessions consécutives</strong> (du Jour 1 au Jour {cohortForm.sessionCount || 6} à {cohortForm.startTime || "19:00"} GMT) et enregistrer ce format pour le Bootcamp sélectionné.
+                      </p>
                     </div>
 
                     <div className="flex gap-2 pt-2">
                       <button
                         type="button"
                         onClick={() => setShowCohortModal(false)}
-                        className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold"
+                        className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold cursor-pointer"
                       >
                         Annuler
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleGenerateCohort(cohortForm.courseId, cohortForm.startDate)}
+                        onClick={() => handleGenerateCohort(
+                          cohortForm.courseId,
+                          cohortForm.startDate,
+                          cohortForm.sessionCount,
+                          cohortForm.startTime,
+                          cohortForm.durationMinutes
+                        )}
                         className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#AA7C11] text-slate-950 font-black shadow-lg shadow-[#D4AF37]/20 hover:opacity-90 cursor-pointer"
                       >
-                        Générer les 7 Sessions
+                        Générer les {cohortForm.sessionCount || 6} Sessions
                       </button>
                     </div>
                   </div>
@@ -4859,7 +5371,6 @@ export default function SuperAdminDashboard() {
           <div className="space-y-8 animate-fadeIn text-left">
             
             {/* Header */}
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <div>
                 <h2 className="font-heading text-xl font-bold text-slate-800 flex items-center gap-2.5">
@@ -4867,36 +5378,36 @@ export default function SuperAdminDashboard() {
                   Newsletter &amp; Diffusion d'Emails
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Diffusez vos analyses, prompts et dates de bootcamps directement par email via votre adresse configurée.
+                  Diffusez vos analyses, veilles technologiques, prompts et offres de bootcamps directement par email via votre adresse officielle.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Expéditeur : {currentUser?.email || "admin@leguideai.com"}
+                <span className="px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center gap-2 shadow-xs">
+                  <span className="size-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Expéditeur officiel : <strong>Alfred Dah — LE GUIDE IA</strong> (alfred@leguideai.com)</span>
                 </span>
               </div>
             </div>
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
+              <div className="rounded-2xl border border-slate-200/90 bg-[#F8FAFC] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Abonnés Newsletter</span>
                 <p className="text-2xl font-black text-slate-800 font-mono">{newsletterSubscribers.length}</p>
                 <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold inline-block">100% Abonnés Actifs</span>
               </div>
 
-              <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
+              <div className="rounded-2xl border border-slate-200/90 bg-[#F8FAFC] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Membres Non-Abonnés</span>
                 <p className="text-2xl font-black text-blue-700 font-mono">{nonSubscribedMembers.length}</p>
                 <span className="text-[10px] text-slate-500">Inscrits sur la plateforme</span>
               </div>
 
-              <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
+              <div className="rounded-2xl border border-slate-200/90 bg-[#F8FAFC] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Serveur d'Envoi</span>
-                <p className="text-sm font-bold text-slate-800 font-mono truncate">Resend (Cloudflare DNS)</p>
-                <span className="text-[10px] text-slate-500">DKIM &amp; SPF sécurisés</span>
+                <p className="text-sm font-bold text-slate-800 font-mono truncate">Resend (DNS Cloudflare)</p>
+                <span className="text-[10px] text-slate-500">DKIM &amp; SPF 100% sécurisés</span>
               </div>
             </div>
 
@@ -4905,52 +5416,285 @@ export default function SuperAdminDashboard() {
               
               {/* Left Column: Email Composer (7 Cols) */}
               <div className="lg:col-span-7 rounded-3xl border border-slate-200/90 bg-white shadow-xs p-5 sm:p-6 shadow-2xl backdrop-blur-xl space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
                   <h3 className="font-heading text-base font-bold text-slate-800 flex items-center gap-2">
                     <Sparkles className="size-4 text-primary" />
                     Rédiger &amp; Diffuser une Campagne
                   </h3>
-                  <span className="text-[10px] font-mono text-slate-500">Expéditeur : {currentUser?.email || "admin@leguideai.com"}</span>
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setEditorViewMode("write")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        editorViewMode === "write"
+                          ? "bg-white text-slate-800 shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      ✍️ Éditeur
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditorViewMode("preview")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        editorViewMode === "preview"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      👁️ Aperçu Réel
+                    </button>
+                  </div>
                 </div>
 
                 <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
                   <div>
-                    <label className="text-slate-600 block mb-1 font-bold">Sujet de l'Email (Objet visible dans la boîte de réception) *</label>
+                    <label className="text-slate-700 block mb-1 font-bold">Sujet de l'Email (Objet visible dans la boîte de réception) *</label>
                     <input
                       type="text"
                       required
                       value={broadcastForm.subject}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, subject: e.target.value })}
                       placeholder="Ex: 🔥 Nouvelles Masterclasses IA & Dates du prochain Bootcamp..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 font-semibold outline-none focus:border-primary placeholder:text-slate-500"
+                      className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 font-semibold outline-none focus:border-primary focus:bg-white placeholder:text-slate-400 transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-600 block mb-1 font-bold">Grand Titre de l'Email</label>
+                    <label className="text-slate-700 block mb-1 font-bold">Grand Titre de l'Email (Dans l'entête du message)</label>
                     <input
                       type="text"
                       value={broadcastForm.title}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
-                      placeholder="Ex: Nos dernières astuces et opportunités IA"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                      placeholder="Ex: Nos dernières astuces et opportunités IA de la semaine"
+                      className="w-full bg-[#F8FAFC] border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary focus:bg-white placeholder:text-slate-400 transition-colors"
                     />
                   </div>
 
+                  {/* EDITEUR AVEC BARRE D'OUTILS COMPLÈTE OU APERÇU LIVE */}
                   <div>
-                    <label className="text-slate-600 block mb-1 font-bold">Corps du Message (Supporte HTML &amp; Paragraphes) *</label>
-                    <textarea
-                      rows={8}
-                      required
-                      value={broadcastForm.bodyHtml}
-                      onChange={(e) => setBroadcastForm({ ...broadcastForm, bodyHtml: e.target.value })}
-                      placeholder="Rédigez votre message ici..."
-                      className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 font-mono text-xs outline-none focus:border-primary leading-relaxed placeholder:text-slate-500"
-                    />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-slate-700 font-bold">Corps du Message (Éditeur Enrichi avec mise en forme) *</label>
+                      <span className="text-[11px] text-slate-400">Cliquez sur les outils pour formater votre texte</span>
+                    </div>
+
+                    {editorViewMode === "write" ? (
+                      <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs focus-within:border-primary transition-all">
+                        {/* Barre d'Outils de Mise en Forme */}
+                        <div className="bg-slate-50 border-b border-slate-200 p-2 flex flex-wrap items-center gap-1">
+                          {/* Formatage Texte */}
+                          <div className="flex items-center gap-0.5 pr-2 border-r border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting("<strong>", "</strong>", "texte en gras")}
+                              title="Gras (Bold)"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 font-bold transition-colors cursor-pointer"
+                            >
+                              <Bold className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting("<em>", "</em>", "texte en italique")}
+                              title="Italique"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            >
+                              <Italic className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting("<u>", "</u>", "texte souligné")}
+                              title="Souligné"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            >
+                              <Underline className="size-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Titres */}
+                          <div className="flex items-center gap-0.5 px-2 border-r border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting('<h2 style="color: #0f172a; font-size: 18px; font-weight: 800; margin: 20px 0 10px;">', '</h2>\n', 'Titre de section')}
+                              title="Titre H2"
+                              className="px-2 py-1 rounded-lg hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors cursor-pointer"
+                            >
+                              H2
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting('<h3 style="color: #0284c7; font-size: 15px; font-weight: 700; margin: 16px 0 8px;">', '</h3>\n', 'Sous-titre')}
+                              title="Sous-titre H3"
+                              className="px-2 py-1 rounded-lg hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors cursor-pointer"
+                            >
+                              H3
+                            </button>
+                          </div>
+
+                          {/* Listes */}
+                          <div className="flex items-center gap-0.5 px-2 border-r border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting('<ul style="padding-left: 20px; line-height: 1.8; margin: 12px 0;">\n  <li>', '</li>\n  <li>Deuxième point clé</li>\n</ul>\n', 'Premier point')}
+                              title="Liste à puces"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            >
+                              <List className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting('<ol style="padding-left: 20px; line-height: 1.8; margin: 12px 0;">\n  <li>', '</li>\n  <li>Deuxième étape</li>\n</ol>\n', 'Première étape')}
+                              title="Liste numérotée"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            >
+                              <ListOrdered className="size-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting('<blockquote style="border-left: 4px solid #0284c7; background: #f0f9ff; padding: 12px 16px; margin: 16px 0; border-radius: 0 10px 10px 0; font-style: italic; color: #0369a1;">', '</blockquote>\n', 'Citation inspirante ou note importante')}
+                              title="Citation / Encadré bleu"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            >
+                              <Quote className="size-3.5" />
+                            </button>
+                          </div>
+
+                          {/* Liens & Boutons CTA */}
+                          <div className="flex items-center gap-0.5 px-2 border-r border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const url = prompt("Entrez l'adresse du lien (URL) :", "https://leguideai.com")
+                                if (url) {
+                                  insertFormatting(`<a href="${url}" style="color: #0284c7; text-decoration: underline; font-weight: bold;">`, '</a>', 'Texte du lien')
+                                }
+                              }}
+                              title="Insérer un lien"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer flex items-center gap-1"
+                            >
+                              <Link2 className="size-3.5 text-blue-600" />
+                              <span className="text-[10px] font-bold">Lien</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const url = prompt("Lien du bouton CTA :", "https://leguideai.com/bootcamp")
+                                const label = prompt("Texte du bouton :", "Découvrir le Bootcamp IA")
+                                if (url && label) {
+                                  insertFormatting(
+                                    `\n<div style="text-align: center; margin: 24px 0;">\n  <a href="${url}" style="display: inline-block; background-color: #0284c7; color: #ffffff; padding: 14px 32px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 14px; box-shadow: 0 4px 14px rgba(2,132,199,0.35);">${label} →</a>\n</div>\n`
+                                  )
+                                }
+                              }}
+                              title="Insérer un bouton d'action CTA"
+                              className="px-2 py-1 rounded-lg bg-primary/15 hover:bg-primary/25 text-slate-900 transition-colors cursor-pointer flex items-center gap-1 font-bold text-[10px]"
+                            >
+                              <MousePointerClick className="size-3 text-slate-800" />
+                              <span>Bouton CTA</span>
+                            </button>
+                          </div>
+
+                          {/* Encadrés Spéciaux */}
+                          <div className="flex items-center gap-0.5 pl-2">
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting(
+                                '\n<div style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 16px; margin: 18px 0; color: #166534;">\n  <strong style="font-size: 14px;">💡 Astuce IA :</strong>\n  <p style="margin: 6px 0 0; font-size: 13px; color: #14532d;">',
+                                '</p>\n</div>\n',
+                                'Votre astuce exclusive ici...'
+                              )}
+                              title="Encadré Astuce Pro (Vert)"
+                              className="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition-colors cursor-pointer flex items-center gap-1 font-bold text-[10px]"
+                            >
+                              <Sparkles className="size-3 text-emerald-600" />
+                              <span>Astuce</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting(
+                                '\n<div style="background-color: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 14px; padding: 16px; margin: 18px 0; color: #991b1b;">\n  <strong style="font-size: 14px;">⚠️ Important :</strong>\n  <p style="margin: 6px 0 0; font-size: 13px; color: #7f1d1d;">',
+                                '</p>\n</div>\n',
+                                'Votre rappel important ici...'
+                              )}
+                              title="Encadré Important (Rouge)"
+                              className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 transition-colors cursor-pointer flex items-center gap-1 font-bold text-[10px]"
+                            >
+                              <AlertCircle className="size-3 text-rose-600" />
+                              <span>Alerte</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => insertFormatting('\n<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />\n')}
+                              title="Ligne de séparation"
+                              className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
+                            >
+                              <Minus className="size-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Textarea de Rédaction */}
+                        <textarea
+                          ref={newsletterBodyRef}
+                          rows={11}
+                          required
+                          value={broadcastForm.bodyHtml}
+                          onChange={(e) => setBroadcastForm({ ...broadcastForm, bodyHtml: e.target.value })}
+                          placeholder="Rédigez votre message ici en utilisant la barre d'outils ci-dessus ou en tapant directement vos paragraphes..."
+                          className="w-full p-4 text-slate-800 font-mono text-xs outline-none leading-relaxed placeholder:text-slate-400 bg-white"
+                        />
+                      </div>
+                    ) : (
+                      /* Aperçu Visuel Réel dans la boîte de réception */
+                      <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-100 p-4 space-y-3">
+                        {/* Simulation Client Email */}
+                        <div className="bg-white rounded-xl border border-slate-300 shadow-lg overflow-hidden max-w-xl mx-auto">
+                          <div className="bg-slate-50 border-b border-slate-200 p-3 text-xs space-y-1">
+                            <div className="flex items-center justify-between text-slate-500">
+                              <span><strong>De :</strong> Alfred Dah — LE GUIDE IA &lt;alfred@leguideai.com&gt;</span>
+                              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Email Officiel</span>
+                            </div>
+                            <div className="text-slate-600"><strong>Répondre à :</strong> alfred@leguideai.com</div>
+                            <div className="text-slate-900 font-bold text-sm pt-1">
+                              <strong>Objet :</strong> {broadcastForm.subject || "(Sujet non renseigné)"}
+                            </div>
+                          </div>
+
+                          {/* Email Body Template Rendering */}
+                          <div className="p-6 bg-white text-slate-800">
+                            <div className="text-center pb-4 mb-4 border-b-2 border-[#0284c7]">
+                              <h1 className="text-[#0284c7] m-0 text-xl font-black tracking-tight">LE GUIDE IA</h1>
+                              <p className="text-slate-500 text-xs mt-1">La référence de l'Intelligence Artificielle</p>
+                            </div>
+
+                            {broadcastForm.title && (
+                              <h2 className="text-slate-900 text-lg font-bold mb-4">
+                                {broadcastForm.title}
+                              </h2>
+                            )}
+
+                            <div 
+                              className="text-slate-700 text-sm leading-relaxed space-y-3"
+                              dangerouslySetInnerHTML={{ 
+                                __html: broadcastForm.bodyHtml || "<p className='text-slate-400 italic'>Aucun contenu rédigé pour le moment...</p>" 
+                              }}
+                            />
+
+                            <div className="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-500 space-y-1">
+                              <p className="font-bold text-slate-700">Alfred Dah · Fondateur LE GUIDE IA</p>
+                              <p>Contact : <a href="mailto:alfred@leguideai.com" className="text-[#0284c7] underline">alfred@leguideai.com</a> | WhatsApp : +226 0505 0577</p>
+                              <p className="text-[10px] text-slate-400 pt-2">Vous recevez cet email car vous êtes inscrit(e) sur la plateforme leguideai.com</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Audience Selector & Non-Subscribers Platform Members Option */}
-                  <div className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200 space-y-3">
+                  <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-slate-200 space-y-3">
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
@@ -4962,7 +5706,7 @@ export default function SuperAdminDashboard() {
                       <label htmlFor="include_platform_members" className="cursor-pointer space-y-0.5 select-none">
                         <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                           <Users className="size-3.5 text-blue-500 inline" />
-                          Inclure également les membres &amp; apprenants inscrits (Non-abonnés)
+                          Inclure également tous les membres &amp; apprenants inscrits (Non-abonnés)
                         </span>
                         <span className="text-[11px] text-slate-600 block leading-relaxed">
                           Optionnel : envoyez aussi cette campagne aux utilisateurs inscrits et participants qui ne sont pas encore abonnés à la newsletter (+{nonSubscribedMembers.length} membre{nonSubscribedMembers.length > 1 ? "s" : ""}).
@@ -5043,7 +5787,7 @@ export default function SuperAdminDashboard() {
                         <span>Envoi en cours via Resend...</span>
                       ) : (
                         <>
-                          <Mail className="size-4" />
+                          <Send className="size-4" />
                           <span>
                             {broadcastForm.includePlatformMembers
                               ? `Diffuser aux ${totalBroadcastRecipients} destinataires (${newsletterSubscribers.length} abonnés + ${nonSubscribedMembers.length} membres)`
@@ -5059,8 +5803,9 @@ export default function SuperAdminDashboard() {
               {/* Right Column: Subscribers Table & Manual Enrollment (5 Cols) */}
               <div className="lg:col-span-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs p-5 shadow-2xl backdrop-blur-xl space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                  <h3 className="font-heading text-sm font-bold text-slate-800">
-                    Liste des Abonnés ({newsletterSubscribers.length})
+                  <h3 className="font-heading text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Users className="size-4 text-emerald-600" />
+                    <span>Liste des Abonnés ({newsletterSubscribers.length})</span>
                   </h3>
                   <button
                     onClick={async () => {
@@ -5069,9 +5814,10 @@ export default function SuperAdminDashboard() {
                       if (data.subscribers) setNewsletterSubscribers(data.subscribers)
                       showNotice("Liste des abonnés actualisée.")
                     }}
-                    className="text-[11px] text-primary hover:underline font-bold"
+                    className="text-[11px] text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer"
                   >
-                    Actualiser
+                    <RefreshCw className="size-3" />
+                    <span>Actualiser</span>
                   </button>
                 </div>
 
@@ -5083,7 +5829,7 @@ export default function SuperAdminDashboard() {
                     placeholder="Ajouter un email abonné..."
                     value={newSubscriberEmail}
                     onChange={(e) => setNewSubscriberEmail(e.target.value)}
-                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder:text-slate-500 outline-none focus:border-primary"
+                    className="flex-1 bg-[#F8FAFC] border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-primary focus:bg-white transition-colors"
                   />
                   <button
                     type="submit"
@@ -5095,17 +5841,19 @@ export default function SuperAdminDashboard() {
                 </form>
 
                 {newsletterSubscribers.length === 0 ? (
-                  <div className="text-center py-10 text-slate-500 text-xs bg-white rounded-2xl border border-slate-200/80 p-4">
-                    <Mail className="size-8 mx-auto text-slate-400 mb-2" />
+                  <div className="text-center py-10 text-slate-500 text-xs bg-slate-50 rounded-2xl border border-slate-200/80 p-6 space-y-2">
+                    <Mail className="size-8 mx-auto text-slate-400" />
                     <p className="font-bold text-slate-700">Aucun abonné enregistré</p>
-                    <p className="text-[11px] text-slate-500 mt-1">Inscrivez un email ci-dessus ou via le formulaire footer du site.</p>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Inscrivez un email ci-dessus ou testez le formulaire au bas de la page d'accueil du site pour voir la liste se remplir automatiquement.
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
                     {newsletterSubscribers.map((sub: any, idx: number) => (
                       <div
                         key={sub.id || sub.email || idx}
-                        className="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between gap-3 text-xs hover:border-slate-300 transition-colors shadow-2xs"
+                        className="p-3 rounded-2xl bg-[#F8FAFC] border border-slate-200/90 flex items-center justify-between gap-3 text-xs hover:border-primary/40 hover:bg-white transition-colors shadow-2xs"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="font-bold text-slate-800 truncate font-mono text-[11px]">{sub.email}</p>

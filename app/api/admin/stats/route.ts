@@ -40,13 +40,56 @@ export async function GET() {
 
     if (subErr) console.warn("Admin stats submissions fetch warn:", subErr.message)
 
-    // Calculate revenue
-    const confirmedPayments = (payments || []).filter(p => p.status === "confirmed" || p.status === "success")
-    const totalRevenue = confirmedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+    // 6. Fetch courses for price lookup
+    const { data: courses } = await supabaseServer
+      .from("courses")
+      .select("id, slug, title, price")
 
-    const pendingPaymentsCount = (payments || []).filter(p => p.status === "pending_verification" || p.status === "pending").length
+    const coursePriceMap = new Map<string, number>()
+    courses?.forEach(c => {
+      const priceNum = parseInt(String(c.price || "99000").replace(/\D/g, "")) || 99000
+      if (c.id) coursePriceMap.set(c.id, priceNum)
+      if (c.slug) coursePriceMap.set(c.slug, priceNum)
+    })
+
+    // Calculate revenue from confirmed payments
+    const confirmedPayments = (payments || []).filter(p => {
+      const s = String(p.status || "").toLowerCase()
+      return s === "confirmed" || s === "success" || s === "paye" || s === "completed" || s === "valide" || s === "validé"
+    })
+
+    const registeredPaymentIds = new Set<string>()
+    let totalRevenue = 0
+
+    confirmedPayments.forEach(p => {
+      if (p.registration_id) registeredPaymentIds.add(p.registration_id)
+      let amt = Number(p.amount)
+      if (!amt || isNaN(amt) || amt <= 0) {
+        amt = (p.course_id && coursePriceMap.get(p.course_id)) || (p.course_title && coursePriceMap.get(p.course_title)) || 99000
+      }
+      totalRevenue += amt
+    })
+
+    // Also include paid registrations that don't have a double-counted payment record
+    const paidRegistrations = (registrations || []).filter(r => {
+      const s = String(r.status || "").toLowerCase()
+      return s === "paye" || s === "paid" || s === "confirmed" || r.source === "admin_manual_enroll"
+    })
+
+    paidRegistrations.forEach(r => {
+      if (!registeredPaymentIds.has(r.id)) {
+        const amt = (r.course_id && coursePriceMap.get(r.course_id)) || (r.course_slug && coursePriceMap.get(r.course_slug)) || 99000
+        totalRevenue += amt
+      }
+    })
+
+    const pendingPaymentsCount = (payments || []).filter(p => {
+      const s = String(p.status || "").toLowerCase()
+      return s === "pending_verification" || s === "pending" || s === "en_attente"
+    }).length
+
     const totalRegistrations = (registrations || []).length
-    const proRegistrations = (registrations || []).filter(r => r.source?.includes("pro") || r.status === "paye").length
+    const proRegistrations = paidRegistrations.length
     const totalStudents = (profiles || []).length
     const pendingSubmissions = (submissions || []).filter(s => s.status === "pending" || !s.status).length
     const b2bCount = (b2bRequests || []).length
