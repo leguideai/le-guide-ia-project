@@ -114,7 +114,14 @@ export async function GET(req: Request) {
 
     if (userRegs && userRegs.length > 0) {
       userRegs.forEach(r => {
-        const slugOrId = r.course_slug || (r.course_id ? String(r.course_id) : "")
+        let slugOrId = r.course_slug || (r.course_id ? String(r.course_id) : "")
+        if (!slugOrId && r.notes) {
+          try {
+            const parsed = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
+            if (parsed?.course_slug) slugOrId = parsed.course_slug
+          } catch(e) {}
+        }
+
         if (slugOrId) {
           regIdToSlug.set(r.id, slugOrId)
           if (["paye", "confirmed", "active"].includes(r.status)) {
@@ -160,11 +167,18 @@ export async function GET(req: Request) {
       })
     }
 
-    // 6. Fetch user_courses
-    const { data: userCourses } = await supabaseServer
+    // 6. Fetch user_courses (both by email and userId)
+    let ucQuery = supabaseServer
       .from("user_courses")
       .select("course_slug, course_id, status, created_at, amount_paid, payment_method")
-      .ilike("user_email", userEmail)
+
+    if (userId) {
+      ucQuery = ucQuery.or(`user_email.ilike.${userEmail},user_id.eq.${userId}`)
+    } else {
+      ucQuery = ucQuery.ilike("user_email", userEmail)
+    }
+
+    const { data: userCourses } = await ucQuery
 
     if (userCourses && userCourses.length > 0) {
       userCourses.forEach((uc: any) => {

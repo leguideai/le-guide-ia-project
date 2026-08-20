@@ -157,14 +157,7 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     if (orig && String(orig).trim() !== "") {
       return formatPrice(orig, currency)
     }
-    if (typeof val === "number") {
-      return val === 0 ? "0 FCFA" : `${Math.round(val * 1.5).toLocaleString("fr-FR")} ${currency}`
-    }
-    const num = parseFloat(String(val).replace(/[^0-9.]/g, ""))
-    if (!isNaN(num) && num > 0) {
-      return `${Math.round(num * 1.5).toLocaleString("fr-FR")} ${currency}`
-    }
-    return String(val || "")
+    return formatPrice(val, currency)
   }
 
   const isBusiness = Number(activeCourse?.price) >= 140000 || 

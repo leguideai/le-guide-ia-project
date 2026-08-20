@@ -238,35 +238,12 @@ export async function sendManualEnrollmentEmail(params: ManualEnrollmentEmailPar
                 Félicitations ! Votre inscription au <strong>${courseTitle}</strong> a été validée et activée avec succès par l'administration Le Guide IA.
               </p>
               
-              ${isNewAccount && tempPassword ? `
-              <!-- NOUVEAU COMPTE CRÉÉ -->
-              <div class="credentials-box">
-                <span class="card-title" style="color: #38bdf8;">🔐 Vos Identifiants de Connexion</span>
-                <p style="margin: 4px 0 14px; font-size: 12px; color: #94a3b8;">
-                  Un compte apprenant a été spécialement créé pour vous sur la plateforme :
-                </p>
-                <div class="info-row">
-                  <span class="info-label">Email :</span>
-                  <span class="info-value" style="font-family: monospace; color: #38bdf8;">${email}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Mot de passe temporaire :</span>
-                  <span class="info-value" style="font-family: monospace; color: #facc15; font-size: 14px;">${tempPassword}</span>
-                </div>
-                <div style="clear: both;"></div>
-                <p style="margin: 12px 0 0; font-size: 11px; color: #94a3b8; font-style: italic;">
-                  💡 Conseil : Vous pourrez modifier votre mot de passe à tout moment une fois connecté dans votre Espace Membre.
-                </p>
-              </div>
-              ` : `
-              <!-- COMPTE DÉJÀ EXISTANT -->
               <div class="card-box" style="border-left: 4px solid #38bdf8;">
-                <span class="card-title" style="color: #38bdf8;">🔐 Accès à votre Espace Membre</span>
+                <span class="card-title" style="color: #38bdf8;">🚀 Accès à votre Espace Membre</span>
                 <p style="margin: 4px 0; font-size: 13px;">
-                  Ce Bootcamp a été rattaché à votre compte existant (<strong>${email}</strong>). Connectez-vous simplement avec votre mot de passe habituel.
+                  Votre formation est associée à votre adresse email (<strong>${email}</strong>). Connectez-vous directement sur la plateforme pour accéder à vos cours et sessions en direct.
                 </p>
               </div>
-              `}
 
               <!-- RÉCAPITULATIF RÈGLEMENT & JUSTIFICATIF -->
               <div class="card-box">
@@ -475,6 +452,155 @@ export async function sendAdminNewEnrollmentNotification(params: AdminNewEnrollm
     return { success: true, data }
   } catch (error) {
     console.error('Error sending admin enrollment notification email:', error)
+    return { success: false, error }
+  }
+}
+
+export interface StripeSuccessEmailParams {
+  fullName: string
+  email: string
+  courseTitle: string
+  amount?: number | string
+  transactionRef?: string
+  tempPassword?: string
+  isNewAccount?: boolean
+}
+
+export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const {
+      fullName,
+      email,
+      courseTitle,
+      amount = "149 000 FCFA",
+      transactionRef = "LGI-STRIPE-OK",
+      tempPassword,
+      isNewAccount = false
+    } = params
+
+    const firstName = fullName ? fullName.split(' ')[0] : email.split('@')[0]
+    const formattedAmount = typeof amount === "number" ? `${amount.toLocaleString("fr-FR")} FCFA` : String(amount)
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideai.com"
+    const loginUrl = `${siteUrl}/login`
+    const dashboardUrl = `${siteUrl}/dashboard`
+
+    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre paiement par carte bancaire pour le ${courseTitle} a été validé avec succès.\nVos accès sont immédiatement débloqués.\n\nAccédez à votre espace apprenant : ${loginUrl}\n\nÀ très vite dans le Bootcamp,\nAlfred Dah & L'équipe LE GUIDE IA`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject: `🎉 Confirmation de Paiement & Accès Immédiat au ${courseTitle} — LE GUIDE IA`,
+      text: textContent,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Paiement Confirmé & Accès Débloqué - LE GUIDE IA</title>
+          <style>
+            body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; background-color: #090d16; color: #e2e8f0; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 24px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+            .header { background: linear-gradient(135deg, #059669 0%, #10b981 50%, #0284c7 100%); padding: 36px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; text-transform: uppercase; }
+            .header p { margin: 6px 0 0; font-size: 13px; color: #ecfdf5; font-weight: 600; opacity: 0.95; }
+            .content { padding: 32px 28px; line-height: 1.65; font-size: 14px; color: #cbd5e1; }
+            .welcome-title { font-size: 18px; font-weight: 700; color: #ffffff; margin-top: 0; margin-bottom: 12px; }
+            .badge-instant { display: inline-block; background-color: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+            .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin: 20px 0; }
+            .card-title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: block; }
+            .credentials-box { background: linear-gradient(180deg, #1e293b 0%, #064e3b 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px; margin: 20px 0; }
+            .info-row { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
+            .info-row:last-child { border-bottom: none; }
+            .info-label { color: #94a3b8; font-weight: 600; }
+            .info-value { color: #f8fafc; font-weight: 700; float: right; }
+            .cta-button { display: block; width: fit-content; margin: 26px auto 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 32px; border-radius: 12px; text-align: center; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+            .footer { background-color: #090d16; padding: 24px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>LE GUIDE IA</h1>
+              <p>Plateforme Officielle de Formation & Certification en IA</p>
+            </div>
+            <div class="content">
+              <span class="badge-instant">⚡ PAIEMENT EN LIGNE VALIDÉ — ACCÈS IMMÉDIAT</span>
+              <p class="welcome-title">Bonjour <strong>${firstName}</strong> 👋,</p>
+              <p>
+                Félicitations ! Votre paiement par carte bancaire pour le <strong>${courseTitle}</strong> a été validé avec succès.
+              </p>
+              <p>
+                Vos accès sont désormais <strong>100% opérationnels</strong>. Vous pouvez dès à présent rejoindre votre tableau de bord et découvrir votre formation.
+              </p>
+              
+              <div class="card-box" style="border-left: 4px solid #10b981;">
+                <span class="card-title" style="color: #34d399;">🚀 Accès à votre Espace Membre</span>
+                <p style="margin: 4px 0; font-size: 13px;">
+                  Ce Bootcamp a été automatiquement débloqué sur votre compte (<strong>${email}</strong>). Connectez-vous simplement sur la plateforme pour accéder à vos contenus et directs.
+                </p>
+              </div>
+
+              <!-- RÉCAPITULATIF RÈGLEMENT OFFICIEL -->
+              <div class="card-box">
+                <span class="card-title" style="color: #38bdf8;">📋 Reçu de Paiement Sécurisé</span>
+                <div class="info-row">
+                  <span class="info-label">Bootcamp :</span>
+                  <span class="info-value">${courseTitle}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Moyen de paiement :</span>
+                  <span class="info-value">Carte Bancaire Internationale (Stripe)</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Réf. Transaction :</span>
+                  <span class="info-value" style="font-family: monospace;">${transactionRef}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Montant réglé :</span>
+                  <span class="info-value" style="color: #10b981;">${formattedAmount}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Statut :</span>
+                  <span class="info-value" style="color: #10b981;">✅ PAYÉ & DÉBLOQUÉ</span>
+                </div>
+                <div style="clear: both;"></div>
+              </div>
+
+              <div style="text-align: center; margin: 28px 0 16px;">
+                <a href="${loginUrl}" class="cta-button" style="color: #ffffff !important;">Accéder à mon Espace Apprenant</a>
+              </div>
+
+              <div style="background-color: #1e293b; border-radius: 12px; padding: 14px; margin-top: 24px; font-size: 12px; color: #94a3b8;">
+                <strong style="color: #e2e8f0;">Support & Accompagnement :</strong><br>
+                Notre équipe est à votre disposition. Vous pouvez répondre directement à cet email ou nous contacter sur WhatsApp au +226 75 75 72 73.
+              </div>
+
+              <p style="margin-top: 24px; font-size: 13px;">
+                Bienvenue parmi nous et bon apprentissage !<br>
+                <strong>Alfred Dah & L'équipe Pédagogique LE GUIDE IA</strong>
+              </p>
+            </div>
+            <div class="footer">
+              © 2026 LE GUIDE IA — Tous droits réservés.<br>
+              Centre d'Excellence en Intelligence Artificielle & Automatisation
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending Stripe success email:', error)
     return { success: false, error }
   }
 }

@@ -10,7 +10,7 @@ import { countries, getCountryFlag, Country } from "@/lib/countries"
 import { 
   ArrowLeft, ArrowRight, ShieldCheck, Lock, CreditCard, Smartphone, 
   CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check, 
-  Upload, Image as ImageIcon, X, ChevronDown, Search 
+  Upload, Image as ImageIcon, X, ChevronDown, Search, Sparkles, Clock, Tag
 } from "lucide-react"
 
 interface PageProps {
@@ -123,10 +123,11 @@ function CheckoutContent({ params }: PageProps) {
     }
   }
 
-  // Fetch course from Supabase
+  // Fetch course from Supabase with fallback to API
   useEffect(() => {
     async function fetchCourse() {
       try {
+        let found: any = null
         const { data, error } = await supabase
           .from("courses")
           .select("*")
@@ -134,7 +135,22 @@ function CheckoutContent({ params }: PageProps) {
           .maybeSingle()
 
         if (data) {
-          setCourseData(data)
+          found = data
+        } else {
+          const res = await fetch("/api/admin/courses")
+          const apiData = await res.json()
+          if (apiData?.courses && apiData.courses.length > 0) {
+            found = apiData.courses.find((c: any) => 
+              c.slug === courseSlug || 
+              c.id === courseSlug ||
+              (courseSlug.includes("business") && c.slug?.includes("business")) ||
+              (!courseSlug.includes("business") && !c.slug?.includes("business"))
+            )
+          }
+        }
+
+        if (found) {
+          setCourseData(found)
         }
       } catch (err) {
         console.warn("Could not fetch course in checkout:", err)
@@ -143,31 +159,51 @@ function CheckoutContent({ params }: PageProps) {
     fetchCourse()
   }, [courseSlug])
 
-  // Check if special offer has expired (after the entire last day is exhausted)
-  const targetTimestamp = getOfferEndTimestamp(courseData?.offer_end_date)
-  const isOfferExpired = targetTimestamp !== null && new Date().getTime() > targetTimestamp
+  // Helper to extract clean numeric value from DB field (e.g. 99000, "99 000 FCFA", "149000", etc.)
+  function parseDbPrice(val: any): number | null {
+    if (val === undefined || val === null || val === "") return null
+    if (typeof val === "number" && !isNaN(val)) return val
+    const cleaned = String(val).replace(/[^0-9.]/g, "")
+    const num = parseFloat(cleaned)
+    return isNaN(num) ? null : num
+  }
 
-  // Active Tier: if offer expired, standard tier is forced
+  // 100% Dynamic Price Calculations directly from Database (NO hardcoded numbers or static fallbacks)
+  const offerPriceFromDb = parseDbPrice(courseData?.price)
+  const standardPriceFromDb = parseDbPrice(courseData?.original_price)
+
+  const rawOfferPrice = offerPriceFromDb !== null ? offerPriceFromDb : (standardPriceFromDb !== null ? standardPriceFromDb : 0)
+  const rawStandardPrice = standardPriceFromDb !== null ? standardPriceFromDb : rawOfferPrice
+
+  // Check if special offer has expired based on database offer_end_date
+  const targetTimestamp = getOfferEndTimestamp(courseData?.offer_end_date)
+  const hasOfferEndDate = targetTimestamp !== null
+  const isOfferExpired = hasOfferEndDate && new Date().getTime() > targetTimestamp
+
+  // Active Tier: if offer expired, standard price is applied
   const isStandardTier = requestedTier === "standard" || isOfferExpired
 
   const isBusiness = courseSlug?.includes("business") || 
     courseData?.slug?.includes("business") || 
     courseData?.title?.toLowerCase().includes("business")
 
-  const courseTitle = courseData?.title || (isBusiness ? "Bootcamp IA & Business" : "Bootcamp IA & Carrière")
+  const courseTitle = courseData?.title || (courseSlug ? courseSlug.replace(/-/g, " ") : "Bootcamp IA")
   const isEnrolled = isEnrolledInCourse(courseData || { id: courseSlug, slug: courseSlug, title: courseTitle })
 
-  // Price calculations
-  const rawOfferPrice = courseData?.price !== undefined ? Number(courseData.price) : (isBusiness ? 149000 : 99000)
-  const rawStandardPrice = courseData?.original_price
-    ? parseFloat(String(courseData.original_price).replace(/[^0-9.]/g, "")) || Math.round(rawOfferPrice * 1.5)
-    : Math.round(rawOfferPrice * 1.5)
-
+  // Final dynamic price to charge
   const price = isStandardTier ? rawStandardPrice : rawOfferPrice
-  const coursePriceFcfa = `${price.toLocaleString("fr-FR")} FCFA`
-  const approxUsd = Math.round(price / 655)
-  const coursePriceUsd = `≈ ${approxUsd} € / $${Math.round(approxUsd * 1.1)}`
-  const courseSchedule = courseData?.dates || (isBusiness ? "Lun-Ven 19h-21h GMT + Dimanche 16h-21h GMT" : "Lun-Ven 19h-21h GMT + Samedi 8h-13h GMT")
+  const discountAmount = Math.max(0, rawStandardPrice - price)
+  const discountPercent = (rawStandardPrice > 0 && discountAmount > 0) ? Math.round((discountAmount / rawStandardPrice) * 100) : 0
+
+  const currency = courseData?.currency || "FCFA"
+  const coursePriceFcfa = `${price.toLocaleString("fr-FR")} ${currency}`
+  const eurVal = price > 0 ? (price >= 655 ? `${Math.round(price / 655.957)} €` : `${Math.max(0.01, price / 655.957).toFixed(2)} €`) : "0 €"
+  const usdVal = price > 0 ? (price >= 655 ? `$${Math.round((price / 655.957) * 1.08)}` : `$${Math.max(0.01, (price / 655.957) * 1.08).toFixed(2)}`) : "$0"
+  const coursePriceUsd = `≈ ${eurVal} / ${usdVal}`
+  const courseSchedule = courseData?.dates || ""
+  const formattedOfferEndDate = courseData?.offer_end_date 
+    ? new Date(courseData.offer_end_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+    : null
 
   useEffect(() => {
     async function loadUserData() {
@@ -175,18 +211,75 @@ function CheckoutContent({ params }: PageProps) {
         const { data } = await supabase.auth.getUser()
         if (data?.user) {
           setIsLoggedIn(true)
-          if (data.user.email) setEmail(data.user.email)
-          const name = data.user.user_metadata?.full_name || data.user.user_metadata?.name
-          if (name) setFullName(name)
-          if (data.user.user_metadata?.whatsapp) setWhatsapp(data.user.user_metadata.whatsapp)
+          const userEmail = data.user.email || ""
+          if (userEmail) setEmail(userEmail)
+
+          let name = data.user.user_metadata?.full_name || data.user.user_metadata?.name || ""
+          let phone = data.user.user_metadata?.whatsapp || data.user.user_metadata?.phone || ""
+          let userCountry = data.user.user_metadata?.country || ""
+
+          // Enrich with profiles table data
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name, whatsapp, phone, country")
+              .or(`id.eq.${data.user.id},email.eq.${userEmail.toLowerCase()}`)
+              .maybeSingle()
+
+            if (profile) {
+              if (profile.full_name && !name) name = profile.full_name
+              if (profile.whatsapp && !phone) phone = profile.whatsapp
+              if (profile.phone && !phone) phone = profile.phone
+              if (profile.country && !userCountry) userCountry = profile.country
+            }
+
+            // Also check latest registration for contact phone / country
+            if (userEmail && (!phone || !name)) {
+              const { data: reg } = await supabase
+                .from("registrations")
+                .select("full_name, whatsapp, country")
+                .eq("email", userEmail.toLowerCase())
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle()
+
+              if (reg) {
+                if (reg.full_name && !name) name = reg.full_name
+                if (reg.whatsapp && !phone) phone = reg.whatsapp
+                if (reg.country && !userCountry) userCountry = reg.country
+              }
+            }
+          } catch (pErr) {
+            console.warn("Could not query profile in checkout:", pErr)
+          }
+
+          if (name) {
+            setFullName(name)
+            try { localStorage.setItem("user_name", name) } catch(e){}
+          }
+          if (phone) {
+            setWhatsapp(phone)
+            try { localStorage.setItem("user_whatsapp", phone) } catch(e){}
+          }
+          if (userCountry) {
+            setCountry(userCountry)
+            try { localStorage.setItem("user_country", userCountry) } catch(e){}
+          }
+          if (userEmail) {
+            try { localStorage.setItem("user_email", userEmail) } catch(e){}
+          }
         } else {
           const savedEmail = localStorage.getItem("user_email")
           const savedName = localStorage.getItem("user_name")
+          const savedPhone = localStorage.getItem("user_whatsapp") || localStorage.getItem("user_phone")
+          const savedCountry = localStorage.getItem("user_country")
           if (savedEmail) {
             setEmail(savedEmail)
             setIsLoggedIn(true)
           }
           if (savedName) setFullName(savedName)
+          if (savedPhone) setWhatsapp(savedPhone)
+          if (savedCountry) setCountry(savedCountry)
         }
       } catch (err) {
         console.warn("Could not auto-fetch user:", err)
@@ -743,36 +836,96 @@ function CheckoutContent({ params }: PageProps) {
           </div>
 
           {/* Summary Card (5 Cols) */}
-          <div className="md:col-span-5 rounded-3xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-xl space-y-6">
+          <div className="md:col-span-5 rounded-3xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-xl space-y-5 text-left">
             <div className="space-y-3 pb-4 border-b border-border">
-              <div className="flex items-center gap-2">
-                {isBusiness ? (
-                  <UserCheck className="size-5 text-[#D4AF37]" />
-                ) : (
-                  <GraduationCap className="size-5 text-primary" />
-                )}
-                <h3 className="font-heading text-lg font-bold text-foreground">{courseTitle}</h3>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  {isBusiness ? (
+                    <UserCheck className="size-5 text-[#D4AF37]" />
+                  ) : (
+                    <GraduationCap className="size-5 text-primary" />
+                  )}
+                  <h3 className="font-heading text-lg font-bold text-foreground">{courseTitle}</h3>
+                </div>
+
+                {!isStandardTier ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <Sparkles className="size-3" />
+                    {courseData?.offer_badge_text || (isBusiness ? "Offre Exclusive" : "Offre Spéciale Fondateur")}
+                  </span>
+                ) : isOfferExpired ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">
+                    <Clock className="size-3" />
+                    Tarif Standard (Offre terminée)
+                  </span>
+                ) : null}
               </div>
+
               <p className="text-xs text-muted-foreground leading-relaxed">
-                15h de formation intensive en direct avec Alfred Dah.
+                15h de formation intensive en direct avec Alfred Dah · 100% En ligne + Replays HD à vie.
               </p>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-2.5 text-xs">
               <div className="flex justify-between py-1">
                 <span className="text-muted-foreground">Formule</span>
                 <span className="font-bold text-foreground">{courseTitle}</span>
               </div>
+
               <div className="flex justify-between py-1">
                 <span className="text-muted-foreground">Créneaux Live</span>
-                <span className="font-semibold text-foreground text-right">{courseSchedule}</span>
+                <span className="font-semibold text-foreground text-right max-w-[65%]">{courseSchedule}</span>
               </div>
-              <div className="flex justify-between py-1 border-t border-border/60 pt-3">
-                <span className="font-bold text-foreground">Total à régler</span>
+
+              {/* Ligne Tarif Standard */}
+              <div className="flex justify-between py-1">
+                <span className="text-muted-foreground">Tarif Standard</span>
+                <span className={`font-mono ${!isStandardTier ? "line-through text-muted-foreground/70" : "font-bold text-foreground"}`}>
+                  {rawStandardPrice.toLocaleString("fr-FR")} FCFA
+                </span>
+              </div>
+
+              {/* Notification contextuelle sur l'offre */}
+              {!isStandardTier && formattedOfferEndDate && (
+                <p className="text-[11px] text-amber-300/90 pt-1 leading-relaxed">
+                  ✨ <strong>Offre garantie :</strong> Tarif promotionnel appliqué jusqu'au {formattedOfferEndDate}.
+                </p>
+              )}
+
+              {isOfferExpired && (
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] leading-relaxed">
+                  ⏱️ <em>La période de promotion s'étant achevée, le tarif régulier officiel ({rawStandardPrice.toLocaleString("fr-FR")} FCFA) est appliqué.</em>
+                </div>
+              )}
+
+              {/* Total à régler */}
+              <div className="flex justify-between py-2 border-t border-border/80 pt-3.5 items-baseline">
+                <div>
+                  <span className="font-bold text-foreground block text-sm">Total à régler</span>
+                  <span className="text-[10px] text-muted-foreground">TVA et accès complets inclus</span>
+                </div>
                 <div className="text-right">
-                  <div className={`text-lg font-black ${isBusiness ? "text-[#ECC86B]" : "text-primary"}`}>{coursePriceFcfa}</div>
+                  <div className={`text-xl font-black ${isBusiness ? "text-[#ECC86B]" : "text-primary"}`}>
+                    {coursePriceFcfa}
+                  </div>
                   <div className="text-[10px] text-muted-foreground">≈ {coursePriceUsd}</div>
                 </div>
+              </div>
+            </div>
+
+            {/* Inclusions garanties */}
+            <div className="pt-2 border-t border-border/60 space-y-1.5 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                <span>Accès direct aux 6 sessions + Replays HD illimités</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                <span>Templates, prompts professionnels &amp; support direct</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                <span>Certificat Officiel nominatif LE GUIDE IA</span>
               </div>
             </div>
           </div>

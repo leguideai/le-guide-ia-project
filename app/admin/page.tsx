@@ -2846,7 +2846,7 @@ export default function SuperAdminDashboard() {
                   />
                   <Mail className="size-4 text-emerald-700 shrink-0" />
                   <span className="text-[11px] text-emerald-900 font-medium leading-tight">
-                    Envoyer automatiquement l'email officiel avec les identifiants et le lien d'accès à l'espace membre.
+                    Envoyer automatiquement l'email officiel de confirmation et d'accès à l'espace membre.
                   </span>
                 </label>
 
@@ -4383,7 +4383,7 @@ export default function SuperAdminDashboard() {
                         className="size-4 text-emerald-600 rounded"
                       />
                       <span className="text-[11px] text-emerald-900 font-medium leading-tight">
-                        Envoyer automatiquement l'email officiel avec les identifiants et le lien d'accès à l'espace membre.
+                        Envoyer automatiquement l'email officiel de confirmation et d'accès à l'espace membre.
                       </span>
                     </label>
 

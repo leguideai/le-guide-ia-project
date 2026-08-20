@@ -281,7 +281,7 @@ export const translations: Record<string, any> = {
         {
           category: "pricing",
           q: "Quand et comment ai-je accès à mon espace de formation après mon paiement ?",
-          a: "Pour les paiements par carte bancaire, votre accès est activé automatiquement et instantanément. Pour les règlements par Mobile Money ou Virement, notre équipe administrative valide manuellement votre transaction sous 24 heures et vous recevez vos identifiants d'accès complets ainsi qu'un email de confirmation."
+          a: "Pour les paiements par carte bancaire, votre accès est activé automatiquement et instantanément. Pour les règlements par Mobile Money ou Virement, notre équipe administrative valide manuellement votre transaction sous 24 heures et vous recevez un email de confirmation dès l'activation de vos accès."
         },
         {
           category: "pricing",

@@ -1,16 +1,37 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { CheckCircle2, ArrowRight, Mail, ShieldCheck, LayoutDashboard, Clock, MessageCircle } from "lucide-react"
+import { CheckCircle2, ArrowRight, Mail, ShieldCheck, LayoutDashboard, Clock, MessageCircle, Sparkles } from "lucide-react"
 
 function SuccessContent() {
   const searchParams = useSearchParams()
-  const method = searchParams.get("method") || "mobile_direct"
+  const method = searchParams.get("method") || ""
   const ref = searchParams.get("ref") || ""
+  const sessionId = searchParams.get("session_id") || ""
 
-  const isMobileDirect = method.startsWith("mobile_direct") || method === "mobile_direct"
+  const isStripe = !!sessionId || method === "stripe" || ref.startsWith("LGI-STRIPE")
+  const isMobileDirect = !isStripe
+
+  const [verified, setVerified] = useState(false)
+
+  useEffect(() => {
+    if (sessionId && sessionId.startsWith("cs_")) {
+      fetch("/api/payment/stripe/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, ref })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setVerified(true)
+        }
+      })
+      .catch(err => console.warn("Could not auto-verify Stripe session:", err))
+    }
+  }, [sessionId, ref])
 
   return (
     <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 relative overflow-hidden">
@@ -71,7 +92,7 @@ function SuccessContent() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">3.</span>
-                    <span>Dès validation par l'administrateur, vous recevrez un <strong>second email contenant vos identifiants d'accès officiels</strong>.</span>
+                    <span>Dès validation par l'administrateur, vous recevrez un <strong>email de confirmation activant votre accès complet</strong>.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">4.</span>
@@ -122,7 +143,7 @@ function SuccessContent() {
               </div>
 
               <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
-                Votre compte apprenant et l'accès à votre formation ont été générés automatiquement. Vous allez recevoir un email de confirmation contenant vos identifiants d'accès.
+                Votre inscription et l'accès à votre formation ont été activés avec succès. Un email officiel de confirmation vous a été envoyé.
               </p>
 
               <div className="rounded-2xl bg-secondary/50 p-4 border border-border/60 text-left space-y-3">

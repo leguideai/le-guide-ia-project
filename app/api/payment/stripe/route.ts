@@ -11,32 +11,6 @@ export async function POST(req: Request) {
 
     const refCommand = `LGI-STRIPE-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
-    const { data: registration } = await supabaseServer
-      .from("registrations")
-      .upsert({
-        full_name: fullName,
-        email: email.toLowerCase(),
-        whatsapp,
-        country,
-        source: "checkout_stripe",
-        status: "inscrit",
-      }, { onConflict: "email" })
-      .select("id")
-      .single()
-
-    const { data: payment } = await supabaseServer
-      .from("payments")
-      .insert({
-        registration_id: registration?.id || null,
-        amount: price,
-        currency: "XOF",
-        method: "stripe",
-        status: "pending",
-        transaction_ref: refCommand,
-      })
-      .select("id")
-      .single()
-
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideai.com")
 
@@ -48,7 +22,19 @@ export async function POST(req: Request) {
       })
     }
 
-    const priceInEurCents = Math.round((price / 655.957) * 100)
+    const priceNumber = Number(price) || 0
+    if (priceNumber <= 0) {
+      return NextResponse.json({
+        url: `${baseUrl}/checkout/success?ref=${refCommand}&free=true`,
+        ref: refCommand
+      })
+    }
+
+    // Conversion FCFA -> EUR en centimes pour Stripe
+    // Note : Stripe exige un montant minimum de 50 centimes (0.50 €) par transaction CB.
+    // Pour des montants de test très bas (ex: 1 FCFA), on applique le seuil technique Stripe minimum de 50 centimes.
+    const rawCents = Math.round((priceNumber / 655.957) * 100)
+    const priceInEurCents = Math.max(50, rawCents)
 
     const params = new URLSearchParams()
     params.append("mode", "payment")
@@ -60,16 +46,19 @@ export async function POST(req: Request) {
     params.append("line_items[0][price_data][currency]", "eur")
     params.append("line_items[0][price_data][unit_amount]", priceInEurCents.toString())
     params.append("line_items[0][price_data][product_data][name]", `Inscription ${courseTitle} - Le Guide IA`)
+    params.append("line_items[0][price_data][product_data][description]", `${priceNumber.toLocaleString("fr-FR")} FCFA — Accès complet au Bootcamp`)
     params.append("line_items[0][price_data][product_data][tax_code]", "txcd_10000000")
     params.append("line_items[0][quantity]", "1")
     params.append("managed_payments[enabled]", "false")
 
     params.append("metadata[fullName]", fullName)
     params.append("metadata[email]", email.toLowerCase())
-    params.append("metadata[whatsapp]", whatsapp)
-    params.append("metadata[country]", country)
+    params.append("metadata[whatsapp]", whatsapp || "")
+    params.append("metadata[country]", country || "")
     params.append("metadata[courseSlug]", courseSlug)
-    params.append("metadata[paymentId]", payment?.id || "")
+    params.append("metadata[courseTitle]", courseTitle || "")
+    params.append("metadata[price]", String(priceNumber))
+    params.append("metadata[refCommand]", refCommand)
 
     const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",

@@ -30,15 +30,18 @@ export async function GET() {
         .select("*")
 
       const regMap = new Map((rawRegs || []).map(r => [r.id, r]))
-      const joined = (rawPayments || []).map(p => ({
-        ...p,
-        registrations: regMap.get(p.registration_id) || null
-      }))
+      const joined = (rawPayments || [])
+        .filter(p => !(p.method === "stripe" && p.status === "pending"))
+        .map(p => ({
+          ...p,
+          registrations: regMap.get(p.registration_id) || null
+        }))
 
       return NextResponse.json({ success: true, payments: joined })
     }
 
-    return NextResponse.json({ success: true, payments: payments || [] })
+    const filtered = (payments || []).filter(p => !(p.method === "stripe" && p.status === "pending"))
+    return NextResponse.json({ success: true, payments: filtered })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -148,14 +151,7 @@ export async function POST(req: Request) {
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b;">
                 <h2 style="color: #16a34a;">Bonjour ${fullName},</h2>
                 <p>Vous avez été officiellement inscrit(e) au Bootcamp <strong>${courseTitle || courseSlug}</strong> par l'équipe d'administration LE GUIDE IA.</p>
-                <p>Vos accès aux replays, ressources et sessions en direct sont désormais <strong>100% ACTIFS</strong> sur votre espace membre.</p>
-                ${isNewAccount && tempPassword ? `
-                  <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0;">
-                    <p><strong>Identifiants :</strong></p>
-                    <p>Email : <code>${emailClean}</code></p>
-                    <p>Mot de passe temporaire : <code>${tempPassword}</code></p>
-                  </div>
-                ` : ""}
+                <p>Vos accès aux replays, ressources et sessions en direct sont désormais <strong>100% ACTIFS</strong> sur votre espace membre (associé à l'adresse <code>${emailClean}</code>).</p>
                 <a href="https://leguideai.com/dashboard" style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 16px;">
                   Accéder à mon Espace Membre →
                 </a>
@@ -264,20 +260,11 @@ export async function POST(req: Request) {
                   </p>
                 </div>
 
-                ${isNewAccount && tempPassword ? `
-                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 8px 0; color: #0f172a; font-size: 14px;">Vos identifiants de connexion :</h4>
-                    <p style="margin: 4px 0; font-size: 13px;"><strong>Email :</strong> <code>${studentEmail}</code></p>
-                    <p style="margin: 4px 0; font-size: 13px;"><strong>Mot de passe temporaire :</strong> <code>${tempPassword}</code></p>
-                    <p style="font-size: 11px; color: #64748b; margin-top: 8px;">(Vous pourrez modifier ce mot de passe à tout moment dans votre profil).</p>
-                  </div>
-                ` : `
-                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
-                    <p style="margin: 0; font-size: 13px; color: #334155;">
-                      Connectez-vous avec votre adresse email <strong>${studentEmail}</strong> pour accéder immédiatement à vos leçons vidéo et boîtes à outils de prompts.
-                    </p>
-                  </div>
-                `}
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                  <p style="margin: 0; font-size: 13px; color: #334155;">
+                    Connectez-vous directement avec votre adresse email (<strong>${studentEmail}</strong>) pour accéder à vos sessions en direct, leçons vidéo et boîtes à outils.
+                  </p>
+                </div>
 
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="https://leguideai.com/dashboard" style="background-color: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);">
