@@ -1637,7 +1637,12 @@ export default function SuperAdminDashboard() {
 
       {/* Mobile Top Navigation Bar (Phone & Tablet) */}
       <header className="md:hidden sticky top-0 z-40 bg-white/95 border-b border-slate-200 shadow-2xs px-4 py-3 flex items-center justify-between backdrop-blur-xl">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2.5">
+          <img
+            src="/Logo%20avatar.png"
+            alt="Logo Le Guide IA"
+            className="size-7 rounded-lg object-cover shadow-xs"
+          />
           <span className="font-heading font-black text-lg text-slate-800 tracking-wider">
             LE GUIDE <span className="text-primary">IA</span>
           </span>
@@ -1650,7 +1655,7 @@ export default function SuperAdminDashboard() {
           <button
             onClick={fetchAllData}
             disabled={loading}
-            className="size-9 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:text-white flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="size-9 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:text-slate-900 hover:bg-slate-50 flex items-center justify-center cursor-pointer transition-all active:scale-95"
             title="Rafraîchir les données"
           >
             <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -1670,7 +1675,12 @@ export default function SuperAdminDashboard() {
         <div className="md:hidden fixed inset-0 z-50 bg-white/98 backdrop-blur-2xl flex flex-col justify-between p-5 overflow-y-auto animate-fadeIn">
           <div className="space-y-5">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5">
+                <img
+                  src="/Logo%20avatar.png"
+                  alt="Logo Le Guide IA"
+                  className="size-8 rounded-lg object-cover shadow-xs"
+                />
                 <span className="font-heading font-black text-xl text-slate-800">
                   LE GUIDE <span className="text-primary">IA</span>
                 </span>
@@ -1680,7 +1690,7 @@ export default function SuperAdminDashboard() {
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="size-9 rounded-xl bg-slate-800 text-slate-600 hover:text-slate-900 flex items-center justify-center cursor-pointer"
+                className="size-9 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 flex items-center justify-center cursor-pointer transition-colors"
               >
                 <X className="size-5" />
               </button>
@@ -1914,15 +1924,17 @@ export default function SuperAdminDashboard() {
       <aside className="w-64 border-r border-slate-200 bg-white backdrop-blur-xl p-4 hidden md:flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto z-30">
         <div className="space-y-6 text-left">
           {/* Logo & Platform Info */}
-          <div className="flex items-center gap-3 px-2">
-            <div className="size-9 rounded-xl bg-primary flex items-center justify-center text-slate-950 font-black text-xs shadow-lg shadow-primary/20">
-              IA
-            </div>
+          <Link href="/" className="flex items-center gap-3 px-2 group">
+            <img
+              src="/Logo%20avatar.png"
+              alt="Logo Le Guide IA"
+              className="size-9 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform"
+            />
             <div>
               <span className="font-heading font-black text-sm text-slate-800 tracking-wide block">LE GUIDE IA</span>
               <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block">ADMIN PORTAL</span>
             </div>
-          </div>
+          </Link>
 
           {/* Nav Categories */}
           <div className="space-y-4">
@@ -2123,12 +2135,12 @@ export default function SuperAdminDashboard() {
         </div>
 
         {/* User Info & Signout */}
-        <div className="pt-4 border-t border-slate-200 space-y-3">
-          <div className="flex items-center gap-3 px-2">
-            <div className="size-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-white text-xs font-bold">
+        <div className="pt-4 border-t border-slate-200 space-y-2.5">
+          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-[#F4F6F8] border border-slate-200/80">
+            <div className="size-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-slate-900 text-xs font-black shrink-0">
               {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
             </div>
-            <div className="min-w-0 text-left">
+            <div className="min-w-0 flex-1 text-left">
               <p className="text-xs font-bold text-slate-800 truncate">{currentUser?.email || "Administrateur"}</p>
               <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
                 <ShieldCheck className="size-3" /> {userRole || "admin"}
@@ -2138,9 +2150,9 @@ export default function SuperAdminDashboard() {
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200/80 transition-all cursor-pointer bg-white"
           >
-            <LogOut className="size-3.5 text-red-400" />
+            <LogOut className="size-3.5 text-rose-500" />
             <span>Déconnexion</span>
           </button>
         </div>
@@ -3840,13 +3852,13 @@ export default function SuperAdminDashboard() {
                     title: "",
                     description: "",
                     category: "Productivity",
-                    access_level: "Membre Premium",
+                    access_level: "Gratuit",
                     prompt_text: "",
                     download_url: ""
                   })
                   setShowResourceModal(true)
                 }}
-                className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20"
+                className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
               >
                 <Plus className="size-4" />
                 Ajouter une Ressource
@@ -3857,14 +3869,16 @@ export default function SuperAdminDashboard() {
               {resources.map(r => (
                 <div key={r.id || r.title} className="p-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-3">
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
-                        {r.category}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                        {r.category || "Ressource"}
                       </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                        r.access_level === "Gratuit" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-primary/10 text-primary border-primary/20"
+                      <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-md border ${
+                        r.access_level === "Gratuit" 
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                          : "bg-amber-50 text-amber-800 border-amber-200"
                       }`}>
-                        {r.access_level}
+                        {r.access_level || "Gratuit"}
                       </span>
                     </div>
                     <h3 className="font-bold text-slate-800 text-base leading-snug">{r.title}</h3>
@@ -4253,6 +4267,7 @@ export default function SuperAdminDashboard() {
           <div className="space-y-8 animate-fadeIn text-left">
             
             {/* Header */}
+            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <div>
                 <h2 className="font-heading text-xl font-bold text-slate-800 flex items-center gap-2.5">
@@ -4260,14 +4275,14 @@ export default function SuperAdminDashboard() {
                   Newsletter &amp; Diffusion d'Emails
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Diffusez vos analyses, prompts et dates de bootcamps directement par email via <strong>alfred@leguideai.com</strong>.
+                  Diffusez vos analyses, prompts et dates de bootcamps directement par email via votre adresse configurée.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center gap-1.5">
-                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Expéditeur : alfred@leguideai.com
+                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Expéditeur : {currentUser?.email || "admin@leguideai.com"}
                 </span>
               </div>
             </div>
@@ -4277,18 +4292,18 @@ export default function SuperAdminDashboard() {
               <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Abonnés Newsletter</span>
                 <p className="text-2xl font-black text-slate-800 font-mono">{newsletterSubscribers.length}</p>
-                <span className="text-[10px] text-emerald-400 font-bold">100% Abonnés Actifs</span>
+                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold inline-block">100% Abonnés Actifs</span>
               </div>
 
               <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Membres Non-Abonnés</span>
-                <p className="text-2xl font-black text-blue-400 font-mono">{nonSubscribedMembers.length}</p>
+                <p className="text-2xl font-black text-blue-700 font-mono">{nonSubscribedMembers.length}</p>
                 <span className="text-[10px] text-slate-500">Inscrits sur la plateforme</span>
               </div>
 
               <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Serveur d'Envoi</span>
-                <p className="text-sm font-bold text-primary font-mono truncate">Resend (Cloudflare DNS)</p>
+                <p className="text-sm font-bold text-slate-800 font-mono truncate">Resend (Cloudflare DNS)</p>
                 <span className="text-[10px] text-slate-500">DKIM &amp; SPF sécurisés</span>
               </div>
             </div>
@@ -4303,7 +4318,7 @@ export default function SuperAdminDashboard() {
                     <Sparkles className="size-4 text-primary" />
                     Rédiger &amp; Diffuser une Campagne
                   </h3>
-                  <span className="text-[10px] font-mono text-slate-500">Expéditeur : alfred@leguideai.com</span>
+                  <span className="text-[10px] font-mono text-slate-500">Expéditeur : {currentUser?.email || "admin@leguideai.com"}</span>
                 </div>
 
                 <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
@@ -4315,7 +4330,7 @@ export default function SuperAdminDashboard() {
                       value={broadcastForm.subject}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, subject: e.target.value })}
                       placeholder="Ex: 🔥 Nouvelles Masterclasses IA & Dates du prochain Bootcamp..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-white font-semibold outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 font-semibold outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
 
@@ -4338,7 +4353,7 @@ export default function SuperAdminDashboard() {
                       value={broadcastForm.bodyHtml}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, bodyHtml: e.target.value })}
                       placeholder="Rédigez votre message ici..."
-                      className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-white font-mono text-xs outline-none focus:border-primary leading-relaxed"
+                      className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 font-mono text-xs outline-none focus:border-primary leading-relaxed placeholder:text-slate-500"
                     />
                   </div>
 
@@ -4354,7 +4369,7 @@ export default function SuperAdminDashboard() {
                       />
                       <label htmlFor="include_platform_members" className="cursor-pointer space-y-0.5 select-none">
                         <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                          <Users className="size-3.5 text-blue-400 inline" />
+                          <Users className="size-3.5 text-blue-500 inline" />
                           Inclure également les membres &amp; apprenants inscrits (Non-abonnés)
                         </span>
                         <span className="text-[11px] text-slate-600 block leading-relaxed">
@@ -4363,19 +4378,19 @@ export default function SuperAdminDashboard() {
                       </label>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-900 text-[11px]">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#F4F6F8] text-slate-700 font-mono">
-                        Abonnés Newsletter : <strong className="text-white">{newsletterSubscribers.length}</strong>
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 text-[11px]">
+                      <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 font-mono">
+                        Abonnés Newsletter : <strong className="text-slate-900">{newsletterSubscribers.length}</strong>
                       </span>
                       {broadcastForm.includePlatformMembers ? (
                         <>
                           <span className="text-slate-500 font-bold">+</span>
-                          <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/30 font-mono">
-                            Membres plateforme : <strong className="text-blue-300">{nonSubscribedMembers.length}</strong>
+                          <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                            Membres plateforme : <strong className="text-blue-800">{nonSubscribedMembers.length}</strong>
                           </span>
                           <span className="text-slate-500 font-bold">=</span>
-                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono font-bold">
-                            Total ciblé : <strong className="text-emerald-300">{totalBroadcastRecipients} destinataire(s)</strong>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono font-bold">
+                            Total ciblé : <strong className="text-emerald-800">{totalBroadcastRecipients} destinataire(s)</strong>
                           </span>
                         </>
                       ) : (
@@ -4391,7 +4406,7 @@ export default function SuperAdminDashboard() {
                     <div className="p-3.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold space-y-1">
                       <p>✅ Envoi réussi à <strong>{broadcastResult.sentCount}</strong> destinataire(s) !</p>
                       {broadcastResult.failureCount > 0 && (
-                        <p className="text-amber-400 text-[11px]">⚠️ {broadcastResult.failureCount} échec(s) de délivrabilité.</p>
+                        <p className="text-amber-700 text-[11px]">⚠️ {broadcastResult.failureCount} échec(s) de délivrabilité.</p>
                       )}
                     </div>
                   )}
@@ -4402,16 +4417,17 @@ export default function SuperAdminDashboard() {
                       type="button"
                       disabled={sendingBroadcast}
                       onClick={async () => {
+                        const targetTestEmail = currentUser?.email || "admin@leguideai.com"
                         setSendingBroadcast(true)
                         try {
                           const res = await fetch("/api/admin/newsletter/broadcast", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ ...broadcastForm, isTest: true, testEmail: "alfred@leguideai.com" })
+                            body: JSON.stringify({ ...broadcastForm, isTest: true, testEmail: targetTestEmail })
                           })
                           const data = await res.json()
                           if (res.ok && data.success) {
-                            showNotice("Email de test envoyé à alfred@leguideai.com !")
+                            showNotice(`Email de test envoyé à ${targetTestEmail} !`)
                           } else {
                             showNotice(data.message || "Erreur lors du test.")
                           }
@@ -4421,9 +4437,9 @@ export default function SuperAdminDashboard() {
                           setSendingBroadcast(false)
                         }
                       }}
-                      className="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-200 text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                      className="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-800 font-bold transition-all text-xs cursor-pointer shadow-xs"
                     >
-                      🧪 Tester vers alfred@leguideai.com
+                      🧪 Tester vers {currentUser?.email || "mon email"}
                     </button>
 
                     <button
@@ -4475,7 +4491,7 @@ export default function SuperAdminDashboard() {
                     placeholder="Ajouter un email abonné..."
                     value={newSubscriberEmail}
                     onChange={(e) => setNewSubscriberEmail(e.target.value)}
-                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-primary"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder:text-slate-500 outline-none focus:border-primary"
                   />
                   <button
                     type="submit"
@@ -4488,7 +4504,7 @@ export default function SuperAdminDashboard() {
 
                 {newsletterSubscribers.length === 0 ? (
                   <div className="text-center py-10 text-slate-500 text-xs bg-white rounded-2xl border border-slate-200/80 p-4">
-                    <Mail className="size-8 mx-auto text-slate-600 mb-2 opacity-50" />
+                    <Mail className="size-8 mx-auto text-slate-400 mb-2" />
                     <p className="font-bold text-slate-700">Aucun abonné enregistré</p>
                     <p className="text-[11px] text-slate-500 mt-1">Inscrivez un email ci-dessus ou via le formulaire footer du site.</p>
                   </div>
@@ -4497,7 +4513,7 @@ export default function SuperAdminDashboard() {
                     {newsletterSubscribers.map((sub: any, idx: number) => (
                       <div
                         key={sub.id || sub.email || idx}
-                        className="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between gap-3 text-xs hover:border-slate-700 transition-colors"
+                        className="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between gap-3 text-xs hover:border-slate-300 transition-colors shadow-2xs"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="font-bold text-slate-800 truncate font-mono text-[11px]">{sub.email}</p>
@@ -4508,12 +4524,12 @@ export default function SuperAdminDashboard() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
                             Actif
                           </span>
                           <button
                             onClick={() => handleDeleteSubscriber(sub)}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                             title="Supprimer cet abonné"
                           >
                             <Trash2 className="size-3.5" />
@@ -4537,7 +4553,7 @@ export default function SuperAdminDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-md">
               <div className="space-y-1">
                 <h3 className="font-heading text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <DollarSign className="size-5 text-emerald-400 shrink-0" />
+                  <DollarSign className="size-5 text-emerald-600 shrink-0" />
                   <span>Inscriptions &amp; Validation des Paiements</span>
                 </h3>
                 <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
@@ -4547,14 +4563,14 @@ export default function SuperAdminDashboard() {
 
               {/* Status Badges Counts */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-xl bg-[#F4F6F8] border border-slate-700 text-[11px] font-bold text-slate-700">
-                  Total : <strong className="text-white">{payments.length}</strong>
+                <span className="px-3 py-1 rounded-xl bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700">
+                  Total : <strong className="text-slate-900">{payments.length}</strong>
                 </span>
-                <span className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-400">
-                  À vérifier : <strong className="text-amber-300">{payments.filter(p => p.status === "pending_verification" || p.status === "pending").length}</strong>
+                <span className="px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-800">
+                  À vérifier : <strong className="text-amber-900">{payments.filter(p => p.status === "pending_verification" || p.status === "pending").length}</strong>
                 </span>
-                <span className="px-3 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400">
-                  Confirmés : <strong className="text-emerald-300">{payments.filter(p => p.status === "confirmed").length}</strong>
+                <span className="px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800">
+                  Confirmés : <strong className="text-emerald-900">{payments.filter(p => p.status === "confirmed").length}</strong>
                 </span>
               </div>
             </div>
@@ -4562,18 +4578,18 @@ export default function SuperAdminDashboard() {
             {/* Search & Filter Toolbar */}
             <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
               <div className="relative flex-1 sm:max-w-md">
-                <Search className="absolute left-3.5 top-3 size-4 text-slate-500" />
+                <Search className="absolute left-3.5 top-3 size-4 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Rechercher par nom, email, tél, référence..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-white border border-slate-200/90 shadow-xs rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-primary outline-none transition-colors"
+                  className="w-full bg-white border border-slate-200/90 shadow-xs rounded-2xl pl-10 pr-10 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-primary outline-none transition-colors"
                 />
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3.5 top-3 text-[11px] text-slate-600 hover:text-slate-900"
+                    className="absolute right-3.5 top-3 text-[11px] text-slate-400 hover:text-slate-700"
                   >
                     ✕
                   </button>
@@ -4616,11 +4632,11 @@ export default function SuperAdminDashboard() {
                       const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
                       const initials = (p.registrations?.full_name || "P").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
                       return (
-                        <tr key={p.id} className="hover:bg-slate-100/40 transition-colors group">
+                        <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
                           {/* Participant */}
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="size-9 rounded-xl bg-primary/10 text-primary font-black flex items-center justify-center text-xs shrink-0 border border-primary/20">
+                              <div className="size-9 rounded-xl bg-primary/15 text-slate-950 font-black flex items-center justify-center text-xs shrink-0 border border-primary/25">
                                 {initials}
                               </div>
                               <div className="min-w-0">
@@ -4634,8 +4650,8 @@ export default function SuperAdminDashboard() {
 
                           {/* Contact */}
                           <td className="p-4 space-y-1">
-                            <div className="text-slate-200 truncate flex items-center gap-1.5">
-                              <Mail className="size-3 text-slate-500 shrink-0" />
+                            <div className="text-slate-800 font-medium truncate flex items-center gap-1.5">
+                              <Mail className="size-3 text-slate-400 shrink-0" />
                               <span className="truncate">{p.registrations?.email || "N/A"}</span>
                             </div>
                             <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
@@ -4644,7 +4660,7 @@ export default function SuperAdminDashboard() {
                                   href={`https://wa.me/${cleanPhone}`} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+                                  className="text-emerald-700 hover:underline flex items-center gap-1 font-bold"
                                   title="Contacter sur WhatsApp"
                                 >
                                   <MessageCircle className="size-3" />
@@ -4653,35 +4669,37 @@ export default function SuperAdminDashboard() {
                               ) : (
                                 <span>{p.registrations?.whatsapp || "N/A"}</span>
                               )}
-                              <span className="text-[10px] text-slate-500 font-mono">({p.registrations?.country || "CI"})</span>
+                              {p.registrations?.country && (
+                                <span className="text-[10px] text-slate-500 font-mono">({p.registrations.country})</span>
+                              )}
                             </div>
                           </td>
 
                           {/* Montant */}
                           <td className="p-4">
-                            <div className="font-mono font-bold text-emerald-400 text-sm">
-                              {p.amount ? Number(p.amount).toLocaleString("fr-FR") : "49 000"} {p.currency || "XOF"}
+                            <div className="font-mono font-extrabold text-emerald-700 text-sm">
+                              {p.amount ? Number(p.amount).toLocaleString("fr-FR") : "0"} {p.currency || "XOF"}
                             </div>
                           </td>
 
                           {/* Méthode & Réf */}
                           <td className="p-4 space-y-0.5">
-                            <span className="font-bold text-slate-200 uppercase text-[11px] block">{p.method}</span>
+                            <span className="font-bold text-slate-800 uppercase text-[11px] block">{p.method}</span>
                             {p.transaction_ref ? (
-                              <div className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block">
+                              <div className="text-[10px] font-mono text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 inline-block">
                                 Réf: {p.transaction_ref}
                               </div>
                             ) : (
-                              <span className="text-[10px] text-slate-500 italic">Sans réf</span>
+                              <span className="text-[10px] text-slate-400 italic">Sans réf</span>
                             )}
                           </td>
 
                           {/* Statut */}
                           <td className="p-4">
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border inline-flex items-center gap-1 ${
-                              p.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                              (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
-                              "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                              p.status === "confirmed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                              (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse" :
+                              "bg-rose-50 text-rose-700 border-rose-200"
                             }`}>
                               {p.status === "confirmed" && <CheckCircle2 className="size-3" />}
                               {(p.status === "pending_verification" || p.status === "pending") && <Clock className="size-3" />}
@@ -4690,7 +4708,7 @@ export default function SuperAdminDashboard() {
                           </td>
 
                           {/* Date */}
-                          <td className="p-4 text-slate-500 text-[11px]">
+                          <td className="p-4 text-slate-500 text-[11px] font-medium">
                             {new Date(p.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                           </td>
 
@@ -4701,7 +4719,7 @@ export default function SuperAdminDashboard() {
                                 <button
                                   onClick={() => handlePaymentStatus(p.id, "confirmed")}
                                   disabled={processingId === p.id}
-                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-[11px] hover:bg-emerald-400 transition-colors shadow-md cursor-pointer flex items-center gap-1 shrink-0"
+                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
                                   title="Valider le paiement et débloquer les accès"
                                 >
                                   <CheckCircle2 className="size-3.5" />
@@ -4712,7 +4730,7 @@ export default function SuperAdminDashboard() {
                                 <button
                                   onClick={() => handlePaymentStatus(p.id, "rejected")}
                                   disabled={processingId === p.id}
-                                  className="px-2 py-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 font-bold text-[11px] hover:bg-red-500/20 transition-colors cursor-pointer shrink-0"
+                                  className="px-2 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] hover:bg-rose-100 transition-colors cursor-pointer shrink-0"
                                   title="Rejeter ce paiement"
                                 >
                                   Rejeter
@@ -4720,16 +4738,15 @@ export default function SuperAdminDashboard() {
                               )}
                               <button
                                 onClick={() => handleOpenEditPayment(p)}
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-700 hover:text-white transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
                                 title="Modifier l'inscription &amp; paiement"
                               >
                                 <Edit3 className="size-3.5" />
                               </button>
                               <button
-                                onClick={() => handleDeletePayment(p.id, p.registration_id)}
-                                disabled={processingId === p.id}
-                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                                title="Supprimer définitivement"
+                                onClick={() => handleDeletePayment(p)}
+                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                title="Supprimer définitivement l'inscription"
                               >
                                 <Trash2 className="size-3.5" />
                               </button>
@@ -4740,8 +4757,8 @@ export default function SuperAdminDashboard() {
                     })}
                     {filteredPayments.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="p-12 text-center text-slate-500">
-                          <DollarSign className="size-8 mx-auto text-slate-600 mb-2 opacity-60" />
+                        <td colSpan={7} className="p-8 text-center text-slate-500">
+                          <DollarSign className="size-8 mx-auto text-slate-400 mb-2" />
                           <p className="font-bold text-slate-800 text-xs">Aucune transaction trouvée</p>
                           <p className="text-[11px] text-slate-500 mt-0.5">Modifiez vos filtres ou effectuez une autre recherche.</p>
                         </td>
@@ -4760,13 +4777,13 @@ export default function SuperAdminDashboard() {
                 return (
                   <div
                     key={p.id}
-                    className="p-4 sm:p-5 rounded-2xl bg-[#F4F6F8] border border-slate-200 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 shadow-lg relative overflow-hidden"
+                    className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition-all flex flex-col justify-between space-y-4 shadow-xs relative overflow-hidden"
                   >
                     {/* Card Top: Participant + Status */}
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2.5">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div className="size-10 rounded-xl bg-primary/10 text-primary font-black flex items-center justify-center text-xs shrink-0 border border-primary/20">
+                          <div className="size-10 rounded-xl bg-primary/15 text-slate-950 font-black flex items-center justify-center text-xs shrink-0 border border-primary/25">
                             {initials}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -4780,16 +4797,16 @@ export default function SuperAdminDashboard() {
                         </div>
 
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 inline-flex items-center gap-1 ${
-                          p.status === "confirmed" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                          (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse" :
-                          "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                          p.status === "confirmed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                          (p.status === "pending_verification" || p.status === "pending") ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse" :
+                          "bg-rose-50 text-rose-700 border-rose-200"
                         }`}>
                           {p.status === "confirmed" ? "Confirmé" : (p.status === "pending_verification" || p.status === "pending") ? "À vérifier" : p.status}
                         </span>
                       </div>
 
                       {/* Contact & WhatsApp */}
-                      <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
+                      <div className="bg-[#F4F6F8] p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
                         <div className="flex items-center justify-between text-slate-700">
                           <span className="text-slate-500 text-[11px]">WhatsApp :</span>
                           {cleanPhone ? (
@@ -4797,7 +4814,7 @@ export default function SuperAdminDashboard() {
                               href={`https://wa.me/${cleanPhone}`} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-emerald-400 hover:underline flex items-center gap-1 font-bold"
+                              className="text-emerald-700 hover:underline flex items-center gap-1 font-bold"
                             >
                               <MessageCircle className="size-3" />
                               <span>{p.registrations?.whatsapp}</span>
@@ -4921,36 +4938,50 @@ export default function SuperAdminDashboard() {
                         <td className="p-4 text-slate-700">{u.email}</td>
                         <td className="p-4">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                            u.role === "super_admin" ? "bg-slate-100 text-slate-600 border-purple-500/30" :
-                            u.role === "admin" ? "bg-blue-500/10 text-blue-400 border-blue-500/30" :
-                            "bg-[#F4F6F8] text-slate-600 border-slate-700"
+                            u.role === "super_admin" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                            u.role === "admin" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                            "bg-slate-100 text-slate-700 border-slate-200"
                           }`}>
                             {u.role || "student"}
                           </span>
                         </td>
-                        <td className="p-4 text-slate-500">{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
-                        <td className="p-4 text-right space-x-1">
-                          <button
-                            onClick={() => handleRoleChange(u.id, "student")}
-                            disabled={processingId === u.id || u.role === "student"}
-                            className="px-2 py-1 rounded bg-slate-800 text-slate-700 hover:bg-slate-200 disabled:opacity-40 text-[10px] font-bold"
-                          >
-                            Student
-                          </button>
-                          <button
-                            onClick={() => handleRoleChange(u.id, "admin")}
-                            disabled={processingId === u.id || u.role === "admin"}
-                            className="px-2 py-1 rounded bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 disabled:opacity-40 text-[10px] font-bold"
-                          >
-                            Admin
-                          </button>
-                          <button
-                            onClick={() => handleRoleChange(u.id, "super_admin")}
-                            disabled={processingId === u.id || u.role === "super_admin"}
-                            className="px-2 py-1 rounded bg-primary/20 text-slate-600 border border-purple-500/30 hover:bg-primary/30 disabled:opacity-40 text-[10px] font-bold"
-                          >
-                            Super Admin
-                          </button>
+                        <td className="p-4 text-slate-500 font-medium">{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
+                        <td className="p-4 text-right">
+                          <div className="inline-flex items-center rounded-xl p-1 bg-[#F4F6F8] border border-slate-200/80 gap-1">
+                            <button
+                              onClick={() => handleRoleChange(u.id, "student")}
+                              disabled={processingId === u.id || (u.role || "student") === "student"}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                                (u.role || "student") === "student"
+                                  ? "bg-slate-800 text-white shadow-xs"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                              }`}
+                            >
+                              Student
+                            </button>
+                            <button
+                              onClick={() => handleRoleChange(u.id, "admin")}
+                              disabled={processingId === u.id || u.role === "admin"}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                                u.role === "admin"
+                                  ? "bg-blue-600 text-white shadow-xs"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                              }`}
+                            >
+                              Admin
+                            </button>
+                            <button
+                              onClick={() => handleRoleChange(u.id, "super_admin")}
+                              disabled={processingId === u.id || u.role === "super_admin"}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                                u.role === "super_admin"
+                                  ? "bg-purple-600 text-white shadow-xs"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                              }`}
+                            >
+                              Super Admin
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

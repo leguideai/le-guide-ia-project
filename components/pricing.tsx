@@ -160,39 +160,9 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
             <span className={`inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest px-3.5 py-1.5 rounded-full border ${isBusiness ? "text-[#ECC86B] bg-[#D4AF37]/10 border-[#D4AF37]/30" : "text-primary bg-primary/10 border-primary/20"}`}>
               TARIFS OFFICIELS · {current.title.toUpperCase()}
             </span>
-
-            {/* Formula switcher buttons if multiple courses exist */}
-            {displayCourses.length > 1 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {displayCourses.map(c => {
-                  const isCurActive = (activeCourse?.id === c.id || activeCourse?.slug === c.slug)
-                  const isCurBusiness = Number(c.price) >= 140000 || String(c.slug || "").includes("business") || String(c.title || "").toLowerCase().includes("business")
-                  return (
-                    <button
-                      key={c.id || c.slug}
-                      onClick={() => {
-                        const targetId = c.id || c.slug
-                        setActiveId(targetId)
-                        if (onSelectCourse) onSelectCourse(targetId)
-                      }}
-                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer border shrink-0 ${
-                        isCurActive
-                          ? isCurBusiness
-                            ? "bg-[#D4AF37] text-slate-950 border-[#F3E5AB] font-black shadow-lg shadow-[#D4AF37]/30 scale-[1.02]"
-                            : "bg-blue-600 text-white border-blue-400 font-bold shadow-lg shadow-blue-500/30 scale-[1.02]"
-                          : "bg-card/60 border-border/70 text-muted-foreground hover:text-foreground hover:bg-card font-semibold"
-                      }`}
-                    >
-                      <span>{c.title}</span>
-                      <span className="opacity-80">({c.price > 0 ? `${Number(c.price).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT"})</span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
           </div>
       
-          <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
+          <p className="text-xs md:text-sm text-muted-foreground ">
             Profitez du tarif officiel garanti avec accès complet aux sessions en direct, aux replays HD et au certificat d'accomplissement.
           </p>
         </div>
