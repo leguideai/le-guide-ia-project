@@ -76,7 +76,7 @@ export function BootcampCalendar({
   onGenerateCohort,
   initialSelectedCourseId = "all"
 }: BootcampCalendarProps) {
-  const [currentDate, setCurrentDate] = useState<Date>(() => new Date(2026, 7, 19)) // Default around Août 2026
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date())
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>(initialSelectedCourseId)
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<"all" | "launches" | "sessions">("all")
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
@@ -508,7 +508,7 @@ export function BootcampCalendar({
                 <span className="text-slate-600 flex items-center gap-1.5 font-medium">
                   <Users className="size-4 text-primary" /> Formateur principal :
                 </span>
-                <span className="font-bold text-slate-900">{selectedEvent.instructor || "Alfred Dah (Auditeur CISA)"}</span>
+                <span className="font-bold text-slate-900">{selectedEvent.instructor || "Formateur non renseigné"}</span>
               </div>
             </div>
 
@@ -529,7 +529,7 @@ export function BootcampCalendar({
               {selectedEvent.eventType === "bootcamp_launch" ? (
                 <>
                   <a
-                    href={`/bootcamp?course=${selectedEvent.courseSlug || "bootcamp-pro-2"}`}
+                    href={selectedEvent.courseSlug ? `/bootcamp?course=${selectedEvent.courseSlug}` : "/bootcamp"}
                     className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-xs hover:opacity-95 transition-all cursor-pointer"
                   >
                     <span>🎟️ Réserver ma place à cette Rentrée</span>

@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { LanguageProvider } from '@/lib/language-context'
 import { PerformancePatch } from '@/components/performance-patch'
+import { AnalyticsTracker } from '@/components/analytics-tracker'
 
 const jakarta = Plus_Jakarta_Sans({
   variable: '--font-geist-sans',
@@ -302,6 +303,7 @@ export default function RootLayout({
         />
         <LanguageProvider>
           <PerformancePatch />
+          <AnalyticsTracker />
           {children}
         </LanguageProvider>
       </body>

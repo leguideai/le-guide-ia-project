@@ -106,39 +106,21 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     String(activeCourse?.badge || "").toLowerCase().includes("vip") ||
     String(activeCourse?.badge || "").toLowerCase().includes("manager")
 
-  const defaultBusinessFeatures = [
-    "Business Model Canvas IA et structuration de modèle économique",
-    "Génération de 100+ prompts stratégiques Business & Vente",
-    "Workflows d'automatisation de tâches & prospection (Make / n8n)",
-    "Stratégie de contenu & Plan éditorial 90 jours prêt à publier",
-    "Accompagnement VIP Exécutif pour Dirigeants & Certificat Officiel"
-  ]
-
-  const defaultCarriereFeatures = [
-    "6 sessions en direct live interactives avec Alfred Dah",
-    "Replays vidéo HD téléchargeables sous 12h",
-    "Exercices pratiques & Ateliers concrets en direct",
-    "Groupe d'entraide & accompagnement personnalisé",
-    "Certificat officiel Le Guide IA individuel et vérifiable"
-  ]
-
-  const activeFeatures = (activeCourse?.features && Array.isArray(activeCourse.features) && activeCourse.features.length > 0)
+  const activeFeatures = (activeCourse?.features && Array.isArray(activeCourse.features))
     ? activeCourse.features
-    : isBusiness
-    ? defaultBusinessFeatures
-    : defaultCarriereFeatures
+    : []
 
   const current = {
-    title: activeCourse?.title || (isBusiness ? "BOOTCAMP IA & BUSINESS" : "BOOTCAMP IA & CARRIÈRE"),
+    title: activeCourse?.title || "",
     subtitle: activeCourse?.description || activeCourse?.subtitle || "",
-    founderPrice: formatPrice(activeCourse?.price || (isBusiness ? 149000 : 99000), activeCourse?.currency),
+    founderPrice: formatPrice(activeCourse?.price || 0, activeCourse?.currency),
     founderApprox: "",
-    standardPrice: formatStandardPrice(activeCourse?.price || (isBusiness ? 149000 : 99000), activeCourse?.original_price || (isBusiness ? "199 000 FCFA" : "149 000 FCFA"), activeCourse?.currency),
+    standardPrice: formatStandardPrice(activeCourse?.price || 0, activeCourse?.original_price || "", activeCourse?.currency),
     standardApprox: "",
     expireText: activeCourse?.badge || "",
     targetDateIso: "",
-    standardDateText: activeCourse?.dates ? `Session : ${activeCourse.dates}` : isBusiness ? "Session : 14 au 19 Septembre 2026" : "Session : 31 Août au 6 Septembre 2026",
-    checkoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT") ? "/register-account" : `/checkout/${activeCourse?.slug || activeCourse?.id || (isBusiness ? "bootcamp-business-exec" : "bootcamp-pro-2")}`,
+    standardDateText: activeCourse?.dates ? `Session : ${activeCourse.dates}` : "",
+    checkoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT") ? "/register-account" : `/checkout/${activeCourse?.slug || activeCourse?.id || ""}`,
     features: activeFeatures
   }
 

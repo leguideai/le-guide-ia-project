@@ -5,7 +5,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
 import { formatVideoEmbedUrl, HeroVslVideo } from "@/components/vsl-hero-video"
-import { FormationItem, FormationCategory, DEFAULT_FORMATIONS, DEFAULT_FORMATION_CATEGORIES } from "@/lib/formations-data"
+import { FormationItem, FormationCategory } from "@/lib/formations-data"
 import { 
   ShieldAlert, ShieldCheck, Users, DollarSign, BookOpen, FileCheck, 
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
@@ -15,6 +15,7 @@ import {
   Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
+import { AnalyticsChart } from "@/components/analytics-chart"
 
 function LinkedinIcon({ className }: { className?: string }) {
   return (
@@ -180,14 +181,14 @@ export default function SuperAdminDashboard() {
   const [lives, setLives] = useState<LiveSession[]>([])
   const [allSessions, setAllSessions] = useState<BootcampSession[]>([])
   const [showCohortModal, setShowCohortModal] = useState(false)
-  const [cohortForm, setCohortForm] = useState({ courseId: "", startDate: "2026-08-31" })
+  const [cohortForm, setCohortForm] = useState({ courseId: "", startDate: "" })
   const [newsletterSubscribers, setNewsletterSubscribers] = useState<any[]>([])
   const [newSubscriberEmail, setNewSubscriberEmail] = useState("")
   const [addingSubscriber, setAddingSubscriber] = useState(false)
   const [broadcastForm, setBroadcastForm] = useState({
-    subject: "🔥 Nouvelles Masterclasses & Astuces IA exclusives — LE GUIDE IA",
-    title: "Nos dernières analyses et opportunités IA",
-    bodyHtml: "<p>Bonjour à tous,</p><p>Voici les dernières actualités IA et les dates de nos prochains bootcamps.</p>",
+    subject: "",
+    title: "",
+    bodyHtml: "",
     includePlatformMembers: false,
     isTest: false
   })
@@ -205,7 +206,7 @@ export default function SuperAdminDashboard() {
   const [testimonialForm, setTestimonialForm] = useState<TestimonialItem>({
     name: "",
     role: "",
-    country: "Burkina Faso",
+    country: "",
     text: "",
     avatar_url: "",
     rating: 5
@@ -227,8 +228,8 @@ export default function SuperAdminDashboard() {
     full_name: "",
     email: "",
     whatsapp: "",
-    country: "CI",
-    amount: 49000,
+    country: "",
+    amount: 0,
     currency: "XOF",
     method: "Mobile Money",
     transaction_ref: "",
@@ -239,7 +240,7 @@ export default function SuperAdminDashboard() {
   const [showFormationModal, setShowFormationModal] = useState(false)
   const [editingFormation, setEditingFormation] = useState<FormationItem | null>(null)
   const [featuresText, setFeaturesText] = useState("")
-  const [formationCategories, setFormationCategories] = useState<FormationCategory[]>(DEFAULT_FORMATION_CATEGORIES)
+  const [formationCategories, setFormationCategories] = useState<FormationCategory[]>([])
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<FormationCategory | null>(null)
   const [categoryForm, setCategoryForm] = useState<Partial<FormationCategory>>({
@@ -256,30 +257,20 @@ export default function SuperAdminDashboard() {
     description: "",
     badge: "Nouveau",
     tool_icon: "chatgpt",
-    category_slug: "chatgpt",
-    thumbnail: "/images/formation_chatgpt_thumb.jpg",
-    instructor: "Alfred Dah · Expert IA & Automatisation",
-    rating: 4.9,
-    reviews_count: "150+ avis",
-    duration: "10h de vidéo",
-    modules_count: "20 leçons",
-    prompts_count: "100+ prompts",
-    price: 39000,
-    original_price: "69 000 FCFA",
+    category_slug: "",
+    thumbnail: "",
+    instructor: "Alfred Dah",
+    rating: 5,
+    reviews_count: "",
+    duration: "",
+    modules_count: "",
+    prompts_count: "",
+    price: 0,
+    original_price: "",
     currency: "FCFA",
     features: [],
-    stats: [
-      { label: "Parties", value: "4" },
-      { label: "Leçons vidéo", value: "20" },
-      { label: "De contenu", value: "10h" }
-    ],
-    testimonial: {
-      quote: "Une formation claire, immédiatement applicable avec des résultats concrets.",
-      author_name: "Jean Kouassi",
-      author_role: "Directeur de Projet",
-      avatar_initials: "JK",
-      rating: 5
-    },
+    stats: [],
+    testimonial: undefined,
     order_index: 1,
     is_active: true
   })
@@ -291,14 +282,14 @@ export default function SuperAdminDashboard() {
     title: "",
     slug: "",
     subtitle: "",
-    price: "99 000 FCFA",
-    original_price: "150 000 FCFA",
-    badge: "OFFRE FONDATEUR",
+    price: "",
+    original_price: "",
+    badge: "Nouveau",
     category: "Bootcamp",
     status: "published",
-    thumbnail: "/images/bootcamp_pro_thumb.jpg",
-    poster: "/images/bootcamp_pro_poster.jpg",
-    pdf_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+    thumbnail: "",
+    poster: "",
+    pdf_url: "",
     format: "100% En Ligne",
     certificate: "Certificat Officiel",
     sequence_order: 1,
@@ -307,10 +298,10 @@ export default function SuperAdminDashboard() {
     end_date: "",
     offer_start_date: "",
     offer_end_date: "",
-    offer_badge_text: "Offre Fondateur",
-    session_count: 7,
+    offer_badge_text: "",
+    session_count: 0,
     instructor: "Alfred Dah",
-    live_meet_url: "https://meet.google.com/xyz-abc-def",
+    live_meet_url: "",
     whatsapp_url: ""
   })
 
@@ -353,23 +344,6 @@ export default function SuperAdminDashboard() {
       }
       let { data: sessData } = await query.order("session_number", { ascending: true })
 
-      if (!sessData || sessData.length === 0) {
-        // Fallback search: fetch all bootcamp_sessions
-        const { data: allSess } = await supabase.from("bootcamp_sessions").select("*").order("session_number", { ascending: true })
-        if (allSess && allSess.length > 0) {
-          const isCarriere = c.title?.toLowerCase().includes("carrière") || c.slug?.includes("carriere") || c.slug?.includes("pro")
-          const isBusiness = c.title?.toLowerCase().includes("business") || c.slug?.includes("business")
-          sessData = allSess.filter((s: any) => {
-            if (s.course_id === c.id || s.course_slug === c.slug || s.course_id === c.slug) return true
-            if (isCarriere && (s.course_slug?.includes("carriere") || s.course_slug?.includes("pro") || !s.course_slug)) return true
-            if (isBusiness && s.course_slug?.includes("business")) return true
-            return false
-          })
-          if (!sessData || sessData.length === 0) {
-            sessData = allSess
-          }
-        }
-      }
       setDetailsSessions(sessData || [])
 
       // 2. Fetch enrolled count from registrations
@@ -403,23 +377,6 @@ export default function SuperAdminDashboard() {
     }
     let { data: sessData } = await query.order("session_number", { ascending: true })
 
-    if (!sessData || sessData.length === 0) {
-      const { data: allSess } = await supabase.from("bootcamp_sessions").select("*").order("session_number", { ascending: true })
-      if (allSess && allSess.length > 0) {
-        const isCarriere = c.title?.toLowerCase().includes("carrière") || c.slug?.includes("carriere") || c.slug?.includes("pro")
-        const isBusiness = c.title?.toLowerCase().includes("business") || c.slug?.includes("business")
-        sessData = allSess.filter((s: any) => {
-          if (s.course_id === c.id || s.course_slug === c.slug || s.course_id === c.slug) return true
-          if (isCarriere && (s.course_slug?.includes("carriere") || s.course_slug?.includes("pro") || !s.course_slug)) return true
-          if (isBusiness && s.course_slug?.includes("business")) return true
-          return false
-        })
-        if (!sessData || sessData.length === 0) {
-          sessData = allSess
-        }
-      }
-    }
-
     const fetched = sessData || []
     setBootcampSessions(fetched)
     setSessionForm({
@@ -428,7 +385,7 @@ export default function SuperAdminDashboard() {
       description: "",
       scheduled_at: "",
       ends_at: "",
-      meet_url: c.live_meet_url || "https://meet.google.com/xyz-abc-def",
+      meet_url: c.live_meet_url || "",
       recording_url: "",
       homework_title: "",
       homework_description: "",
@@ -486,26 +443,26 @@ export default function SuperAdminDashboard() {
   const [resourceForm, setResourceForm] = useState<Partial<ResourceItem>>({
     title: "",
     description: "",
-    category: "Productivity",
-    access_level: "Membre Premium",
+    category: "",
+    access_level: "Gratuit",
     prompt_text: "",
     download_url: ""
   })
 
   const [showLiveModal, setShowLiveModal] = useState(false)
   const [liveForm, setLiveForm] = useState<Partial<LiveSession>>({
-    title: "Session Live #01 — Stratégies d'Automation IA",
-    course_slug: "bootcamp-pro-2",
-    meet_url: "https://meet.google.com/xyz-abc-def",
+    title: "",
+    course_slug: "",
+    meet_url: "",
     replay_url: "",
-    scheduled_at: new Date().toISOString(),
+    scheduled_at: "",
     status: "upcoming"
   })
 
   // Manual Enroll Form
   const [enrollEmail, setEnrollEmail] = useState("")
   const [enrollFullName, setEnrollFullName] = useState("")
-  const [enrollCourse, setEnrollCourse] = useState("bootcamp-pro-2")
+  const [enrollCourse, setEnrollCourse] = useState("")
   const [enrollPaymentMethod, setEnrollPaymentMethod] = useState("")
   const [enrollTransactionRef, setEnrollTransactionRef] = useState("")
   const [enrollSendEmail, setEnrollSendEmail] = useState(true)
@@ -518,51 +475,32 @@ export default function SuperAdminDashboard() {
 
   // Grading modal state
   const [gradingSub, setGradingSub] = useState<SubmissionRecord | null>(null)
-  const [gradeScore, setGradeScore] = useState<number>(18)
+  const [gradeScore, setGradeScore] = useState<number>(0)
   const [gradeFeedback, setGradeFeedback] = useState("")
 
   // Site Settings state
   const [siteSettings, setSiteSettings] = useState<any>({
-    announcement_text: "BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !",
-    announcement_cta: "Réserver ma place (149 000 FCFA) →",
-    vsl_youtube_url: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1",
+    announcement_text: "",
+    announcement_cta: "",
+    vsl_youtube_url: "",
     vsl_videos_pool: "",
-    hero_badge: "CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL",
-    hero_title: "Maîtrisez l'IA. Transformez votre carrière et votre business.",
-    hero_subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.",
-    hero_dates: "31 Août – 6 Sept 2026",
-    hero_time: "19h00 GMT",
-    hero_format: "🌍 100% En ligne",
-    hero_sessions: "🎓 7 Sessions intensives",
-    hero_promo_price: "149,900 F CFA",
-    hero_normal_price: "250,000 F CFA",
-    whatsapp_number: "+226 0505 0577",
-    hero_poster_url: "/images/bootcamp_pro_poster.jpg",
-    hero_programme_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+    hero_badge: "",
+    hero_title: "",
+    hero_subtitle: "",
+    hero_dates: "",
+    hero_time: "",
+    hero_format: "",
+    hero_sessions: "",
+    hero_promo_price: "",
+    hero_normal_price: "",
+    whatsapp_number: "",
+    hero_poster_url: "",
+    hero_programme_url: ""
   })
   const [savingSettings, setSavingSettings] = useState(false)
 
   // VSL Videos Pool state
-  const [vslVideosList, setVslVideosList] = useState<HeroVslVideo[]>([
-    {
-      id: "vsl-official",
-      title: "Présentation Complète du Bootcamp PRO IA par Alfred Dah",
-      video_url: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1",
-      badge: "Vidéo Officielle",
-      author_name: "Alfred Dah",
-      author_role: "Fondateur & Expert IA",
-      is_active: true
-    },
-    {
-      id: "vsl-testimonial-1",
-      title: "Comment l'IA a transformé mon quotidien professionnel et ma productivité",
-      video_url: "https://www.youtube.com/embed/L_LUpnjgPso?rel=0&modestbranding=1",
-      badge: "Témoignage Apprenant",
-      author_name: "Diplômé Bootcamp Promo 1",
-      author_role: "Consultant Stratégie & Finance",
-      is_active: true
-    }
-  ])
+  const [vslVideosList, setVslVideosList] = useState<HeroVslVideo[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showVslModal, setShowVslModal] = useState(false)
   const [editingVslIdx, setEditingVslIdx] = useState<number | null>(null)
@@ -818,7 +756,7 @@ export default function SuperAdminDashboard() {
     setTestimonialForm({
       name: "",
       role: "",
-      country: "Burkina Faso",
+      country: "",
       text: "",
       avatar_url: "",
       rating: 5
@@ -832,7 +770,7 @@ export default function SuperAdminDashboard() {
       id: t.id,
       name: t.name,
       role: t.role || "",
-      country: t.country || "Burkina Faso",
+      country: t.country || "",
       text: t.text,
       avatar_url: t.avatar_url || t.image || "",
       rating: t.rating || 5
@@ -1301,8 +1239,8 @@ export default function SuperAdminDashboard() {
       full_name: payment.registrations?.full_name || "",
       email: payment.registrations?.email || "",
       whatsapp: payment.registrations?.whatsapp || "",
-      country: payment.registrations?.country || "CI",
-      amount: payment.amount || 49000,
+      country: payment.registrations?.country || "",
+      amount: payment.amount || 0,
       currency: payment.currency || "XOF",
       method: payment.method || "Mobile Money",
       transaction_ref: payment.transaction_ref || "",
@@ -1460,9 +1398,9 @@ export default function SuperAdminDashboard() {
 
       return {
         id: s.id || `sess-${s.session_number}-${dateStr}`,
-        courseId: s.course_id || course?.id || "bootcamp-pro-2",
-        courseSlug: s.course_slug || course?.slug || "bootcamp-pro-2",
-        courseTitle: course?.title || (isBusiness ? "Bootcamp IA & Business (Exclusive Managers)" : "Bootcamp IA & Carrière"),
+        courseId: s.course_id || course?.id || "",
+        courseSlug: s.course_slug || course?.slug || "",
+        courseTitle: course?.title || s.title || "Session Live",
         track: isBusiness ? ("business" as const) : ("carriere" as const),
         eventType: "session" as const,
         sessionNumber: s.session_number,
@@ -1479,184 +1417,63 @@ export default function SuperAdminDashboard() {
       }
     })
 
-    const cohortLaunches = [
-      {
-        id: "cohort-admin-carriere-2026-08-31",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 31 Août)",
-        description: "Lancement officiel de la cohorte intensive de 7 jours.",
-        date: "2026-08-31",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-admin-business-2026-08-31",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 31 Août)",
-        description: "Lancement de la cohorte exécutive pour dirigeants et managers.",
-        date: "2026-08-31",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-admin-carriere-2026-09-14",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 14 Septembre)",
-        description: "Cohorte de mi-septembre.",
-        date: "2026-09-14",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-admin-business-2026-09-14",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 14 Septembre)",
-        description: "Cohorte exécutive de mi-septembre.",
-        date: "2026-09-14",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-admin-carriere-2026-09-28",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 28 Septembre)",
-        description: "Cohorte de fin septembre.",
-        date: "2026-09-28",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-admin-business-2026-09-28",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 28 Septembre)",
-        description: "Cohorte exécutive de fin septembre.",
-        date: "2026-09-28",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-admin-carriere-2026-10-12",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 12 Octobre)",
-        description: "Cohorte d'octobre.",
-        date: "2026-10-12",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-admin-business-2026-10-12",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers (Cohorte 12 Octobre)",
-        description: "Cohorte exécutive d'octobre.",
-        date: "2026-10-12",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        status: "upcoming" as const
-      }
-    ]
+    const cohortLaunches = courses
+      .filter(c => c.start_date)
+      .map(c => {
+        const isBusiness = Number(c.price) >= 140000 || String(c.slug || "").includes("business") || String(c.title || "").toLowerCase().includes("business")
+        const dateStr = String(c.start_date).split("T")[0]
+        return {
+          id: `launch-${c.id || c.slug}-${dateStr}`,
+          courseId: c.id || c.slug,
+          courseSlug: c.slug,
+          courseTitle: c.title,
+          track: isBusiness ? ("business" as const) : ("carriere" as const),
+          eventType: "bootcamp_launch" as const,
+          title: `🚀 Rentrée Officielle — ${c.title}`,
+          description: c.subtitle || "Lancement officiel de la cohorte.",
+          date: dateStr,
+          duration: `${c.session_count || 7} Jours Intensifs`,
+          startTime: "19:00",
+          endTime: "21:00",
+          instructor: c.instructor || "Alfred Dah",
+          status: "upcoming" as const
+        }
+      })
 
     return [...cohortLaunches, ...rawEvents]
   }, [allSessions, courses])
 
-  // Generate 7-Day Cohort Handler for Admin
+  // Generate Cohort Handler for Admin
   async function handleGenerateCohort(courseId: string, startDateStr: string) {
     const course = courses.find(c => c.id === courseId || c.slug === courseId) || courses[0]
-    if (!course) return
+    if (!course || !startDateStr) return
 
-    const isBusiness = Number(course.price) >= 140000 || String(course.slug || "").includes("business")
-    const titlesCarriere = [
-      "Session 1 : Les Fondations de l'IA & Prompt Engineering Avancé",
-      "Session 2 : Maîtrise de Claude 3.5 Sonnet & ChatGPT 4o",
-      "Session 3 : Analyse de Documents & Synthèse Stratégique",
-      "Session 4 : Création de Contenus & Visuels Pro (Midjourney & Flux)",
-      "Session 5 : Automatisation des Tâches avec Make & n8n",
-      "Session 6 : Assistants Personnalisés & GPTs Métiers",
-      "Session 7 : Projet Final, Audit IA & Remise des Certificats"
-    ]
-
-    const titlesBusiness = [
-      "Session 1 : IA Stratégique pour Dirigeants & Managers",
-      "Session 2 : Automatisation des Processus Métiers & Réduction des Coûts",
-      "Session 3 : IA & Productivité d'Équipe (Management & RH)",
-      "Session 4 : Gouvernance, Cybersécurité & Audit IA (CISA)",
-      "Session 5 : Intégration de Workflows IA Entreprise",
-      "Session 6 : Masterclass Exclusive & Cas d'Usage Grands Comptes",
-      "Session 7 : Plan de Transformation IA & Certificat Exécutif"
-    ]
-
-    const titles = isBusiness ? titlesBusiness : titlesCarriere
     const start = new Date(startDateStr)
+    const sessionCount = course.session_count && Number(course.session_count) > 0 ? Number(course.session_count) : 7
+    
+    // Check if course has lessons defined in Supabase
+    let courseLessons: string[] = []
+    if (Array.isArray((course as any).lessons) && (course as any).lessons.length > 0) {
+      courseLessons = (course as any).lessons.map((l: any) => typeof l === "string" ? l : (l.title || `Module`))
+    }
 
-    const payload = titles.map((t, idx) => {
+    const payload = Array.from({ length: sessionCount }, (_, idx) => {
       const cur = new Date(start)
       cur.setDate(start.getDate() + idx)
       const datePart = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`
       const sched = `${datePart}T19:00:00Z`
       const end = `${datePart}T21:00:00Z`
 
+      const sessionTitle = courseLessons[idx] 
+        ? `Session ${idx + 1} : ${courseLessons[idx]}`
+        : `Session ${idx + 1} : ${course.title} — Module ${idx + 1}`
+
       return {
         course_id: course.id || course.slug,
         course_slug: course.slug,
         session_number: idx + 1,
-        title: t,
-        description: isBusiness 
-          ? "Masterclass exécutive interactive en direct avec Alfred Dah sur Google Meet." 
-          : "Session intensive interactive en direct avec Alfred Dah sur Google Meet.",
+        title: sessionTitle,
+        description: `Session intensive en direct avec ${course.instructor || "le formateur"} sur Google Meet.`,
         scheduled_at: sched,
         ends_at: end,
         meet_url: course.live_meet_url || "https://meet.google.com",
@@ -1668,7 +1485,7 @@ export default function SuperAdminDashboard() {
       const { data, error } = await supabase.from("bootcamp_sessions").insert(payload).select()
       if (!error && data) {
         setAllSessions(prev => [...prev, ...data])
-        showNotice(`Cohorte de 7 sessions générée avec succès pour ${course.title} !`)
+        showNotice(`Cohorte de ${sessionCount} sessions générée avec succès pour ${course.title} !`)
         setShowCohortModal(false)
       } else {
         showNotice("Erreur lors de la création de la cohorte.")
@@ -1775,12 +1592,12 @@ export default function SuperAdminDashboard() {
 
   if (unauthorized) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center space-y-4">
         <div className="size-16 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center justify-center">
           <ShieldAlert className="size-8 animate-pulse" />
         </div>
-        <h1 className="text-2xl font-bold text-white font-heading">Accès Restreint Super Admin</h1>
-        <p className="text-sm text-slate-400 max-w-md">
+        <h1 className="text-2xl font-bold text-slate-800 font-heading">Accès Restreint Super Admin</h1>
+        <p className="text-sm text-slate-500 max-w-md">
           Vous devez posséder les privilèges <strong>super_admin</strong> ou <strong>admin</strong> pour accéder à cette interface.
         </p>
         <Link href="/dashboard" className="px-6 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity">
@@ -1808,7 +1625,7 @@ export default function SuperAdminDashboard() {
   })
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col md:flex-row selection:bg-primary/30">
+    <div className="min-h-screen bg-[#F4F6F8] text-slate-800 font-sans flex flex-col md:flex-row selection:bg-primary/30">
       
       {/* Notice Toast */}
       {noticeMessage && (
@@ -1819,9 +1636,9 @@ export default function SuperAdminDashboard() {
       )}
 
       {/* Mobile Top Navigation Bar (Phone & Tablet) */}
-      <header className="md:hidden sticky top-0 z-40 bg-slate-950/95 border-b border-slate-800/80 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
+      <header className="md:hidden sticky top-0 z-40 bg-white/95 border-b border-slate-200 shadow-2xs px-4 py-3 flex items-center justify-between backdrop-blur-xl">
         <Link href="/" className="flex items-center gap-2">
-          <span className="font-heading font-black text-lg text-white tracking-wider">
+          <span className="font-heading font-black text-lg text-slate-800 tracking-wider">
             LE GUIDE <span className="text-primary">IA</span>
           </span>
           <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
@@ -1833,7 +1650,7 @@ export default function SuperAdminDashboard() {
           <button
             onClick={fetchAllData}
             disabled={loading}
-            className="size-9 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="size-9 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:text-white flex items-center justify-center cursor-pointer transition-all active:scale-95"
             title="Rafraîchir les données"
           >
             <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -1850,11 +1667,11 @@ export default function SuperAdminDashboard() {
 
       {/* Mobile Slide-Out Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-slate-950/98 backdrop-blur-2xl flex flex-col justify-between p-5 overflow-y-auto animate-fadeIn">
+        <div className="md:hidden fixed inset-0 z-50 bg-white/98 backdrop-blur-2xl flex flex-col justify-between p-5 overflow-y-auto animate-fadeIn">
           <div className="space-y-5">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
-                <span className="font-heading font-black text-xl text-white">
+                <span className="font-heading font-black text-xl text-slate-800">
                   LE GUIDE <span className="text-primary">IA</span>
                 </span>
                 <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
@@ -1863,21 +1680,21 @@ export default function SuperAdminDashboard() {
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="size-9 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+                className="size-9 rounded-xl bg-slate-800 text-slate-600 hover:text-slate-900 flex items-center justify-center cursor-pointer"
               >
                 <X className="size-5" />
               </button>
             </div>
 
             {/* Admin Profile Info */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3.5 flex items-center gap-3">
+            <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-3.5 flex items-center gap-3">
               <div className="size-9 rounded-full bg-primary text-slate-950 flex items-center justify-center font-black text-xs border border-white/20 shrink-0">
                 {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1 text-left">
-                <p className="text-xs font-bold text-white truncate">{currentUser?.email || "Alfred Dah"}</p>
+                <p className="text-xs font-bold text-slate-800 truncate">{currentUser?.email || "Administrateur"}</p>
                 <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                  <ShieldCheck className="size-3" /> {userRole || "super_admin"}
+                  <ShieldCheck className="size-3" /> {userRole || "admin"}
                 </span>
               </div>
             </div>
@@ -1890,7 +1707,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("kpi"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1902,7 +1719,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("payments"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "payments" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "payments" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1923,7 +1740,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("courses"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1936,11 +1753,11 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("formations"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Sparkles className="size-4 shrink-0 text-cyan-400" />
+                    <Sparkles className="size-4 shrink-0 text-primary" />
                     <span>Formations Vidéos</span>
                   </div>
                   <span className="text-[10px] opacity-75">({formations.length})</span>
@@ -1949,7 +1766,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("resources"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1962,7 +1779,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("lives"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1979,7 +1796,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("users"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -1992,7 +1809,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("submissions"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "submissions" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "submissions" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -2013,7 +1830,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("newsletter"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "newsletter" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "newsletter" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -2026,7 +1843,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("testimonials"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "testimonials" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "testimonials" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -2039,7 +1856,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("b2b"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "b2b" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "b2b" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -2056,7 +1873,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("settings"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -2068,7 +1885,7 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => { setActiveTab("export"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                    activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -2079,10 +1896,10 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Logout Mobile */}
-              <div className="pt-4 border-t border-slate-800">
+              <div className="pt-4 border-t border-slate-200">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3.5 py-3 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="w-full flex items-center gap-2 px-3.5 py-3 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors"
                 >
                   <LogOut className="size-4 shrink-0" />
                   <span>Déconnexion</span>
@@ -2094,15 +1911,15 @@ export default function SuperAdminDashboard() {
       )}
 
       {/* Desktop Sidebar (Left - Fixed on viewport) */}
-      <aside className="w-64 border-r border-slate-800/80 bg-slate-950/90 backdrop-blur-xl p-4 hidden md:flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto z-30">
+      <aside className="w-64 border-r border-slate-200 bg-white backdrop-blur-xl p-4 hidden md:flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto z-30">
         <div className="space-y-6 text-left">
           {/* Logo & Platform Info */}
           <div className="flex items-center gap-3 px-2">
-            <div className="size-9 rounded-xl bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center text-slate-950 font-black text-xs shadow-lg shadow-primary/20">
+            <div className="size-9 rounded-xl bg-primary flex items-center justify-center text-slate-950 font-black text-xs shadow-lg shadow-primary/20">
               IA
             </div>
             <div>
-              <span className="font-heading font-black text-sm text-white tracking-wide block">LE GUIDE IA</span>
+              <span className="font-heading font-black text-sm text-slate-800 tracking-wide block">LE GUIDE IA</span>
               <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block">ADMIN PORTAL</span>
             </div>
           </div>
@@ -2115,7 +1932,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("kpi")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2127,7 +1944,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("payments")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "payments" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "payments" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2148,7 +1965,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("courses")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2161,11 +1978,11 @@ export default function SuperAdminDashboard() {
               {/* <button
                 onClick={() => setActiveTab("formations")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="size-4 shrink-0 text-cyan-400" />
+                  <Sparkles className="size-4 shrink-0 text-primary" />
                   <span>Formations Vidéos</span>
                 </div>
                 <span className="text-[10px] opacity-75">({formations.length})</span>
@@ -2174,7 +1991,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("resources")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2187,7 +2004,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("lives")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2204,7 +2021,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("users")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2217,7 +2034,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("submissions")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "submissions" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "submissions" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2238,7 +2055,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("newsletter")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "newsletter" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "newsletter" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2251,7 +2068,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("testimonials")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "testimonials" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "testimonials" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2264,7 +2081,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("b2b")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "b2b" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "b2b" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2281,7 +2098,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("settings")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2293,7 +2110,7 @@ export default function SuperAdminDashboard() {
               <button
                 onClick={() => setActiveTab("export")}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                  activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className="flex items-center gap-2.5">
@@ -2306,22 +2123,22 @@ export default function SuperAdminDashboard() {
         </div>
 
         {/* User Info & Signout */}
-        <div className="pt-4 border-t border-slate-800/80 space-y-3">
+        <div className="pt-4 border-t border-slate-200 space-y-3">
           <div className="flex items-center gap-3 px-2">
             <div className="size-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-white text-xs font-bold">
-              {currentUser?.email?.[0]?.toUpperCase() || "A"}
+              {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 text-left">
-              <p className="text-xs font-bold text-white truncate">{currentUser?.email || "Alfred Dah"}</p>
+              <p className="text-xs font-bold text-slate-800 truncate">{currentUser?.email || "Administrateur"}</p>
               <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                <ShieldCheck className="size-3" /> {userRole || "super_admin"}
+                <ShieldCheck className="size-3" /> {userRole || "admin"}
               </span>
             </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
           >
             <LogOut className="size-3.5 text-red-400" />
             <span>Déconnexion</span>
@@ -2332,9 +2149,9 @@ export default function SuperAdminDashboard() {
       {/* Main Workspace */}
       <main className="flex-1 p-3 sm:p-6 md:p-10 space-y-6 sm:space-y-8 overflow-y-auto max-w-7xl mx-auto w-full text-left">
         {/* Workspace Top Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-200">
           <div>
-            <h1 className="font-heading text-lg sm:text-2xl font-bold text-white uppercase tracking-tight">
+            <h1 className="font-heading text-lg sm:text-2xl font-bold text-slate-800 uppercase tracking-tight">
               {activeTab === "kpi" && "Vue d'Ensemble & KPIs Financiers"}
               {activeTab === "courses" && "Gestion des Bootcamps (Lives)"}
               {activeTab === "formations" && "Gestion des Formations Vidéos (À la demande)"}
@@ -2345,9 +2162,9 @@ export default function SuperAdminDashboard() {
               {activeTab === "submissions" && "Correction des Devoirs"}
               {activeTab === "b2b" && "Demandes de Devis B2B Entreprises"}
               {activeTab === "settings" && "Paramètres du Site"}
-              {activeTab === "export" && "Exportation des Données"}
+              {/* {activeTab === "export" && "Exportation des Données"} */}
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Console d'Administration Admin — Le Guide IA
             </p>
           </div>
@@ -2356,7 +2173,7 @@ export default function SuperAdminDashboard() {
             <button 
               onClick={fetchAllData}
               disabled={loading}
-              className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-all text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
+              className="px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:text-white hover:border-slate-700 transition-all text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
             >
               <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
               <span>Rafraîchir</span>
@@ -2369,241 +2186,214 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6 sm:space-y-8 animate-fadeIn">
             {/* KPI Cards Grid */}
             <div className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
+              <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Chiffre d'Affaires</span>
-                  <div className="size-9 sm:size-10 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Chiffre d'Affaires</span>
+                  <div className="size-9 sm:size-10 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center">
                     <DollarSign className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-2xl sm:text-3xl font-black text-white">
-                  {stats.totalRevenue.toLocaleString()} <span className="text-xs sm:text-sm font-normal text-emerald-400">FCFA</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-slate-800">
+                  {stats.totalRevenue.toLocaleString()} <span className="text-xs sm:text-sm font-bold text-emerald-700">FCFA</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Paiements validés PayTech & Mobile Money</p>
+                <p className="text-[11px] text-slate-500 mt-1.5 sm:mt-2">Paiements validés PayTech & Mobile Money</p>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
+              <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all" />
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Inscrits</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Total Inscrits</span>
                   <div className="size-9 sm:size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
                     <Users className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-2xl sm:text-3xl font-black text-white">
-                  {stats.totalRegistrations} <span className="text-xs sm:text-sm font-normal text-slate-400">apprenants</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-slate-800">
+                  {stats.totalRegistrations} <span className="text-xs sm:text-sm font-normal text-slate-500">apprenants</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Apprenants inscrits sur les Bootcamps</p>
+                <p className="text-[11px] text-slate-500 mt-1.5 sm:mt-2">Apprenants inscrits sur les Bootcamps</p>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/10 rounded-full blur-2xl group-hover:bg-[#D4AF37]/20 transition-all" />
+              <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Paiements à valider</span>
-                  <div className="size-9 sm:size-10 rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 flex items-center justify-center">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Paiements à valider</span>
+                  <div className="size-9 sm:size-10 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center">
                     <Clock className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-2xl sm:text-3xl font-black text-[#ECC86B]">
-                  {stats.pendingPaymentsCount} <span className="text-xs sm:text-sm font-normal text-slate-400">en attente</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-amber-800">
+                  {stats.pendingPaymentsCount} <span className="text-xs sm:text-sm font-normal text-slate-500">en attente</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Dépôts Mobile Money Direct à vérifier</p>
+                <p className="text-[11px] text-slate-500 mt-1.5 sm:mt-2">Dépôts Mobile Money Direct à vérifier</p>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
+              <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all" />
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Devis B2B Entreprises</span>
-                  <div className="size-9 sm:size-10 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Devis B2B Entreprises</span>
+                  <div className="size-9 sm:size-10 rounded-2xl bg-blue-50 text-blue-800 border border-blue-200 flex items-center justify-center">
                     <Building2 className="size-4 sm:size-5" />
                   </div>
                 </div>
-                <div className="font-heading text-2xl sm:text-3xl font-black text-white">
-                  {stats.b2bCount} <span className="text-xs sm:text-sm font-normal text-slate-400">demandes</span>
+                <div className="font-heading text-2xl sm:text-3xl font-black text-slate-800">
+                  {stats.b2bCount} <span className="text-xs sm:text-sm font-normal text-slate-500">demandes</span>
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1.5 sm:mt-2">Opportunités B2B d'entreprises</p>
+                <p className="text-[11px] text-slate-500 mt-1.5 sm:mt-2">Opportunités B2B d'entreprises</p>
               </div>
             </div>
 
-            {/* Quick Actions Panel */}
-            <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-              <div className="p-4 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-4">
-                <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
-                  <UserPlus className="size-5 text-primary" />
-                  Inscription Manuelle d'un Apprenant
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Inscrivez manuellement un étudiant, attribuez un mode de règlement et générez immédiatement un reçu/facture dans son espace membre.
-                </p>
+            {/* Live Analytics & Traffic Chart */}
+            <AnalyticsChart />
 
-                <form onSubmit={handleManualEnroll} className="space-y-3 pt-2">
-                  {/* Email avec Autocomplétion Suggerée des Élèves */}
-                  <div className="relative">
-                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Email de l'apprenant * (suggestion automatique)</label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="Tapez l'adresse email du participant..."
-                      value={enrollEmail}
-                      onChange={e => {
-                        setEnrollEmail(e.target.value)
-                        setShowEmailSuggestions(true)
-                      }}
-                      onFocus={() => setShowEmailSuggestions(true)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
-                    />
+            {/* Quick Actions: Inscription Manuelle */}
+            <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-4 max-w-3xl">
+              <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
+                <UserPlus className="size-5 text-primary" />
+                Inscription Manuelle d'un Apprenant
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Inscrivez manuellement un étudiant, attribuez un mode de règlement et générez immédiatement un reçu/facture dans son espace membre.
+              </p>
 
-                    {/* Suggestions Dropdown */}
-                    {showEmailSuggestions && enrollEmail.trim().length > 0 && (
-                      <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto p-1 text-xs">
-                        {(() => {
-                          const query = enrollEmail.toLowerCase()
-                          const matches = users.filter(u =>
-                            u.email?.toLowerCase().includes(query) || u.full_name?.toLowerCase().includes(query)
+              <form onSubmit={handleManualEnroll} className="space-y-3 pt-2">
+                {/* Email avec Autocomplétion Suggerée des Élèves */}
+                <div className="relative">
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Email de l'apprenant * (suggestion automatique)</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="Tapez l'adresse email du participant..."
+                    value={enrollEmail}
+                    onChange={e => {
+                      setEnrollEmail(e.target.value)
+                      setShowEmailSuggestions(true)
+                    }}
+                    onFocus={() => setShowEmailSuggestions(true)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
+                  />
+
+                  {/* Suggestions Dropdown */}
+                  {showEmailSuggestions && enrollEmail.trim().length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-white border border-slate-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto p-1 text-xs">
+                      {(() => {
+                        const query = enrollEmail.toLowerCase()
+                        const matches = users.filter(u =>
+                          u.email?.toLowerCase().includes(query) || u.full_name?.toLowerCase().includes(query)
+                        )
+                        if (matches.length === 0) {
+                          return (
+                            <div className="p-2.5 text-slate-500 text-center italic text-[11px]">
+                              Aucun compte élève existant ne correspond à "{enrollEmail}". L'inscription créera un nouveau reçu et un compte d'accès pour cet email.
+                            </div>
                           )
-                          if (matches.length === 0) {
-                            return (
-                              <div className="p-2.5 text-slate-400 text-center italic text-[11px]">
-                                Aucun compte élève existant ne correspond à "{enrollEmail}". L'inscription créera un nouveau reçu et un compte d'accès pour cet email.
-                              </div>
-                            )
-                          }
-                          return matches.map(u => (
-                            <button
-                              key={u.id}
-                              type="button"
-                              onClick={() => {
-                                setEnrollEmail(u.email || "")
-                                if (u.full_name) setEnrollFullName(u.full_name)
-                                setShowEmailSuggestions(false)
-                              }}
-                              className="w-full text-left p-2.5 rounded-xl hover:bg-slate-800 flex items-center justify-between transition-colors"
-                            >
-                              <div>
-                                <span className="font-bold text-white block">{u.full_name || "Élève sans nom"}</span>
-                                <span className="text-[10px] text-slate-400 font-mono">{u.email}</span>
-                              </div>
-                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
-                                {u.role}
-                              </span>
-                            </button>
-                          ))
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Nom complet de l'apprenant */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Nom complet du participant (Optionnel)</label>
-                    <input
-                      type="text"
-                      placeholder="Ex: Jean Dupont (recommandé pour personnaliser l'email et le certificat)"
-                      value={enrollFullName}
-                      onChange={e => setEnrollFullName(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white focus:border-primary outline-none"
-                    />
-                  </div>
-
-                  {/* Sélection du Bootcamp dynamique */}
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-400 block mb-1">Bootcamp concerné *</label>
-                    <select
-                      value={enrollCourse}
-                      onChange={e => setEnrollCourse(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
-                    >
-                      {courses.length > 0 ? (
-                        courses.map(c => (
-                          <option key={c.id || c.slug} value={c.slug}>
-                            {c.title} ({c.price})
-                          </option>
+                        }
+                        return matches.map(u => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => {
+                              setEnrollEmail(u.email || "")
+                              if (u.full_name) setEnrollFullName(u.full_name)
+                              setShowEmailSuggestions(false)
+                            }}
+                            className="w-full text-left p-2.5 rounded-xl hover:bg-slate-100 flex items-center justify-between transition-colors"
+                          >
+                            <div>
+                              <span className="font-bold text-slate-800 block">{u.full_name || "Élève sans nom"}</span>
+                              <span className="text-[10px] text-slate-500 font-mono">{u.email}</span>
+                            </div>
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                              {u.role}
+                            </span>
+                          </button>
                         ))
-                      ) : (
-                        <>
-                          <option value="bootcamp-pro-2">Bootcamp IA Pro 2 (99 000 FCFA)</option>
-                          <option value="bootcamp-business-exec">Bootcamp IA Business Exec (199 000 FCFA)</option>
-                          <option value="initiation-free">Initiation IA &amp; ChatGPT (Gratuit)</option>
-                        </>
-                      )}
+                      })()}
+                    </div>
+                  )}
+                </div>
+
+                {/* Nom complet de l'apprenant */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Nom complet du participant (Optionnel)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Jean Dupont (recommandé pour personnaliser l'email et le certificat)"
+                    value={enrollFullName}
+                    onChange={e => setEnrollFullName(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
+                  />
+                </div>
+
+                {/* Sélection du Bootcamp dynamique */}
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">Bootcamp concerné *</label>
+                  <select
+                    value={enrollCourse}
+                    onChange={e => setEnrollCourse(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
+                  >
+                    <option value="">Sélectionner une formation...</option>
+                    {courses.map(c => (
+                      <option key={c.id || c.slug} value={c.slug}>
+                        {c.title} {c.price ? `(${c.price})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Mode de règlement & Référence (Optionnels) */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Moyen de paiement (Optionnel)</label>
+                    <select
+                      value={enrollPaymentMethod}
+                      onChange={e => setEnrollPaymentMethod(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
+                    >
+                      <option value="">Sélectionner un moyen (optionnel)</option>
+                      <option value="Wave Mobile Money">Wave</option>
+                      <option value="Orange Money">Orange Money</option>
+                      <option value="Moov Money">Moov Money</option>
+                      <option value="MTN Mobile Money">MTN Mobile Money</option>
+                      <option value="Virement Bancaire">Virement Bancaire</option>
+                      <option value="Espèces / Cash">Espèces / Cash</option>
+                      <option value="Offert / Gratuit">Offert / Gratuit</option>
+                      <option value="Carte Bancaire">Carte Bancaire</option>
                     </select>
                   </div>
-
-                  {/* Mode de règlement & Référence (Optionnels) */}
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Moyen de paiement (Optionnel)</label>
-                      <select
-                        value={enrollPaymentMethod}
-                        onChange={e => setEnrollPaymentMethod(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none"
-                      >
-                        <option value="">Sélectionner un moyen (optionnel)</option>
-                        <option value="Wave Mobile Money">Wave</option>
-                        <option value="Orange Money">Orange Money</option>
-                        <option value="Moov Money">Moov Money</option>
-                        <option value="MTN Mobile Money">MTN Mobile Money</option>
-                        <option value="Virement Bancaire">Virement Bancaire</option>
-                        <option value="Espèces / Cash">Espèces / Cash</option>
-                        <option value="Offert / Gratuit">Offert / Gratuit</option>
-                        <option value="Carte Bancaire">Carte Bancaire</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-400 block mb-1">Référence Transaction (Optionnel)</label>
-                      <input
-                        type="text"
-                        placeholder="ex: Ref Wave, OM, N° Virement"
-                        value={enrollTransactionRef}
-                        onChange={e => setEnrollTransactionRef(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-primary outline-none font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Checkbox Envoyer Email de confirmation */}
-                  <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800/80 cursor-pointer text-xs text-slate-300 hover:text-white transition-colors">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">Référence Transaction (Optionnel)</label>
                     <input
-                      type="checkbox"
-                      checked={enrollSendEmail}
-                      onChange={e => setEnrollSendEmail(e.target.checked)}
-                      className="size-4 rounded accent-primary cursor-pointer"
+                      type="text"
+                      placeholder="ex: Ref Wave, OM, N° Virement"
+                      value={enrollTransactionRef}
+                      onChange={e => setEnrollTransactionRef(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500 font-mono"
                     />
-                    <Mail className="size-4 text-primary shrink-0" />
-                    <span>Envoyer automatiquement l'email de confirmation d'inscription et d'accès</span>
-                  </label>
-
-                  <button
-                    type="submit"
-                    disabled={processingId === "enroll"}
-                    className="w-full py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity mt-2 shadow-lg shadow-primary/10 cursor-pointer"
-                  >
-                    {processingId === "enroll" ? "Inscription & Envoi de l'email..." : "Valider l'Inscription et Débloquer Accès"}
-                  </button>
-                </form>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-4 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
-                    <Download className="size-5 text-emerald-400" />
-                    Émargement & Reporting CSV
-                  </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed mt-2">
-                    Téléchargez instantanément la liste complète de tous les participants inscrits avec leurs numéros WhatsApp et statuts de versement pour l'émargement des direct Google Meet.
-                  </p>
+                  </div>
                 </div>
-                <div className="pt-4">
-                  <button
-                    onClick={exportRegistrationsCSV}
-                    className="w-full py-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold text-sm hover:bg-emerald-500/30 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Download className="size-4" />
-                    Exporter le Fichier CSV (Excel / Google Sheets)
-                  </button>
-                </div>
-              </div>
+
+                {/* Checkbox Envoyer Email de confirmation */}
+                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#F4F6F8] border border-slate-200/80 cursor-pointer text-xs text-slate-700 hover:text-white transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={enrollSendEmail}
+                    onChange={e => setEnrollSendEmail(e.target.checked)}
+                    className="size-4 rounded accent-primary cursor-pointer"
+                  />
+                  <Mail className="size-4 text-primary shrink-0" />
+                  <span>Envoyer automatiquement l'email de confirmation d'inscription et d'accès</span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={processingId === "enroll"}
+                  className="w-full py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity mt-2 shadow-lg shadow-primary/10 cursor-pointer"
+                >
+                  {processingId === "enroll" ? "Inscription & Envoi de l'email..." : "Valider l'Inscription et Débloquer Accès"}
+                </button>
+              </form>
             </div>
           </div>
         )}
@@ -2613,7 +2403,7 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <p className="text-xs text-slate-400">Créez et publiez de nouvelles offres de formation visibles sur le site et l'espace membre.</p>
+                <p className="text-xs text-slate-500">Créez et publiez de nouvelles offres de formation visibles sur le site et l'espace membre.</p>
               </div>
               <button
                 onClick={() => {
@@ -2621,20 +2411,20 @@ export default function SuperAdminDashboard() {
                     title: "",
                     slug: "",
                     subtitle: "",
-                    price: "99 000 FCFA",
-                    original_price: "150 000 FCFA",
-                    badge: "OFFRE FONDATEUR",
+                    price: "",
+                    original_price: "",
+                    badge: "Nouveau",
                     category: "Bootcamp",
                     status: "published",
-                    poster: "/images/bootcamp_pro_thumb.jpg",
-                    thumbnail: "/images/bootcamp_pro_thumb.jpg",
-                    dates: "Sessions Intensives Live",
+                    poster: "",
+                    thumbnail: "",
+                    dates: "",
                     start_date: "",
                     end_date: "",
-                    session_count: 7,
+                    session_count: 0,
                     whatsapp_url: "",
                     instructor: "Alfred Dah",
-                    live_meet_url: "https://meet.google.com/xyz-abc-def"
+                    live_meet_url: ""
                   })
                   setShowCourseModal(true)
                 }}
@@ -2648,42 +2438,42 @@ export default function SuperAdminDashboard() {
             {/* Courses List */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {courses.map((c, idx) => (
-                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col justify-between space-y-4 relative group hover:border-slate-700 transition-all">
+                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-4 relative group hover:border-slate-700 transition-all">
                   <div className="space-y-3 cursor-pointer" onClick={() => openCourseDetails(c)}>
-                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
+                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-white border border-slate-200">
                       <img src={c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg"} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                        <span className="bg-slate-950/80 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
+                        <span className="bg-white text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
                           #{c.sequence_order || idx + 1}
                         </span>
                         <span className="bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase">
                           {c.badge}
                         </span>
                       </div>
-                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="bg-slate-900/90 text-white font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 shadow-xl">
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="bg-white text-slate-800 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 shadow-xl">
                           <Eye className="size-3.5 text-primary" /> Voir les Détails
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="font-bold text-white text-base leading-snug group-hover:text-primary transition-colors">{c.title}</h3>
-                      <p className="text-xs text-slate-400 line-clamp-2">{c.subtitle}</p>
+                      <h3 className="font-bold text-slate-800 text-base leading-snug group-hover:text-primary transition-colors">{c.title}</h3>
+                      <p className="text-xs text-slate-500 line-clamp-2">{c.subtitle}</p>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs font-mono pt-2 border-t border-slate-800">
+                    <div className="flex items-center justify-between text-xs font-mono pt-2 border-t border-slate-200">
                       <span className="font-bold text-emerald-400">{c.price}</span>
                       <span className="text-slate-500 line-through text-[10px]">{c.original_price}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
-                    <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-1">
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-200">
+                    <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1">
                       <button
                         onClick={() => handleMoveCourse(c, "up")}
                         disabled={idx === 0}
-                        className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+                        className="p-1 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
                         title="Déplacer vers le haut"
                       >
                         <ArrowUp className="size-3.5" />
@@ -2691,7 +2481,7 @@ export default function SuperAdminDashboard() {
                       <button
                         onClick={() => handleMoveCourse(c, "down")}
                         disabled={idx === courses.length - 1}
-                        className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent"
+                        className="p-1 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
                         title="Déplacer vers le bas"
                       >
                         <ArrowDown className="size-3.5" />
@@ -2699,14 +2489,14 @@ export default function SuperAdminDashboard() {
                     </div>
                     <button
                       onClick={() => openCourseDetails(c)}
-                      className="p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 flex items-center justify-center gap-1"
+                      className="p-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-200 flex items-center justify-center gap-1"
                       title="Voir les détails"
                     >
                       <Eye className="size-3.5 text-primary" />
                     </button>
                     <button
                       onClick={() => { setCourseForm(c); setShowCourseModal(true) }}
-                      className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-700 flex items-center justify-center gap-1"
+                      className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-200 text-xs font-bold hover:bg-slate-200 flex items-center justify-center gap-1"
                     >
                       <Edit3 className="size-3" /> Modifier
                     </button>
@@ -2735,9 +2525,9 @@ export default function SuperAdminDashboard() {
 
             {/* Course Modal */}
             {showCourseModal && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-2xl w-full space-y-4 max-h-[90vh] overflow-y-auto">
-                  <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-2xl w-full space-y-4 max-h-[90vh] overflow-y-auto">
+                  <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Layers className="size-5 text-primary" />
                     {courseForm.id ? "Editer la Formation" : "Créer une Nouvelle Formation"}
                   </h3>
@@ -2745,105 +2535,105 @@ export default function SuperAdminDashboard() {
                   <form onSubmit={handleSaveCourse} className="space-y-4 text-xs">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Titre du Bootcamp</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Titre du Bootcamp</label>
                         <input
                           type="text"
                           required
                           value={courseForm.title}
                           onChange={e => setCourseForm({ ...courseForm, title: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Slug URL (ex: bootcamp-ia-pro-3)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Slug URL (ex: bootcamp-ia-pro-3)</label>
                         <input
                           type="text"
                           required
                           value={courseForm.slug}
                           onChange={e => setCourseForm({ ...courseForm, slug: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Description / Sous-titre</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Description / Sous-titre</label>
                       <textarea
                         rows={2}
                         value={courseForm.subtitle}
                         onChange={e => setCourseForm({ ...courseForm, subtitle: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-3">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Prix Promo (FCFA)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Prix Promo (FCFA)</label>
                         <input
                           type="text"
                           value={courseForm.price}
                           onChange={e => setCourseForm({ ...courseForm, price: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-bold text-emerald-400"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-bold text-emerald-400"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Prix Standard (Barré)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Prix Standard (Barré)</label>
                         <input
                           type="text"
                           value={courseForm.original_price}
                           onChange={e => setCourseForm({ ...courseForm, original_price: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Ordre d'Affichage (#)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Ordre d'Affichage (#)</label>
                         <input
                           type="number"
                           min="1"
                           value={courseForm.sequence_order || 1}
                           onChange={e => setCourseForm({ ...courseForm, sequence_order: parseInt(e.target.value) || 1 })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-bold text-amber-400"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-bold text-amber-400"
                         />
                       </div>
                     </div>
 
                     {/* 🔥 Validité de l'Offre Fondateur / Promo */}
-                    <div className="bg-slate-950/70 border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
+                    <div className="bg-white border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
                           🔥 Validité de l'Offre Fondateur / Promo (Dynamique)
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800">
+                        <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200">
                           Affiché sur l'accueil
                         </span>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
-                          <label className="text-slate-400 block mb-1 font-bold">📅 Début de l'offre</label>
+                          <label className="text-slate-600 block mb-1 font-bold">📅 Début de l'offre</label>
                           <input
                             type="date"
                             value={courseForm.offer_start_date ? courseForm.offer_start_date.substring(0, 10) : ""}
                             onChange={e => setCourseForm({ ...courseForm, offer_start_date: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-400 block mb-1 font-bold">⏳ Fin de l'offre (Date limite)</label>
+                          <label className="text-slate-600 block mb-1 font-bold">⏳ Fin de l'offre (Date limite)</label>
                           <input
                             type="date"
                             value={courseForm.offer_end_date ? courseForm.offer_end_date.substring(0, 10) : ""}
                             onChange={e => setCourseForm({ ...courseForm, offer_end_date: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400 font-bold text-amber-300"
+                            className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400 font-bold text-amber-300"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-400 block mb-1 font-bold">🏷️ Badge / Label Promo</label>
+                          <label className="text-slate-600 block mb-1 font-bold">🏷️ Badge / Label Promo</label>
                           <input
                             type="text"
                             placeholder="ex: Offre Fondateur"
                             value={courseForm.offer_badge_text || ""}
                             onChange={e => setCourseForm({ ...courseForm, offer_badge_text: e.target.value })}
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                       </div>
@@ -2875,34 +2665,34 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Lien Google Meet (Direct Live)</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Lien Google Meet (Direct Live)</label>
                       <input
                         type="text"
                         value={courseForm.live_meet_url}
                         onChange={e => setCourseForm({ ...courseForm, live_meet_url: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
                       />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Dates / Période (affichage texte)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Dates / Période (affichage texte)</label>
                         <input
                           type="text"
                           placeholder="ex: 31 Août au 6 Septembre 2026"
                           value={courseForm.dates || ""}
                           onChange={e => setCourseForm({ ...courseForm, dates: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Format de la Session</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Format de la Session</label>
                         <input
                           type="text"
                           placeholder="ex: 100% En Ligne"
                           value={courseForm.format || ""}
                           onChange={e => setCourseForm({ ...courseForm, format: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                     </div>
@@ -2910,56 +2700,56 @@ export default function SuperAdminDashboard() {
                     {/* Dates structurées */}
                     <div className="grid gap-3 sm:grid-cols-3">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">📅 Date de début</label>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date de début</label>
                         <input
                           type="date"
                           value={courseForm.start_date || ""}
                           onChange={e => setCourseForm({ ...courseForm, start_date: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">📅 Date de fin</label>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date de fin</label>
                         <input
                           type="date"
                           value={courseForm.end_date || ""}
                           onChange={e => setCourseForm({ ...courseForm, end_date: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold"># Nb de sessions</label>
+                        <label className="text-slate-600 block mb-1 font-bold"># Nb de sessions</label>
                         <input
                           type="number"
                           min={1}
                           placeholder="7"
                           value={courseForm.session_count || ""}
                           onChange={e => setCourseForm({ ...courseForm, session_count: parseInt(e.target.value) || 0 })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">💬 Lien Groupe WhatsApp</label>
+                      <label className="text-slate-600 block mb-1 font-bold">💬 Lien Groupe WhatsApp</label>
                       <input
                         type="text"
                         placeholder="https://chat.whatsapp.com/..."
                         value={courseForm.whatsapp_url || ""}
                         onChange={e => setCourseForm({ ...courseForm, whatsapp_url: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
                       />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Type de Certificat / Badge</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Type de Certificat / Badge</label>
                         <input
                           type="text"
                           placeholder="ex: Certificat Officiel"
                           value={courseForm.certificate || ""}
                           onChange={e => setCourseForm({ ...courseForm, certificate: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <FileUploadField
@@ -2977,32 +2767,32 @@ export default function SuperAdminDashboard() {
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Avantages / Inclus (1 par ligne)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Avantages / Inclus (1 par ligne)</label>
                         <textarea
                           rows={3}
                           placeholder="7 sessions premium en direct...&#10;Replays vidéo HD...&#10;Certificat officiel..."
                           value={Array.isArray(courseForm.features) ? courseForm.features.join("\n") : (courseForm.features || "")}
                           onChange={e => setCourseForm({ ...courseForm, features: e.target.value.split("\n").filter(Boolean) })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary text-xs"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 text-xs"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">🎯 Compétences clés acquises (1 par ligne)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">🎯 Compétences clés acquises (1 par ligne)</label>
                         <textarea
                           rows={3}
                           placeholder="Système de travail IA personnalisé...&#10;Prompt Engineering avancé...&#10;Automatisation Make.com..."
                           value={Array.isArray(courseForm.skills) ? courseForm.skills.join("\n") : (courseForm.skills || "")}
                           onChange={e => setCourseForm({ ...courseForm, skills: e.target.value.split("\n").filter(Boolean) })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary text-xs"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 text-xs"
                         />
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-3 border-t border-slate-800">
+                    <div className="flex gap-2 pt-3 border-t border-slate-200">
                       <button
                         type="button"
                         onClick={() => setShowCourseModal(false)}
-                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700"
+                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold hover:bg-slate-200"
                       >
                         Annuler
                       </button>
@@ -3021,27 +2811,27 @@ export default function SuperAdminDashboard() {
 
             {/* ===== MODAL GESTION DES SESSIONS LIVE ===== */}
             {showSessionModal && selectedCourseForSessions && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-3xl w-full space-y-5 max-h-[90vh] overflow-y-auto">
+              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-3xl w-full space-y-5 max-h-[90vh] overflow-y-auto">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+                    <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                       <Calendar className="size-5 text-primary" />
                       Sessions Live — {selectedCourseForSessions.title}
                     </h3>
-                    <button onClick={() => { setShowSessionModal(false); setSelectedCourseForSessions(null); setBootcampSessions([]) }} className="text-slate-400 hover:text-white">✕</button>
+                    <button onClick={() => { setShowSessionModal(false); setSelectedCourseForSessions(null); setBootcampSessions([]) }} className="text-slate-600 hover:text-slate-900">✕</button>
                   </div>
 
                   {/* Liste des sessions existantes */}
                   {bootcampSessions.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sessions existantes</h4>
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Sessions existantes</h4>
                       <div className="space-y-2">
                         {bootcampSessions.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between gap-3 bg-slate-800/60 rounded-xl px-4 py-3">
+                          <div key={s.id} className="flex items-center justify-between gap-3 bg-[#F4F6F8] rounded-xl px-4 py-3">
                             <div>
                               <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md mr-2">Session {s.session_number}</span>
-                              <span className="text-sm font-bold text-white">{s.title}</span>
-                              <div className="text-[10px] text-slate-400 mt-0.5">
+                              <span className="text-sm font-bold text-slate-800">{s.title}</span>
+                              <div className="text-[10px] text-slate-500 mt-0.5">
                                 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Date non définie"}
                                 {s.meet_url && <span className="ml-2 text-primary">• Meet ✓</span>}
                                 {s.recording_url && <span className="ml-2 text-emerald-400">• Replay ✓</span>}
@@ -3051,7 +2841,7 @@ export default function SuperAdminDashboard() {
                             <div className="flex gap-2 shrink-0">
                               <button
                                 onClick={() => setSessionForm({ ...s })}
-                                className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:text-white"
+                                className="p-1.5 rounded-lg bg-slate-700 text-slate-700 hover:text-white"
                               >
                                 <Edit3 className="size-3.5" />
                               </button>
@@ -3073,82 +2863,82 @@ export default function SuperAdminDashboard() {
                   )}
 
                   {/* Formulaire ajout/édition session */}
-                  <div className="border-t border-slate-800 pt-4 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  <div className="border-t border-slate-200 pt-4 space-y-4">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                       {sessionForm.id ? `Modifier la session #${sessionForm.session_number}` : `Ajouter la session #${bootcampSessions.length + 1}`}
                     </h4>
                     <div className="grid gap-3 sm:grid-cols-2 text-xs">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold"># Numéro de session (Auto-généré)</label>
+                        <label className="text-slate-600 block mb-1 font-bold"># Numéro de session (Auto-généré)</label>
                         <input
                           type="number"
                           readOnly
                           value={sessionForm.id ? sessionForm.session_number : (bootcampSessions.length + 1)}
-                          className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2 text-primary font-bold outline-none cursor-not-allowed"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-primary font-bold outline-none cursor-not-allowed"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Titre de la session</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Titre de la session</label>
                         <input type="text" placeholder="ex: Session 1 — Introduction à l'IA"
                           value={sessionForm.title || ""}
                           onChange={e => setSessionForm({ ...sessionForm, title: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">📅 Date et heure de début</label>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de début</label>
                         <input type="datetime-local"
                           value={sessionForm.scheduled_at ? sessionForm.scheduled_at.slice(0, 16) : ""}
                           onChange={e => setSessionForm({ ...sessionForm, scheduled_at: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">📅 Date et heure de fin</label>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin</label>
                         <input type="datetime-local"
                           value={sessionForm.ends_at ? sessionForm.ends_at.slice(0, 16) : ""}
                           onChange={e => setSessionForm({ ...sessionForm, ends_at: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-400 block mb-1 font-bold">🎬 Lien Google Meet (Direct Live)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">🎬 Lien Google Meet (Direct Live)</label>
                         <input type="url" placeholder="https://meet.google.com/..."
                           value={sessionForm.meet_url || ""}
                           onChange={e => setSessionForm({ ...sessionForm, meet_url: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-400 block mb-1 font-bold">📺 Lien enregistrement replay (rend le replay immédiatement disponible)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">📺 Lien enregistrement replay (rend le replay immédiatement disponible)</label>
                         <input type="url" placeholder="https://youtube.com/... ou vimeo.com/..."
                           value={sessionForm.recording_url || ""}
                           onChange={e => setSessionForm({ ...sessionForm, recording_url: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">📚 Titre du devoir</label>
+                        <label className="text-slate-600 block mb-1 font-bold">📚 Titre du devoir</label>
                         <input type="text" placeholder="ex: Créez votre premier prompt..."
                           value={sessionForm.homework_title || ""}
                           onChange={e => setSessionForm({ ...sessionForm, homework_title: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">⏰ Date limite du devoir</label>
+                        <label className="text-slate-600 block mb-1 font-bold">⏰ Date limite du devoir</label>
                         <input type="datetime-local"
                           value={sessionForm.homework_deadline ? sessionForm.homework_deadline.slice(0, 16) : ""}
                           onChange={e => setSessionForm({ ...sessionForm, homework_deadline: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-400 block mb-1 font-bold">Description du devoir</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Description du devoir</label>
                         <textarea rows={2} placeholder="Décrivez le travail demandé aux étudiants..."
                           value={sessionForm.homework_description || ""}
                           onChange={e => setSessionForm({ ...sessionForm, homework_description: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       {/* Téléversement du Fichier du Devoir (PDF ou Image) */}
@@ -3166,11 +2956,11 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-400 block mb-1 font-bold">Statut de la session</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Statut de la session</label>
                         <select
                           value={sessionForm.status || "upcoming"}
                           onChange={e => setSessionForm({ ...sessionForm, status: e.target.value as any })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         >
                           <option value="upcoming">🕒 À venir</option>
                           <option value="live">🟢 En Direct Maintenant</option>
@@ -3261,11 +3051,11 @@ export default function SuperAdminDashboard() {
 
             {/* ===== MODAL D'APERÇU ET DÉTAILS COMPLETS DU BOOTCAMP ===== */}
             {showDetailsModal && selectedCourseDetails && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-4xl w-full space-y-6 max-h-[92vh] overflow-y-auto shadow-2xl relative">
+              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 md:p-8 max-w-4xl w-full space-y-6 max-h-[92vh] overflow-y-auto shadow-2xl relative">
                   
                   {/* Header Modal */}
-                  <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-start justify-between border-b border-slate-200 pb-4">
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
                         <Eye className="size-5" />
@@ -3274,14 +3064,14 @@ export default function SuperAdminDashboard() {
                         <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20">
                           Aperçu &amp; Fiche Technique
                         </span>
-                        <h3 className="font-heading text-xl font-bold text-white mt-1">
+                        <h3 className="font-heading text-xl font-bold text-slate-800 mt-1">
                           {selectedCourseDetails.title}
                         </h3>
                       </div>
                     </div>
                     <button
                       onClick={() => { setShowDetailsModal(false); setSelectedCourseDetails(null) }}
-                      className="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold"
+                      className="text-slate-600 hover:text-slate-900 p-2 rounded-xl bg-slate-800 hover:bg-slate-200 text-sm font-bold"
                     >
                       ✕
                     </button>
@@ -3291,14 +3081,14 @@ export default function SuperAdminDashboard() {
                   <div className="grid gap-6 md:grid-cols-3">
                     {/* Poster preview */}
                     <div className="md:col-span-1 space-y-3">
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-xl">
+                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-xl">
                         <img
                           src={selectedCourseDetails.poster || selectedCourseDetails.thumbnail || "/images/bootcamp_pro_thumb.jpg"}
                           alt={selectedCourseDetails.title}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute top-2 left-2 flex flex-col gap-1">
-                          <span className="bg-slate-950/90 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
+                          <span className="bg-white text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md text-[10px] font-black">
                             #{selectedCourseDetails.sequence_order || 1}
                           </span>
                           <span className="bg-primary/90 text-slate-950 px-2 py-0.5 rounded-md text-[9px] font-black uppercase">
@@ -3307,8 +3097,8 @@ export default function SuperAdminDashboard() {
                         </div>
                       </div>
 
-                      <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3 text-center space-y-1">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tarif Officiel</span>
+                      <div className="bg-[#F4F6F8] border border-slate-200 rounded-2xl p-3 text-center space-y-1">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Tarif Officiel</span>
                         <div className="flex items-center justify-center gap-3">
                           <span className="font-mono text-lg font-black text-emerald-400">{selectedCourseDetails.price}</span>
                           {selectedCourseDetails.original_price && (
@@ -3322,29 +3112,29 @@ export default function SuperAdminDashboard() {
                     <div className="md:col-span-2 space-y-5">
                       {/* Top KPI Cards */}
                       <div className="grid grid-cols-3 gap-3 text-xs">
-                        <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                        <div className="p-3.5 rounded-2xl bg-[#F4F6F8] border border-slate-200 text-center space-y-1">
                           <Users className="size-4 text-primary mx-auto" />
-                          <div className="font-bold text-white text-base font-mono">{detailsEnrolledCount}</div>
-                          <div className="text-[10px] text-slate-400 font-bold uppercase">Inscrits</div>
+                          <div className="font-bold text-slate-800 text-base font-mono">{detailsEnrolledCount}</div>
+                          <div className="text-[10px] text-slate-500 font-bold uppercase">Inscrits</div>
                         </div>
-                        <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                        <div className="p-3.5 rounded-2xl bg-[#F4F6F8] border border-slate-200 text-center space-y-1">
                           <Calendar className="size-4 text-emerald-400 mx-auto" />
-                          <div className="font-bold text-white text-base font-mono">{detailsSessions.length} / {selectedCourseDetails.session_count || 7}</div>
-                          <div className="text-[10px] text-slate-400 font-bold uppercase">Sessions Live</div>
+                          <div className="font-bold text-slate-800 text-base font-mono">{detailsSessions.length} / {selectedCourseDetails.session_count || detailsSessions.length || 0}</div>
+                          <div className="text-[10px] text-slate-500 font-bold uppercase">Sessions Live</div>
                         </div>
-                        <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                        <div className="p-3.5 rounded-2xl bg-[#F4F6F8] border border-slate-200 text-center space-y-1">
                           <Award className="size-4 text-amber-400 mx-auto" />
-                          <div className="font-bold text-white text-xs truncate">{selectedCourseDetails.instructor || "Alfred Dah"}</div>
-                          <div className="text-[10px] text-slate-400 font-bold uppercase">Instructeur</div>
+                          <div className="font-bold text-slate-800 text-xs truncate">{selectedCourseDetails.instructor || "Non renseigné"}</div>
+                          <div className="text-[10px] text-slate-500 font-bold uppercase">Instructeur</div>
                         </div>
                       </div>
 
                       {/* Fiche Descriptive */}
-                      <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3 text-xs">
-                        <h4 className="font-bold text-white flex items-center gap-2 border-b border-slate-800/80 pb-2">
+                      <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 text-xs">
+                        <h4 className="font-bold text-slate-800 flex items-center gap-2 border-b border-slate-200 pb-2">
                           <BookOpen className="size-4 text-primary" /> Fiche Technique du Bootcamp
                         </h4>
-                        <div className="grid sm:grid-cols-2 gap-2 text-slate-300">
+                        <div className="grid sm:grid-cols-2 gap-2 text-slate-700">
                           <div><span className="text-slate-500 font-bold">Slug :</span> <span className="font-mono text-primary">{selectedCourseDetails.slug}</span></div>
                           <div><span className="text-slate-500 font-bold">Format :</span> {selectedCourseDetails.format || "100% En Ligne"}</div>
                           <div><span className="text-slate-500 font-bold">Période :</span> {selectedCourseDetails.dates || "Non spécifiée"}</div>
@@ -3352,26 +3142,26 @@ export default function SuperAdminDashboard() {
                         </div>
 
                         {/* Links preview */}
-                        <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                        <div className="space-y-2 pt-2 border-t border-slate-200">
                           {selectedCourseDetails.live_meet_url && (
-                            <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-xl text-[11px]">
-                              <span className="text-slate-400 font-bold flex items-center gap-1.5"><Video className="size-3.5 text-primary" /> Lien Google Meet Live:</span>
+                            <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl text-[11px]">
+                              <span className="text-slate-500 font-bold flex items-center gap-1.5"><Video className="size-3.5 text-primary" /> Lien Google Meet Live:</span>
                               <a href={selectedCourseDetails.live_meet_url} target="_blank" rel="noreferrer" className="text-primary hover:underline font-mono truncate max-w-[200px]">
                                 {selectedCourseDetails.live_meet_url}
                               </a>
                             </div>
                           )}
                           {selectedCourseDetails.whatsapp_url && (
-                            <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-xl text-[11px]">
-                              <span className="text-slate-400 font-bold flex items-center gap-1.5"><MessageCircle className="size-3.5 text-emerald-400" /> Groupe WhatsApp:</span>
+                            <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl text-[11px]">
+                              <span className="text-slate-500 font-bold flex items-center gap-1.5"><MessageCircle className="size-3.5 text-emerald-400" /> Groupe WhatsApp:</span>
                               <a href={selectedCourseDetails.whatsapp_url} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline font-mono truncate max-w-[200px]">
                                 {selectedCourseDetails.whatsapp_url}
                               </a>
                             </div>
                           )}
                           {selectedCourseDetails.pdf_url && (
-                            <div className="flex items-center justify-between bg-slate-900 px-3 py-2 rounded-xl text-[11px]">
-                              <span className="text-slate-400 font-bold flex items-center gap-1.5"><FileText className="size-3.5 text-amber-400" /> Programme PDF:</span>
+                            <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl text-[11px]">
+                              <span className="text-slate-500 font-bold flex items-center gap-1.5"><FileText className="size-3.5 text-amber-400" /> Programme PDF:</span>
                               <a href={selectedCourseDetails.pdf_url} target="_blank" rel="noreferrer" className="text-amber-400 hover:underline font-bold">
                                 Ouvrir le PDF →
                               </a>
@@ -3381,9 +3171,9 @@ export default function SuperAdminDashboard() {
 
                         {/* Features list */}
                         {selectedCourseDetails.features && Array.isArray(selectedCourseDetails.features) && selectedCourseDetails.features.length > 0 && (
-                          <div className="pt-2 border-t border-slate-800/80">
-                            <span className="text-slate-400 font-bold block mb-1">Inclus dans la formule :</span>
-                            <ul className="grid sm:grid-cols-2 gap-1 text-[11px] text-slate-300">
+                          <div className="pt-2 border-t border-slate-200">
+                            <span className="text-slate-500 font-bold block mb-1">Inclus dans la formule :</span>
+                            <ul className="grid sm:grid-cols-2 gap-1 text-[11px] text-slate-700">
                               {selectedCourseDetails.features.map((feat: string, idx: number) => (
                                 <li key={idx} className="flex items-center gap-1.5">
                                   <CheckCircle2 className="size-3 text-emerald-400 shrink-0" />
@@ -3398,7 +3188,7 @@ export default function SuperAdminDashboard() {
                       {/* Liste des Sessions Live */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-white text-xs uppercase tracking-widest flex items-center gap-2">
+                          <h4 className="font-bold text-slate-800 text-xs uppercase tracking-widest flex items-center gap-2">
                             <Calendar className="size-4 text-emerald-400" /> Planning des Sessions Live ({detailsSessions.length})
                           </h4>
                           <button
@@ -3415,23 +3205,23 @@ export default function SuperAdminDashboard() {
                         </div>
 
                         {loadingDetails ? (
-                          <div className="p-4 text-center text-xs text-slate-400">Chargement des sessions...</div>
+                          <div className="p-4 text-center text-xs text-slate-500">Chargement des sessions...</div>
                         ) : detailsSessions.length === 0 ? (
-                          <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-center text-xs text-slate-400">
+                          <div className="p-4 rounded-xl bg-white border border-slate-200 text-center text-xs text-slate-500">
                             Aucune session live configurée pour ce bootcamp pour l'instant.
                           </div>
                         ) : (
                           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                             {detailsSessions.map((s) => (
-                              <div key={s.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-start justify-between gap-3 text-xs">
+                              <div key={s.id} className="p-3 rounded-xl bg-[#F4F6F8] border border-slate-200 flex items-start justify-between gap-3 text-xs">
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-2">
                                     <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-black uppercase px-2 py-0.5 rounded-md">
                                       Session {s.session_number}
                                     </span>
-                                    <span className="font-bold text-white">{s.title}</span>
+                                    <span className="font-bold text-slate-800">{s.title}</span>
                                   </div>
-                                  <div className="text-[10px] text-slate-400 flex items-center gap-3">
+                                  <div className="text-[10px] text-slate-500 flex items-center gap-3">
                                     <span>📅 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Non planifiée"}</span>
                                     {s.meet_url && <span className="text-primary font-semibold">Meet ✓</span>}
                                     {s.recording_url && <span className="text-emerald-400 font-semibold">Replay Video ✓</span>}
@@ -3449,7 +3239,7 @@ export default function SuperAdminDashboard() {
                                 </div>
                                 <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ${
                                   s.status === "live" ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse"
-                                  : s.status === "completed" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                  : s.status === "completed" ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                                   : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                                 }`}>
                                   {s.status === "live" ? "En Direct" : s.status === "completed" ? "Terminée" : "À venir"}
@@ -3463,10 +3253,10 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   {/* Footer Modal Actions */}
-                  <div className="flex items-center justify-end gap-3 border-t border-slate-800 pt-4">
+                  <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
                     <button
                       onClick={() => { setShowDetailsModal(false); setSelectedCourseDetails(null) }}
-                      className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700"
+                      className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold text-xs hover:bg-slate-200"
                     >
                       Fermer
                     </button>
@@ -3491,7 +3281,7 @@ export default function SuperAdminDashboard() {
                         })
                         setShowSessionModal(true)
                       }}
-                      className="px-5 py-2.5 rounded-xl bg-slate-800 text-primary border border-primary/30 font-bold text-xs hover:bg-slate-700 flex items-center gap-1.5"
+                      className="px-5 py-2.5 rounded-xl bg-slate-800 text-primary border border-primary/30 font-bold text-xs hover:bg-slate-200 flex items-center gap-1.5"
                     >
                       <Calendar className="size-3.5" /> Gérer les Sessions
                     </button>
@@ -3518,16 +3308,16 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Gérez les masterclasses vidéos asynchrones vendues à l'unité. Vos modifications apparaissent immédiatement sur <Link href="/formations" target="_blank" className="text-primary hover:underline font-bold">/formations</Link> et sur la page d'accueil.
                 </p>
               </div>
               <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                 <button
                   onClick={() => setShowCategoryModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 hover:text-white hover:border-slate-500 font-bold text-xs flex items-center gap-2 shadow-md cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-700 text-slate-200 hover:text-white hover:border-slate-500 font-bold text-xs flex items-center gap-2 shadow-md cursor-pointer"
                 >
-                  <Layers className="size-4 text-cyan-400" />
+                  <Layers className="size-4 text-primary" />
                   Gérer les Catégories (Tabs)
                 </button>
                 <button
@@ -3541,9 +3331,9 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Category Chips Bar */}
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+            <div className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200 space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                   <Sparkles className="size-3.5 text-primary" />
                   Catégories &amp; Onglets Actifs ({formationCategories.length}) :
                 </span>
@@ -3560,15 +3350,15 @@ export default function SuperAdminDashboard() {
                   return (
                     <div
                       key={c.id || c.slug}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-slate-200"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-200"
                     >
                       <span>{c.label}</span>
-                      <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-400 font-bold">
+                      <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-500 font-bold">
                         {count} cours
                       </span>
                       <button
                         onClick={() => openEditCategory(c)}
-                        className="text-slate-400 hover:text-white p-0.5"
+                        className="text-slate-600 hover:text-slate-900 p-0.5"
                         title="Modifier la catégorie"
                       >
                         <Edit3 className="size-3" />
@@ -3591,12 +3381,12 @@ export default function SuperAdminDashboard() {
               {formations.map((f, idx) => (
                 <div 
                   key={f.id || f.slug} 
-                  className={`rounded-3xl border bg-slate-900/50 backdrop-blur-xl flex flex-col justify-between overflow-hidden relative transition-all ${
-                    f.is_active ? "border-slate-800 hover:border-slate-700" : "border-rose-900/40 opacity-75"
+                  className={`rounded-3xl border bg-white backdrop-blur-xl flex flex-col justify-between overflow-hidden relative transition-all ${
+                    f.is_active ? "border-slate-200 hover:border-slate-700" : "border-rose-900/40 opacity-75"
                   }`}
                 >
                   {/* Thumbnail Cover 16/9 */}
-                  <div className="relative aspect-video w-full overflow-hidden bg-slate-950 border-b border-slate-800">
+                  <div className="relative aspect-video w-full overflow-hidden bg-white border-b border-slate-200">
                     <img
                       src={f.thumbnail || "/images/formation_claude_thumb.jpg"}
                       alt={f.title}
@@ -3605,7 +3395,7 @@ export default function SuperAdminDashboard() {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
                     
                     <div className="absolute top-3 left-3">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-950/90 text-primary border border-primary/30 backdrop-blur-md shadow-md">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-white text-primary border border-primary/30 backdrop-blur-md shadow-md">
                         {f.badge || "Formation"}
                       </span>
                     </div>
@@ -3622,7 +3412,7 @@ export default function SuperAdminDashboard() {
                   <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
-                        <div className="size-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-black text-sm text-primary shadow-md shrink-0">
+                        <div className="size-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black text-sm text-primary shadow-md shrink-0">
                           {f.tool_icon === "claude" ? <Bot className="size-5 text-[#d97757]" /> :
                            f.tool_icon === "chatgpt" ? <Sparkles className="size-5 text-[#10a37f]" /> :
                            f.tool_icon === "notebook" ? <FileText className="size-5 text-[#4285f4]" /> :
@@ -3630,7 +3420,7 @@ export default function SuperAdminDashboard() {
                            <Film className="size-5 text-primary" />}
                         </div>
                         <div>
-                          <h3 className="font-heading text-base font-black text-white leading-snug">
+                          <h3 className="font-heading text-base font-black text-slate-800 leading-snug">
                             {f.title}
                           </h3>
                           <span className="text-[11px] text-slate-500 font-mono">
@@ -3645,28 +3435,28 @@ export default function SuperAdminDashboard() {
                         {f.tagline}
                       </p>
                     )}
-                    <p className="text-xs text-slate-400 line-clamp-2">
+                    <p className="text-xs text-slate-500 line-clamp-2">
                       {f.description}
                     </p>
 
                     {/* Metadata Pills */}
-                    <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-300">
-                      <span className="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">
+                    <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-700">
+                      <span className="bg-white px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">
                         ⏱️ {f.duration}
                       </span>
-                      <span className="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">
+                      <span className="bg-white px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">
                         📚 {f.modules_count}
                       </span>
-                      <span className="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">
+                      <span className="bg-white px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">
                         ⚡ {f.prompts_count}
                       </span>
                     </div>
 
                     {/* Pricing */}
-                    <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-baseline justify-between">
+                    <div className="p-3 rounded-2xl bg-[#F4F6F8] border border-slate-200 flex items-baseline justify-between">
                       <div>
-                        <span className="text-[10px] text-slate-400 block font-semibold">Prix de vente :</span>
-                        <span className="font-heading text-lg font-black text-white">
+                        <span className="text-[10px] text-slate-600 block font-semibold">Prix de vente :</span>
+                        <span className="font-heading text-lg font-black text-slate-800">
                           {typeof f.price === "number" ? f.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") : f.price} FCFA
                         </span>
                       </div>
@@ -3679,12 +3469,12 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   {/* Actions Bar */}
-                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-200">
                     <button
                       onClick={() => handleToggleFormationActive(f)}
                       className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                         f.is_active 
-                          ? "text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white"
+                          ? "text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-white"
                           : "text-emerald-400 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20"
                       }`}
                     >
@@ -3694,7 +3484,7 @@ export default function SuperAdminDashboard() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditFormation(f)}
-                        className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Edit3 className="size-3.5 text-primary" />
                         <span>Modifier</span>
@@ -3702,7 +3492,7 @@ export default function SuperAdminDashboard() {
 
                       <button
                         onClick={() => handleDeleteFormation(f)}
-                        className="p-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title="Supprimer la formation"
                       >
                         <Trash2 className="size-4" />
@@ -3717,22 +3507,22 @@ export default function SuperAdminDashboard() {
             {/* Formation Creation / Edition Modal */}
             {showFormationModal && (
               <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-3xl w-full space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div className="bg-white border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-3xl w-full space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl">
                   
                   {/* Modal Header */}
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                     <div className="space-y-1 text-left">
                       <span className="text-[10px] font-black uppercase text-primary tracking-widest">
                         Catalogue Formations
                       </span>
-                      <h3 className="font-heading text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                      <h3 className="font-heading text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
                         <Sparkles className="size-5 text-primary" />
                         {editingFormation ? `Modifier : ${editingFormation.title}` : "Créer une Nouvelle Formation Vidéo"}
                       </h3>
                     </div>
                     <button
                       onClick={() => setShowFormationModal(false)}
-                      className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                     >
                       <X className="size-5" />
                     </button>
@@ -3742,53 +3532,53 @@ export default function SuperAdminDashboard() {
                     
                     {/* Section 1 : Informations Générales */}
                     <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 flex items-center gap-2">
                         <FileText className="size-4 text-primary" /> 1. Informations Générales
                       </h4>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Titre de la Formation *</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Titre de la Formation *</label>
                           <input
                             type="text"
                             required
                             placeholder="ex: Maîtriser Claude 3.7 & Claude Code"
                             value={formationForm.title || ""}
                             onChange={e => setFormationForm({ ...formationForm, title: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Slug Unique *</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Slug Unique *</label>
                           <input
                             type="text"
                             required
                             placeholder="ex: maitriser-claude-ia"
                             value={formationForm.slug || ""}
                             onChange={e => setFormationForm({ ...formationForm, slug: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-mono text-xs outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-white font-mono text-xs outline-none focus:border-primary"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="text-slate-300 block mb-1 font-bold">Accroche / Tagline de Résultat</label>
+                        <label className="text-slate-700 block mb-1 font-bold">Accroche / Tagline de Résultat</label>
                         <input
                           type="text"
                           placeholder="ex: Déléguez enfin le travail complexe qui vous prend des heures"
                           value={formationForm.tagline || ""}
                           onChange={e => setFormationForm({ ...formationForm, tagline: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
 
                       <div>
-                        <label className="text-slate-300 block mb-1 font-bold">Description Détaillée</label>
+                        <label className="text-slate-700 block mb-1 font-bold">Description Détaillée</label>
                         <textarea
                           rows={3}
                           placeholder="Présentation synthétique des bénéfices concrets pour l'élève..."
                           value={formationForm.description || ""}
                           onChange={e => setFormationForm({ ...formationForm, description: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
 
@@ -3807,11 +3597,11 @@ export default function SuperAdminDashboard() {
 
                       <div className="grid gap-3 sm:grid-cols-4">
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Catégorie (Tabs) *</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Catégorie (Tabs) *</label>
                           <select
                             value={formationForm.category_slug || formationForm.tool_icon || "chatgpt"}
                             onChange={e => setFormationForm({ ...formationForm, category_slug: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs font-semibold"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 text-xs font-semibold"
                           >
                             {formationCategories.map(cat => (
                               <option key={cat.id || cat.slug} value={cat.slug}>
@@ -3821,11 +3611,11 @@ export default function SuperAdminDashboard() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Badge Marketing</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Badge Marketing</label>
                           <select
                             value={formationForm.badge || "Nouveau"}
                             onChange={e => setFormationForm({ ...formationForm, badge: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 text-xs"
                           >
                             <option value="Best-seller">Best-seller</option>
                             <option value="Forte demande">Forte demande</option>
@@ -3835,11 +3625,11 @@ export default function SuperAdminDashboard() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Icône Outil</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Icône Outil</label>
                           <select
                             value={formationForm.tool_icon || "chatgpt"}
                             onChange={e => setFormationForm({ ...formationForm, tool_icon: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 text-xs"
                           >
                             <option value="claude">Claude (Anthropic)</option>
                             <option value="chatgpt">ChatGPT (OpenAI)</option>
@@ -3851,12 +3641,12 @@ export default function SuperAdminDashboard() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Ordre</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Ordre</label>
                           <input
                             type="number"
                             value={formationForm.order_index || 1}
                             onChange={e => setFormationForm({ ...formationForm, order_index: parseInt(e.target.value) || 1 })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary text-xs"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 text-xs"
                           />
                         </div>
                       </div>
@@ -3864,33 +3654,33 @@ export default function SuperAdminDashboard() {
 
                     {/* Section 2 : Tarifs & Métadonnées */}
                     <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 flex items-center gap-2">
                         <DollarSign className="size-4 text-emerald-400" /> 2. Tarifs & Métadonnées
                       </h4>
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Prix de Vente (FCFA) *</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Prix de Vente (FCFA) *</label>
                           <input
                             type="number"
                             required
                             placeholder="ex: 39000"
                             value={formationForm.price || ""}
                             onChange={e => setFormationForm({ ...formationForm, price: parseInt(e.target.value) || 0 })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-bold outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Prix Barré (ex: 69 000 FCFA)</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Prix Barré (ex: 69 000 FCFA)</label>
                           <input
                             type="text"
                             placeholder="ex: 69 000 FCFA"
                             value={formationForm.original_price || ""}
                             onChange={e => setFormationForm({ ...formationForm, original_price: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div className="flex items-center gap-2 pt-6">
-                          <label className="flex items-center gap-2 cursor-pointer text-slate-300 font-bold">
+                          <label className="flex items-center gap-2 cursor-pointer text-slate-700 font-bold">
                             <input
                               type="checkbox"
                               checked={formationForm.is_active !== false}
@@ -3904,33 +3694,33 @@ export default function SuperAdminDashboard() {
 
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Durée Vidéo</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Durée Vidéo</label>
                           <input
                             type="text"
                             placeholder="ex: 12h+ de vidéo"
                             value={formationForm.duration || ""}
                             onChange={e => setFormationForm({ ...formationForm, duration: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Nombre de Leçons / Modules</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Nombre de Leçons / Modules</label>
                           <input
                             type="text"
                             placeholder="ex: 29 leçons"
                             value={formationForm.modules_count || ""}
                             onChange={e => setFormationForm({ ...formationForm, modules_count: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Prompts & Livrables Inclus</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Prompts & Livrables Inclus</label>
                           <input
                             type="text"
                             placeholder="ex: 150+ prompts premium"
                             value={formationForm.prompts_count || ""}
                             onChange={e => setFormationForm({ ...formationForm, prompts_count: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                       </div>
@@ -3938,25 +3728,25 @@ export default function SuperAdminDashboard() {
 
                     {/* Section 3 : Livrables & Compétences Clés */}
                     <div className="space-y-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
-                        <CheckCircle2 className="size-4 text-cyan-400" /> 3. Livrables & Compétences Clés (1 par ligne)
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 flex items-center gap-2">
+                        <CheckCircle2 className="size-4 text-primary" /> 3. Livrables & Compétences Clés (1 par ligne)
                       </h4>
                       <textarea
                         rows={4}
                         placeholder="Insérez un livrable par ligne :&#10;Prompt engineering expert avec la méthode CARTEL&#10;Création de GPTs sur-mesure&#10;Workflows Make prêts à importer"
                         value={featuresText}
                         onChange={e => setFeaturesText(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary font-sans leading-relaxed"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-sans leading-relaxed"
                       />
                     </div>
 
                     {/* Section 4 : Témoignage Client Embarqué */}
                     <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 flex items-center gap-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1.5 flex items-center gap-2">
                         <Sparkles className="size-4 text-amber-400" /> 4. Témoignage Client Embarqué
                       </h4>
                       <div>
-                        <label className="text-slate-300 block mb-1 font-bold">Citation de l'Élève</label>
+                        <label className="text-slate-700 block mb-1 font-bold">Citation de l'Élève</label>
                         <textarea
                           rows={2}
                           placeholder="ex: Des exemples concrets qu'on peut appliquer tout de suite dans son travail..."
@@ -3965,12 +3755,12 @@ export default function SuperAdminDashboard() {
                             ...formationForm,
                             testimonial: { ...formationForm.testimonial, quote: e.target.value, author_name: formationForm.testimonial?.author_name || "Élève" }
                           })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Nom Complet de l'Élève</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Nom Complet de l'Élève</label>
                           <input
                             type="text"
                             placeholder="ex: David Fraisse"
@@ -3979,11 +3769,11 @@ export default function SuperAdminDashboard() {
                               ...formationForm,
                               testimonial: { ...formationForm.testimonial, quote: formationForm.testimonial?.quote || "", author_name: e.target.value }
                             })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Rôle / Entreprise</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Rôle / Entreprise</label>
                           <input
                             type="text"
                             placeholder="ex: Consultant Stratégie & IA"
@@ -3992,11 +3782,11 @@ export default function SuperAdminDashboard() {
                               ...formationForm,
                               testimonial: { ...formationForm.testimonial, quote: formationForm.testimonial?.quote || "", author_name: formationForm.testimonial?.author_name || "", author_role: e.target.value }
                             })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                         <div>
-                          <label className="text-slate-300 block mb-1 font-bold">Initiales Avatar</label>
+                          <label className="text-slate-700 block mb-1 font-bold">Initiales Avatar</label>
                           <input
                             type="text"
                             placeholder="ex: DF"
@@ -4005,18 +3795,18 @@ export default function SuperAdminDashboard() {
                               ...formationForm,
                               testimonial: { ...formationForm.testimonial, quote: formationForm.testimonial?.quote || "", author_name: formationForm.testimonial?.author_name || "", avatar_initials: e.target.value }
                             })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* Modal Footer Actions */}
-                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
                       <button
                         type="button"
                         onClick={() => setShowFormationModal(false)}
-                        className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 transition-colors"
+                        className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors"
                       >
                         Annuler
                       </button>
@@ -4042,7 +3832,7 @@ export default function SuperAdminDashboard() {
           <div className="space-y-6 animate-fadeIn">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs text-slate-400">Ajoutez des guides, templates et prompts réutilisables réservés aux membres.</p>
+                <p className="text-xs text-slate-500">Ajoutez des guides, templates et prompts réutilisables réservés aux membres.</p>
               </div>
               <button
                 onClick={() => {
@@ -4065,10 +3855,10 @@ export default function SuperAdminDashboard() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {resources.map(r => (
-                <div key={r.id || r.title} className="p-5 rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl flex flex-col justify-between space-y-3">
+                <div key={r.id || r.title} className="p-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-3">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
                         {r.category}
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
@@ -4077,11 +3867,11 @@ export default function SuperAdminDashboard() {
                         {r.access_level}
                       </span>
                     </div>
-                    <h3 className="font-bold text-white text-base leading-snug">{r.title}</h3>
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">{r.description}</p>
+                    <h3 className="font-bold text-slate-800 text-base leading-snug">{r.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.description}</p>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
                     <span className="text-slate-500">{r.downloads_count || 0} téléchargements</span>
                     <button
                       onClick={() => { setResourceForm(r); setShowResourceModal(true) }}
@@ -4096,32 +3886,32 @@ export default function SuperAdminDashboard() {
 
             {/* Resource Modal */}
             {showResourceModal && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4">
-                  <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
+                  <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Sparkles className="size-5 text-primary" />
                     Ajouter / Éditer une Ressource
                   </h3>
 
                   <form onSubmit={handleSaveResource} className="space-y-3 text-xs">
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Titre de la Ressource / Prompt</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Titre de la Ressource / Prompt</label>
                       <input
                         type="text"
                         required
                         value={resourceForm.title}
                         onChange={e => setResourceForm({ ...resourceForm, title: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Catégorie</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Catégorie</label>
                         <select
                           value={resourceForm.category}
                           onChange={e => setResourceForm({ ...resourceForm, category: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         >
                           <option value="Productivity">Productivité</option>
                           <option value="Automation">Automation Make/n8n</option>
@@ -4130,11 +3920,11 @@ export default function SuperAdminDashboard() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-slate-400 block mb-1 font-bold">Niveau d'Accès</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Niveau d'Accès</label>
                         <select
                           value={resourceForm.access_level}
                           onChange={e => setResourceForm({ ...resourceForm, access_level: e.target.value as any })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         >
                           <option value="Membre Premium">Membre Premium</option>
                           <option value="Gratuit">Gratuit (Lead Gen)</option>
@@ -4143,12 +3933,12 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Texte du Prompt Parfait</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Texte du Prompt Parfait</label>
                       <textarea
                         rows={3}
                         value={resourceForm.prompt_text}
                         onChange={e => setResourceForm({ ...resourceForm, prompt_text: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white outline-none focus:border-primary font-mono text-[11px]"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
                       />
                     </div>
 
@@ -4164,11 +3954,11 @@ export default function SuperAdminDashboard() {
                       hint="Formats supportés : PDF, DOCX, JSON (Blueprint Make.com), XLSX, ZIP"
                     />
 
-                    <div className="flex gap-2 pt-3 border-t border-slate-800">
+                    <div className="flex gap-2 pt-3 border-t border-slate-200">
                       <button
                         type="button"
                         onClick={() => setShowResourceModal(false)}
-                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700"
+                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold hover:bg-slate-200"
                       >
                         Annuler
                       </button>
@@ -4192,11 +3982,11 @@ export default function SuperAdminDashboard() {
           <div className="space-y-8 animate-fadeIn">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="font-heading text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="font-heading text-xl font-bold text-slate-800 flex items-center gap-2">
                   <Calendar className="size-6 text-primary" />
                   Calendrier &amp; Planning des Sessions Bootcamps
                 </h2>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   Définissez les dates des prochaines cohortes de bootcamps.
                 </p>
               </div>
@@ -4204,8 +3994,8 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => {
                     setCohortForm({
-                      courseId: courses[0]?.id || courses[0]?.slug || "bootcamp-pro-2",
-                      startDate: "2026-08-31"
+                      courseId: courses[0]?.id || courses[0]?.slug || "",
+                      startDate: new Date().toISOString().split("T")[0]
                     })
                     setShowCohortModal(true)
                   }}
@@ -4218,9 +4008,9 @@ export default function SuperAdminDashboard() {
                 <button
                   onClick={() => {
                     setLiveForm({
-                      title: "Session Live Intensive #01",
-                      course_slug: "bootcamp-pro-2",
-                      meet_url: "https://meet.google.com/xyz-abc-def",
+                      title: "",
+                      course_slug: courses[0]?.slug || "",
+                      meet_url: courses[0]?.live_meet_url || "",
                       replay_url: "",
                       scheduled_at: new Date().toISOString(),
                       status: "upcoming"
@@ -4236,16 +4026,16 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Interactive Calendar Component for Admin */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
+            <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
               <BootcampCalendar
                 events={adminCalendarEvents}
                 courses={courses}
                 isAdmin={true}
                 onAddEvent={(dateStr) => {
                   setLiveForm({
-                    title: "Session Live Bootcamp",
-                    course_slug: courses[0]?.slug || "bootcamp-pro-2",
-                    meet_url: courses[0]?.live_meet_url || "https://meet.google.com/xyz-abc-def",
+                    title: "",
+                    course_slug: courses[0]?.slug || "",
+                    meet_url: courses[0]?.live_meet_url || "",
                     replay_url: "",
                     scheduled_at: dateStr ? `${dateStr}T19:00:00.000Z` : new Date().toISOString(),
                     status: "upcoming"
@@ -4256,8 +4046,8 @@ export default function SuperAdminDashboard() {
                   setLiveForm({
                     id: ev.id,
                     title: ev.title,
-                    course_slug: ev.courseSlug || "bootcamp-pro-2",
-                    meet_url: ev.meetUrl || "https://meet.google.com",
+                    course_slug: ev.courseSlug || courses[0]?.slug || "",
+                    meet_url: ev.meetUrl || "",
                     replay_url: ev.recordingUrl || "",
                     scheduled_at: ev.date ? `${ev.date}T19:00:00.000Z` : new Date().toISOString(),
                     status: ev.status
@@ -4280,12 +4070,12 @@ export default function SuperAdminDashboard() {
 
             {/* Tabular List of Direct Sessions */}
             <div className="space-y-3 pt-4">
-              <h3 className="font-heading text-sm font-bold text-slate-300 uppercase tracking-wider">
+              <h3 className="font-heading text-sm font-bold text-slate-700 uppercase tracking-wider">
                 Liste des directes enregistrés ({lives.length})
               </h3>
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase border-b border-slate-800">
+              <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-[#F4F6F8] text-slate-600 font-bold uppercase border-b border-slate-200">
                     <tr>
                       <th className="p-4">Session Live</th>
                       <th className="p-4">Date &amp; Heure</th>
@@ -4294,13 +4084,13 @@ export default function SuperAdminDashboard() {
                       <th className="p-4 text-right">Statut</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-200/80">
                     {lives.map(l => (
-                      <tr key={l.id || l.title} className="hover:bg-slate-800/30">
-                        <td className="p-4 font-bold text-white">{l.title}</td>
-                        <td className="p-4 text-slate-300">{new Date(l.scheduled_at).toLocaleString("fr-FR")}</td>
+                      <tr key={l.id || l.title} className="hover:bg-[#F4F6F8]/60">
+                        <td className="p-4 font-bold text-slate-800">{l.title}</td>
+                        <td className="p-4 text-slate-700">{new Date(l.scheduled_at).toLocaleString("fr-FR")}</td>
                         <td className="p-4 font-mono text-primary truncate max-w-xs">{l.meet_url}</td>
-                        <td className="p-4 text-slate-400">{l.replay_url ? "Replay Disponible" : "En attente du direct"}</td>
+                        <td className="p-4 text-slate-500">{l.replay_url ? "Replay Disponible" : "En attente du direct"}</td>
                         <td className="p-4 text-right">
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-primary/10 text-primary border border-primary/30">
                             {l.status}
@@ -4320,23 +4110,23 @@ export default function SuperAdminDashboard() {
 
             {/* Modal: Generate 7-Day Cohort */}
             {showCohortModal && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                       <Zap className="size-5 text-[#D4AF37]" />
                       Générer une Cohorte (7 Jours)
                     </h3>
-                    <button onClick={() => setShowCohortModal(false)} className="text-slate-400 hover:text-white">✕</button>
+                    <button onClick={() => setShowCohortModal(false)} className="text-slate-600 hover:text-slate-900">✕</button>
                   </div>
 
                   <div className="space-y-4 text-xs">
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Sélectionner le Bootcamp</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Sélectionner le Bootcamp</label>
                       <select
                         value={cohortForm.courseId}
                         onChange={(e) => setCohortForm({ ...cohortForm, courseId: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-primary cursor-pointer"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-bold outline-none focus:border-primary placeholder:text-slate-500 cursor-pointer"
                       >
                         {courses.map(c => (
                           <option key={c.id || c.slug} value={c.id || c.slug}>
@@ -4347,16 +4137,16 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Date du Premier Jour (Lundi de la cohorte)</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Date du Premier Jour (Lundi de la cohorte)</label>
                       <input
                         type="date"
                         value={cohortForm.startDate}
                         onChange={(e) => setCohortForm({ ...cohortForm, startDate: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white font-bold outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-bold outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1 text-[11px] text-slate-400">
+                    <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1 text-[11px] text-slate-500">
                       <p>✨ Cette action va créer automatiquement <strong>7 sessions consécutives</strong> (du jour 1 au jour 7 à 19h00 GMT) avec les programmes et titres officiels.</p>
                     </div>
 
@@ -4364,7 +4154,7 @@ export default function SuperAdminDashboard() {
                       <button
                         type="button"
                         onClick={() => setShowCohortModal(false)}
-                        className="flex-1 py-2.5 rounded-xl border border-slate-800 hover:bg-slate-800 text-slate-300 font-bold"
+                        className="flex-1 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold"
                       >
                         Annuler
                       </button>
@@ -4383,43 +4173,43 @@ export default function SuperAdminDashboard() {
 
             {/* Live Modal */}
             {showLiveModal && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4">
-                  <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
+                  <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Video className="size-5 text-primary" />
                     Programmer une Session Live Google Meet
                   </h3>
 
                   <form onSubmit={handleSaveLive} className="space-y-3 text-xs">
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Titre du Live</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Titre du Live</label>
                       <input
                         type="text"
                         required
                         value={liveForm.title}
                         onChange={e => setLiveForm({ ...liveForm, title: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Lien de la Réunion Google Meet</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Lien de la Réunion Google Meet</label>
                       <input
                         type="text"
                         required
                         value={liveForm.meet_url}
                         onChange={e => setLiveForm({ ...liveForm, meet_url: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-[11px]"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
                       />
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1 font-bold">Date & Heure du Direct (GMT)</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Date & Heure du Direct (GMT)</label>
                       <input
                         type="datetime-local"
                         value={liveForm.scheduled_at?.slice(0, 16)}
                         onChange={e => setLiveForm({ ...liveForm, scheduled_at: new Date(e.target.value).toISOString() })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
 
@@ -4435,11 +4225,11 @@ export default function SuperAdminDashboard() {
                       hint="Collez le lien YouTube ou téléversez le fichier MP4 directement."
                     />
 
-                    <div className="flex gap-2 pt-3 border-t border-slate-800">
+                    <div className="flex gap-2 pt-3 border-t border-slate-200">
                       <button
                         type="button"
                         onClick={() => setShowLiveModal(false)}
-                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700"
+                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold hover:bg-slate-200"
                       >
                         Annuler
                       </button>
@@ -4463,19 +4253,19 @@ export default function SuperAdminDashboard() {
           <div className="space-y-8 animate-fadeIn text-left">
             
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <div>
-                <h2 className="font-heading text-xl font-bold text-white flex items-center gap-2.5">
+                <h2 className="font-heading text-xl font-bold text-slate-800 flex items-center gap-2.5">
                   <Mail className="size-6 text-primary" />
                   Newsletter &amp; Diffusion d'Emails
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Diffusez vos analyses, prompts et dates de bootcamps directement par email via <strong>alfred@leguideai.com</strong>.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center gap-1.5">
+                <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center gap-1.5">
                   <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
                   Expéditeur : alfred@leguideai.com
                 </span>
@@ -4484,22 +4274,22 @@ export default function SuperAdminDashboard() {
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+              <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Abonnés Newsletter</span>
-                <p className="text-2xl font-black text-white font-mono">{newsletterSubscribers.length}</p>
+                <p className="text-2xl font-black text-slate-800 font-mono">{newsletterSubscribers.length}</p>
                 <span className="text-[10px] text-emerald-400 font-bold">100% Abonnés Actifs</span>
               </div>
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+              <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Membres Non-Abonnés</span>
                 <p className="text-2xl font-black text-blue-400 font-mono">{nonSubscribedMembers.length}</p>
-                <span className="text-[10px] text-slate-400">Inscrits sur la plateforme</span>
+                <span className="text-[10px] text-slate-500">Inscrits sur la plateforme</span>
               </div>
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+              <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-4 space-y-1">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Serveur d'Envoi</span>
                 <p className="text-sm font-bold text-primary font-mono truncate">Resend (Cloudflare DNS)</p>
-                <span className="text-[10px] text-slate-400">DKIM &amp; SPF sécurisés</span>
+                <span className="text-[10px] text-slate-500">DKIM &amp; SPF sécurisés</span>
               </div>
             </div>
 
@@ -4507,9 +4297,9 @@ export default function SuperAdminDashboard() {
             <div className="grid gap-6 lg:grid-cols-12 items-start">
               
               {/* Left Column: Email Composer (7 Cols) */}
-              <div className="lg:col-span-7 rounded-3xl border border-slate-800 bg-slate-900/40 p-5 sm:p-6 shadow-2xl backdrop-blur-xl space-y-5">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-heading text-base font-bold text-white flex items-center gap-2">
+              <div className="lg:col-span-7 rounded-3xl border border-slate-200/90 bg-white shadow-xs p-5 sm:p-6 shadow-2xl backdrop-blur-xl space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-heading text-base font-bold text-slate-800 flex items-center gap-2">
                     <Sparkles className="size-4 text-primary" />
                     Rédiger &amp; Diffuser une Campagne
                   </h3>
@@ -4518,42 +4308,42 @@ export default function SuperAdminDashboard() {
 
                 <form onSubmit={handleSendBroadcast} className="space-y-4 text-xs">
                   <div>
-                    <label className="text-slate-400 block mb-1 font-bold">Sujet de l'Email (Objet visible dans la boîte de réception) *</label>
+                    <label className="text-slate-600 block mb-1 font-bold">Sujet de l'Email (Objet visible dans la boîte de réception) *</label>
                     <input
                       type="text"
                       required
                       value={broadcastForm.subject}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, subject: e.target.value })}
                       placeholder="Ex: 🔥 Nouvelles Masterclasses IA & Dates du prochain Bootcamp..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white font-semibold outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-white font-semibold outline-none focus:border-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-400 block mb-1 font-bold">Grand Titre de l'Email</label>
+                    <label className="text-slate-600 block mb-1 font-bold">Grand Titre de l'Email</label>
                     <input
                       type="text"
                       value={broadcastForm.title}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
                       placeholder="Ex: Nos dernières astuces et opportunités IA"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
 
                   <div>
-                    <label className="text-slate-400 block mb-1 font-bold">Corps du Message (Supporte HTML &amp; Paragraphes) *</label>
+                    <label className="text-slate-600 block mb-1 font-bold">Corps du Message (Supporte HTML &amp; Paragraphes) *</label>
                     <textarea
                       rows={8}
                       required
                       value={broadcastForm.bodyHtml}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, bodyHtml: e.target.value })}
                       placeholder="Rédigez votre message ici..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-white font-mono text-xs outline-none focus:border-primary leading-relaxed"
+                      className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-white font-mono text-xs outline-none focus:border-primary leading-relaxed"
                     />
                   </div>
 
                   {/* Audience Selector & Non-Subscribers Platform Members Option */}
-                  <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
+                  <div className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200 space-y-3">
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
@@ -4563,18 +4353,18 @@ export default function SuperAdminDashboard() {
                         className="mt-0.5 size-4 rounded accent-primary cursor-pointer shrink-0"
                       />
                       <label htmlFor="include_platform_members" className="cursor-pointer space-y-0.5 select-none">
-                        <span className="font-bold text-white text-xs flex items-center gap-1.5">
+                        <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                           <Users className="size-3.5 text-blue-400 inline" />
                           Inclure également les membres &amp; apprenants inscrits (Non-abonnés)
                         </span>
-                        <span className="text-[11px] text-slate-400 block leading-relaxed">
+                        <span className="text-[11px] text-slate-600 block leading-relaxed">
                           Optionnel : envoyez aussi cette campagne aux utilisateurs inscrits et participants qui ne sont pas encore abonnés à la newsletter (+{nonSubscribedMembers.length} membre{nonSubscribedMembers.length > 1 ? "s" : ""}).
                         </span>
                       </label>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-900 text-[11px]">
-                      <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 text-slate-300 font-mono">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#F4F6F8] text-slate-700 font-mono">
                         Abonnés Newsletter : <strong className="text-white">{newsletterSubscribers.length}</strong>
                       </span>
                       {broadcastForm.includePlatformMembers ? (
@@ -4598,7 +4388,7 @@ export default function SuperAdminDashboard() {
 
                   {/* Feedback Message */}
                   {broadcastResult && (
-                    <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold space-y-1">
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold space-y-1">
                       <p>✅ Envoi réussi à <strong>{broadcastResult.sentCount}</strong> destinataire(s) !</p>
                       {broadcastResult.failureCount > 0 && (
                         <p className="text-amber-400 text-[11px]">⚠️ {broadcastResult.failureCount} échec(s) de délivrabilité.</p>
@@ -4631,7 +4421,7 @@ export default function SuperAdminDashboard() {
                           setSendingBroadcast(false)
                         }
                       }}
-                      className="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                      className="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-200 text-slate-200 font-bold transition-all text-xs cursor-pointer"
                     >
                       🧪 Tester vers alfred@leguideai.com
                     </button>
@@ -4659,9 +4449,9 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Right Column: Subscribers Table & Manual Enrollment (5 Cols) */}
-              <div className="lg:col-span-5 rounded-3xl border border-slate-800 bg-slate-900/40 p-5 shadow-2xl backdrop-blur-xl space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <h3 className="font-heading text-sm font-bold text-white">
+              <div className="lg:col-span-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs p-5 shadow-2xl backdrop-blur-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <h3 className="font-heading text-sm font-bold text-slate-800">
                     Liste des Abonnés ({newsletterSubscribers.length})
                   </h3>
                   <button
@@ -4685,7 +4475,7 @@ export default function SuperAdminDashboard() {
                     placeholder="Ajouter un email abonné..."
                     value={newSubscriberEmail}
                     onChange={(e) => setNewSubscriberEmail(e.target.value)}
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-primary"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-primary"
                   />
                   <button
                     type="submit"
@@ -4697,9 +4487,9 @@ export default function SuperAdminDashboard() {
                 </form>
 
                 {newsletterSubscribers.length === 0 ? (
-                  <div className="text-center py-10 text-slate-500 text-xs bg-slate-950/40 rounded-2xl border border-slate-800/60 p-4">
+                  <div className="text-center py-10 text-slate-500 text-xs bg-white rounded-2xl border border-slate-200/80 p-4">
                     <Mail className="size-8 mx-auto text-slate-600 mb-2 opacity-50" />
-                    <p className="font-bold text-slate-300">Aucun abonné enregistré</p>
+                    <p className="font-bold text-slate-700">Aucun abonné enregistré</p>
                     <p className="text-[11px] text-slate-500 mt-1">Inscrivez un email ci-dessus ou via le formulaire footer du site.</p>
                   </div>
                 ) : (
@@ -4707,10 +4497,10 @@ export default function SuperAdminDashboard() {
                     {newsletterSubscribers.map((sub: any, idx: number) => (
                       <div
                         key={sub.id || sub.email || idx}
-                        className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex items-center justify-between gap-3 text-xs hover:border-slate-700 transition-colors"
+                        className="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between gap-3 text-xs hover:border-slate-700 transition-colors"
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="font-bold text-white truncate font-mono text-[11px]">{sub.email}</p>
+                          <p className="font-bold text-slate-800 truncate font-mono text-[11px]">{sub.email}</p>
                           <p className="text-[10px] text-slate-500 mt-0.5">
                             {sub.created_at ? new Date(sub.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "Inscrit récemment"}
                             {sub.source ? ` · ${sub.source}` : ""}
@@ -4723,7 +4513,7 @@ export default function SuperAdminDashboard() {
                           </span>
                           <button
                             onClick={() => handleDeleteSubscriber(sub)}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                             title="Supprimer cet abonné"
                           >
                             <Trash2 className="size-3.5" />
@@ -4744,20 +4534,20 @@ export default function SuperAdminDashboard() {
         {activeTab === "payments" && (
           <div className="space-y-6 animate-fadeIn">
             {/* Header & Metrics Summary */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-md">
               <div className="space-y-1">
-                <h3 className="font-heading text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
                   <DollarSign className="size-5 text-emerald-400 shrink-0" />
                   <span>Inscriptions &amp; Validation des Paiements</span>
                 </h3>
-                <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
                   Consultez, modifiez, validez en 1-clic ou supprimez les inscriptions et virements Mobile Money.
                 </p>
               </div>
 
               {/* Status Badges Counts */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-xl bg-slate-800/80 border border-slate-700 text-[11px] font-bold text-slate-300">
+                <span className="px-3 py-1 rounded-xl bg-[#F4F6F8] border border-slate-700 text-[11px] font-bold text-slate-700">
                   Total : <strong className="text-white">{payments.length}</strong>
                 </span>
                 <span className="px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-bold text-amber-400">
@@ -4778,12 +4568,12 @@ export default function SuperAdminDashboard() {
                   placeholder="Rechercher par nom, email, tél, référence..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-primary outline-none transition-colors"
+                  className="w-full bg-white border border-slate-200/90 shadow-xs rounded-2xl pl-10 pr-10 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-primary outline-none transition-colors"
                 />
                 {searchQuery && (
                   <button 
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3.5 top-3 text-[11px] text-slate-400 hover:text-white"
+                    className="absolute right-3.5 top-3 text-[11px] text-slate-600 hover:text-slate-900"
                   >
                     ✕
                   </button>
@@ -4791,11 +4581,11 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Filter className="size-4 text-slate-400 shrink-0" />
+                <Filter className="size-4 text-slate-500 shrink-0" />
                 <select
                   value={paymentFilter}
                   onChange={e => setPaymentFilter(e.target.value)}
-                  className="w-full sm:w-auto bg-slate-900 border border-slate-800 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-300 focus:border-primary outline-none cursor-pointer"
+                  className="w-full sm:w-auto bg-white border border-slate-200/90 shadow-xs rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:border-primary outline-none cursor-pointer"
                 >
                   <option value="all">Tous les Statuts ({payments.length})</option>
                   <option value="pending_verification">À vérifier / Mobile Money ({payments.filter(p => p.status === "pending_verification" || p.status === "pending").length})</option>
@@ -4807,10 +4597,10 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* 1. DESKTOP TABLE VIEW (Visible on Large Screens) */}
-            <div className="hidden lg:block rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl shadow-xl">
+            <div className="hidden lg:block rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl shadow-xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-white text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4">Participant</th>
                       <th className="p-4">Contact</th>
@@ -4821,12 +4611,12 @@ export default function SuperAdminDashboard() {
                       <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-200/80">
                     {filteredPayments.map(p => {
                       const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
                       const initials = (p.registrations?.full_name || "P").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
                       return (
-                        <tr key={p.id} className="hover:bg-slate-800/40 transition-colors group">
+                        <tr key={p.id} className="hover:bg-slate-100/40 transition-colors group">
                           {/* Participant */}
                           <td className="p-4">
                             <div className="flex items-center gap-3">
@@ -4834,7 +4624,7 @@ export default function SuperAdminDashboard() {
                                 {initials}
                               </div>
                               <div className="min-w-0">
-                                <div className="font-bold text-white truncate">{p.registrations?.full_name || "Prospect Direct"}</div>
+                                <div className="font-bold text-slate-800 truncate">{p.registrations?.full_name || "Prospect Direct"}</div>
                                 {p.registrations?.source && (
                                   <div className="text-[10px] text-slate-500 truncate">{p.registrations.source}</div>
                                 )}
@@ -4845,10 +4635,10 @@ export default function SuperAdminDashboard() {
                           {/* Contact */}
                           <td className="p-4 space-y-1">
                             <div className="text-slate-200 truncate flex items-center gap-1.5">
-                              <Mail className="size-3 text-slate-400 shrink-0" />
+                              <Mail className="size-3 text-slate-500 shrink-0" />
                               <span className="truncate">{p.registrations?.email || "N/A"}</span>
                             </div>
-                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                            <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
                               {cleanPhone ? (
                                 <a 
                                   href={`https://wa.me/${cleanPhone}`} 
@@ -4878,7 +4668,7 @@ export default function SuperAdminDashboard() {
                           <td className="p-4 space-y-0.5">
                             <span className="font-bold text-slate-200 uppercase text-[11px] block">{p.method}</span>
                             {p.transaction_ref ? (
-                              <div className="text-[10px] font-mono text-slate-400 bg-slate-950/60 px-2 py-0.5 rounded border border-slate-800/80 inline-block">
+                              <div className="text-[10px] font-mono text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block">
                                 Réf: {p.transaction_ref}
                               </div>
                             ) : (
@@ -4900,7 +4690,7 @@ export default function SuperAdminDashboard() {
                           </td>
 
                           {/* Date */}
-                          <td className="p-4 text-slate-400 text-[11px]">
+                          <td className="p-4 text-slate-500 text-[11px]">
                             {new Date(p.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                           </td>
 
@@ -4930,7 +4720,7 @@ export default function SuperAdminDashboard() {
                               )}
                               <button
                                 onClick={() => handleOpenEditPayment(p)}
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-700 hover:text-white transition-colors cursor-pointer"
                                 title="Modifier l'inscription &amp; paiement"
                               >
                                 <Edit3 className="size-3.5" />
@@ -4952,7 +4742,7 @@ export default function SuperAdminDashboard() {
                       <tr>
                         <td colSpan={7} className="p-12 text-center text-slate-500">
                           <DollarSign className="size-8 mx-auto text-slate-600 mb-2 opacity-60" />
-                          <p className="font-bold text-white text-xs">Aucune transaction trouvée</p>
+                          <p className="font-bold text-slate-800 text-xs">Aucune transaction trouvée</p>
                           <p className="text-[11px] text-slate-500 mt-0.5">Modifiez vos filtres ou effectuez une autre recherche.</p>
                         </td>
                       </tr>
@@ -4970,7 +4760,7 @@ export default function SuperAdminDashboard() {
                 return (
                   <div
                     key={p.id}
-                    className="p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 shadow-lg relative overflow-hidden"
+                    className="p-4 sm:p-5 rounded-2xl bg-[#F4F6F8] border border-slate-200 hover:border-slate-700 transition-all flex flex-col justify-between space-y-4 shadow-lg relative overflow-hidden"
                   >
                     {/* Card Top: Participant + Status */}
                     <div className="space-y-3">
@@ -4980,10 +4770,10 @@ export default function SuperAdminDashboard() {
                             {initials}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-xs font-bold text-white truncate" title={p.registrations?.full_name || "Prospect Direct"}>
+                            <h4 className="text-xs font-bold text-slate-800 truncate" title={p.registrations?.full_name || "Prospect Direct"}>
                               {p.registrations?.full_name || "Prospect Direct"}
                             </h4>
-                            <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                            <p className="text-[11px] text-slate-500 truncate mt-0.5">
                               {p.registrations?.email || "N/A"}
                             </p>
                           </div>
@@ -4999,9 +4789,9 @@ export default function SuperAdminDashboard() {
                       </div>
 
                       {/* Contact & WhatsApp */}
-                      <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-2 text-xs">
-                        <div className="flex items-center justify-between text-slate-300">
-                          <span className="text-slate-400 text-[11px]">WhatsApp :</span>
+                      <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
+                        <div className="flex items-center justify-between text-slate-700">
+                          <span className="text-slate-500 text-[11px]">WhatsApp :</span>
                           {cleanPhone ? (
                             <a 
                               href={`https://wa.me/${cleanPhone}`} 
@@ -5016,22 +4806,22 @@ export default function SuperAdminDashboard() {
                             <span className="text-slate-500">N/A</span>
                           )}
                         </div>
-                        <div className="flex items-center justify-between text-slate-300">
-                          <span className="text-slate-400 text-[11px]">Pays :</span>
-                          <span className="font-bold text-white text-[11px]">{p.registrations?.country || "CI"}</span>
+                        <div className="flex items-center justify-between text-slate-700">
+                          <span className="text-slate-500 text-[11px]">Pays :</span>
+                          <span className="font-bold text-slate-800 text-[11px]">{p.registrations?.country || "CI"}</span>
                         </div>
                       </div>
 
                       {/* Montant, Méthode & Ref */}
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
-                          <span className="text-[10px] text-slate-400 block">Montant</span>
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                          <span className="text-[10px] text-slate-600 block">Montant</span>
                           <span className="font-mono font-bold text-emerald-400 text-xs">
                             {p.amount ? Number(p.amount).toLocaleString("fr-FR") : "49 000"} {p.currency || "XOF"}
                           </span>
                         </div>
-                        <div className="bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/60">
-                          <span className="text-[10px] text-slate-400 block">Méthode</span>
+                        <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                          <span className="text-[10px] text-slate-600 block">Méthode</span>
                           <span className="font-bold text-slate-200 text-[11px] uppercase truncate block">
                             {p.method}
                           </span>
@@ -5039,9 +4829,9 @@ export default function SuperAdminDashboard() {
                       </div>
 
                       {p.transaction_ref && (
-                        <div className="text-[10px] font-mono text-slate-400 bg-slate-950/60 px-3 py-1.5 rounded-lg border border-slate-800/80 flex items-center justify-between">
+                        <div className="text-[10px] font-mono text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 flex items-center justify-between">
                           <span>Réf:</span>
-                          <span className="text-white font-bold">{p.transaction_ref}</span>
+                          <span className="text-slate-800 font-bold">{p.transaction_ref}</span>
                         </div>
                       )}
 
@@ -5051,7 +4841,7 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     {/* Actions Bar */}
-                    <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                    <div className="space-y-2 pt-2 border-t border-slate-200">
                       {/* 1-Click Validation / Reject buttons if pending */}
                       {p.status !== "confirmed" && (
                         <div className="flex gap-2">
@@ -5079,7 +4869,7 @@ export default function SuperAdminDashboard() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleOpenEditPayment(p)}
-                          className="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                          className="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                         >
                           <Edit3 className="size-3" />
                           <span>Modifier</span>
@@ -5099,9 +4889,9 @@ export default function SuperAdminDashboard() {
               })}
 
               {filteredPayments.length === 0 && (
-                <div className="col-span-full p-12 text-center rounded-3xl bg-slate-900/30 border border-slate-800 text-slate-400">
+                <div className="col-span-full p-12 text-center rounded-3xl bg-white border border-slate-200 text-slate-500">
                   <DollarSign className="size-10 mx-auto text-slate-600 mb-3" />
-                  <p className="font-bold text-sm text-white">Aucune inscription trouvée</p>
+                  <p className="font-bold text-sm text-slate-800">Aucune inscription trouvée</p>
                   <p className="text-xs text-slate-500 mt-1">Modifiez vos critères de recherche ou vos filtres.</p>
                 </div>
               )}
@@ -5112,10 +4902,10 @@ export default function SuperAdminDashboard() {
         {/* TAB 6: USERS & RBAC ROLES */}
         {activeTab === "users" && (
           <div className="space-y-6 animate-fadeIn">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl">
+            <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-white text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4">Utilisateur</th>
                       <th className="p-4">Email</th>
@@ -5124,26 +4914,26 @@ export default function SuperAdminDashboard() {
                       <th className="p-4 text-right">Changer Rôle</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-200/80">
                     {users.map(u => (
-                      <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="p-4 font-bold text-white">{u.full_name || "Utilisateur Anonyme"}</td>
-                        <td className="p-4 text-slate-300">{u.email}</td>
+                      <tr key={u.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
+                        <td className="p-4 font-bold text-slate-800">{u.full_name || "Utilisateur Anonyme"}</td>
+                        <td className="p-4 text-slate-700">{u.email}</td>
                         <td className="p-4">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                            u.role === "super_admin" ? "bg-purple-500/10 text-purple-400 border-purple-500/30" :
+                            u.role === "super_admin" ? "bg-slate-100 text-slate-600 border-purple-500/30" :
                             u.role === "admin" ? "bg-blue-500/10 text-blue-400 border-blue-500/30" :
-                            "bg-slate-800 text-slate-400 border-slate-700"
+                            "bg-[#F4F6F8] text-slate-600 border-slate-700"
                           }`}>
                             {u.role || "student"}
                           </span>
                         </td>
-                        <td className="p-4 text-slate-400">{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
+                        <td className="p-4 text-slate-500">{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
                         <td className="p-4 text-right space-x-1">
                           <button
                             onClick={() => handleRoleChange(u.id, "student")}
                             disabled={processingId === u.id || u.role === "student"}
-                            className="px-2 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-40 text-[10px] font-bold"
+                            className="px-2 py-1 rounded bg-slate-800 text-slate-700 hover:bg-slate-200 disabled:opacity-40 text-[10px] font-bold"
                           >
                             Student
                           </button>
@@ -5157,7 +4947,7 @@ export default function SuperAdminDashboard() {
                           <button
                             onClick={() => handleRoleChange(u.id, "super_admin")}
                             disabled={processingId === u.id || u.role === "super_admin"}
-                            className="px-2 py-1 rounded bg-purple-600/20 text-purple-400 border border-purple-500/30 hover:bg-purple-600/30 disabled:opacity-40 text-[10px] font-bold"
+                            className="px-2 py-1 rounded bg-primary/20 text-slate-600 border border-purple-500/30 hover:bg-primary/30 disabled:opacity-40 text-[10px] font-bold"
                           >
                             Super Admin
                           </button>
@@ -5174,10 +4964,10 @@ export default function SuperAdminDashboard() {
         {/* TAB 7: DEVOIRS & SUBMISSIONS */}
         {activeTab === "submissions" && (
           <div className="space-y-6 animate-fadeIn">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl">
+            <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-white text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4">Apprenant</th>
                       <th className="p-4">Exercice</th>
@@ -5186,11 +4976,11 @@ export default function SuperAdminDashboard() {
                       <th className="p-4 text-right">Évaluation</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-200/80">
                     {submissions.map(s => (
-                      <tr key={s.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="p-4 font-bold text-white">{s.user_email}</td>
-                        <td className="p-4 text-slate-300">{s.lesson_title || "Exercice Module 01"}</td>
+                      <tr key={s.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
+                        <td className="p-4 font-bold text-slate-800">{s.user_email}</td>
+                        <td className="p-4 text-slate-700">{s.lesson_title || "Exercice Module 01"}</td>
                         <td className="p-4">
                           {s.submission_url ? (
                             <a href={s.submission_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1">
@@ -5231,32 +5021,32 @@ export default function SuperAdminDashboard() {
 
             {/* Grading Modal */}
             {gradingSub && (
-              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full space-y-4">
-                  <h3 className="font-heading text-lg font-bold text-white">Évaluation du Devoir</h3>
-                  <p className="text-xs text-slate-400">Pour : <strong>{gradingSub.user_email}</strong></p>
+              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
+                  <h3 className="font-heading text-lg font-bold text-slate-800">Évaluation du Devoir</h3>
+                  <p className="text-xs text-slate-500">Pour : <strong>{gradingSub.user_email}</strong></p>
 
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-slate-400 block mb-1">Note attribuée (/20)</label>
+                      <label className="text-xs text-slate-600 block mb-1">Note attribuée (/20)</label>
                       <input
                         type="number"
                         max={20}
                         min={0}
                         value={gradeScore}
                         onChange={e => setGradeScore(Number(e.target.value))}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white font-bold text-lg outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-slate-800 font-bold text-lg outline-none focus:border-primary"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs text-slate-400 block mb-1">Feedback du Formateur Alfred Dah</label>
+                      <label className="text-xs text-slate-600 block mb-1">Feedback du Formateur Alfred Dah</label>
                       <textarea
                         rows={3}
                         value={gradeFeedback}
                         onChange={e => setGradeFeedback(e.target.value)}
                         placeholder="Commentaires personnalisés pour l'apprenant..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
                   </div>
@@ -5264,7 +5054,7 @@ export default function SuperAdminDashboard() {
                   <div className="flex gap-2 pt-2">
                     <button
                       onClick={() => setGradingSub(null)}
-                      className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700"
+                      className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold text-xs hover:bg-slate-200"
                     >
                       Annuler
                     </button>
@@ -5285,10 +5075,10 @@ export default function SuperAdminDashboard() {
         {/* TAB 8: DEMANDES B2B */}
         {activeTab === "b2b" && (
           <div className="space-y-6 animate-fadeIn">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/40 overflow-hidden backdrop-blur-xl">
+            <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-white text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4">Entreprise & Contact</th>
                       <th className="p-4">Email / Tél</th>
@@ -5297,22 +5087,22 @@ export default function SuperAdminDashboard() {
                       <th className="p-4">Statut Lead</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-slate-200/80">
                     {b2bRequests.map(b => (
-                      <tr key={b.id} className="hover:bg-slate-800/30 transition-colors">
+                      <tr key={b.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
                         <td className="p-4">
-                          <div className="font-bold text-white">{b.company_name}</div>
-                          <div className="text-slate-400 text-[11px]">{b.contact_name}</div>
+                          <div className="font-bold text-slate-800">{b.company_name}</div>
+                          <div className="text-slate-500 text-[11px]">{b.contact_name}</div>
                         </td>
                         <td className="p-4">
                           <div>{b.email}</div>
-                          <div className="text-slate-400">{b.phone || "N/A"}</div>
+                          <div className="text-slate-500">{b.phone || "N/A"}</div>
                         </td>
                         <td className="p-4">
                           <div>{b.sector || "Général"}</div>
-                          <div className="text-slate-400 text-[10px]">{b.employees || "10-50"} employés</div>
+                          <div className="text-slate-500 text-[10px]">{b.employees || "10-50"} employés</div>
                         </td>
-                        <td className="p-4 max-w-xs text-slate-300 truncate">{b.needs || "Formation & Audit IA"}</td>
+                        <td className="p-4 max-w-xs text-slate-700 truncate">{b.needs || "Formation & Audit IA"}</td>
                         <td className="p-4">
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/30">
                             {b.status || "Nouveau"}
@@ -5338,16 +5128,16 @@ export default function SuperAdminDashboard() {
         {activeTab === "testimonials" && (
           <div className="space-y-6 animate-fadeIn">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-slate-900/40 border border-slate-800 backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-md">
               <div className="space-y-1">
-                <h3 className="font-heading text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
                   <Quote className="size-5 text-primary shrink-0" />
                   <span>Gestion des Avis & Témoignages</span>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold">
                     {testimonials.length}
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+                <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
                   Ajoutez, modifiez ou supprimez les recommandations affichées sur la page d'accueil et le carrousel.
                 </p>
               </div>
@@ -5361,8 +5151,8 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Search filter */}
-            <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800 rounded-2xl px-4 py-2.5 w-full sm:max-w-md focus-within:border-primary/50 transition-colors">
-              <Search className="size-4 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-3 bg-[#F4F6F8] border border-slate-200 rounded-2xl px-4 py-2.5 w-full sm:max-w-md focus-within:border-primary/50 transition-colors">
+              <Search className="size-4 text-slate-500 shrink-0" />
               <input
                 type="text"
                 placeholder="Rechercher par nom, profession ou mot-clé..."
@@ -5373,7 +5163,7 @@ export default function SuperAdminDashboard() {
               {testimonialSearch && (
                 <button 
                   onClick={() => setTestimonialSearch("")}
-                  className="text-[11px] text-slate-400 hover:text-white shrink-0"
+                  className="text-[11px] text-slate-600 hover:text-slate-900 shrink-0"
                 >
                   Effacer
                 </button>
@@ -5398,7 +5188,7 @@ export default function SuperAdminDashboard() {
                   return (
                     <div
                       key={t.id || idx}
-                      className="p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-4 hover:shadow-xl hover:shadow-primary/5 group relative overflow-hidden"
+                      className="p-4 sm:p-5 rounded-2xl bg-[#F4F6F8] border border-slate-200 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-4 hover:shadow-xl hover:shadow-primary/5 group relative overflow-hidden"
                     >
                       <div className="space-y-3">
                         {/* Header: User details + rating */}
@@ -5408,7 +5198,7 @@ export default function SuperAdminDashboard() {
                               <img
                                 src={avatar}
                                 alt={t.name}
-                                className="size-11 rounded-full object-cover border-2 border-primary/40 shadow-sm shrink-0 bg-slate-950"
+                                className="size-11 rounded-full object-cover border-2 border-primary/40 shadow-sm shrink-0 bg-white"
                               />
                             ) : (
                               <div className="size-11 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 border-primary/40 text-xs shrink-0 uppercase">
@@ -5416,8 +5206,8 @@ export default function SuperAdminDashboard() {
                               </div>
                             )}
                             <div className="min-w-0 flex-1">
-                              <h4 className="text-xs font-bold text-white truncate" title={t.name}>{t.name}</h4>
-                              <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5" title={t.role}>
+                              <h4 className="text-xs font-bold text-slate-800 truncate" title={t.name}>{t.name}</h4>
+                              <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5" title={t.role}>
                                 {t.role}
                               </p>
                             </div>
@@ -5432,16 +5222,16 @@ export default function SuperAdminDashboard() {
                         </div>
 
                         {/* Testimonial quote text */}
-                        <p className="break-words text-xs text-slate-300 italic leading-relaxed line-clamp-5 bg-slate-950/50 p-3.5 rounded-xl border border-slate-800/80 group-hover:border-slate-700 transition-colors">
+                        <p className="break-words text-xs text-slate-700 italic leading-relaxed line-clamp-5 bg-white p-3.5 rounded-xl border border-slate-200 group-hover:border-slate-700 transition-colors">
                           "{t.text}"
                         </p>
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800/80 w-full">
+                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 w-full">
                         <button
                           onClick={() => handleOpenEditTestimonial(t)}
-                          className="flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                          className="flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
                         >
                           <Edit3 className="size-3" /> Modifier
                         </button>
@@ -5460,9 +5250,9 @@ export default function SuperAdminDashboard() {
             </div>
 
             {testimonials.length === 0 && (
-              <div className="p-12 text-center rounded-3xl bg-slate-900/30 border border-slate-800 text-slate-400">
+              <div className="p-12 text-center rounded-3xl bg-white border border-slate-200 text-slate-500">
                 <Quote className="size-10 mx-auto text-slate-600 mb-3" />
-                <p className="font-bold text-sm text-white">Aucun avis ou témoignage pour le moment</p>
+                <p className="font-bold text-sm text-slate-800">Aucun avis ou témoignage pour le moment</p>
                 <p className="text-xs text-slate-500 mt-1">Cliquez sur "Nouveau Témoignage" pour en ajouter un.</p>
               </div>
             )}
@@ -5472,14 +5262,14 @@ export default function SuperAdminDashboard() {
         {/* TAB 9: SITE & HERO LANDING SETTINGS */}
         {activeTab === "settings" && (
           <div className="space-y-6 animate-fadeIn">
-            <form onSubmit={handleSaveSettings} className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <form onSubmit={handleSaveSettings} className="p-8 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                 <div>
-                  <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
+                  <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Sparkles className="size-5 text-primary" />
                     Éditeur CMS de la Landing Page d'Accueil
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Modifiez le texte du bandeau supérieur, l'URL de la vidéo VSL YouTube, les titres du Hero et les prix promos. Les modifications s'appliquent immédiatement sur le site !
                   </p>
                 </div>
@@ -5494,47 +5284,47 @@ export default function SuperAdminDashboard() {
 
               {/* Section 1: Top Announcement Bar */}
               <div className="space-y-4 pt-2">
-                <h4 className="text-xs font-black uppercase tracking-wider text-primary border-b border-slate-800/60 pb-2">
+                <h4 className="text-xs font-black uppercase tracking-wider text-primary border-b border-slate-200/80 pb-2">
                   1. Bandeau Supérieur d'Annonce (Header Top Bar)
                 </h4>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Texte d'Annonce Principal</label>
+                    <label className="text-xs font-bold text-slate-700">Texte d'Annonce Principal</label>
                     <input
                       type="text"
                       value={siteSettings.announcement_text}
                       onChange={e => setSiteSettings({ ...siteSettings, announcement_text: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Texte du Bouton CTA d'Annonce</label>
+                    <label className="text-xs font-bold text-slate-700">Texte du Bouton CTA d'Annonce</label>
                     <input
                       type="text"
                       value={siteSettings.announcement_cta}
                       onChange={e => setSiteSettings({ ...siteSettings, announcement_cta: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 2: VSL Hero Video & Testimonials Pool */}
-              <div className="space-y-4 pt-4 border-t border-slate-800/80">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
+              <div className="space-y-4 pt-4 border-t border-slate-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-2">
                       <Video className="size-4" />
                       2. Pool de Vidéos VSL & Témoignages (Aléatoire & Switcher)
                     </h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-[11px] text-slate-500 mt-0.5">
                       Chaque visiteur verra une vidéo choisie aléatoirement parmi les vidéos actives, avec la possibilité de naviguer entre les différents témoignages et présentations.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleOpenAddVslVideo}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-md shrink-0 self-start sm:self-auto cursor-pointer"
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold transition-all shadow-md shrink-0 self-start sm:self-auto cursor-pointer"
                   >
                     <Plus className="size-3.5" />
                     <span>Ajouter une Vidéo / Témoignage</span>
@@ -5550,13 +5340,13 @@ export default function SuperAdminDashboard() {
                         key={v.id || vIdx}
                         className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
                           v.is_active !== false
-                            ? "bg-slate-950/80 border-slate-800"
-                            : "bg-slate-950/40 border-slate-900 opacity-60"
+                            ? "bg-white border-slate-200"
+                            : "bg-white border-slate-900 opacity-60"
                         }`}
                       >
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-500/20 text-slate-600 border border-purple-500/30">
                               {v.badge || "Vidéo"}
                             </span>
                             <div className="flex items-center gap-1.5">
@@ -5566,7 +5356,7 @@ export default function SuperAdminDashboard() {
                                 className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
                                   v.is_active !== false
                                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                                    : "bg-slate-800 text-slate-400 border-slate-700"
+                                    : "bg-[#F4F6F8] text-slate-600 border-slate-700"
                                 }`}
                               >
                                 {v.is_active !== false ? "✓ Actif (En rotation)" : "Inactif"}
@@ -5574,24 +5364,24 @@ export default function SuperAdminDashboard() {
                             </div>
                           </div>
 
-                          <h5 className="font-bold text-xs text-white line-clamp-2">{v.title}</h5>
+                          <h5 className="font-bold text-xs text-slate-800 line-clamp-2">{v.title}</h5>
 
                           {v.author_name && (
-                            <p className="text-[11px] text-slate-400">
+                            <p className="text-[11px] text-slate-500">
                               Par : <strong className="text-slate-200">{v.author_name}</strong> {v.author_role ? `(${v.author_role})` : ""}
                             </p>
                           )}
 
-                          <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[10px] font-mono text-slate-400 truncate">
+                          <div className="p-2 rounded-lg bg-white border border-slate-200/90 shadow-xs text-[10px] font-mono text-slate-500 truncate">
                             {isDirect ? "📁 Fichier direct MP4/Supabase" : "🔴 YouTube Embed / Lien"} : {v.video_url}
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/80">
                           <button
                             type="button"
                             onClick={() => handleOpenEditVslVideo(v, vIdx)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all cursor-pointer"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-200 text-xs font-semibold transition-all cursor-pointer"
                           >
                             <Edit3 className="size-3 text-primary" />
                             <span>Modifier</span>
@@ -5612,102 +5402,102 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Section 3: Hero Banner Main Content */}
-              <div className="space-y-4 pt-4 border-t border-slate-800/80">
-                <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 border-b border-slate-800/60 pb-2">
+              <div className="space-y-4 pt-4 border-t border-slate-200">
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 border-b border-slate-200/80 pb-2">
                   3. Hero Banner Principal (Titres, Dates, Tarifs & Affiche)
                 </h4>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Badge du Hero Banner</label>
+                    <label className="text-xs font-bold text-slate-700">Badge du Hero Banner</label>
                     <input
                       type="text"
                       value={siteSettings.hero_badge}
                       onChange={e => setSiteSettings({ ...siteSettings, hero_badge: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Titre Principal du Hero (H1)</label>
+                    <label className="text-xs font-bold text-slate-700">Titre Principal du Hero (H1)</label>
                     <input
                       type="text"
                       value={siteSettings.hero_title}
                       onChange={e => setSiteSettings({ ...siteSettings, hero_title: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Sous-titre explicatif</label>
+                  <label className="text-xs font-bold text-slate-700">Sous-titre explicatif</label>
                   <textarea
                     rows={3}
                     value={siteSettings.hero_subtitle}
                     onChange={e => setSiteSettings({ ...siteSettings, hero_subtitle: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-primary outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                   />
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Dates des Directs GMT</label>
+                    <label className="text-xs font-bold text-slate-700">Dates des Directs GMT</label>
                     <input
                       type="text"
                       value={siteSettings.hero_dates}
                       onChange={e => setSiteSettings({ ...siteSettings, hero_dates: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Heure GMT</label>
+                    <label className="text-xs font-bold text-slate-700">Heure GMT</label>
                     <input
                       type="text"
                       value={siteSettings.hero_time}
                       onChange={e => setSiteSettings({ ...siteSettings, hero_time: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Format (Badge 3ème)</label>
+                    <label className="text-xs font-bold text-slate-700">Format (Badge 3ème)</label>
                     <input
                       type="text"
                       placeholder="ex: 🌍 100% En ligne"
                       value={siteSettings.hero_format}
                       onChange={e => setSiteSettings({ ...siteSettings, hero_format: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Nb Sessions (Badge 4ème)</label>
+                    <label className="text-xs font-bold text-slate-700">Nb Sessions (Badge 4ème)</label>
                     <input
                       type="text"
                       placeholder="ex: 🎓 7 Sessions intensives"
                       value={siteSettings.hero_sessions}
                       onChange={e => setSiteSettings({ ...siteSettings, hero_sessions: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 pt-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Prix Promo Affiche (FCFA)</label>
+                    <label className="text-xs font-bold text-slate-700">Prix Promo Affiche (FCFA)</label>
                     <input
                       type="text"
                       value={siteSettings.hero_promo_price}
                       onChange={e => setSiteSettings({ ...siteSettings, hero_promo_price: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 pt-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Numéro WhatsApp Support</label>
+                    <label className="text-xs font-bold text-slate-700">Numéro WhatsApp Support</label>
                     <input
                       type="text"
                       value={siteSettings.whatsapp_number}
                       onChange={e => setSiteSettings({ ...siteSettings, whatsapp_number: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -5755,13 +5545,13 @@ export default function SuperAdminDashboard() {
 
         {/* TAB 10: EXPORT CSV */}
         {activeTab === "export" && (
-          <div className="p-8 rounded-3xl bg-slate-900/40 border border-slate-800 text-center space-y-6 animate-fadeIn">
-            <div className="size-16 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
+          <div className="p-8 rounded-3xl bg-white border border-slate-200/90 shadow-xs text-center space-y-6 animate-fadeIn">
+            <div className="size-16 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center mx-auto">
               <Download className="size-8" />
             </div>
             <div className="space-y-2 max-w-lg mx-auto">
-              <h3 className="font-heading text-xl font-bold text-white">Exportation Intégrale des Participants</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h3 className="font-heading text-xl font-bold text-slate-800">Exportation Intégrale des Participants</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
                 Générez le fichier CSV d'émargement contenant les Noms, Emails, Numéros WhatsApp, Pays, Montants versés et Références de transaction pour l'organisation des direct Google Meet.
               </p>
             </div>
@@ -5776,17 +5566,17 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL: AJOUTER / MODIFIER UNE VIDÉO VSL OU TÉMOIGNAGE */}
         {showVslModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-            <div className="relative w-full max-w-xl rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Video className="size-5 text-purple-400" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-xl rounded-3xl border border-slate-200/90 bg-white shadow-xs p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Video className="size-5 text-slate-600" />
                   {editingVslIdx !== null ? "Modifier la Vidéo / Témoignage" : "Ajouter une Vidéo / Témoignage"}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowVslModal(false)}
-                  className="size-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+                  className="size-8 rounded-full bg-slate-800 text-slate-600 hover:text-slate-900 flex items-center justify-center cursor-pointer"
                 >
                   ✕
                 </button>
@@ -5794,48 +5584,48 @@ export default function SuperAdminDashboard() {
 
               <form onSubmit={handleSaveVslVideo} className="space-y-4 text-xs">
                 <div className="space-y-1.5">
-                  <label className="font-bold text-slate-300">Titre de la vidéo *</label>
+                  <label className="font-bold text-slate-700">Titre de la vidéo *</label>
                   <input
                     type="text"
                     required
                     placeholder="Ex: Témoignage : Patrick K. - Consultant Stratégie IA"
                     value={vslForm.title}
                     onChange={e => setVslForm({ ...vslForm, title: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                   />
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="font-bold text-slate-300">Badge / Catégorie</label>
+                    <label className="font-bold text-slate-700">Badge / Catégorie</label>
                     <input
                       type="text"
                       placeholder="Ex: Témoignage Apprenant, Vidéo Officielle, Cas Client..."
                       value={vslForm.badge}
                       onChange={e => setVslForm({ ...vslForm, badge: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="font-bold text-slate-300">Nom de l'intervenant / auteur</label>
+                    <label className="font-bold text-slate-700">Nom de l'intervenant / auteur</label>
                     <input
                       type="text"
                       placeholder="Ex: Alfred Dah, Patrick K., Dr. Traoré..."
                       value={vslForm.author_name || ""}
                       onChange={e => setVslForm({ ...vslForm, author_name: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="font-bold text-slate-300">Rôle ou métier de l'auteur (Optionnel)</label>
+                  <label className="font-bold text-slate-700">Rôle ou métier de l'auteur (Optionnel)</label>
                   <input
                     type="text"
                     placeholder="Ex: Diplômé Promo 1 • Consultant Financier"
                     value={vslForm.author_role || ""}
                     onChange={e => setVslForm({ ...vslForm, author_role: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary outline-none"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
                   />
                 </div>
 
@@ -5866,17 +5656,17 @@ export default function SuperAdminDashboard() {
                   </label>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setShowVslModal(false)}
-                    className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold hover:bg-slate-200 cursor-pointer"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg cursor-pointer"
                   >
                     {editingVslIdx !== null ? "Mettre à jour" : "Ajouter au pool de vidéos"}
                   </button>
@@ -5888,21 +5678,21 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL GESTION DES CATÉGORIES DE FORMATIONS */}
         {showCategoryModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleUp">
-              <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+          <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleUp">
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <div className="size-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                     <Layers className="size-5" />
                   </div>
                   <div>
-                    <h3 className="font-heading text-lg font-black text-white">Catégories &amp; Onglets Formations</h3>
-                    <p className="text-xs text-slate-400">Gérez les onglets de filtrage affichés sur l'accueil et sur /formations</p>
+                    <h3 className="font-heading text-lg font-black text-slate-800">Catégories &amp; Onglets Formations</h3>
+                    <p className="text-xs text-slate-500">Gérez les onglets de filtrage affichés sur l'accueil et sur /formations</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }}
-                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
+                  className="text-slate-600 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-100 transition-colors"
                 >
                   <X className="size-5" />
                 </button>
@@ -5910,7 +5700,7 @@ export default function SuperAdminDashboard() {
 
               <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
                 {/* Formulaire d'ajout / modification de catégorie */}
-                <form onSubmit={handleSaveCategory} className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+                <form onSubmit={handleSaveCategory} className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200 space-y-4">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2">
                     <Sparkles className="size-3.5" />
                     {editingCategory ? `Modifier la catégorie "${editingCategory.label}"` : "Ajouter une nouvelle catégorie"}
@@ -5918,7 +5708,7 @@ export default function SuperAdminDashboard() {
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Nom de la catégorie (Label de l'onglet) *</label>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Nom de la catégorie (Label de l'onglet) *</label>
                       <input
                         type="text"
                         required
@@ -5933,31 +5723,31 @@ export default function SuperAdminDashboard() {
                             slug: editingCategory ? (categoryForm.slug || autoSlug) : autoSlug
                           })
                         }}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Slug URL (Identifiant unique) *</label>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Slug URL (Identifiant unique) *</label>
                       <input
                         type="text"
                         required
                         placeholder="Ex: deepseek"
                         value={categoryForm.slug || ""}
                         onChange={e => setCategoryForm({ ...categoryForm, slug: e.target.value })}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <label className="text-xs font-bold text-slate-300 block mb-1">Ordre d'affichage</label>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Ordre d'affichage</label>
                       <input
                         type="number"
                         value={categoryForm.order_index || 1}
                         onChange={e => setCategoryForm({ ...categoryForm, order_index: parseInt(e.target.value) || 1 })}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                        className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                       />
                     </div>
 
@@ -5969,13 +5759,13 @@ export default function SuperAdminDashboard() {
                         onChange={e => setCategoryForm({ ...categoryForm, is_active: e.target.checked })}
                         className="size-4 rounded accent-primary cursor-pointer"
                       />
-                      <label htmlFor="cat_is_active" className="text-xs font-semibold text-slate-300 cursor-pointer">
+                      <label htmlFor="cat_is_active" className="text-xs font-semibold text-slate-700 cursor-pointer">
                         Activer cet onglet sur le site
                       </label>
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
                     {editingCategory && (
                       <button
                         type="button"
@@ -5983,7 +5773,7 @@ export default function SuperAdminDashboard() {
                           setEditingCategory(null)
                           setCategoryForm({ label: "", slug: "", icon: "sparkles", order_index: formationCategories.length + 1, is_active: true })
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-700 font-bold text-xs hover:bg-slate-200 cursor-pointer"
                       >
                         Annuler la modification
                       </button>
@@ -6005,7 +5795,7 @@ export default function SuperAdminDashboard() {
 
                 {/* Liste des catégories existantes */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Catégories existantes ({formationCategories.length})
                   </h4>
 
@@ -6015,20 +5805,20 @@ export default function SuperAdminDashboard() {
                       return (
                         <div
                           key={c.id || c.slug}
-                          className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-colors"
+                          className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-slate-200 hover:border-slate-700 transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="size-7 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-xs font-mono font-bold text-primary">
+                            <div className="size-7 rounded-lg bg-white border border-slate-200/90 shadow-xs flex items-center justify-center text-xs font-mono font-bold text-primary">
                               {idx + 1}
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-white text-xs">{c.label}</span>
-                                <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded">
+                                <span className="font-bold text-slate-800 text-xs">{c.label}</span>
+                                <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.5 rounded">
                                   /{c.slug}
                                 </span>
                               </div>
-                              <span className="text-[11px] text-slate-400">
+                              <span className="text-[11px] text-slate-500">
                                 {count} formation{count > 1 ? "s" : ""} liée{count > 1 ? "s" : ""}
                               </span>
                             </div>
@@ -6037,13 +5827,13 @@ export default function SuperAdminDashboard() {
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => openEditCategory(c)}
-                              className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200/90 shadow-xs text-slate-700 hover:text-white text-xs font-bold flex items-center gap-1 cursor-pointer"
                             >
                               <Edit3 className="size-3" /> Modifier
                             </button>
                             <button
                               onClick={() => handleDeleteCategory(c)}
-                              className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 hover:bg-rose-500/20 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
                             >
                               <Trash2 className="size-3" /> Supprimer
                             </button>
@@ -6056,11 +5846,11 @@ export default function SuperAdminDashboard() {
 
               </div>
 
-              <div className="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
+              <div className="p-4 border-t border-slate-200/90 bg-white/50 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setShowCategoryModal(false)}
-                  className="px-5 py-2 rounded-xl bg-slate-800 text-slate-200 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-slate-800 text-slate-200 font-bold text-xs hover:bg-slate-200 cursor-pointer"
                 >
                   Fermer
                 </button>
@@ -6071,23 +5861,23 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL GESTION DES TÉMOIGNAGES */}
         {showTestimonialModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
-              <div className="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center shrink-0">
+          <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
+              <div className="p-4 sm:p-6 border-b border-slate-200 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
                     <Quote className="size-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-heading text-sm sm:text-lg font-black text-white truncate">
+                    <h3 className="font-heading text-sm sm:text-lg font-black text-slate-800 truncate">
                       {editingTestimonialId ? "Modifier le Témoignage" : "Nouveau Témoignage"}
                     </h3>
-                    <p className="text-[11px] sm:text-xs text-slate-400">Avis d'apprenant affiché sur le site</p>
+                    <p className="text-[11px] sm:text-xs text-slate-500">Avis d'apprenant affiché sur le site</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowTestimonialModal(false)}
-                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors shrink-0"
+                  className="text-slate-600 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0"
                 >
                   <X className="size-5" />
                 </button>
@@ -6096,26 +5886,26 @@ export default function SuperAdminDashboard() {
               <form onSubmit={handleSaveTestimonial} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Nom & Prénom de l'apprenant *</label>
+                    <label className="text-xs font-bold text-slate-700">Nom & Prénom de l'apprenant *</label>
                     <input
                       type="text"
                       required
                       placeholder="Ex: Jean-Yves OUATTARA"
                       value={testimonialForm.name}
                       onChange={e => setTestimonialForm({ ...testimonialForm, name: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Profession / Titre / Entreprise *</label>
+                    <label className="text-xs font-bold text-slate-700">Profession / Titre / Entreprise *</label>
                     <input
                       type="text"
                       required
                       placeholder="Ex: Expert Gouvernance IT · CISA"
                       value={testimonialForm.role}
                       onChange={e => setTestimonialForm({ ...testimonialForm, role: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
                 </div>
@@ -6134,22 +5924,22 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Texte / Avis du témoignage *</label>
+                  <label className="text-xs font-bold text-slate-700">Texte / Avis du témoignage *</label>
                   <textarea
                     rows={4}
                     required
                     placeholder="Saisissez ici le retour d'expérience complet..."
                     value={testimonialForm.text}
                     onChange={e => setTestimonialForm({ ...testimonialForm, text: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-primary leading-relaxed"
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 leading-relaxed"
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setShowTestimonialModal(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-700 font-bold text-xs hover:bg-slate-200 cursor-pointer"
                   >
                     Annuler
                   </button>
@@ -6173,23 +5963,23 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL ÉDITION INSCRIPTION & PAIEMENT */}
         {showPaymentModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
-              <div className="p-4 sm:p-6 border-b border-slate-800 flex justify-between items-center shrink-0">
+          <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
+              <div className="p-4 sm:p-6 border-b border-slate-200 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
                     <DollarSign className="size-5" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-heading text-sm sm:text-lg font-black text-white truncate">
+                    <h3 className="font-heading text-sm sm:text-lg font-black text-slate-800 truncate">
                       Modifier l'Inscription &amp; Paiement
                     </h3>
-                    <p className="text-[11px] sm:text-xs text-slate-400">Mettez à jour les informations du participant ou de la transaction</p>
+                    <p className="text-[11px] sm:text-xs text-slate-500">Mettez à jour les informations du participant ou de la transaction</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowPaymentModal(false)}
-                  className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors shrink-0"
+                  className="text-slate-600 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-100 transition-colors shrink-0"
                 >
                   <X className="size-5" />
                 </button>
@@ -6199,26 +5989,26 @@ export default function SuperAdminDashboard() {
                 {/* Participant Info */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Nom &amp; Prénom du Participant *</label>
+                    <label className="text-xs font-bold text-slate-700">Nom &amp; Prénom du Participant *</label>
                     <input
                       type="text"
                       required
                       placeholder="Ex: Jean Dupont"
                       value={paymentForm.full_name}
                       onChange={e => setPaymentForm({ ...paymentForm, full_name: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Adresse Email *</label>
+                    <label className="text-xs font-bold text-slate-700">Adresse Email *</label>
                     <input
                       type="email"
                       required
                       placeholder="Ex: jean.dupont@email.com"
                       value={paymentForm.email}
                       onChange={e => setPaymentForm({ ...paymentForm, email: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
                 </div>
@@ -6226,24 +6016,24 @@ export default function SuperAdminDashboard() {
                 {/* WhatsApp & Country */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Numéro WhatsApp (avec indicatif)</label>
+                    <label className="text-xs font-bold text-slate-700">Numéro WhatsApp (avec indicatif)</label>
                     <input
                       type="text"
                       placeholder="Ex: +225 0700000000"
                       value={paymentForm.whatsapp}
                       onChange={e => setPaymentForm({ ...paymentForm, whatsapp: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Pays de résidence</label>
+                    <label className="text-xs font-bold text-slate-700">Pays de résidence</label>
                     <input
                       type="text"
                       placeholder="Ex: CI, BF, SN, FR..."
                       value={paymentForm.country}
                       onChange={e => setPaymentForm({ ...paymentForm, country: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
                 </div>
@@ -6251,22 +6041,22 @@ export default function SuperAdminDashboard() {
                 {/* Amount & Currency */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Montant *</label>
+                    <label className="text-xs font-bold text-slate-700">Montant *</label>
                     <input
                       type="number"
                       required
                       value={paymentForm.amount}
                       onChange={e => setPaymentForm({ ...paymentForm, amount: Number(e.target.value) })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Devise</label>
+                    <label className="text-xs font-bold text-slate-700">Devise</label>
                     <select
                       value={paymentForm.currency}
                       onChange={e => setPaymentForm({ ...paymentForm, currency: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary cursor-pointer"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 cursor-pointer"
                     >
                       <option value="XOF">XOF (FCFA)</option>
                       <option value="EUR">EUR (€)</option>
@@ -6278,35 +6068,35 @@ export default function SuperAdminDashboard() {
                 {/* Method & Ref */}
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Méthode de Paiement</label>
+                    <label className="text-xs font-bold text-slate-700">Méthode de Paiement</label>
                     <input
                       type="text"
                       placeholder="Ex: Wave, Orange Money, Moov, Carte..."
                       value={paymentForm.method}
                       onChange={e => setPaymentForm({ ...paymentForm, method: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Référence de Transaction</label>
+                    <label className="text-xs font-bold text-slate-700">Référence de Transaction</label>
                     <input
                       type="text"
                       placeholder="Ex: TX-984729"
                       value={paymentForm.transaction_ref}
                       onChange={e => setPaymentForm({ ...paymentForm, transaction_ref: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white font-mono outline-none focus:border-primary"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono outline-none focus:border-primary placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 {/* Status */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Statut du Paiement &amp; Accès *</label>
+                  <label className="text-xs font-bold text-slate-700">Statut du Paiement &amp; Accès *</label>
                   <select
                     value={paymentForm.status}
                     onChange={e => setPaymentForm({ ...paymentForm, status: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-primary cursor-pointer"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 cursor-pointer"
                   >
                     <option value="pending_verification">À vérifier (Virement soumis en attente de vérification)</option>
                     <option value="confirmed">Confirmé (Accès activé &amp; Payé)</option>
@@ -6315,11 +6105,11 @@ export default function SuperAdminDashboard() {
                   </select>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
                   <button
                     type="button"
                     onClick={() => setShowPaymentModal(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs hover:bg-slate-700 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-700 font-bold text-xs hover:bg-slate-200 cursor-pointer"
                   >
                     Annuler
                   </button>

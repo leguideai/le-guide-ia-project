@@ -109,8 +109,8 @@ function formatPriceNum(num: number): string {
 function FormationsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [formations, setFormations] = useState<FormationItem[]>(DEFAULT_FORMATIONS)
-  const [categories, setCategories] = useState<FormationCategory[]>(DEFAULT_FORMATION_CATEGORIES)
+  const [formations, setFormations] = useState<FormationItem[]>([])
+  const [categories, setCategories] = useState<FormationCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [userEnrollments, setUserEnrollments] = useState<string[]>([])

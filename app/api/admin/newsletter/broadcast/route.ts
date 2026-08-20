@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       recipientEmails, 
       includePlatformMembers = false,
       isTest = false,
-      testEmail = "alfred@leguideai.com"
+      testEmail = ""
     } = await req.json()
 
     if (!subject || !bodyHtml) {
@@ -33,7 +33,10 @@ export async function POST(req: Request) {
     let targetEmails: string[] = []
 
     if (isTest) {
-      targetEmails = [testEmail || "alfred@leguideai.com"]
+      if (!testEmail) {
+        return NextResponse.json({ message: "Veuillez renseigner une adresse email de test." }, { status: 400 })
+      }
+      targetEmails = [testEmail.toLowerCase().trim()]
     } else if (recipientEmails && Array.isArray(recipientEmails) && recipientEmails.length > 0) {
       targetEmails = Array.from(new Set(recipientEmails.map((e: string) => e.toLowerCase().trim()).filter(Boolean)))
     } else {

@@ -31,46 +31,16 @@ export function UdemyTrustLogos() {
     loadTools()
   }, [])
 
-  const defaultTools = [
-    {
-      pillar: "models",
-      pillarLabel: "Modèles IA & Raisonnement",
-      name: "ChatGPT (OpenAI)",
-      role: "Génération de texte, Prompt Engineering avancé, Personas & Assistants sur-mesure.",
-      icon: "🤖",
-      image: "/images/tools/chatgpt.png",
-      gradient: "from-blue-600/10 via-primary/5 to-transparent"
-    },
-    {
-      pillar: "models",
-      pillarLabel: "Modèles IA & Raisonnement",
-      name: "Claude (Anthropic)",
-      role: "Rédaction complexe, analyse fine de documents, logique stratégique & synthèses.",
-      icon: "🧠",
-      image: "/images/tools/claude.png",
-      gradient: "from-purple-500/10 via-purple-500/5 to-transparent"
-    },
-    {
-      pillar: "models",
-      pillarLabel: "Modèles IA & Raisonnement",
-      name: "Google Gemini",
-      role: "Traitement multimodal, analyse d'images & intégration écosystème Workspace.",
-      icon: "💎",
-      image: "/images/tools/gemini.png",
-      gradient: "from-sky-500/10 via-sky-500/5 to-transparent"
-    }
-  ]
-
   const pillars = [
     {
       id: "all",
       label: "Tous les Piliers",
       icon: Sparkles,
-      count: `${dbTools.length > 0 ? dbTools.length : 6} Outils`
+      count: `${dbTools.length} Outils`
     }
   ]
 
-  const toolArchitecture = dbTools.length > 0 ? dbTools.map((t: any) => ({
+  const toolArchitecture = dbTools.map((t: any) => ({
     pillar: "models",
     pillarLabel: t.category || "Outil IA",
     name: t.name,
@@ -78,7 +48,7 @@ export function UdemyTrustLogos() {
     icon: t.icon || "⚡",
     image: t.image || "/images/tools/chatgpt.png",
     gradient: "from-primary/10 via-primary/5 to-transparent"
-  })) : defaultTools
+  }))
 
   const filteredTools = activePillar === "all" ? toolArchitecture : toolArchitecture.filter(t => t.pillar === activePillar)
 

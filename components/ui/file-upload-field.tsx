@@ -116,14 +116,14 @@ export function FileUploadField({
   }
 
   return (
-    <div className="space-y-2">
-      <label className="text-xs font-bold text-slate-300 block">{label}</label>
+    <div className="space-y-2 text-left">
+      <label className="text-xs font-bold text-slate-700 block">{label}</label>
 
       {/* Upload Button */}
       <label className={`flex items-center justify-center gap-2 w-full border border-dashed rounded-xl px-3 py-2.5 text-xs font-bold cursor-pointer transition-all ${
         uploading
-          ? "bg-slate-800/60 text-slate-500 border-slate-700 cursor-not-allowed"
-          : "bg-slate-800/40 hover:bg-slate-700/60 text-slate-300 hover:text-white border-slate-700 hover:border-primary/50"
+          ? "bg-slate-100 text-slate-400 border-slate-300 cursor-not-allowed"
+          : "bg-[#F4F6F8] hover:bg-slate-200/70 text-slate-700 hover:text-slate-900 border-slate-300 hover:border-primary/60"
       }`}>
         {uploading ? (
           <>
@@ -148,7 +148,7 @@ export function FileUploadField({
 
       {/* URL Input */}
       <div className="relative flex items-center gap-2">
-        <div className="absolute left-3 text-slate-500">
+        <div className="absolute left-3 text-slate-400">
           {icon}
         </div>
         <input
@@ -156,17 +156,17 @@ export function FileUploadField({
           placeholder={placeholder}
           value={value || ""}
           onChange={e => onChange(e.target.value)}
-          className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-16 py-2 text-white outline-none focus:border-primary font-mono text-[11px] placeholder:text-slate-600"
+          className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-16 py-2 text-slate-800 outline-none focus:border-primary font-mono text-[11px] placeholder:text-slate-400 shadow-2xs"
         />
         <div className="absolute right-2 flex items-center gap-1">
           {value && (
             <>
               {(isImage || value.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i)) && (
-                <a href={value} target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-primary transition-colors" title="Voir l'image">
+                <a href={value} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-primary transition-colors" title="Voir l'image">
                   <ExternalLink className="size-3.5" />
                 </a>
               )}
-              <button type="button" onClick={handleClear} className="text-slate-500 hover:text-red-400 transition-colors" title="Effacer">
+              <button type="button" onClick={handleClear} className="text-slate-400 hover:text-red-500 transition-colors cursor-pointer" title="Effacer">
                 <X className="size-3.5" />
               </button>
             </>
@@ -176,7 +176,7 @@ export function FileUploadField({
 
       {/* Error */}
       {error && (
-        <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[11px] text-red-400 flex items-start gap-1.5 leading-snug">
+        <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-[11px] text-red-700 flex items-start gap-1.5 leading-snug">
           <AlertCircle className="size-4 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
@@ -189,14 +189,14 @@ export function FileUploadField({
 
       {/* Image Preview */}
       {preview === "image" && value && value.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i) && (
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-200 bg-[#F4F6F8]">
           <img
             src={value}
             alt="Aperçu"
             className="w-full h-full object-contain"
             onError={e => { (e.target as HTMLImageElement).style.display = "none" }}
           />
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-black/60 transition-opacity">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 bg-slate-900/60 backdrop-blur-xs transition-opacity">
             <a href={value} target="_blank" rel="noopener noreferrer" className="text-white text-xs font-bold flex items-center gap-1">
               <ExternalLink className="size-3.5" /> Voir en plein écran
             </a>
@@ -206,9 +206,9 @@ export function FileUploadField({
 
       {/* File Preview (non-image) */}
       {preview !== "image" && value && (
-        <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+        <div className="flex items-center gap-2 bg-[#F4F6F8] border border-slate-200 rounded-xl px-3 py-2">
           {icon}
-          <span className="text-[11px] text-slate-400 font-mono truncate flex-1">{value.split("/").pop()}</span>
+          <span className="text-[11px] text-slate-600 font-mono truncate flex-1">{value.split("/").pop()}</span>
           <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary text-[10px] font-bold hover:underline flex items-center gap-1">
             <ExternalLink className="size-3" /> Ouvrir
           </a>

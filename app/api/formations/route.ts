@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
-import { DEFAULT_FORMATIONS, DEFAULT_FORMATION_CATEGORIES, FormationItem, FormationCategory } from "@/lib/formations-data"
+import { FormationItem, FormationCategory } from "@/lib/formations-data"
 
 export const dynamic = "force-dynamic"
 
@@ -39,10 +39,6 @@ export async function GET() {
       } catch (e) {}
     }
 
-    if (formationsList.length === 0) {
-      formationsList = DEFAULT_FORMATIONS
-    }
-
     // 2. Lire Catégories
     try {
       const { data: dbCategories } = await supabaseServer
@@ -73,10 +69,6 @@ export async function GET() {
       } catch (e) {}
     }
 
-    if (categoriesList.length === 0) {
-      categoriesList = DEFAULT_FORMATION_CATEGORIES
-    }
-
     return NextResponse.json({
       success: true,
       formations: formationsList,
@@ -85,8 +77,8 @@ export async function GET() {
   } catch (error: any) {
     return NextResponse.json({
       success: true,
-      formations: DEFAULT_FORMATIONS,
-      categories: DEFAULT_FORMATION_CATEGORIES,
+      formations: [],
+      categories: [],
       error: error.message
     })
   }

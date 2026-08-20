@@ -130,6 +130,29 @@ CREATE TABLE IF NOT EXISTS public.ai_tools (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- I. TABLE SITE_VISITS (ANALYTICS & AUDIENCE TRACKING)
+CREATE TABLE IF NOT EXISTS public.site_visits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  path TEXT NOT NULL DEFAULT '/',
+  full_path TEXT,
+  visitor_id TEXT NOT NULL,
+  session_id TEXT,
+  device_type TEXT DEFAULT 'desktop',
+  referrer TEXT,
+  user_agent TEXT,
+  country TEXT,
+  ip TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_created_at ON public.site_visits(created_at);
+CREATE INDEX IF NOT EXISTS idx_site_visits_path ON public.site_visits(path);
+CREATE INDEX IF NOT EXISTS idx_site_visits_visitor_id ON public.site_visits(visitor_id);
+
+ALTER TABLE public.site_visits ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public insert to site_visits" ON public.site_visits FOR INSERT TO anon, authenticated WITH CHECK (true);
+CREATE POLICY "Allow admin read site_visits" ON public.site_visits FOR SELECT TO anon, authenticated USING (true);
+
 -- Table 6: LIVE_SESSIONS (Directs Google Meet & Liens WhatsApp)
 CREATE TABLE IF NOT EXISTS public.live_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

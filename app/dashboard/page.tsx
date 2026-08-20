@@ -622,227 +622,32 @@ export default function DashboardPage() {
       })
     }
 
-    // Default 7-day schedule for both bootcamps if DB sessions not yet populated
-    if (evs.length === 0) {
-      const carriereCourse = dbCourses.find((c: any) => c.slug === "bootcamp-pro-2" || c.id === "bootcamp-pro-2")
-      const businessCourse = dbCourses.find((c: any) => c.slug === "bootcamp-business-exec" || c.id === "bootcamp-business-exec")
-
-      const defaultScheduleCarriere = [
-        { day: "2026-08-31", num: 1, title: "Session 1 : Les Fondations de l'IA & Prompt Engineering Avancé" },
-        { day: "2026-09-01", num: 2, title: "Session 2 : Maîtrise de Claude 3.5 Sonnet & ChatGPT 4o" },
-        { day: "2026-09-02", num: 3, title: "Session 3 : Analyse de Documents & Synthèse Stratégique" },
-        { day: "2026-09-03", num: 4, title: "Session 4 : Création de Contenus & Visuels Pro (Midjourney & Flux)" },
-        { day: "2026-09-04", num: 5, title: "Session 5 : Automatisation des Tâches avec Make & n8n" },
-        { day: "2026-09-05", num: 6, title: "Session 6 : Assistants Personnalisés & GPTs Métiers" },
-        { day: "2026-09-06", num: 7, title: "Session 7 : Projet Final, Audit IA & Remise des Certificats" },
-      ]
-
-      defaultScheduleCarriere.forEach(s => {
-        evs.push({
-          id: `carriere-s${s.num}`,
-          courseId: "bootcamp-pro-2",
-          courseSlug: "bootcamp-pro-2",
-          courseTitle: carriereCourse?.title || "Bootcamp IA & Carrière",
-          track: "carriere",
-          sessionNumber: s.num,
-          title: s.title,
-          description: "Cours interactif en direct avec exercices d'application pratique et coaching personnalisé.",
-          date: s.day,
+    // Inject Upcoming Official Bootcamp Cohort Launch Dates dynamically from courses
+    const upcomingCohorts = dbCourses
+      .filter((c: any) => c.start_date)
+      .map((c: any) => {
+        const isBusiness = Number(c.price) >= 140000 || String(c.slug || "").includes("business") || String(c.title || "").toLowerCase().includes("business")
+        const dateStr = String(c.start_date).split("T")[0]
+        return {
+          id: `cohort-${c.id || c.slug}-${dateStr}`,
+          courseId: c.id || c.slug,
+          courseSlug: c.slug,
+          courseTitle: c.title,
+          track: isBusiness ? ("business" as const) : ("carriere" as const),
+          eventType: "bootcamp_launch" as const,
+          cohortName: `Cohorte ${dateStr}`,
+          title: `🚀 Rentrée Officielle — ${c.title}`,
+          description: c.subtitle || "Lancement officiel de la cohorte.",
+          date: dateStr,
+          duration: `${c.session_count || 7} Jours Intensifs`,
           startTime: "19:00",
           endTime: "21:00",
-          instructor: carriereCourse?.instructor || "Alfred Dah (Auditeur CISA)",
-          meetUrl: carriereCourse?.live_meet_url || "https://meet.google.com",
-          whatsappUrl: carriereCourse?.whatsapp_url || "https://wa.me/22605050577",
-          status: "upcoming"
-        })
+          instructor: c.instructor || "Alfred Dah",
+          meetUrl: c.live_meet_url || "https://meet.google.com",
+          whatsappUrl: c.whatsapp_url || "https://wa.me/22605050577",
+          status: "upcoming" as const
+        }
       })
-
-      const defaultScheduleBusiness = [
-        { day: "2026-08-31", num: 1, title: "Session 1 : IA Stratégique pour Dirigeants & Managers" },
-        { day: "2026-09-01", num: 2, title: "Session 2 : Automatisation des Processus Métiers & Réduction des Coûts" },
-        { day: "2026-09-02", num: 3, title: "Session 3 : IA & Productivité d'Équipe (Management & RH)" },
-        { day: "2026-09-03", num: 4, title: "Session 4 : Gouvernance, Cybersécurité & Audit IA (CISA)" },
-        { day: "2026-09-04", num: 5, title: "Session 5 : Intégration de Workflows IA Entreprise" },
-        { day: "2026-09-05", num: 6, title: "Session 6 : Masterclass Exclusive & Cas d'Usage Grands Comptes" },
-        { day: "2026-09-06", num: 7, title: "Session 7 : Plan de Transformation IA & Certificat Exécutif" },
-      ]
-
-      defaultScheduleBusiness.forEach(s => {
-        evs.push({
-          id: `business-s${s.num}`,
-          courseId: "bootcamp-business-exec",
-          courseSlug: "bootcamp-business-exec",
-          courseTitle: businessCourse?.title || "Bootcamp IA & Business (Exclusive Managers)",
-          track: "business",
-          sessionNumber: s.num,
-          title: s.title,
-          description: "Accompagnement VIP de haut niveau pour dirigeants, entrepreneurs et décideurs.",
-          date: s.day,
-          startTime: "19:00",
-          endTime: "21:00",
-          instructor: businessCourse?.instructor || "Alfred Dah (Auditeur CISA)",
-          meetUrl: businessCourse?.live_meet_url || "https://meet.google.com",
-          whatsappUrl: businessCourse?.whatsapp_url || "https://wa.me/22605050577",
-          status: "upcoming"
-        })
-      })
-    }
-
-    // Inject Upcoming Official Bootcamp Cohort Launch Dates (Rentrées officielles)
-    const upcomingCohorts = [
-      {
-        id: "cohort-carriere-2026-08-31",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte 31 Août 2026",
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 31 Août)",
-        description: "Lancement officiel de la cohorte intensive de 7 jours. Démarrage des masterclasses interactives, coaching direct sur Google Meet et remise des accès aux ressources privées.",
-        date: "2026-08-31",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA, Expert IA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-business-2026-08-31",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte 31 Août 2026",
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 31 Août)",
-        description: "Lancement de la cohorte exécutive de 7 jours. Stratégies IA pour décideurs, automatisation de flux de travail, gouvernance & cybersécurité.",
-        date: "2026-08-31",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-carriere-2026-09-14",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte Mi-Septembre 2026",
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 14 Septembre)",
-        description: "Nouvelle session intensive de 7 jours pour professionnels et consultants. Maîtrise des LLMs, Make, n8n et assistants spécialisés.",
-        date: "2026-09-14",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-business-2026-09-14",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte Mi-Septembre 2026",
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 14 Septembre)",
-        description: "Programme d'accompagnement accéléré pour chefs d'entreprises et cadres supérieurs.",
-        date: "2026-09-14",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-carriere-2026-09-28",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte Fin-Septembre 2026",
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 28 Septembre)",
-        description: "Rentrée d'automne du Bootcamp Carrière. 7 jours d'immersion pratique.",
-        date: "2026-09-28",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-business-2026-09-28",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte Fin-Septembre 2026",
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 28 Septembre)",
-        description: "Cohorte de fin septembre pour dirigeants et décideurs d'entreprise.",
-        date: "2026-09-28",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-carriere-2026-10-12",
-        courseId: "bootcamp-pro-2",
-        courseSlug: "bootcamp-pro-2",
-        courseTitle: "Bootcamp IA & Carrière",
-        track: "carriere" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte Octobre 2026",
-        title: "🚀 Rentrée Officielle — Bootcamp IA & Carrière (Cohorte 12 Octobre)",
-        description: "Cohorte d'octobre 2026 du Bootcamp Carrière.",
-        date: "2026-10-12",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      },
-      {
-        id: "cohort-business-2026-10-12",
-        courseId: "bootcamp-business-exec",
-        courseSlug: "bootcamp-business-exec",
-        courseTitle: "Bootcamp IA & Business (Exclusive Managers)",
-        track: "business" as const,
-        eventType: "bootcamp_launch" as const,
-        cohortName: "Cohorte Octobre 2026",
-        title: "💎 🚀 Rentrée Officielle — Exclusive Managers & Dirigeants (Cohorte 12 Octobre)",
-        description: "Cohorte d'octobre pour dirigeants et décideurs d'entreprise.",
-        date: "2026-10-12",
-        duration: "7 Jours Intensifs",
-        startTime: "19:00",
-        endTime: "21:00",
-        instructor: "Alfred Dah (Auditeur CISA)",
-        meetUrl: "https://meet.google.com",
-        whatsappUrl: "https://wa.me/22605050577",
-        status: "upcoming" as const
-      }
-    ]
 
     // Combine cohort launch dates with session events (avoiding duplicates)
     const combined = [...upcomingCohorts, ...evs]

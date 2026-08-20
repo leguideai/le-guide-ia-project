@@ -3,22 +3,23 @@ import { supabaseServer } from "@/lib/supabase-server"
 
 export const dynamic = "force-dynamic"
 
-const DEFAULT_SETTINGS = {
-  announcement_text: "BOOTCAMP IA PRO 2 — Direct Live du 31 Août au 6 Septembre 2026. Inscriptions ouvertes !",
-  announcement_cta: "Réserver ma place (149 000 FCFA) →",
-  vsl_youtube_url: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1",
-  hero_badge: "CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL",
-  hero_title: "Maîtrisez l'IA. Transformez votre carrière et votre business.",
-  hero_subtitle: "Formation intensive en ligne · 100% en français · Cas africains & diaspora. Apprenez à maîtriser ChatGPT, Claude, Gemini, Perplexity, NotebookLM, Make et n8n avec Alfred Dah.",
-  hero_dates: "31 Août – 6 Sept 2026",
-  hero_time: "19h00 GMT",
-  hero_format: "🌍 100% En ligne",
-  hero_sessions: "🎓 7 Sessions intensives",
-  hero_promo_price: "149,900 F CFA",
-  hero_normal_price: "250,000 F CFA",
-  whatsapp_number: "+226 0505 0577",
-  hero_poster_url: "/images/bootcamp_pro_poster.jpg",
-  hero_programme_url: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+const EMPTY_SETTINGS: Record<string, string> = {
+  announcement_text: "",
+  announcement_cta: "",
+  vsl_youtube_url: "",
+  vsl_videos_pool: "",
+  hero_badge: "",
+  hero_title: "",
+  hero_subtitle: "",
+  hero_dates: "",
+  hero_time: "",
+  hero_format: "",
+  hero_sessions: "",
+  hero_promo_price: "",
+  hero_normal_price: "",
+  whatsapp_number: "",
+  hero_poster_url: "",
+  hero_programme_url: ""
 }
 
 export async function GET() {
@@ -28,20 +29,20 @@ export async function GET() {
       .select("*")
 
     if (error || !data || data.length === 0) {
-      return NextResponse.json({ settings: DEFAULT_SETTINGS })
+      return NextResponse.json({ settings: EMPTY_SETTINGS })
     }
 
     // Convert array of key-value pairs to object
-    const settingsObj: Record<string, string> = { ...DEFAULT_SETTINGS }
+    const settingsObj: Record<string, string> = { ...EMPTY_SETTINGS }
     data.forEach((row: { key: string; value: string }) => {
-      if (row.key && row.value) {
+      if (row.key && row.value !== undefined && row.value !== null) {
         settingsObj[row.key] = row.value
       }
     })
 
     return NextResponse.json({ settings: settingsObj })
   } catch (err: any) {
-    return NextResponse.json({ settings: DEFAULT_SETTINGS })
+    return NextResponse.json({ settings: EMPTY_SETTINGS })
   }
 }
 

@@ -21,8 +21,8 @@ function formatPriceNum(num: number): string {
 
 export function UdemyTabbedCourses() {
   const [activeTab, setActiveTab] = useState<string>("all")
-  const [formations, setFormations] = useState<FormationItem[]>(DEFAULT_FORMATIONS)
-  const [categories, setCategories] = useState<FormationCategory[]>(DEFAULT_FORMATION_CATEGORIES)
+  const [formations, setFormations] = useState<FormationItem[]>([])
+  const [categories, setCategories] = useState<FormationCategory[]>([])
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

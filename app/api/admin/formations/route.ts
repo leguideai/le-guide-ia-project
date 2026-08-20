@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
-import { DEFAULT_FORMATIONS, DEFAULT_FORMATION_CATEGORIES, FormationItem, FormationCategory } from "@/lib/formations-data"
+import { FormationItem, FormationCategory } from "@/lib/formations-data"
 
 export const dynamic = "force-dynamic"
 
@@ -63,11 +63,6 @@ async function getCategoriesList(): Promise<FormationCategory[]> {
     } catch (e) {}
   }
 
-  if (categoriesList.length === 0) {
-    categoriesList = [...DEFAULT_FORMATION_CATEGORIES]
-    await updateCategoriesMirror(categoriesList)
-  }
-
   return categoriesList
 }
 
@@ -104,12 +99,6 @@ export async function GET() {
           }
         }
       } catch (e) {}
-    }
-
-    // 3. Si toujours vide, initialiser avec DEFAULT_FORMATIONS
-    if (formationsList.length === 0) {
-      formationsList = [...DEFAULT_FORMATIONS]
-      await updateSettingsMirror(formationsList)
     }
 
     const categoriesList = await getCategoriesList()
@@ -244,9 +233,6 @@ export async function POST(req: Request) {
       } catch (e) {}
     }
 
-    if (currentList.length === 0) {
-      currentList = [...DEFAULT_FORMATIONS]
-    }
 
     // ACTION: SAVE (Create or Update Formation)
     if (action === "save") {
@@ -267,23 +253,19 @@ export async function POST(req: Request) {
         badge: formation.badge || "Nouveau",
         tool_icon: formation.tool_icon || "chatgpt",
         category_slug: formation.category_slug || formation.tool_icon || "chatgpt",
-        thumbnail: formation.thumbnail || "/images/formation_claude_thumb.jpg",
-        instructor: formation.instructor || "Alfred Dah · Expert IA & Productivité",
-        rating: formation.rating || 4.9,
-        reviews_count: formation.reviews_count || "150+ avis",
-        duration: formation.duration || "10h de vidéo",
-        modules_count: formation.modules_count || "20 leçons",
-        prompts_count: formation.prompts_count || "100+ prompts",
-        price: Number(formation.price) || 39000,
-        original_price: formation.original_price || "69 000 FCFA",
+        thumbnail: formation.thumbnail || "",
+        instructor: formation.instructor || "Alfred Dah",
+        rating: formation.rating || 5,
+        reviews_count: formation.reviews_count || "",
+        duration: formation.duration || "",
+        modules_count: formation.modules_count || "",
+        prompts_count: formation.prompts_count || "",
+        price: Number(formation.price) || 0,
+        original_price: formation.original_price || "",
         currency: formation.currency || "FCFA",
         features: Array.isArray(formation.features) ? formation.features : [],
         stats: Array.isArray(formation.stats) ? formation.stats : [],
-        testimonial: formation.testimonial || {
-          quote: "Une formation claire et directement applicable.",
-          author_name: "Apprenant Vérifié",
-          rating: 5
-        },
+        testimonial: formation.testimonial || undefined,
         video_preview_url: formation.video_preview_url || "",
         order_index: formation.order_index ?? currentList.length + 1,
         is_active: formation.is_active !== false,

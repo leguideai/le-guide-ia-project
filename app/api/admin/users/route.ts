@@ -75,8 +75,8 @@ export async function POST(req: Request) {
 
       const courseId = courseData?.id || null
       const courseSlugFinal = courseData?.slug || courseSlug
-      const courseTitle = courseTitleOverride || courseData?.title || (courseSlug === "bootcamp-business-exec" ? "Bootcamp IA Business Exec" : "Formation IA")
-      const amountNum = amountPaidOverride ? Number(amountPaidOverride) : (courseData?.price ? parseInt(String(courseData.price).replace(/\D/g, "")) : 39000)
+      const courseTitle = courseTitleOverride || courseData?.title || courseSlug
+      const amountNum = amountPaidOverride ? Number(amountPaidOverride) : (courseData?.price ? parseInt(String(courseData.price).replace(/\D/g, "")) : 0)
 
       // 2. Look up or Create Auth User in Supabase Auth
       let authUserId: string | null = null
