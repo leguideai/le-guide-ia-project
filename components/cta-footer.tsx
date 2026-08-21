@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { motion } from "motion/react"
 import { Mail, CheckCircle2 } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
+import { usePromoStatus } from "@/lib/use-promo"
 
 const socials = [
   {
@@ -26,33 +26,9 @@ const socials = [
 ]
 
 function InlineCountdown() {
-  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 })
-  const [expired, setExpired] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const { isExpired, timeLeft, mounted } = usePromoStatus()
 
-  useEffect(() => {
-    setMounted(true)
-    const updateCountdown = () => {
-      const now = new Date().getTime()
-      const distance = targetDate - now
-
-      if (distance < 0) {
-        setExpired(true)
-      } else {
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-        setTimeLeft({ days, hours, minutes })
-      }
-    }
-
-    updateCountdown()
-    const timer = setInterval(updateCountdown, 1000)
-    return () => clearInterval(timer)
-  }, [targetDate])
-
-  if (!mounted || expired) return null
+  if (!mounted || isExpired) return null
 
   return (
     <span className="text-amber-500 font-bold ml-1">
@@ -63,6 +39,13 @@ function InlineCountdown() {
 
 export function CtaFooter() {
   const { t } = useLanguage()
+  const { isExpired, mounted } = usePromoStatus()
+  const promoActive = mounted ? !isExpired : true
+
+  const waMessage = promoActive
+    ? "Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (Offre Promo - 99 000 FCFA) et valider mon paiement."
+    : "Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (149 000 FCFA) et valider mon paiement."
+
   const links = [
     { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf" },
     { label: t("nav.audience"), href: "/#audience" },
@@ -109,7 +92,7 @@ export function CtaFooter() {
               
               <div className="mt-8">
                 <a
-                  href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (Offre Promo - 99 000 FCFA) et valider mon paiement.")}`}
+                  href={`https://wa.me/22605050577?text=${encodeURIComponent(waMessage)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
@@ -121,8 +104,10 @@ export function CtaFooter() {
                 </a>
                 
                 <div className="mt-4 text-xs text-slate-300 flex flex-wrap gap-2 items-center">
-                  <span className="font-bold text-white">{t("ctaFooter.founderPrice")}</span>
-                  <InlineCountdown />
+                  <span className="font-bold text-white">
+                    {promoActive ? t("ctaFooter.founderPrice") : (t("ctaFooter.standardPrice") || "149 000 FCFA · Tarif Normal")}
+                  </span>
+                  {promoActive && <InlineCountdown />}
                 </div>
 
                 {/* Checklist Badges */}

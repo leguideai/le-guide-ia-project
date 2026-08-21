@@ -7,40 +7,15 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
 
+import { usePromoStatus } from "@/lib/use-promo"
+
 function CountdownTimer() {
   const { t } = useLanguage()
-  // Target date is August 20, 2026 at 23:59:59 GMT
-  const targetDate = new Date("2026-08-20T23:59:59Z").getTime()
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-  const [expired, setExpired] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-    const updateCountdown = () => {
-      const now = new Date().getTime()
-      const distance = targetDate - now
-
-      if (distance < 0) {
-        setExpired(true)
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-      } else {
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000)
-        setTimeLeft({ days, hours, minutes, seconds })
-      }
-    }
-
-    updateCountdown()
-    const timer = setInterval(updateCountdown, 1000)
-    return () => clearInterval(timer)
-  }, [targetDate])
+  const { isExpired, timeLeft, mounted } = usePromoStatus()
 
   if (!mounted) return null
 
-  if (expired) {
+  if (isExpired) {
     return (
       <div className="mt-6 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center font-heading text-sm font-bold text-destructive">
         L'offre promo à 99 000 FCFA / 174 USD est expirée.
@@ -81,13 +56,19 @@ function CountdownTimer() {
 
 export function Hero() {
   const { t } = useLanguage()
+  const { isExpired, mounted } = usePromoStatus()
+  const promoActive = mounted ? !isExpired : true
 
   const badges = t("hero.badges") || []
+
+  const waMessage = promoActive
+    ? "Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (Offre Promo - 99 000 FCFA / environ 174 $  ) et procéder au paiement."
+    : "Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (149 000 FCFA / environ 262 USD) et procéder au paiement."
 
   const ctaButtons = (
     <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center w-full justify-center">
       <a
-        href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite rejoindre le Bootcamp IA & Carrière (Offre Promo - 99 000 FCFA / environ 174 $  ) et procéder au paiement.")}`}
+        href={`https://wa.me/22605050577?text=${encodeURIComponent(waMessage)}`}
         target="_blank"
         rel="noopener noreferrer"
         className={cn(

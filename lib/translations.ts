@@ -115,15 +115,23 @@ export const translations: Record<string, any> = {
       title: "Choisissez votre accès au Bootcamp IA & Carrière",
       founderCard: {
         badge: "🏅 OFFRE PROMO",
+        badgeExpired: "⛔ OFFRE EXPIRÉE",
         priceFcfa: "99 000 FCFA",
         priceUsd: "174 $",
-        expireLabel: "⏳ Offre promo expire le 20 août 2026 à minuit GMT"
+        expireLabel: "⏳ Offre promo expire le 20 août 2026 à minuit GMT",
+        expiredNotice: "Offre promo expirée depuis le 20 août 2026 à minuit GMT",
+        buttonText: "Profiter du Tarif Promo",
+        buttonExpiredText: "Offre expirée — Non disponible"
       },
       standardCard: {
         badge: "PRIX NORMAL",
+        badgeActive: "🏅 PRIX ACTUEL",
         priceFcfa: "149 000 FCFA",
         priceUsd: "262 $",
-        dateLabel: "À partir du 21 Août 2026"
+        dateLabel: "À partir du 21 Août 2026",
+        activeLabel: "✨ Tarif en vigueur",
+        buttonText: "Choisir l'accès normal",
+        buttonActiveText: "Réserver mon accès au Bootcamp"
       },
       features: [
         "6 sessions pratiques en direct",
@@ -275,21 +283,9 @@ export const translations: Record<string, any> = {
       ctaPro: "Je rejoins le Bootcamp IA & Carrière",
       ctaContact: "Nous contacter",
       founderPrice: "99 000 FCFA · Offre Promo",
+      standardPrice: "149 000 FCFA · Tarif Normal",
       footerNote: "Le futur appartient à ceux qui se préparent avant les autres.",
       rights: "© {year} Le Guide IA. Tous droits réservés.",
-    },
-    testimonials: {
-      tag: "Témoignages",
-      title: "Ce qu'en disent les participants",
-      desc: "Des retours d'expérience concrets d'élèves ayant suivi nos formations précédentes.",
-      items: [
-        { name: "Moussa", country: "Sénégal", role: "Entrepreneur", text: "Le Guide IA a changé ma perception de l'IA. J'ai automatisé 80% de mon service client sur WhatsApp et économisé des heures de travail quotidien.", image: "/moussa.jpg" },
-        { name: "Fatoumata", country: "Côte d'Ivoire", role: "Responsable RH", text: "Grâce aux exercices de prompting sur Claude et ChatGPT, j'ai réécrit toutes les fiches de poste de mon service en une après-midi. Impressionnant !", image: "/fatoumata.jpg" },
-        { name: "Amadou", country: "Burkina Faso", role: "Consultant", text: "Ce bootcamp est très différent des formations théoriques gratuites. Les exemples s'adaptent réellement à nos connexions, nos cas locaux et notre environnement professionnel.", image: "/amadou.jpg" },
-        { name: "Sarah", country: "France (Diaspora)", role: "Chercheuse d'emploi", text: "J'ai optimisé mon CV et mon profil LinkedIn avec la méthode d'Alfred. J'ai été contactée par deux recruteurs en moins d'une semaine après la mise à jour.", image: "/sarah.jpg" },
-        { name: "Jean-Pierre", country: "Cameroun", role: "Développeur d'affaires", text: "Le module sur la rédaction d'e-mails et de rapports professionnels est une pépite. Mes propositions commerciales sont plus percutantes.", image: "/jeanpierre.jpg" },
-        { name: "Awa", country: "Mali", role: "Étudiante", text: "Je me sens armée pour mon entrée sur le marché du travail. Le certificat Le Guide IA est déjà fièrement affiché sur mon profil LinkedIn.", image: "/awa.jpg" }
-      ]
     },
     services: {
       tag: "Prestations Sur-Mesure",
@@ -521,15 +517,23 @@ export const translations: Record<string, any> = {
       title: "Choose your access to Bootcamp IA & Carrière",
       founderCard: {
         badge: "🏅 PROMO OFFER",
+        badgeExpired: "⛔ EXPIRED OFFER",
         priceFcfa: "99,000 FCFA",
         priceUsd: "174 $",
-        expireLabel: "⏳ Promo offer expires August 20, 2026 at midnight GMT"
+        expireLabel: "⏳ Promo offer expires August 20, 2026 at midnight GMT",
+        expiredNotice: "Promo offer expired since August 20, 2026 at midnight GMT",
+        buttonText: "Get Promo Rate",
+        buttonExpiredText: "Offer expired — Unavailable"
       },
       standardCard: {
         badge: "NORMAL PRICE",
+        badgeActive: "🏅 CURRENT PRICE",
         priceFcfa: "149,000 FCFA",
         priceUsd: "262 $",
-        dateLabel: "Starting August 21, 2026"
+        dateLabel: "Starting August 21, 2026",
+        activeLabel: "✨ Current active rate",
+        buttonText: "Choose normal access",
+        buttonActiveText: "Book my access to Bootcamp"
       },
       features: [
         "6 live practical sessions",
@@ -682,6 +686,8 @@ export const translations: Record<string, any> = {
       desc: "AI won't wait until you're ready. But you can decide today to get seriously trained. Join the Bootcamp IA & Carrière to master the essential tools for your success.",
       ctaPro: "Join the Bootcamp IA & Carrière",
       ctaContact: "Contact us",
+      founderPrice: "99,000 FCFA · Promo Offer",
+      standardPrice: "149,000 FCFA · Normal Rate",
       footerNote: "The future belongs to those who prepare before others.",
       rights: "© {year} Le Guide IA. All rights reserved.",
     },
