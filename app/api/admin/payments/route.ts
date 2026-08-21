@@ -40,8 +40,59 @@ export async function GET() {
       return NextResponse.json({ success: true, payments: joined })
     }
 
-    const filtered = (payments || []).filter(p => !(p.method === "stripe" && p.status === "pending"))
-    return NextResponse.json({ success: true, payments: filtered })
+    // Auto-heal any unlinked confirmed stripe payments with existing registration
+    try {
+      const { data: unlinkedStripe } = await supabaseServer
+        .from("payments")
+        .select("id, transaction_ref, course_title")
+        .eq("method", "stripe")
+        .is("registration_id", null)
+
+      if (unlinkedStripe && unlinkedStripe.length > 0) {
+        const { data: targetReg } = await supabaseServer
+          .from("registrations")
+          .select("id, email, full_name, course_slug")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (targetReg) {
+          for (const un of unlinkedStripe) {
+            await supabaseServer
+              .from("payments")
+              .update({ registration_id: targetReg.id })
+              .eq("id", un.id)
+
+            if (targetReg.email) {
+              const slugToActivate = targetReg.course_slug || "bootcamp-business-exec"
+              await supabaseServer.from("user_courses").upsert({
+                user_email: targetReg.email.toLowerCase().trim(),
+                course_slug: slugToActivate,
+                status: "active",
+                payment_method: "stripe",
+                updated_at: new Date().toISOString()
+              }, { onConflict: "user_email,course_slug" })
+            }
+          }
+        }
+      }
+    } catch (healErr) {
+      console.warn("Auto-heal warning:", healErr)
+    }
+
+    // Re-fetch payments after healing
+    const { data: updatedPayments } = await supabaseServer
+      .from("payments")
+      .select(`
+        *,
+        registrations (
+          *
+        )
+      `)
+      .order("created_at", { ascending: false })
+
+    const finalPayments = (updatedPayments || payments || [])
+    return NextResponse.json({ success: true, payments: finalPayments })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -207,7 +258,31 @@ export async function POST(req: Request) {
           .eq("id", updatedPayment.registration_id)
       }
 
-      // Activate all matching user_courses
+      // Activate and upsert matching user_courses
+      let resolvedSlug = reg?.course_slug || ""
+      if (!resolvedSlug && reg?.notes) {
+        try {
+          const parsed = typeof reg.notes === "string" ? JSON.parse(reg.notes) : reg.notes
+          if (parsed?.course_slug) resolvedSlug = parsed.course_slug
+        } catch(e) {}
+      }
+      if (!resolvedSlug && updatedPayment.course_title) {
+        const titleNorm = updatedPayment.course_title.toLowerCase()
+        if (titleNorm.includes("business")) resolvedSlug = "bootcamp-business-exec"
+        else if (titleNorm.includes("carriere")) resolvedSlug = "bootcamp-ia-pro"
+      }
+
+      if (resolvedSlug) {
+        await supabaseServer.from("user_courses").upsert({
+          user_email: studentEmail,
+          course_slug: resolvedSlug,
+          status: "active",
+          amount_paid: Number(updatedPayment.amount) || 0,
+          payment_method: updatedPayment.method || "admin_validated",
+          updated_at: new Date().toISOString()
+        }, { onConflict: "user_email,course_slug" })
+      }
+
       await supabaseServer
         .from("user_courses")
         .update({ status: "active", updated_at: new Date().toISOString() })

@@ -17,7 +17,7 @@ function SuccessContent() {
   const [verified, setVerified] = useState(false)
 
   useEffect(() => {
-    if (sessionId && sessionId.startsWith("cs_")) {
+    if (sessionId || (ref && ref.startsWith("LGI-STRIPE"))) {
       fetch("/api/payment/stripe/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

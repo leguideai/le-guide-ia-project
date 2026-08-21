@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { fulfillStripeCheckout } from "@/lib/stripe-fulfillment"
+import { supabaseServer } from "@/lib/supabase-server"
 
 export async function POST(req: Request) {
   try {
@@ -40,6 +41,38 @@ export async function POST(req: Request) {
           success: false,
           status: session.payment_status,
           message: "Le paiement n'a pas encore été validé par Stripe."
+        })
+      }
+    }
+
+    if (ref) {
+      const { data: payment } = await supabaseServer
+        .from("payments")
+        .select("*, registrations(*)")
+        .eq("transaction_ref", ref)
+        .maybeSingle()
+
+      if (payment) {
+        const reg = payment.registrations
+        const mockSession = {
+          client_reference_id: ref,
+          metadata: {
+            refCommand: ref,
+            email: reg?.email,
+            fullName: reg?.full_name,
+            whatsapp: reg?.whatsapp,
+            country: reg?.country,
+            courseSlug: reg?.course_slug,
+            courseTitle: payment.course_title,
+            price: payment.amount
+          }
+        }
+        const result: any = await fulfillStripeCheckout(mockSession)
+        return NextResponse.json({
+          success: true,
+          status: "confirmed",
+          courseTitle: result?.courseTitle,
+          email: result?.email
         })
       }
     }

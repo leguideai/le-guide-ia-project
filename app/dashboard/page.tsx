@@ -302,11 +302,27 @@ export default function DashboardPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   // A course is accessible if: it's free (price===0) OR its DB uuid / slug is in userEnrollments OR user is admin
-  const canAccess = (course: BootcampCourse & { dbId?: string; slug?: string; isFree?: boolean }) =>
-    course.isFree ||
-    isAdmin ||
-    userEnrollments.includes(course.dbId || "") ||
-    userEnrollments.includes(course.slug || "")
+  const canAccess = (course: BootcampCourse & { dbId?: string; slug?: string; isFree?: boolean; id?: string }) => {
+    if (course.isFree || isAdmin) return true
+    if (userEnrollments.includes("*") || userEnrollments.includes("all")) return true
+    if (course.dbId && userEnrollments.includes(course.dbId)) return true
+    if (course.slug && userEnrollments.includes(course.slug)) return true
+    if (course.id && userEnrollments.includes(course.id)) return true
+    
+    // Fuzzy match
+    const cSlugNorm = (course.slug || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+    const cTitleNorm = (course.title || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+    return userEnrollments.some(e => {
+      if (!e) return false
+      const eNorm = e.toLowerCase().replace(/[^a-z0-9]/g, "")
+      if (!eNorm) return false
+      if (cSlugNorm && (cSlugNorm.includes(eNorm) || eNorm.includes(cSlugNorm))) return true
+      if (cTitleNorm && (cTitleNorm.includes(eNorm) || eNorm.includes(cTitleNorm))) return true
+      if (cSlugNorm.includes("business") && eNorm.includes("business")) return true
+      if (cSlugNorm.includes("carriere") && eNorm.includes("carriere")) return true
+      return false
+    })
+  }
 
   useEffect(() => {
     async function loadUserData() {
