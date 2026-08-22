@@ -6,7 +6,10 @@ import { useSearchParams } from "next/navigation"
 import { UdemyHeader } from "@/components/udemy-header"
 import { supabase } from "@/lib/supabase"
 import { useUserEnrollments } from "@/lib/user-enrollments"
-import { countries, getCountryFlag, Country } from "@/lib/countries"
+import { 
+  countries, getCountryFlag, Country, 
+  PHONE_RULES, formatPhoneNumber, parsePhoneNumber 
+} from "@/lib/countries"
 import { 
   ArrowLeft, ArrowRight, ShieldCheck, Lock, CreditCard, Smartphone, 
   CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check, 
@@ -54,11 +57,19 @@ function CheckoutContent({ params }: PageProps) {
   const [transactionRef, setTransactionRef] = useState("")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
-  const [whatsapp, setWhatsapp] = useState("")
   const [country, setCountry] = useState("Côte d'Ivoire")
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
   const [countrySearch, setCountrySearch] = useState("")
   const countryDropdownRef = useRef<HTMLDivElement>(null)
+
+  // WhatsApp states & country selector
+  const [selectedWhatsappCountry, setSelectedWhatsappCountry] = useState<Country>(() => {
+    return countries.find((c) => c.name === "Côte d'Ivoire") || countries[0]
+  })
+  const [whatsappLocalNumber, setWhatsappLocalNumber] = useState("")
+  const [isWhatsappDropdownOpen, setIsWhatsappDropdownOpen] = useState(false)
+  const [whatsappCountrySearch, setWhatsappCountrySearch] = useState("")
+  const whatsappDropdownRef = useRef<HTMLDivElement>(null)
 
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -67,7 +78,7 @@ function CheckoutContent({ params }: PageProps) {
   const [receiptFile, setReceiptFile] = useState<File | null>(null)
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
 
-  // Selected country object resolution
+  // Selected country object resolution for residence
   const selectedCountryObj = useMemo(() => {
     return (
       countries.find(
@@ -78,7 +89,7 @@ function CheckoutContent({ params }: PageProps) {
     )
   }, [country])
 
-  // Filtered countries list for searchable dropdown
+  // Filtered countries list for residence searchable dropdown
   const filteredCountries = useMemo(() => {
     if (!countrySearch.trim()) return countries
     const q = countrySearch.toLowerCase().trim()
@@ -90,11 +101,56 @@ function CheckoutContent({ params }: PageProps) {
     )
   }, [countrySearch])
 
-  // Close dropdown on click outside
+  // Filtered countries list for WhatsApp searchable dropdown
+  const filteredWhatsappCountries = useMemo(() => {
+    if (!whatsappCountrySearch.trim()) return countries
+    const q = whatsappCountrySearch.toLowerCase().trim()
+    return countries.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.code.toLowerCase().includes(q) ||
+        c.dial.includes(q)
+    )
+  }, [whatsappCountrySearch])
+
+  // WhatsApp phone rules & validation
+  const currentWhatsappRule = PHONE_RULES[selectedWhatsappCountry.code]
+  const rawWhatsappDigits = useMemo(() => whatsappLocalNumber.replace(/\D/g, ""), [whatsappLocalNumber])
+  const isWhatsappValid = useMemo(() => {
+    if (!rawWhatsappDigits) return false
+    if (!currentWhatsappRule) return rawWhatsappDigits.length >= 6 && rawWhatsappDigits.length <= 15
+    if (Array.isArray(currentWhatsappRule.expectedLength)) {
+      return currentWhatsappRule.expectedLength.includes(rawWhatsappDigits.length)
+    }
+    return rawWhatsappDigits.length === currentWhatsappRule.expectedLength
+  }, [rawWhatsappDigits, currentWhatsappRule])
+
+  const fullWhatsapp = useMemo(() => {
+    if (!rawWhatsappDigits) return ""
+    return `${selectedWhatsappCountry.dial}${rawWhatsappDigits}`
+  }, [selectedWhatsappCountry, rawWhatsappDigits])
+
+  const handleWhatsappChange = (val: string) => {
+    if (val.startsWith("+")) {
+      const parsed = parsePhoneNumber(val)
+      if (parsed) {
+        setSelectedWhatsappCountry(parsed.country)
+        setWhatsappLocalNumber(parsed.localNumber)
+        return
+      }
+    }
+    const formatted = formatPhoneNumber(val, selectedWhatsappCountry.code)
+    setWhatsappLocalNumber(formatted)
+  }
+
+  // Close dropdowns on click outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target as Node)) {
         setIsCountryDropdownOpen(false)
+      }
+      if (whatsappDropdownRef.current && !whatsappDropdownRef.current.contains(e.target as Node)) {
+        setIsWhatsappDropdownOpen(false)
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -258,11 +314,21 @@ function CheckoutContent({ params }: PageProps) {
             try { localStorage.setItem("user_name", name) } catch(e){}
           }
           if (phone) {
-            setWhatsapp(phone)
+            const parsed = parsePhoneNumber(phone)
+            if (parsed) {
+              setSelectedWhatsappCountry(parsed.country)
+              setWhatsappLocalNumber(parsed.localNumber)
+            } else {
+              setWhatsappLocalNumber(phone.replace(/^\+\d+\s*/, ""))
+            }
             try { localStorage.setItem("user_whatsapp", phone) } catch(e){}
           }
           if (userCountry) {
             setCountry(userCountry)
+            const matched = countries.find(c => c.name.toLowerCase() === userCountry.toLowerCase() || c.code.toLowerCase() === userCountry.toLowerCase())
+            if (matched && !phone) {
+              setSelectedWhatsappCountry(matched)
+            }
             try { localStorage.setItem("user_country", userCountry) } catch(e){}
           }
           if (userEmail) {
@@ -278,8 +344,22 @@ function CheckoutContent({ params }: PageProps) {
             setIsLoggedIn(true)
           }
           if (savedName) setFullName(savedName)
-          if (savedPhone) setWhatsapp(savedPhone)
-          if (savedCountry) setCountry(savedCountry)
+          if (savedPhone) {
+            const parsed = parsePhoneNumber(savedPhone)
+            if (parsed) {
+              setSelectedWhatsappCountry(parsed.country)
+              setWhatsappLocalNumber(parsed.localNumber)
+            } else {
+              setWhatsappLocalNumber(savedPhone)
+            }
+          }
+          if (savedCountry) {
+            setCountry(savedCountry)
+            const matched = countries.find(c => c.name.toLowerCase() === savedCountry.toLowerCase() || c.code.toLowerCase() === savedCountry.toLowerCase())
+            if (matched && !savedPhone) {
+              setSelectedWhatsappCountry(matched)
+            }
+          }
         }
       } catch (err) {
         console.warn("Could not auto-fetch user:", err)
@@ -299,11 +379,31 @@ function CheckoutContent({ params }: PageProps) {
     setLoading(true)
     setError(null)
 
+    if (!rawWhatsappDigits) {
+      setError("Veuillez renseigner votre numéro WhatsApp.")
+      setLoading(false)
+      return
+    }
+
+    if (!isWhatsappValid) {
+      setError(`Veuillez renseigner un numéro WhatsApp valide pour ${selectedWhatsappCountry.name} (${currentWhatsappRule ? currentWhatsappRule.formatExample : "longueur incorrecte"}).`)
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await fetch("/api/payment/stripe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseSlug, courseTitle, price, email, fullName, whatsapp, country }),
+        body: JSON.stringify({ 
+          courseSlug, 
+          courseTitle, 
+          price, 
+          email, 
+          fullName, 
+          whatsapp: fullWhatsapp, 
+          country 
+        }),
       })
       const data = await res.json()
 
@@ -323,6 +423,18 @@ function CheckoutContent({ params }: PageProps) {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    if (!rawWhatsappDigits) {
+      setError("Veuillez renseigner votre numéro WhatsApp.")
+      setLoading(false)
+      return
+    }
+
+    if (!isWhatsappValid) {
+      setError(`Veuillez renseigner un numéro WhatsApp valide pour ${selectedWhatsappCountry.name} (${currentWhatsappRule ? currentWhatsappRule.formatExample : "longueur incorrecte"}).`)
+      setLoading(false)
+      return
+    }
 
     if (!transactionRef.trim() && !receiptFile) {
       setError("Veuillez saisir la référence de transaction OU ajouter une capture d'écran de votre reçu de paiement.")
@@ -361,7 +473,7 @@ function CheckoutContent({ params }: PageProps) {
           price, 
           email, 
           fullName, 
-          whatsapp, 
+          whatsapp: fullWhatsapp, 
           country, 
           transactionRef, 
           mobileOperator,
@@ -388,11 +500,31 @@ function CheckoutContent({ params }: PageProps) {
     setLoading(true)
     setError(null)
 
+    if (!rawWhatsappDigits) {
+      setError("Veuillez renseigner votre numéro WhatsApp.")
+      setLoading(false)
+      return
+    }
+
+    if (!isWhatsappValid) {
+      setError(`Veuillez renseigner un numéro WhatsApp valide pour ${selectedWhatsappCountry.name} (${currentWhatsappRule ? currentWhatsappRule.formatExample : "longueur incorrecte"}).`)
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await fetch("/api/payment/paytech", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseSlug, courseTitle, price, email, fullName, whatsapp, country }),
+        body: JSON.stringify({ 
+          courseSlug, 
+          courseTitle, 
+          price, 
+          email, 
+          fullName, 
+          whatsapp: fullWhatsapp, 
+          country 
+        }),
       })
       const data = await res.json()
 
@@ -519,16 +651,138 @@ function CheckoutContent({ params }: PageProps) {
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground/80">WhatsApp *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="+226 75 75 72 73"
-                    className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm sm:text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
+                {/* WhatsApp avec Drapeau, Indicatif et Validation par Règles Pays */}
+                <div className="space-y-1.5" ref={whatsappDropdownRef}>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground/80">WhatsApp *</label>
+                    <span className="text-[10px] text-muted-foreground">
+                      {currentWhatsappRule ? currentWhatsappRule.formatExample : "Indicatif + Numéro"}
+                    </span>
+                  </div>
+
+                  <div className="relative flex items-center">
+                    {/* Bouton Drapeau & Indicatif */}
+                    <button
+                      type="button"
+                      onClick={() => setIsWhatsappDropdownOpen(!isWhatsappDropdownOpen)}
+                      className="h-10.5 sm:h-10 shrink-0 flex items-center gap-1.5 px-3 rounded-l-xl border border-r-0 border-border bg-secondary/60 hover:bg-secondary text-foreground transition-all cursor-pointer select-none"
+                      title="Changer l'indicatif pays de votre WhatsApp"
+                    >
+                      <span className="text-lg leading-none">{getCountryFlag(selectedWhatsappCountry.code)}</span>
+                      <span className="font-mono text-xs font-bold text-foreground">{selectedWhatsappCountry.dial}</span>
+                      <ChevronDown className={`size-3 text-muted-foreground transition-transform duration-200 ${isWhatsappDropdownOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {/* Champ de saisie du numéro local */}
+                    <div className="relative flex-1">
+                      <input
+                        type="tel"
+                        required
+                        value={whatsappLocalNumber}
+                        onChange={(e) => handleWhatsappChange(e.target.value)}
+                        placeholder={currentWhatsappRule?.placeholder || "07 12 34 56 78"}
+                        className={`w-full h-10.5 sm:h-10 rounded-r-xl border bg-card px-3.5 py-2 text-sm sm:text-xs text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${
+                          rawWhatsappDigits.length > 0 && isWhatsappValid
+                            ? "border-emerald-500/70 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                            : rawWhatsappDigits.length > 0 && !isWhatsappValid
+                            ? "border-amber-500/70 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                            : "border-border focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                        }`}
+                      />
+                      {rawWhatsappDigits.length > 0 && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                          {isWhatsappValid ? (
+                            <CheckCircle2 className="size-4 text-emerald-400" />
+                          ) : (
+                            <AlertCircle className="size-4 text-amber-400" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Popover Sélecteur d'Indicatif WhatsApp */}
+                    {isWhatsappDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-1.5 w-72 max-w-[90vw] max-h-64 bg-card border border-border/90 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                        <div className="p-2.5 border-b border-border/80 sticky top-0 bg-card z-10">
+                          <div className="relative">
+                            <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={whatsappCountrySearch}
+                              onChange={(e) => setWhatsappCountrySearch(e.target.value)}
+                              placeholder="Rechercher pays ou indicatif..."
+                              className="w-full bg-secondary/50 border border-border/80 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                              autoFocus
+                            />
+                            {whatsappCountrySearch && (
+                              <button
+                                type="button"
+                                onClick={() => setWhatsappCountrySearch("")}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground hover:text-foreground"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="overflow-y-auto divide-y divide-border/40 text-left max-h-52">
+                          {filteredWhatsappCountries.map((c) => {
+                            const isSelected = selectedWhatsappCountry.code === c.code
+                            return (
+                              <button
+                                key={`wa-c-${c.code}-${c.dial}`}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedWhatsappCountry(c)
+                                  setIsWhatsappDropdownOpen(false)
+                                  setWhatsappCountrySearch("")
+                                  if (whatsappLocalNumber) {
+                                    setWhatsappLocalNumber(formatPhoneNumber(whatsappLocalNumber, c.code))
+                                  }
+                                }}
+                                className={`w-full px-3.5 py-2 text-xs flex items-center justify-between hover:bg-primary/10 transition-colors cursor-pointer text-left ${
+                                  isSelected ? "bg-primary/15 text-primary font-bold" : "text-foreground"
+                                }`}
+                              >
+                                <span className="flex items-center gap-2.5 truncate">
+                                  <span className="text-base leading-none">{getCountryFlag(c.code)}</span>
+                                  <span className="truncate">{c.name}</span>
+                                </span>
+                                <span className="font-mono text-[11px] font-bold text-muted-foreground ml-2 shrink-0">
+                                  {c.dial}
+                                </span>
+                              </button>
+                            )
+                          })}
+                          {filteredWhatsappCountries.length === 0 && (
+                            <div className="p-4 text-center text-xs text-muted-foreground">
+                              Aucun pays trouvé
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Feedback en direct sur le format du numéro */}
+                  <div className="flex items-center justify-between text-[10px] pt-0.5">
+                    {rawWhatsappDigits.length > 0 ? (
+                      isWhatsappValid ? (
+                        <span className="text-emerald-400 font-bold flex items-center gap-1">
+                          <Check className="size-3" /> Numéro valide pour {selectedWhatsappCountry.name}
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 flex items-center gap-1 font-semibold">
+                          <AlertCircle className="size-3" /> {currentWhatsappRule ? `Format : ${currentWhatsappRule.formatExample} (${rawWhatsappDigits.length}/${Array.isArray(currentWhatsappRule.expectedLength) ? currentWhatsappRule.expectedLength.join(' ou ') : currentWhatsappRule.expectedLength})` : "Format incomplet"}
+                        </span>
+                      )
+                    ) : (
+                      <span className="text-muted-foreground">
+                        Exemple : {selectedWhatsappCountry.dial} {currentWhatsappRule?.placeholder || "07 12 34 56 78"}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -590,6 +844,10 @@ function CheckoutContent({ params }: PageProps) {
                                 setCountry(c.name)
                                 setIsCountryDropdownOpen(false)
                                 setCountrySearch("")
+                                setSelectedWhatsappCountry(c)
+                                if (whatsappLocalNumber) {
+                                  setWhatsappLocalNumber(formatPhoneNumber(whatsappLocalNumber, c.code))
+                                }
                               }}
                               className={`w-full px-3.5 py-2 text-xs flex items-center justify-between hover:bg-primary/10 transition-colors cursor-pointer text-left ${
                                 isSelected ? "bg-primary/15 text-primary font-bold" : "text-foreground"
