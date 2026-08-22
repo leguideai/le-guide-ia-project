@@ -23,12 +23,12 @@ export async function POST(req: Request) {
     const resolvedCourseTitle = courseData?.title || courseTitle || courseSlug
     const courseId = courseData?.id || null
 
-    // 2. Manage Registration in 'registrations' table (Exactly as in Mobile Money)
+    // 2. Manage Registration in 'registrations' table (Safe select + insert/update)
     let registrationId: string | null = null
     const { data: existingReg } = await supabaseServer
       .from("registrations")
       .select("id")
-      .eq("email", emailClean)
+      .ilike("email", emailClean)
       .maybeSingle()
 
     const regPayload: any = {
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         .update(regPayload)
         .eq("id", existingReg.id)
     } else {
-      const { data: newReg, error: regErr } = await supabaseServer
+      const { data: newReg } = await supabaseServer
         .from("registrations")
         .insert(regPayload)
         .select("id")
@@ -84,21 +84,6 @@ export async function POST(req: Request) {
       })
       .select("id")
       .single()
-
-    // 4. Create user_courses in 'pending_verification' status
-    try {
-      await supabaseServer.from("user_courses").upsert({
-        user_email: emailClean,
-        course_slug: resolvedCourseSlug,
-        course_id: courseId,
-        status: "pending_verification",
-        amount_paid: priceNumber,
-        payment_method: "stripe",
-        updated_at: new Date().toISOString()
-      }, { onConflict: "user_email,course_slug" })
-    } catch (ucErr) {
-      console.warn("user_courses pending stripe upsert warning:", ucErr)
-    }
 
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideai.com")

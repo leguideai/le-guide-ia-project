@@ -29,123 +29,148 @@ export async function fulfillStripeCheckout(session: any) {
     const resolvedCourseSlug = course?.slug || courseSlug
     const resolvedCourseTitle = course?.title || courseTitle
 
-    // 2. Upsert Registration with status "paye" and course_slug
-    const { data: registration } = await supabaseServer
+    // 2. Manage Registration (safe select + update / insert)
+    let regId: string | null = null
+    const { data: existingReg } = await supabaseServer
       .from("registrations")
-      .upsert({
-        full_name: fullName,
-        email: email,
-        whatsapp: whatsapp || null,
-        country: country || null,
-        source: "checkout_stripe",
-        course_slug: resolvedCourseSlug,
-        course_id: course?.id || null,
-        status: "paye",
-        notes: JSON.stringify({
-          course_slug: resolvedCourseSlug,
-          course_title: resolvedCourseTitle,
-          payment_method: "stripe",
-          ref: refCommand,
-          paid_at: new Date().toISOString()
-        })
-      }, { onConflict: "email" })
       .select("id")
-      .single()
+      .ilike("email", email)
+      .maybeSingle()
 
-    const regId = registration?.id || null
+    const regPayload: any = {
+      full_name: fullName,
+      email: email,
+      whatsapp: whatsapp || null,
+      country: country || "CI",
+      source: "checkout_stripe",
+      course_slug: resolvedCourseSlug,
+      course_id: course?.id || null,
+      status: "paye",
+      notes: JSON.stringify({
+        course_slug: resolvedCourseSlug,
+        course_title: resolvedCourseTitle,
+        payment_method: "stripe",
+        ref: refCommand,
+        paid_at: new Date().toISOString()
+      })
+    }
 
-    // 3. Check if payment already exists
+    if (existingReg) {
+      regId = existingReg.id
+      await supabaseServer.from("registrations").update(regPayload).eq("id", existingReg.id)
+    } else {
+      const { data: newReg } = await supabaseServer.from("registrations").insert(regPayload).select("id").single()
+      regId = newReg?.id || null
+    }
+
+    // 3. Manage Payment Record
     const { data: existingPayment } = await supabaseServer
       .from("payments")
-      .select("id, status")
+      .select("id")
       .eq("transaction_ref", refCommand)
       .maybeSingle()
 
+    const paymentPayload: any = {
+      registration_id: regId,
+      amount: price,
+      currency: "XOF",
+      method: "stripe",
+      status: "confirmed",
+      transaction_ref: refCommand,
+      course_title: resolvedCourseTitle,
+      payment_method: "Carte Bancaire (Stripe)",
+      confirmed_at: new Date().toISOString()
+    }
+
     if (existingPayment) {
+      await supabaseServer.from("payments").update(paymentPayload).eq("id", existingPayment.id)
+    } else {
+      await supabaseServer.from("payments").insert(paymentPayload)
+    }
+
+    // 4. Enroll User in user_courses (Activates instantly on Dashboard & throughout platform)
+    const { data: existingUC } = await supabaseServer
+      .from("user_courses")
+      .select("id")
+      .ilike("user_email", email)
+      .eq("course_slug", resolvedCourseSlug)
+      .maybeSingle()
+
+    if (existingUC) {
       await supabaseServer
-        .from("payments")
-        .update({
-          registration_id: regId,
-          amount: price,
-          currency: "XOF",
-          method: "stripe",
-          status: "confirmed",
-          confirmed_at: new Date().toISOString(),
-        })
-        .eq("id", existingPayment.id)
+        .from("user_courses")
+        .update({ status: "active" })
+        .eq("id", existingUC.id)
     } else {
       await supabaseServer
-        .from("payments")
+        .from("user_courses")
         .insert({
-          registration_id: regId,
-          amount: price,
-          currency: "XOF",
-          method: "stripe",
-          status: "confirmed",
-          transaction_ref: refCommand,
-          confirmed_at: new Date().toISOString(),
+          user_email: email,
+          course_slug: resolvedCourseSlug,
+          status: "active"
         })
     }
 
-    // 4. Create or fetch user in Supabase Auth & profiles
-    let userId: string | null = null
+    // Update any other user_courses matching email & course_slug to active
+    await supabaseServer
+      .from("user_courses")
+      .update({ status: "active" })
+      .ilike("user_email", email)
+      .eq("course_slug", resolvedCourseSlug)
 
-    const { data: existingUser } = await supabaseServer
-      .from("profiles")
-      .select("id, role")
-      .eq("email", email)
-      .maybeSingle()
-
-    if (existingUser) {
-      userId = existingUser.id
-      await supabaseServer
+    // 5. Ensure Profile and Auth User
+    try {
+      const { data: existingProfile } = await supabaseServer
         .from("profiles")
-        .update({
-          plan: "PRO",
-          full_name: fullName || undefined,
-          whatsapp: whatsapp || undefined,
-          country: country || undefined,
-          status: "active"
-        })
-        .eq("id", userId)
-    } else {
-      // Create user in Auth
-      const tempPassword = "Lgi" + Math.floor(100000 + Math.random() * 900000) + "!"
-      const { data: newUser, error: createErr } = await supabaseServer.auth.admin.createUser({
-        email: email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { full_name: fullName, whatsapp: whatsapp },
-      })
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle()
 
-      if (!createErr && newUser?.user) {
-        userId = newUser.user.id
+      if (existingProfile) {
         await supabaseServer
           .from("profiles")
-          .upsert({
-            id: userId,
+          .update({
+            full_name: fullName || undefined,
+            whatsapp: whatsapp || undefined,
+            country: country || undefined,
+            role: "student",
+            plan: "PRO",
+            status: "active",
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existingProfile.id)
+      } else {
+        const { data: listData } = await supabaseServer.auth.admin.listUsers()
+        const existingAuthUser = listData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
+        let authUserId = existingAuthUser?.id
+
+        if (!existingAuthUser) {
+          const tempPassword = `Lgi${Math.floor(1000 + Math.random() * 9000)}!2026`
+          const { data: newAuth } = await supabaseServer.auth.admin.createUser({
+            email: email,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { full_name: fullName, whatsapp: whatsapp }
+          })
+          authUserId = newAuth?.user?.id
+        }
+
+        if (authUserId) {
+          await supabaseServer.from("profiles").upsert({
+            id: authUserId,
             email: email,
             full_name: fullName,
             whatsapp: whatsapp || null,
             country: country || null,
-            role: "user",
+            role: "student",
             plan: "PRO",
             status: "active"
           })
+        }
       }
+    } catch (authErr) {
+      console.warn("Auth user ensure warning in Stripe fulfillment:", authErr)
     }
-
-    // 5. Enroll User in user_courses (Activates instantly on Dashboard & API)
-    await supabaseServer.from("user_courses").upsert({
-      user_email: email,
-      user_id: userId || null,
-      course_slug: resolvedCourseSlug,
-      course_id: course?.id || null,
-      status: "active",
-      amount_paid: price,
-      payment_method: "stripe",
-      updated_at: new Date().toISOString()
-    }, { onConflict: "user_email,course_slug" })
 
     // 6. Send official instant confirmation email
     await sendStripeSuccessEmail({
@@ -156,7 +181,7 @@ export async function fulfillStripeCheckout(session: any) {
       transactionRef: refCommand,
     })
 
-    console.log(`[Stripe Fulfillment] Successfully fulfilled order for ${email} (${resolvedCourseSlug})`)
+    console.log(`[Stripe Fulfillment] Successfully fulfilled order and granted instant access to ${email} for course ${resolvedCourseSlug}`)
     return { success: true, email, courseTitle: resolvedCourseTitle }
   } catch (err: any) {
     console.error("[Stripe Fulfillment] Error fulfilling checkout:", err)

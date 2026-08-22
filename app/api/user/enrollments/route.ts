@@ -167,18 +167,11 @@ export async function GET(req: Request) {
       })
     }
 
-    // 6. Fetch user_courses (both by email and userId)
-    let ucQuery = supabaseServer
+    // 6. Fetch user_courses (safe select with real database columns)
+    const { data: userCourses } = await supabaseServer
       .from("user_courses")
-      .select("course_slug, course_id, status, created_at, amount_paid, payment_method")
-
-    if (userId) {
-      ucQuery = ucQuery.or(`user_email.ilike.${userEmail},user_id.eq.${userId}`)
-    } else {
-      ucQuery = ucQuery.ilike("user_email", userEmail)
-    }
-
-    const { data: userCourses } = await ucQuery
+      .select("id, user_email, course_slug, status, created_at")
+      .ilike("user_email", userEmail)
 
     if (userCourses && userCourses.length > 0) {
       userCourses.forEach((uc: any) => {

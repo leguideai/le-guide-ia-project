@@ -162,15 +162,22 @@ export async function POST(req: Request) {
       })
 
       // 3. Activate user_courses
-      await supabaseServer.from("user_courses").upsert({
-        user_email: emailClean,
-        course_slug: courseSlug,
-        course_id: courseId || null,
-        status: "active",
-        amount_paid: Number(amount) || 0,
-        payment_method: "admin_manual",
-        updated_at: new Date().toISOString()
-      }, { onConflict: "user_email,course_slug" })
+      const { data: existingUC } = await supabaseServer
+        .from("user_courses")
+        .select("id")
+        .ilike("user_email", emailClean)
+        .eq("course_slug", courseSlug)
+        .maybeSingle()
+
+      if (existingUC) {
+        await supabaseServer.from("user_courses").update({ status: "active" }).eq("id", existingUC.id)
+      } else {
+        await supabaseServer.from("user_courses").insert({
+          user_email: emailClean,
+          course_slug: courseSlug,
+          status: "active"
+        })
+      }
 
       // 4. Ensure Auth user exists
       let tempPassword: string | undefined = undefined
@@ -273,20 +280,28 @@ export async function POST(req: Request) {
       }
 
       if (resolvedSlug) {
-        await supabaseServer.from("user_courses").upsert({
-          user_email: studentEmail,
-          course_slug: resolvedSlug,
-          status: "active",
-          amount_paid: Number(updatedPayment.amount) || 0,
-          payment_method: updatedPayment.method || "admin_validated",
-          updated_at: new Date().toISOString()
-        }, { onConflict: "user_email,course_slug" })
+        const { data: existingUC } = await supabaseServer
+          .from("user_courses")
+          .select("id")
+          .ilike("user_email", studentEmail)
+          .eq("course_slug", resolvedSlug)
+          .maybeSingle()
+
+        if (existingUC) {
+          await supabaseServer.from("user_courses").update({ status: "active" }).eq("id", existingUC.id)
+        } else {
+          await supabaseServer.from("user_courses").insert({
+            user_email: studentEmail,
+            course_slug: resolvedSlug,
+            status: "active"
+          })
+        }
       }
 
       await supabaseServer
         .from("user_courses")
-        .update({ status: "active", updated_at: new Date().toISOString() })
-        .eq("user_email", studentEmail)
+        .update({ status: "active" })
+        .ilike("user_email", studentEmail)
 
       // Ensure Supabase Auth user account exists
       let tempPassword: string | undefined = undefined
@@ -437,20 +452,62 @@ export async function PUT(req: Request) {
   }
 }
 
-// DELETE: Delete an inscription / payment and revoke course access
+// DELETE: Delete an inscription / payment and revoke course access completely
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
     const registrationId = searchParams.get("registration_id")
-    const email = searchParams.get("email")
-    const courseSlug = searchParams.get("course_slug")
+    let email = searchParams.get("email")
+    let courseSlug = searchParams.get("course_slug")
 
     if (!id && !registrationId && !email) {
       return NextResponse.json({ error: "Identifiant du paiement ou de l'inscription requis." }, { status: 400 })
     }
 
-    // 1. Delete payment if ID is provided
+    let targetEmail = email ? email.toLowerCase().trim() : ""
+    let targetRegId = registrationId || null
+    let targetSlug = courseSlug || ""
+
+    // 1. If payment ID is provided, look up payment record to extract registration and course info before deletion
+    if (id) {
+      const { data: pay } = await supabaseServer
+        .from("payments")
+        .select("*, registrations(*)")
+        .eq("id", id)
+        .maybeSingle()
+
+      if (pay) {
+        if (!targetRegId && pay.registration_id) targetRegId = pay.registration_id
+        if (!targetEmail) {
+          targetEmail = (pay.registrations?.email || "").toLowerCase().trim()
+        }
+        if (!targetSlug) {
+          targetSlug = pay.registrations?.course_slug || ""
+        }
+        if (!targetSlug && pay.course_title) {
+          const t = pay.course_title.toLowerCase()
+          if (t.includes("business")) targetSlug = "bootcamp-business-exec"
+          else if (t.includes("carriere") || t.includes("pro")) targetSlug = "bootcamp-pro-2"
+        }
+      }
+    }
+
+    // 2. If targetRegId is provided, look up registration record if email is still missing
+    if (targetRegId && !targetEmail) {
+      const { data: reg } = await supabaseServer
+        .from("registrations")
+        .select("*")
+        .eq("id", targetRegId)
+        .maybeSingle()
+
+      if (reg) {
+        targetEmail = (reg.email || "").toLowerCase().trim()
+        if (!targetSlug) targetSlug = reg.course_slug || ""
+      }
+    }
+
+    // 3. Delete payment if ID is provided
     if (id) {
       const { error: payErr } = await supabaseServer
         .from("payments")
@@ -462,27 +519,64 @@ export async function DELETE(req: Request) {
       }
     }
 
-    // 2. Delete registration if registration_id is provided
-    if (registrationId) {
+    // 4. Delete registration if registrationId is provided
+    if (targetRegId) {
       await supabaseServer
         .from("registrations")
         .delete()
-        .eq("id", registrationId)
+        .eq("id", targetRegId)
+    } else if (targetEmail && targetSlug) {
+      await supabaseServer
+        .from("registrations")
+        .delete()
+        .ilike("email", targetEmail)
+        .or(`course_slug.eq.${targetSlug},course_slug.is.null`)
     }
 
-    // 3. Delete or deactivate user_courses if email and course_slug are provided
-    if (email) {
-      const emailClean = email.toLowerCase().trim()
-      let ucQuery = supabaseServer.from("user_courses").delete().eq("user_email", emailClean)
-      if (courseSlug) {
-        ucQuery = ucQuery.eq("course_slug", courseSlug)
+    // 5. Delete and revoke user_courses
+    if (targetEmail) {
+      if (targetSlug) {
+        const slugsToDelete = [targetSlug]
+        if (targetSlug.includes("carriere") || targetSlug.includes("pro")) {
+          slugsToDelete.push("bootcamp-pro-2", "bootcamp-ia-pro", "bootcamp-ia-carriere")
+        }
+        if (targetSlug.includes("business") || targetSlug.includes("exec")) {
+          slugsToDelete.push("bootcamp-business-exec", "bootcamp-ia-business")
+        }
+
+        for (const s of slugsToDelete) {
+          await supabaseServer
+            .from("user_courses")
+            .delete()
+            .ilike("user_email", targetEmail)
+            .eq("course_slug", s)
+        }
+      } else {
+        await supabaseServer
+          .from("user_courses")
+          .delete()
+          .ilike("user_email", targetEmail)
       }
-      await ucQuery
+
+      // Check remaining active courses for user
+      const { data: remainingUC } = await supabaseServer
+        .from("user_courses")
+        .select("id")
+        .ilike("user_email", targetEmail)
+        .eq("status", "active")
+
+      if (!remainingUC || remainingUC.length === 0) {
+        await supabaseServer
+          .from("profiles")
+          .update({ plan: "FREE" })
+          .ilike("email", targetEmail)
+          .not("role", "in", '("admin","super_admin")')
+      }
     }
 
     return NextResponse.json({
       success: true,
-      message: "Apprenant et inscription supprimés avec succès du Bootcamp."
+      message: "Apprenant et inscription supprimés avec succès du Bootcamp. L'accès a été révoqué."
     })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

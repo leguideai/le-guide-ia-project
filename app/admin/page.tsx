@@ -1427,18 +1427,21 @@ export default function SuperAdminDashboard() {
     }
   }
 
-  // Delete Payment & Registration
-  async function handleDeletePayment(paymentId: string, registrationId?: string) {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette inscription et son paiement ? Cette action est irréversible.")) return
+  // Delete Payment & Registration and revoke course access
+  async function handleDeletePayment(paymentId: string, registrationId?: string, paymentEmail?: string, courseSlug?: string) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette inscription et son paiement ? L'accès au Bootcamp sera révoqué immédiatement.")) return
     setProcessingId(paymentId)
     try {
-      const url = registrationId 
-        ? `/api/admin/payments?id=${paymentId}&registration_id=${registrationId}`
-        : `/api/admin/payments?id=${paymentId}`
-      const res = await fetch(url, { method: "DELETE" })
+      const params = new URLSearchParams()
+      if (paymentId) params.append("id", paymentId)
+      if (registrationId) params.append("registration_id", registrationId)
+      if (paymentEmail) params.append("email", paymentEmail)
+      if (courseSlug) params.append("course_slug", courseSlug)
+
+      const res = await fetch(`/api/admin/payments?${params.toString()}`, { method: "DELETE" })
       const data = await res.json()
       if (data.success) {
-        showNotice("Inscription & Paiement supprimés avec succès.")
+        showNotice("Inscription & Paiement supprimés avec succès. Accès révoqué.")
         setPayments(prev => prev.filter(p => p.id !== paymentId))
         fetchAllData()
       } else {
@@ -6103,7 +6106,7 @@ export default function SuperAdminDashboard() {
                                 <Edit3 className="size-3.5" />
                               </button>
                               <button
-                                onClick={() => handleDeletePayment(p.id, p.registration_id)}
+                                onClick={() => handleDeletePayment(p.id, p.registration_id, (p.registrations as any)?.email, (p.registrations as any)?.course_slug || p.course_title)}
                                 className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                                 title="Supprimer définitivement l'inscription"
                               >
@@ -6264,7 +6267,7 @@ export default function SuperAdminDashboard() {
                           <span>Modifier</span>
                         </button>
                         <button
-                          onClick={() => handleDeletePayment(p.id, p.registration_id)}
+                          onClick={() => handleDeletePayment(p.id, p.registration_id, (p.registrations as any)?.email, (p.registrations as any)?.course_slug || p.course_title)}
                           disabled={processingId === p.id}
                           className="flex-1 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                         >
