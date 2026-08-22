@@ -17,9 +17,7 @@ function CountdownTimer() {
 
   if (isExpired) {
     return (
-      <div className="mt-6 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center font-heading text-sm font-bold text-destructive">
-        L'offre promo à 99 000 FCFA / 174 USD est expirée.
-      </div>
+     <></>
     )
   }
 
