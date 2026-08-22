@@ -76,9 +76,34 @@ function BootcampContent() {
     return p >= 140000 || slug.includes("business") || slug.includes("exec") || title.includes("business") || badge.includes("vip") || badge.includes("executif") || badge.includes("manager")
   }
 
+  const getOfferEndTimestamp = (rawDate?: string | null): number | null => {
+    if (!rawDate || String(rawDate).trim() === "") return null
+    const clean = String(rawDate).trim()
+    if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+      const [y, m, d] = clean.split("-").map(Number)
+      const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+      return isNaN(endOfDay) ? null : endOfDay
+    }
+    if (clean.includes("T00:00:00")) {
+      const datePart = clean.split("T")[0]
+      const [y, m, d] = datePart.split("-").map(Number)
+      const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+      return isNaN(endOfDay) ? null : endOfDay
+    }
+    const parsed = new Date(clean).getTime()
+    return isNaN(parsed) ? null : parsed
+  }
+
   const active = dbCourses.find(c => c.id === selectedCourseId || c.slug === selectedCourseId) || dbCourses[0]
 
   const isBusiness = isBusinessCourse(active)
+
+  const activeTargetTimestamp = getOfferEndTimestamp(active?.offer_end_date)
+  const isOfferExpired = activeTargetTimestamp ? activeTargetTimestamp < Date.now() : false
+
+  const displayPrice = isOfferExpired
+    ? (active?.original_price || active?.price || 0)
+    : (active?.price || 0)
 
   const getBadgeLabel = (c: any) => {
     if (isBusinessCourse(c)) return "EXCLUSIVE MANAGERS"
@@ -146,6 +171,9 @@ function BootcampContent() {
             {dbCourses.filter(isCourseOpenForPublic).map((c) => {
               const isCurActive = active?.id === c.id
               const isCurBusiness = isBusinessCourse(c)
+              const cTarget = getOfferEndTimestamp(c.offer_end_date)
+              const cExpired = cTarget ? cTarget < Date.now() : false
+              const cDisplayPrice = cExpired ? (c.original_price || c.price) : c.price
               return (
                 <button
                   key={c.id}
@@ -159,7 +187,7 @@ function BootcampContent() {
                   }`}
                 >
                   {isCurBusiness ? <UserCheck className="size-4" /> : <GraduationCap className="size-4" />}
-                  <span>{c.title} ({c.price > 0 ? `${Number(c.price).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT"})</span>
+                  <span>{c.title} ({cDisplayPrice > 0 ? `${Number(cDisplayPrice).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT"})</span>
                 </button>
               )
             })}
@@ -224,10 +252,10 @@ function BootcampContent() {
 
                       <div className={`text-left sm:text-right shrink-0 px-4 py-2.5 rounded-2xl ${theme.priceBox}`}>
                         <div className={`font-heading text-2xl md:text-3xl font-black ${theme.priceText}`}>
-                          {active.price > 0 ? `${Number(active.price).toLocaleString("fr-FR")} ${active.currency || "FCFA"}` : "GRATUIT"}
+                          {displayPrice > 0 ? `${Number(displayPrice).toLocaleString("fr-FR")} ${active.currency || "FCFA"}` : "GRATUIT"}
                         </div>
                         <div className={theme.badgeText}>
-                          {isEnrolledInCourse(active) ? "INSCRIPTION ACTIVE" : isPendingInCourse(active) ? "EN COURS DE VALIDATION" : getBadgeLabel(active)}
+                          {isEnrolledInCourse(active) ? "INSCRIPTION ACTIVE" : isPendingInCourse(active) ? "EN COURS DE VALIDATION" : isOfferExpired ? "TARIF STANDARD" : getBadgeLabel(active)}
                         </div>
                       </div>
                     </div>
@@ -284,10 +312,10 @@ function BootcampContent() {
                     </Link>
                   ) : isCourseOpenForPublic(active) ? (
                     <Link
-                      href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}`}
+                      href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}${isOfferExpired ? "?tier=standard" : ""}`}
                       className={`w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm transition-all hover:scale-[1.01] active:scale-95 cursor-pointer ${theme.btn}`}
                     >
-                      <span>Réserver ma place maintenant</span>
+                      <span>Réserver ma place ({displayPrice > 0 ? `${Number(displayPrice).toLocaleString("fr-FR")} FCFA` : "Tarif Standard"})</span>
                       <ArrowRight className="size-4" />
                     </Link>
                   ) : (

@@ -6,6 +6,24 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut } from "lucide-react"
 
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
+
 export function UdemyHeader() {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -41,16 +59,47 @@ export function UdemyHeader() {
 
   const [announcementText, setAnnouncementText] = useState("")
   const [announcementCta, setAnnouncementCta] = useState("")
+  const [announcementHref, setAnnouncementHref] = useState("/checkout/bootcamp-ia-pro")
 
   useEffect(() => {
     async function loadSettings() {
       try {
         const res = await fetch("/api/admin/settings")
         const data = await res.json()
-        if (data?.settings) {
-          if (data.settings.announcement_text) setAnnouncementText(data.settings.announcement_text)
-          if (data.settings.announcement_cta) setAnnouncementCta(data.settings.announcement_cta)
+        let text = data?.settings?.announcement_text || ""
+        let cta = data?.settings?.announcement_cta || ""
+
+        // Check active course for dynamic price & expiration
+        const { data: courses } = await supabase
+          .from("courses")
+          .select("id, title, slug, price, original_price, offer_end_date, dates")
+          .order("sequence_order", { ascending: true })
+          .limit(1)
+
+        if (courses && courses.length > 0) {
+          const course = courses[0]
+          const targetTime = getOfferEndTimestamp(course.offer_end_date)
+          const isExpired = targetTime ? targetTime < Date.now() : false
+          const currentPrice = isExpired ? (course.original_price || course.price) : course.price
+          const formattedPrice = currentPrice > 0 ? `${Number(currentPrice).toLocaleString("fr-FR")} FCFA` : ""
+
+          if (!text) {
+            text = `${course.title} — Direct Live ${course.dates ? `du ${course.dates}` : ""}. Inscriptions ouvertes !`
+          }
+
+          if (cta) {
+            if (formattedPrice && cta.includes("FCFA")) {
+              cta = cta.replace(/\d[\d\s]*FCFA/i, formattedPrice)
+            }
+          } else {
+            cta = formattedPrice ? `Réserver ma place (${formattedPrice}) →` : "Réserver ma place →"
+          }
+
+          setAnnouncementHref(`/checkout/${course.slug || course.id}${isExpired ? "?tier=standard" : ""}`)
         }
+
+        setAnnouncementText(text)
+        setAnnouncementCta(cta)
       } catch (e) {}
     }
     loadSettings()
@@ -76,7 +125,7 @@ export function UdemyHeader() {
       <div className="bg-gradient-to-r from-primary/90 via-blue-600 to-[#D4AF37] text-white text-[11px] font-extrabold py-1.5 px-4 text-center flex items-center justify-center gap-2">
         <Sparkles className="size-3.5 animate-pulse text-[#F3E5AB]" />
         <span>{announcementText}</span>
-        <Link href="/checkout/bootcamp-ia-pro" className="underline font-black hover:opacity-90 ml-1">
+        <Link href={announcementHref} className="underline font-black hover:opacity-90 ml-1">
           {announcementCta}
         </Link>
       </div>

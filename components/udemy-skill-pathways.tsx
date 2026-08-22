@@ -22,13 +22,39 @@ function formatDateSafe(d: Date | string | null | undefined): string {
 
 
 
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
+
 function getOfferDetails(c: any) {
   const badgeText = c.offer_badge_text || "Offre Fondateur"
   const rawStart = c.offer_start_date
-  const rawEnd = c.offer_end_date || (c.slug?.includes("business") ? "" : "")
+  const rawEnd = c.offer_end_date
 
   if (rawEnd) {
     try {
+      const targetTime = getOfferEndTimestamp(rawEnd)
+      if (targetTime && targetTime < Date.now()) {
+        return null
+      }
+
       const endFormatted = formatDateSafe(rawEnd) || ""
       const startFormatted = rawStart ? formatDateSafe(rawStart) : null
 
@@ -42,11 +68,11 @@ function getOfferDetails(c: any) {
         endFormatted
       }
     } catch {
-      return { badgeText, periodLabel: "", endFormatted: "" }
+      return null
     }
   }
 
-  return { badgeText, periodLabel: "", endFormatted: "" }
+  return null
 }
 
 function parseCourseSkills(c: any): string[] {
@@ -141,7 +167,21 @@ export function UdemySkillPathways() {
       : ""
 
     const skills = parseCourseSkills(c)
-    const offer = c.price === 0 ? null : getOfferDetails(c)
+
+    // Vérification de l'expiration de l'offre
+    const targetTimestamp = getOfferEndTimestamp(c.offer_end_date)
+    const isOfferExpired = targetTimestamp ? targetTimestamp < Date.now() : false
+
+    const offer = (c.price === 0 || isOfferExpired) ? null : getOfferDetails(c)
+
+    // Si l'offre est expirée : afficher UNIQUEMENT le prix standard, sans prix barré ni date de validité
+    const displayPrice = isOfferExpired
+      ? (c.original_price || c.price || "")
+      : (c.price || "")
+
+    const displayOriginalPrice = isOfferExpired
+      ? ""
+      : (c.original_price || "")
 
     const isBusiness = Number(c.price) >= 140000 || String(c.slug).includes("business") || String(c.slug).includes("executif") || String(c.badge || "").toLowerCase().includes("vip") || String(c.badge || "").toLowerCase().includes("manager")
 
@@ -156,14 +196,15 @@ export function UdemySkillPathways() {
       slug: c.slug,
       title: c.title,
       desc: c.description || c.subtitle,
-      price: formatPriceStr(c.price || ""),
-      originalPrice: formatPriceStr(c.original_price || ""),
+      price: formatPriceStr(displayPrice),
+      originalPrice: formatPriceStr(displayOriginalPrice),
       badge: badgeLabel,
       format: c.format || "",
       certificate: c.certificate || "",
       dates: datesText,
       skills: skills,
       offer: offer,
+      isOfferExpired: isOfferExpired,
       pdfUrl: c.pdf_url || "",
       icon: isBusiness ? UserCheck : GraduationCap,
       href: `/bootcamp?course=${c.slug || c.id}`,

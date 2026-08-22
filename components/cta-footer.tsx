@@ -152,10 +152,16 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
     { label: "Bibliothèque Premium", href: "/ressources" },
     { label: "Entreprises (B2B)", href: "/entreprises" },
   ]
+  const targetTimestamp = getOfferEndTimestamp(activeCourse?.offer_end_date)
+  const isOfferExpired = targetTimestamp ? targetTimestamp < Date.now() : false
 
-  const formattedPrice = typeof activeCourse?.price === "number"
-    ? `${activeCourse.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA`
-    : String(activeCourse?.price || "99 000 FCFA")
+  const finalPriceToDisplay = isOfferExpired
+    ? (activeCourse?.original_price || activeCourse?.price)
+    : activeCourse?.price
+
+  const formattedPrice = typeof finalPriceToDisplay === "number"
+    ? `${finalPriceToDisplay.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA`
+    : String(finalPriceToDisplay || "149 000 FCFA")
 
   const isEnrolled = isEnrolledInCourse(activeCourse)
 
@@ -194,52 +200,56 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le <strong className="text-white font-bold">{activeCourse?.title || "Bootcamp IA"}</strong> pour maîtriser les outils indispensables à votre réussite.
                 </p>
                 
-                <div className="pt-4 space-y-3">
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
-                    {isEnrolledInCourse(activeCourse) ? (
-                      <Link
-                        href="/dashboard"
-                        className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
-                      >
-                        <CheckCircle2 className="size-5" />
-                        <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
-                      </Link>
-                    ) : isPendingInCourse(activeCourse) ? (
-                      <Link
-                        href="/dashboard"
-                        className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
-                      >
-                        <CheckCircle2 className="size-5" />
-                        <span>⏳ Inscription en cours de validation · Espace Membre</span>
-                      </Link>
-                    ) : (
-                      <a
-                        href={`/bootcamp?course=${activeCourse?.slug || "bootcamp-ia-carriere"}`}
-                        className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
-                      >
-                        S'inscrire au {activeCourse?.title || "Bootcamp IA"} ({formattedPrice})
-                      </a>
-                    )}
-                  </div>
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="flex-1 sm:flex-initial">
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
+                      {isEnrolledInCourse(activeCourse) ? (
+                        <Link
+                          href="/dashboard"
+                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
+                        >
+                          <CheckCircle2 className="size-5" />
+                          <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
+                        </Link>
+                      ) : isPendingInCourse(activeCourse) ? (
+                        <Link
+                          href="/dashboard"
+                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
+                        >
+                          <CheckCircle2 className="size-5" />
+                          <span>⏳ Inscription en cours de validation · Espace Membre</span>
+                        </Link>
+                      ) : (
+                        <a
+                          href={`/bootcamp?course=${activeCourse?.slug || "bootcamp-ia-carriere"}`}
+                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
+                        >
+                          S'inscrire au {activeCourse?.title || "Bootcamp IA"} ({formattedPrice})
+                        </a>
+                      )}
+                    </div>
                   
-                  <div className="text-xs text-slate-300 flex flex-wrap gap-2 items-center">
-                    {isEnrolledInCourse(activeCourse) ? (
-                      <span className="font-bold text-emerald-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="size-3.5" />
-                        Accès complet activé à votre nom
-                      </span>
-                    ) : isPendingInCourse(activeCourse) ? (
-                      <span className="font-bold text-amber-300 flex items-center gap-1.5">
-                        <CheckCircle2 className="size-3.5 text-amber-400" />
-                        Paiement Mobile Money en cours de vérification sous 24h
-                      </span>
-                    ) : (
-                      <>
-                        <span className="font-bold text-white">{activeCourse?.original_price || ""} {activeCourse?.offer_badge_text ? `• ${activeCourse.offer_badge_text}` : ""}</span>
-                        {activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
-                      </>
-                    )}
+                    <div className="text-xs text-slate-300 flex flex-wrap gap-2 items-center mt-3">
+                      {isEnrolledInCourse(activeCourse) ? (
+                        <span className="font-bold text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 className="size-3.5" />
+                          Accès complet activé à votre nom
+                        </span>
+                      ) : isPendingInCourse(activeCourse) ? (
+                        <span className="font-bold text-amber-300 flex items-center gap-1.5">
+                          <CheckCircle2 className="size-3.5 text-amber-400" />
+                          Paiement Mobile Money en cours de vérification sous 24h
+                        </span>
+                      ) : (
+                        <>
+                          {!isOfferExpired && activeCourse?.original_price && (
+                            <span className="font-bold text-white line-through opacity-75">{activeCourse.original_price} {activeCourse?.offer_badge_text ? `• ${activeCourse.offer_badge_text}` : ""}</span>
+                          )}
+                          {!isOfferExpired && activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Checklist Badges */}

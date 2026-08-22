@@ -99,29 +99,20 @@ export function useUserEnrollments() {
       const currentUser = authData?.user
 
       if (!currentUser) {
-        // Fallback for saved email in localStorage if any
-        const savedEmail = typeof window !== "undefined" ? localStorage.getItem("user_email") : null
-        if (!savedEmail) {
-          setUser(null)
-          setIsLoggedIn(false)
-          setIsAdmin(false)
-          setEnrolledSet(new Set())
-          setPendingSet(new Set())
-          setPendingList([])
-          setLoading(false)
-          return
-        }
+        setUser(null)
+        setIsLoggedIn(false)
+        setIsAdmin(false)
+        setEnrolledSet(new Set())
+        setPendingSet(new Set())
+        setPendingList([])
+        setLoading(false)
+        return
       }
 
-      const email = currentUser?.email?.toLowerCase().trim() || 
-        (typeof window !== "undefined" ? localStorage.getItem("user_email")?.toLowerCase().trim() : "") || ""
+      const email = currentUser.email?.toLowerCase().trim() || ""
 
-      if (currentUser) {
-        setUser(currentUser)
-        setIsLoggedIn(true)
-      } else if (email) {
-        setIsLoggedIn(true)
-      }
+      setUser(currentUser)
+      setIsLoggedIn(true)
 
       // Fetch dynamic courses for cross-referencing
       const { data: cData } = await supabase.from("courses").select("*")
@@ -199,10 +190,12 @@ export function useUserEnrollments() {
   }, [loadEnrollments])
 
   const isEnrolledInCourse = (course: any) => {
+    if (!isLoggedIn || !user) return false
     return checkIsCourseEnrolled(enrolledSet, course, allCourses)
   }
 
   const isPendingInCourse = (course: any) => {
+    if (!isLoggedIn || !user) return false
     if (isEnrolledInCourse(course)) return false
     return checkIsCoursePending(pendingSet, course, allCourses)
   }
