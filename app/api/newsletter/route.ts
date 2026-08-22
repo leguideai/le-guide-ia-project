@@ -21,31 +21,31 @@ export async function POST(req: Request) {
     const nowIso = new Date().toISOString()
     let saved = false
 
-    // 1. Enregistrement dans newsletter_subscribers
+    // 1. Enregistrement dans newsletter_subscribers (colonnes réelles: email, name, status, subscribed_at)
     try {
       const { error: insErr } = await supabaseServer
         .from("newsletter_subscribers")
         .upsert({
           email: emailClean,
-          name: name || undefined,
+          name: name || null,
           status: "active",
-          source: source,
-          created_at: nowIso,
-          updated_at: nowIso
+          subscribed_at: nowIso
         }, { onConflict: "email" })
 
       if (!insErr) {
         saved = true
       } else {
+        console.warn("newsletter_subscribers upsert error, attempting insert:", insErr)
         const { error: retryErr } = await supabaseServer
           .from("newsletter_subscribers")
           .insert({
             email: emailClean,
+            name: name || null,
             status: "active",
-            source: source,
-            created_at: nowIso
+            subscribed_at: nowIso
           })
         if (!retryErr) saved = true
+        else console.error("newsletter_subscribers insert error:", retryErr)
       }
     } catch (dbErr) {
       console.warn("newsletter_subscribers insert error:", dbErr)
