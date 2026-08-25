@@ -2,6 +2,7 @@
 
 import { GridBackground } from "@/components/grid-background"
 import { UdemyHeader } from "@/components/udemy-header"
+import { MasterclassTicker } from "@/components/masterclass-ticker"
 import { VslHeroVideo } from "@/components/vsl-hero-video"
 import { UdemyTrustLogos } from "@/components/udemy-trust-logos"
 import { UdemySkillPathways } from "@/components/udemy-skill-pathways"
@@ -19,6 +20,9 @@ export default function Page() {
       
       {/* 1. Header Global Udemy Style */}
       <UdemyHeader />
+
+      {/* Bandeau Défilant Masterclass Live (Actif uniquement si session programmée) */}
+      <MasterclassTicker />
 
       {/* 2. Vidéo VSL Haute Conversion */}
       <VslHeroVideo />

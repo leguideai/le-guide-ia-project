@@ -461,24 +461,9 @@ export default function MasterclassHubPage() {
                 <Play className="size-3 fill-primary" />
                 <span>REPLAYS VIDÉOS MASTERCLASSES</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
-                Replays des Masterclasses Passées ({replays.length})
-              </h2>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
                 Visionnez gratuitement toutes les masterclasses passées.
               </p>
-            </div>
-
-            {/* Barre de Recherche */}
-            <div className="relative w-full sm:w-72">
-              <Search className="size-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Rechercher une masterclass..."
-                className="w-full bg-card border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-primary placeholder:text-muted-foreground"
-              />
             </div>
           </div>
 

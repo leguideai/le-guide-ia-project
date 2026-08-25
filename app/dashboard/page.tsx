@@ -44,11 +44,14 @@ import {
   X,
   Mail,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Radio,
+  Tv,
+  ArrowRight
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 
-type TabType = "overview" | "calendar" | "courses" | "resources" | "certificates" | "invoices" | "profile"
+type TabType = "overview" | "calendar" | "courses" | "masterclasses" | "resources" | "certificates" | "invoices" | "profile"
 
 interface ExerciseDetails {
   type: 'devoir-a-rendre' | 'cas-pratique' | 'qcm' | 'challenge' | 'fichier-entrainement'
@@ -118,6 +121,27 @@ export default function DashboardPage() {
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null)
   const [isCertModalOpen, setIsCertModalOpen] = useState(false)
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
+
+  // Masterclass Space State
+  const [masterclassSession, setMasterclassSession] = useState<any>({
+    is_active: false,
+    title: "Masterclass IA en Direct",
+    description: "",
+    scheduledAt: "",
+    dateDisplay: "",
+    thumbnailUrl: "",
+    meetUrl: "https://meet.google.com/qvt-gkyh-yuv",
+    youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
+    instructor: "Alfred Dah",
+    duration: "1h 30min"
+  })
+  const [masterclassReplays, setMasterclassReplays] = useState<any[]>([])
+  const [isMasterclassRegistered, setIsMasterclassRegistered] = useState(false)
+  const [activeMasterclassReplayModal, setActiveMasterclassReplayModal] = useState<any | null>(null)
+  const [masterclassCategoryFilter, setMasterclassCategoryFilter] = useState("Tous")
+  const [masterclassSearchQuery, setMasterclassSearchQuery] = useState("")
+  const [registeringMasterclass, setRegisteringMasterclass] = useState(false)
+  const [masterclassRegisterSuccess, setMasterclassRegisterSuccess] = useState<string | null>(null)
 
   // Exercise Submission Modal State
   const [submittingExercise, setSubmittingExercise] = useState<{
@@ -497,12 +521,52 @@ export default function DashboardPage() {
         console.warn("Could not sync with /api/user/enrollments:", apiErr)
       }
 
+      // 10. Synchroniser les données Masterclasses & Replays
+      try {
+        const mcRes = await fetch(`/api/masterclass?email=${encodeURIComponent(userEmailClean)}`)
+        const mcData = await mcRes.json()
+        if (mcData?.upcomingSession) setMasterclassSession(mcData.upcomingSession)
+        if (mcData?.replays && Array.isArray(mcData.replays)) setMasterclassReplays(mcData.replays)
+        if (mcData?.isRegistered) setIsMasterclassRegistered(true)
+      } catch (mcErr) {
+        console.warn("Could not load masterclass data in dashboard:", mcErr)
+      }
+
       setLoading(false)
     }
 
     loadUserData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleRegisterForMasterclass = async () => {
+    if (!user?.email) return
+    setRegisteringMasterclass(true)
+    setMasterclassRegisterSuccess(null)
+    try {
+      const res = await fetch("/api/masterclass", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          fullName: profile?.full_name || fullName || user.email.split("@")[0],
+          country: profile?.country || country || "CI",
+          whatsapp: profile?.whatsapp || whatsappNumber || ""
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setIsMasterclassRegistered(true)
+        setMasterclassRegisterSuccess("🎉 Votre place en direct est confirmée ! Vos liens d'accès vous ont été envoyés par email.")
+      } else {
+        alert(data.error || "Erreur lors de la réservation.")
+      }
+    } catch (err: any) {
+      alert("Erreur réseau : " + err.message)
+    } finally {
+      setRegisteringMasterclass(false)
+    }
+  }
 
   const handleCopyPrompt = (id: string, text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -677,6 +741,8 @@ export default function DashboardPage() {
   const navItems: { id: string; label: string; icon: any; badge?: string }[] = [
     { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
     { id: "courses", label: "Mes Formations", icon: BookOpen },
+    { id: "masterclasses", label: "Masterclasses IA", icon: Radio, badge: masterclassSession.is_active ? "En Direct" : undefined },
+    { id: "calendar", label: "Planning & Directs", icon: Calendar },
     { id: "resources", label: "Mes Ressources", icon: DownloadCloudIcon },
     // { id: "certificates", label: "Mes Certificats", icon: Award },
     // { id: "invoices", label: "Mes Factures", icon: FileText },
@@ -1127,6 +1193,51 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {/* Masterclass Live Scrolling / Ticker Banner (Compact, No heavy background) */}
+            {masterclassSession?.is_active && (
+              <div 
+                onClick={() => setActiveTab("masterclasses")}
+                className="group w-full py-2 px-3 rounded-xl border border-slate-200 bg-white hover:border-primary/50 transition-colors cursor-pointer flex items-center gap-3 overflow-hidden shadow-2xs"
+              >
+                {/* Badge Fixe Gauche */}
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider shrink-0 shadow-2xs">
+                  <span className="size-1.5 rounded-full bg-white animate-ping" />
+                  <span>DIRECT</span>
+                </div>
+
+                {/* Conteneur Texte Défilant Continu */}
+                <div className="flex-1 overflow-hidden relative">
+                  <div className="flex items-center gap-10 whitespace-nowrap animate-ticker text-xs font-semibold text-slate-800">
+                    <span className="inline-flex items-center gap-2">
+                      <strong className="text-slate-900">{masterclassSession.title}</strong>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-primary font-bold">{masterclassSession.dateDisplay || "En Direct Prochainement"}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-slate-600">Animé par {masterclassSession.instructor || "Alfred Dah"}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-emerald-700 font-bold">100% Inclus Membre</span>
+                    </span>
+
+                    <span className="inline-flex items-center gap-2" aria-hidden="true">
+                      <strong className="text-slate-900">{masterclassSession.title}</strong>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-primary font-bold">{masterclassSession.dateDisplay || "En Direct Prochainement"}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-slate-600">Animé par {masterclassSession.instructor || "Alfred Dah"}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-emerald-700 font-bold">100% Inclus Membre</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Lien Fixe Droite */}
+                <div className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform shrink-0">
+                  <span className="hidden sm:inline">Rejoindre</span>
+                  <ChevronRight className="size-4" />
+                </div>
+              </div>
+            )}
+
             {/* 1. CALENDRIER OFFICIEL DES BOOTCAMPS & DIRECTS */}
             <div className="space-y-4 pt-2">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left border-b border-slate-200 pb-3">
@@ -1560,6 +1671,326 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB: MASTERCLASSES IA (Directs & Replays) */}
+        {activeTab === "masterclasses" && (
+          <div className="space-y-6">
+            
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold uppercase">
+                    Espace Masterclasses
+                  </span>
+                </div>
+                <h1 className="font-heading text-2xl font-bold text-slate-800 mt-1">
+                  Masterclasses IA : Directs & Replays
+                </h1>
+                <p className="text-xs text-slate-500 mt-1">
+                  Participez aux sessions pratiques en direct animées par Alfred Dah et visionnez tous les replays en streaming HD.
+                </p>
+              </div>
+
+              <Link
+                href="/masterclass"
+                target="_blank"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F4F6F8] hover:bg-slate-200 text-slate-800 font-bold text-xs border border-slate-200 shadow-2xs transition-all shrink-0"
+              >
+                <span>Voir la page publique</span>
+                <ExternalLink className="size-3.5" />
+              </Link>
+            </div>
+
+            {/* Notification de confirmation */}
+            {masterclassRegisterSuccess && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+                  <span>{masterclassRegisterSuccess}</span>
+                </div>
+                <button
+                  onClick={() => setMasterclassRegisterSuccess(null)}
+                  className="text-emerald-700 hover:text-emerald-900 font-bold text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* 1. SECTION PROCHAINE MASTERCLASS EN DIRECT (SI ACTIVE) */}
+            {masterclassSession?.is_active ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+                <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between">
+                  
+                  <div className="space-y-4 max-w-2xl text-left">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+                      <span className="size-2 rounded-full bg-rose-500 animate-ping" />
+                      <span>PROCHAINE SESSION EN DIRECT</span>
+                    </div>
+
+                    <h2 className="font-heading text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
+                      {masterclassSession.title}
+                    </h2>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {masterclassSession.description || "Rejoignez Alfred Dah pour 1h30 de formation intensive et interactive en direct."}
+                    </p>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs pt-1">
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Date & Heure</span>
+                        <span className="font-bold text-slate-800">{masterclassSession.dateDisplay || "Prochainement"}</span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Formateur</span>
+                        <span className="font-bold text-slate-800">{masterclassSession.instructor || "Alfred Dah"}</span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5 col-span-2 sm:col-span-1">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Accès Membre</span>
+                        <span className="font-bold text-emerald-600">100% Inclus (Gratuit)</span>
+                      </div>
+                    </div>
+
+                    {/* Actions d'accès : Réservation 1-clic ou Liens Live débloqués */}
+                    <div className="pt-2">
+                      {isMasterclassRegistered ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold bg-emerald-50 px-3.5 py-2.5 rounded-xl border border-emerald-200">
+                            <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+                            <span>Votre place est confirmée ! Vos liens d'accès direct sont débloqués :</span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3">
+                            <a
+                              href={masterclassSession.meetUrl || "https://meet.google.com/qvt-gkyh-yuv"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all"
+                            >
+                              <Video className="size-4" />
+                              <span>Rejoindre sur Google Meet</span>
+                              <ExternalLink className="size-3.5 opacity-80" />
+                            </a>
+
+                            <a
+                              href={masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all"
+                            >
+                              <Play className="size-4 fill-current" />
+                              <span>Suivre sur YouTube Live</span>
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <button
+                            type="button"
+                            disabled={registeringMasterclass}
+                            onClick={handleRegisterForMasterclass}
+                            className="px-6 py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs shadow-md shadow-primary/20 transition-all flex items-center gap-2 cursor-pointer"
+                          >
+                            {registeringMasterclass ? (
+                              <span>Réservation en cours...</span>
+                            ) : (
+                              <>
+                                <span>Réserver ma place gratuite en 1 clic</span>
+                                <ArrowRight className="size-4" />
+                              </>
+                            )}
+                          </button>
+                          <p className="text-[11px] text-slate-500">
+                            🔒 Cliquez pour confirmer votre inscription et débloquer l'access au masterclass.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Affiche Officielle de la Masterclass */}
+                  {masterclassSession.thumbnailUrl && (
+                    <div className="w-full lg:w-72 aspect-video rounded-2xl overflow-hidden border border-slate-200 shadow-md shrink-0 bg-slate-900">
+                      <img
+                        src={masterclassSession.thumbnailUrl}
+                        alt={masterclassSession.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center space-y-3">
+                <div className="inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto">
+                  <Radio className="size-6" />
+                </div>
+                <h3 className="font-heading text-lg font-bold text-slate-800">
+                  Prochaine Masterclass en Direct en Préparation
+                </h3>
+                <p className="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+                  L'équipe pédagogique prépare la prochaine session pratique. En attendant, découvrez et visionnez l'intégralité de nos replays vidéos ci-dessous !
+                </p>
+              </div>
+            )}
+
+            {/* 2. VIDÉOTHÈQUE DES REPLAYS */}
+            {masterclassReplays.length > 0 && (
+              <div className="space-y-4 pt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
+                  <div>
+                    <h2 className="font-heading text-lg font-bold text-slate-800">
+                      Replays des Masterclasses Passées ({masterclassReplays.length})
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Visionnez les démonstrations et méthodologies sans limite de temps.
+                    </p>
+                  </div>
+
+                  {/* Recherche */}
+                  <div className="relative w-full sm:w-64">
+                    <Search className="size-4 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      value={masterclassSearchQuery}
+                      onChange={(e) => setMasterclassSearchQuery(e.target.value)}
+                      placeholder="Filtrer les replays..."
+                      className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-primary shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Filtres par Catégorie */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                  {["Tous", "Prompting", "Automatisation", "Création de Contenu", "Business"].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setMasterclassCategoryFilter(cat)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        masterclassCategoryFilter === cat
+                          ? "bg-primary text-slate-950 shadow-xs"
+                          : "bg-white border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Grille des Replays */}
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 pt-2">
+                  {masterclassReplays
+                    .filter(r => {
+                      const matchCat = masterclassCategoryFilter === "Tous" || r.category?.toLowerCase() === masterclassCategoryFilter.toLowerCase()
+                      const matchQuery = !masterclassSearchQuery || r.title?.toLowerCase().includes(masterclassSearchQuery.toLowerCase()) || r.description?.toLowerCase().includes(masterclassSearchQuery.toLowerCase())
+                      return matchCat && matchQuery
+                    })
+                    .map((replay) => (
+                      <div
+                        key={replay.id}
+                        className="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow text-left"
+                      >
+                        <div 
+                          onClick={() => setActiveMasterclassReplayModal(replay)}
+                          className="relative aspect-video bg-black overflow-hidden cursor-pointer group"
+                        >
+                          <img
+                            src={`https://img.youtube.com/vi/${replay.youtubeId}/hqdefault.jpg`}
+                            alt={replay.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
+                          />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
+                            <div className="size-11 rounded-full bg-primary text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
+                              <Play className="size-5 fill-slate-950" />
+                            </div>
+                          </div>
+                          <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-mono font-bold">
+                            {replay.duration || "1h 30min"}
+                          </span>
+                          <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-primary text-slate-950 text-[10px] font-black uppercase">
+                            {replay.category || "Masterclass"}
+                          </span>
+                        </div>
+
+                        <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                          <div>
+                            <h3 className="font-bold text-xs sm:text-sm text-slate-800 line-clamp-2 leading-snug">
+                              {replay.title}
+                            </h3>
+                            <p className="text-[11px] text-slate-500 line-clamp-2 mt-1">
+                              {replay.description}
+                            </p>
+                          </div>
+
+                          <div className="space-y-2 pt-3 border-t border-slate-100">
+                            <div className="flex items-center justify-between text-[11px] text-slate-500">
+                              <span>{replay.instructor || "Alfred Dah"}</span>
+                              <span>{replay.date}</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveMasterclassReplayModal(replay)}
+                              className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-primary hover:text-slate-950 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                              <Play className="size-3.5 fill-current" />
+                              <span>Visionner le Replay</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Modal Lecteur Replay YouTube */}
+            {activeMasterclassReplayModal && (
+              <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl space-y-4">
+                  <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900 truncate max-w-[80%]">
+                      <Play className="size-4 text-primary fill-primary" />
+                      <span className="truncate">{activeMasterclassReplayModal.title}</span>
+                    </div>
+                    <button
+                      onClick={() => setActiveMasterclassReplayModal(null)}
+                      className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+
+                  <div className="px-4">
+                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${activeMasterclassReplayModal.youtubeId}?autoplay=1&rel=0`}
+                        title={activeMasterclassReplayModal.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-4 pt-0 text-left space-y-1">
+                    <p className="text-xs text-slate-600">{activeMasterclassReplayModal.description}</p>
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+                      <span>Formateur : {activeMasterclassReplayModal.instructor || "Alfred Dah"}</span>
+                      <span>Date : {activeMasterclassReplayModal.date}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
