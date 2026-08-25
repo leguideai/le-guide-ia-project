@@ -322,6 +322,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
               Navigation
             </span>
             <ul className="flex flex-col items-center sm:items-start gap-3.5 text-xs font-bold uppercase tracking-wider">
+
               {links.map((l) => {
                 const isActive = pathname === l.href || (l.href !== "/" && pathname?.startsWith(l.href))
                 return (
@@ -341,6 +342,15 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   </li>
                 )
               })}
+              <li>
+                <a
+                 href="/masterclass" className="flex items-center gap-2.5 rounded-xl text-xs font-bold hover:bg-secondary text-rose-300"
+                >
+                  <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
+                  <span>Masterclasses (Live Dimanche)</span>
+         
+                </a>
+              </li>
             </ul>
           </div>
 

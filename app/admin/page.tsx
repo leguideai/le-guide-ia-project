@@ -636,7 +636,12 @@ export default function SuperAdminDashboard() {
     hero_normal_price: "",
     whatsapp_number: "",
     hero_poster_url: "",
-    hero_programme_url: ""
+    hero_programme_url: "",
+    masterclass_title: "",
+    masterclass_description: "",
+    masterclass_date: "",
+    masterclass_meet_url: "",
+    masterclass_youtube_url: ""
   })
   const [savingSettings, setSavingSettings] = useState(false)
 
@@ -6933,6 +6938,62 @@ export default function SuperAdminDashboard() {
                     preview="none"
                     hint="Ce PDF s'ouvre quand l'utilisateur clique sur « Télécharger le programme » sur la page d'accueil."
                   />
+                </div>
+              </div>
+
+              {/* Section 4: Masterclass Hebdomadaire Settings */}
+              <div className="space-y-4 pt-4 border-t border-slate-200">
+                <h4 className="text-xs font-black uppercase tracking-wider text-rose-500 border-b border-slate-200/80 pb-2 flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
+                  <span>4. Configuration de la Masterclass Gratuite du Dimanche (Page /masterclass)</span>
+                </h4>
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700">Titre de la Masterclass Hebdomadaire</label>
+                    <input
+                      type="text"
+                      value={siteSettings.masterclass_title || ""}
+                      onChange={e => setSiteSettings({ ...siteSettings, masterclass_title: e.target.value })}
+                      placeholder="Ex: Masterclass IA : Fondamentaux du Prompt Engineering & Automatisation"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700">Description du Sujet & Programme</label>
+                    <textarea
+                      rows={3}
+                      value={siteSettings.masterclass_description || ""}
+                      onChange={e => setSiteSettings({ ...siteSettings, masterclass_description: e.target.value })}
+                      placeholder="Présentation de la session interactive du dimanche..."
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none resize-none"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Lien Google Meet de la Session en Direct</label>
+                      <input
+                        type="url"
+                        value={siteSettings.masterclass_meet_url || ""}
+                        onChange={e => setSiteSettings({ ...siteSettings, masterclass_meet_url: e.target.value })}
+                        placeholder="https://meet.google.com/..."
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Lien YouTube Live / Chaine YouTube</label>
+                      <input
+                        type="url"
+                        value={siteSettings.masterclass_youtube_url || ""}
+                        onChange={e => setSiteSettings({ ...siteSettings, masterclass_youtube_url: e.target.value })}
+                        placeholder="https://www.youtube.com/@LeGuideIA"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

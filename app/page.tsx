@@ -5,7 +5,6 @@ import { UdemyHeader } from "@/components/udemy-header"
 import { VslHeroVideo } from "@/components/vsl-hero-video"
 import { UdemyTrustLogos } from "@/components/udemy-trust-logos"
 import { UdemySkillPathways } from "@/components/udemy-skill-pathways"
-import { UdemyTabbedCourses } from "@/components/udemy-tabbed-courses"
 import { UdemyBusinessBanner } from "@/components/udemy-business-banner"
 import { Authority } from "@/components/authority"
 import { Testimonials } from "@/components/testimonials"
@@ -26,9 +25,6 @@ export default function Page() {
 
       {/* 3. Les 3 Parcours d'Apprentissage */}
       <UdemySkillPathways />
-
-      {/* 4. Section Formations & Masterclasses Vidéos avec Onglets */}
-      {/* <UdemyTabbedCourses /> */}
 
       {/* 5. Banner Le Guide IA Business (B2B) */}
       <UdemyBusinessBanner />

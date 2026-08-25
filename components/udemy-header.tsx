@@ -158,6 +158,7 @@ export function UdemyHeader() {
           {categoriesOpen && (
             <div className="absolute top-full left-0 pt-2 w-64 z-50">
               <div className="rounded-2xl border border-border bg-card p-3 shadow-2xl space-y-1 backdrop-blur-2xl">
+               
                 <Link href="/bootcamp" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
                   <GraduationCap className="size-4 text-primary" />
                   <span>Bootcamps IA Live</span>
@@ -173,6 +174,10 @@ export function UdemyHeader() {
                 <Link href="/entreprises" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
                   <Building2 className="size-4 text-blue-400" />
                   <span>Espace Entreprises (B2B)</span>
+                </Link>
+                 <Link href="/masterclass" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-bold hover:bg-secondary text-rose-300">
+                  <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
+                  <span>Masterclasses (Live Dimanche)</span>
                 </Link>
               </div>
             </div>
@@ -197,9 +202,18 @@ export function UdemyHeader() {
         {/* Nav Links & Actions */}
         <div className="flex items-center gap-3 shrink-0">
           
-          {/* <Link href="/formations" className="hidden md:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
-            Nos Formations
-          </Link> */}
+          <Link 
+            href="/masterclass" 
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-black text-white px-3 py-1.5 rounded-xl bg-slate-900/90 border border-rose-500/40 hover:border-rose-500 text-rose-300 transition-all shadow-sm"
+          >
+            <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
+            <span>Masterclasses</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-rose-500/20 text-rose-300 font-extrabold uppercase">Gratuit</span>
+          </Link>
+
+          <Link href="/bootcamp" className="hidden md:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
+            Bootcamps
+          </Link>
 
           <Link href="/entreprises" className="hidden lg:inline-block text-xs font-bold text-slate-300 hover:text-white transition-colors">
             Espace Entreprises
@@ -263,6 +277,15 @@ export function UdemyHeader() {
           </form>
 
           <div className="space-y-1">
+            <Link
+              href="/masterclass"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 p-3 rounded-xl text-xs font-black text-rose-300 bg-rose-500/10 border border-rose-500/20"
+            >
+              <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
+              <span>Masterclasses (Live Dimanche 19h)</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-extrabold ml-auto">Gratuit</span>
+            </Link>
             <Link
               href="/bootcamp"
               onClick={() => setMobileMenuOpen(false)}
