@@ -347,7 +347,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                  href="/masterclass" className="flex items-center gap-2.5 rounded-xl text-xs font-bold hover:bg-secondary text-rose-300"
                 >
                   <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
-                  <span>Masterclasses (Live Dimanche)</span>
+                  <span>Masterclasses (Live)</span>
          
                 </a>
               </li>
