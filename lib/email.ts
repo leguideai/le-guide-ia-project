@@ -839,4 +839,125 @@ export async function sendMasterclassReminderEmail(
   }
 }
 
+// EMAIL 4: Invitation Spéciale à Tous les Membres de la Plateforme
+export async function sendMasterclassPlatformInvitationEmail(
+  name: string,
+  email: string,
+  session: {
+    title: string
+    description?: string
+    scheduledAt?: string
+    dateDisplay?: string
+    instructor?: string
+    thumbnailUrl?: string
+    meetUrl?: string
+    youtubeLiveUrl?: string
+  }
+) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const firstName = name.split(' ')[0] || 'Membre'
+    const sessionTitle = session.title || "Masterclass IA Interactive en Direct"
+    const instructor = session.instructor || "Alfred Dah"
+    const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
+    const description = session.description || "Rejoignez-nous pour une session exclusive de formation pratique en direct avec démonstrations et cas réels."
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideai.com"
+    const registerUrl = `${siteUrl}/masterclass`
+
+    const subject = `🎉 Invitation Spéciale : Masterclass IA en Direct avec ${instructor} (${dateFormatted})`
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${subject}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #090d16; color: #e2e8f0; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 24px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+          .header { background: linear-gradient(135deg, #0284c7 0%, #38bdf8 50%, #6366f1 100%); padding: 32px 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; text-transform: uppercase; }
+          .header p { margin: 6px 0 0; font-size: 13px; color: #f0f9ff; font-weight: 600; opacity: 0.95; }
+          .content { padding: 32px 28px; line-height: 1.65; font-size: 14px; color: #cbd5e1; }
+          .badge { display: inline-block; background-color: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; font-weight: 800; font-size: 11px; padding: 4px 14px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
+          .poster { width: 100%; border-radius: 12px; margin: 16px 0; border: 1px solid #334155; }
+          .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin: 20px 0; }
+          .cta-button { display: block; width: fit-content; margin: 26px auto 10px; background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 16px 36px; border-radius: 12px; text-align: center; font-size: 15px; box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4); }
+          .footer { background-color: #090d16; padding: 24px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>LE GUIDE IA</h1>
+            <p>Invitation Exclusive aux Membres de la Plateforme</p>
+          </div>
+          <div class="content">
+            <span class="badge">🔴 NOUVELLE MASTERCLASS EN DIRECT</span>
+            <p style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 0;">Bonjour ${firstName} 👋,</p>
+            <p>
+              Nous avons le plaisir de vous inviter à notre prochaine <strong>Masterclass IA Interactive en Direct</strong> animée par <strong>${instructor}</strong>.
+            </p>
+
+            ${session.thumbnailUrl ? `<img src="${session.thumbnailUrl}" alt="${sessionTitle}" class="poster" />` : ''}
+
+            <div class="card-box">
+              <strong style="color: #38bdf8; font-size: 16px; display: block; margin-bottom: 10px;">${sessionTitle}</strong>
+              <p style="margin: 0 0 12px; font-size: 13px; color: #94a3b8;">${description}</p>
+              <div style="border-top: 1px solid #334155; padding-top: 10px; font-size: 13px;">
+                📅 <strong>Date & Heure :</strong> ${dateFormatted}<br>
+                👨‍🏫 <strong>Intervenant :</strong> ${instructor}<br>
+                🎟️ <strong>Tarif :</strong> 100% Gratuit (Accès Libre)<br>
+                💻 <strong>Plateforme :</strong> Google Meet & YouTube Live
+              </div>
+            </div>
+
+            <p style="text-align: center; font-weight: 700; color: #ffffff; margin-bottom: 6px;">
+              Réservez votre place dès maintenant (1 clic si vous êtes connecté) :
+            </p>
+            <a href="${registerUrl}" class="cta-button">👉 Réserver ma place à la Masterclass</a>
+
+            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 20px;">
+              Les places en direct sur Google Meet sont limitées pour permettre l'interaction et les questions/réponses en direct.
+            </p>
+
+            <p style="margin-top: 28px;">
+              Au plaisir de vous retrouver en direct,<br>
+              <strong>${instructor} & L'équipe Pédagogique LE GUIDE IA</strong>
+            </p>
+          </div>
+          <div class="footer">
+            Vous recevez cet email car vous êtes membre ou abonné de la plateforme Le Guide IA.<br>
+            © 2026 LE GUIDE IA — Tous droits réservés.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const textContent = `Bonjour ${firstName},\n\nNous vous invitons à notre prochaine Masterclass IA en Direct :\n\n${sessionTitle}\nDate : ${dateFormatted}\nIntervenant : ${instructor}\n\nRéservez votre place gratuite : ${registerUrl}\n\nÀ très vite,\n${instructor}`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject,
+      text: textContent,
+      html: htmlContent
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending platform masterclass invitation email:', error)
+    return { success: false, error }
+  }
+}
+
+
 

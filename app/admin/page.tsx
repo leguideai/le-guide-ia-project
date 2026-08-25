@@ -181,6 +181,7 @@ export default function SuperAdminDashboard() {
     description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Démonstrations d'outils, cas pratiques et questions-réponses.",
     scheduledAt: "",
     dateDisplay: "",
+    thumbnailUrl: "",
     meetUrl: "https://meet.google.com/qvt-gkyh-yuv",
     youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
     instructor: "Alfred Dah",
@@ -203,14 +204,9 @@ export default function SuperAdminDashboard() {
   const [masterclassSearch, setMasterclassSearch] = useState("")
   const [savingMasterclassSession, setSavingMasterclassSession] = useState(false)
   const [savingReplay, setSavingReplay] = useState(false)
-
-  // Masterclass Email Reminders State
-  const [showReminderModal, setShowReminderModal] = useState(false)
-  const [selectedReminderType, setSelectedReminderType] = useState<"j_minus_2" | "h_minus_1" | "custom">("j_minus_2")
-  const [reminderCustomMsg, setReminderCustomMsg] = useState("")
-  const [reminderTestEmail, setReminderTestEmail] = useState("")
-  const [sendingReminder, setSendingReminder] = useState(false)
-  const [reminderResultMsg, setReminderResultMsg] = useState<string | null>(null)
+  const [notifyAllUsersOnSave, setNotifyAllUsersOnSave] = useState(false)
+  const [sendingPlatformInvite, setSendingPlatformInvite] = useState(false)
+  const [platformInviteStatus, setPlatformInviteStatus] = useState<string | null>(null)
 
   // Data states
   const [stats, setStats] = useState({
@@ -958,6 +954,7 @@ export default function SuperAdminDashboard() {
   async function handleSaveMasterclassSession(e: React.FormEvent) {
     e.preventDefault()
     setSavingMasterclassSession(true)
+    setPlatformInviteStatus(null)
     try {
       const res = await fetch("/api/admin/masterclasses", {
         method: "POST",
@@ -969,7 +966,12 @@ export default function SuperAdminDashboard() {
       })
       const data = await res.json()
       if (data.success) {
-        alert("Session Masterclass enregistrée avec succès dans Supabase !")
+        if (notifyAllUsersOnSave) {
+          // Lancer l'invitation de tous les membres de la plateforme
+          handleSendPlatformInvite(false, true)
+        } else {
+          alert("La Masterclass a été enregistrée avec succès !")
+        }
       } else {
         alert(data.error || "Erreur lors de l'enregistrement.")
       }
@@ -980,36 +982,37 @@ export default function SuperAdminDashboard() {
     }
   }
 
-  async function handleSendMasterclassReminder(type: "j_minus_2" | "h_minus_1" | "custom", isTest = false) {
-    if (!isTest && !confirm(`Confirmez-vous l'envoi du rappel (${type === "j_minus_2" ? "J-2" : type === "h_minus_1" ? "H-1" : "Message"}) à tous les ${masterclassParticipants.length} inscrits ?`)) {
+  async function handleSendPlatformInvite(isTest = false, fromSave = false) {
+    if (!isTest && !fromSave && !confirm("Confirmez-vous l'envoi d'un email d'invitation à TOUS les utilisateurs et membres de la plateforme ?")) {
       return
     }
 
-    setSendingReminder(true)
-    setReminderResultMsg(null)
+    setSendingPlatformInvite(true)
+    setPlatformInviteStatus(null)
+
     try {
       const res = await fetch("/api/admin/masterclasses/broadcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          reminderType: type,
-          customMessage: reminderCustomMsg,
-          testEmail: isTest ? (reminderTestEmail || currentUser?.email) : undefined
+          target: "all_platform_users",
+          testEmail: isTest ? (currentUser?.email || "alfred@leguideai.com") : undefined
         })
       })
+
       const data = await res.json()
       if (data.success) {
-        setReminderResultMsg(`✅ ${data.message}`)
-        if (!isTest) {
-          alert(data.message)
-        }
+        setPlatformInviteStatus(`✅ ${data.message}`)
+        alert(data.message)
       } else {
-        setReminderResultMsg(`❌ ${data.error || "Erreur lors de l'envoi."}`)
+        setPlatformInviteStatus(`❌ ${data.error || "Erreur lors de l'envoi des invitations."}`)
+        alert(data.error || "Erreur lors de l'envoi.")
       }
     } catch (err: any) {
-      setReminderResultMsg("❌ Erreur : " + err.message)
+      setPlatformInviteStatus("❌ Erreur : " + err.message)
+      alert("Erreur : " + err.message)
     } finally {
-      setSendingReminder(false)
+      setSendingPlatformInvite(false)
     }
   }
 
@@ -5726,7 +5729,7 @@ export default function SuperAdminDashboard() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Date & Heure du Direct (pour le compte à rebours) *</label>
+                    <label className="text-xs font-bold text-slate-700">Date & Heure du Direct *</label>
                     <input
                       type="datetime-local"
                       value={masterclassSession.scheduledAt ? masterclassSession.scheduledAt.slice(0, 16) : ""}
@@ -5760,6 +5763,20 @@ export default function SuperAdminDashboard() {
                   />
                 </div>
 
+                {/* Miniature / Affiche Upload vers Supabase */}
+                <div className="space-y-1.5">
+                  <FileUploadField
+                    label="Miniature / Affiche Officielle de la Masterclass (PNG, JPG, WebP)"
+                    value={masterclassSession.thumbnailUrl || ""}
+                    onChange={url => setMasterclassSession({ ...masterclassSession, thumbnailUrl: url })}
+                    accept="image/*"
+                    bucket="resources-files"
+                    folder="masterclass"
+                    placeholder="https://... ou téléversez l'affiche de la masterclass"
+                    preview="image"
+                  />
+                </div>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-700">Lien Google Meet de la session</label>
@@ -5785,111 +5802,59 @@ export default function SuperAdminDashboard() {
                   </div>
                 </div>
 
+                {/* Option d'Invitation par Email pour Tous les Membres */}
+                <div className="p-4 rounded-xl border border-sky-200 bg-sky-50/60 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="notifyAllUsers"
+                      checked={notifyAllUsersOnSave}
+                      onChange={e => setNotifyAllUsersOnSave(e.target.checked)}
+                      className="mt-0.5 size-4 rounded accent-primary cursor-pointer"
+                    />
+                    <label htmlFor="notifyAllUsers" className="text-xs text-slate-800 font-semibold cursor-pointer">
+                      ✉️ Envoyer automatiquement un email d'invitation à TOUS les utilisateurs de la plateforme (Newsletter, Apprenants & Membres) lors de la mise à jour
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-sky-100">
+                    <button
+                      type="button"
+                      disabled={sendingPlatformInvite}
+                      onClick={() => handleSendPlatformInvite(false)}
+                      className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      <Mail className="size-3.5" />
+                      <span>{sendingPlatformInvite ? "Envoi en cours..." : "Inviter tous les membres maintenant"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={sendingPlatformInvite}
+                      onClick={() => handleSendPlatformInvite(true)}
+                      className="px-3.5 py-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                    >
+                      🧪 M'envoyer un email test
+                    </button>
+
+                    {platformInviteStatus && (
+                      <span className="text-xs font-bold text-slate-700 pl-2">
+                        {platformInviteStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex justify-end pt-2">
                   <button
                     type="submit"
-                    disabled={savingMasterclassSession}
+                    disabled={savingMasterclassSession || sendingPlatformInvite}
                     className="px-6 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 cursor-pointer shadow-md"
                   >
-                    {savingMasterclassSession ? "Enregistrement..." : "Mettre à jour la Masterclass"}
+                    {savingMasterclassSession ? "Enregistrement..." : "💾 Mettre à Jour la Masterclass"}
                   </button>
                 </div>
               </form>
-            </div>
-
-            {/* Section 2: Automated Email Reminders Module */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                <div className="flex items-center gap-2">
-                  <Mail className="size-5 text-primary" />
-                  <div>
-                    <h3 className="font-heading text-base font-bold text-slate-800">
-                      Rappels par Email Automatisés (Resend)
-                    </h3>
-                    <p className="text-[11px] text-slate-500">
-                      Envoyez des emails de rappels à tous les inscrits.
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
-                  {masterclassParticipants.length} Destinataires
-                </span>
-              </div>
-
-              {reminderResultMsg && (
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800">
-                  {reminderResultMsg}
-                </div>
-              )}
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                {/* Rappel J-2 */}
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3 flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black uppercase text-blue-600 px-2 py-0.5 rounded-md bg-blue-50">
-                      J-2 (48h avant)
-                    </span>
-                    <h4 className="font-bold text-xs text-slate-800">Rappel Général J-2</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Rappelle la date, le thème et invite à préparer des questions.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={sendingReminder || masterclassParticipants.length === 0}
-                    onClick={() => handleSendMasterclassReminder("j_minus_2")}
-                    className="w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    {sendingReminder ? "Envoi..." : "📨 Envoyer le Rappel J-2"}
-                  </button>
-                </div>
-
-                {/* Rappel H-1 */}
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3 flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black uppercase text-rose-600 px-2 py-0.5 rounded-md bg-rose-50">
-                      H-1 (Direct imminent)
-                    </span>
-                    <h4 className="font-bold text-xs text-slate-800">Rappel Urgent H-1</h4>
-                    <p className="text-[11px] text-slate-500">
-                      Alerte "En direct dans 1 heure" avec boutons d'accès direct.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={sendingReminder || masterclassParticipants.length === 0}
-                    onClick={() => handleSendMasterclassReminder("h_minus_1")}
-                    className="w-full py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    {sendingReminder ? "Envoi..." : "🔴 Envoyer le Rappel H-1"}
-                  </button>
-                </div>
-
-                {/* Test Email */}
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3 flex flex-col justify-between">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-black uppercase text-slate-600 px-2 py-0.5 rounded-md bg-slate-200">
-                      Boîte de Réception
-                    </span>
-                    <h4 className="font-bold text-xs text-slate-800">Tester sur mon Email</h4>
-                    <input
-                      type="email"
-                      placeholder="mon-email@leguideai.com"
-                      value={reminderTestEmail}
-                      onChange={e => setReminderTestEmail(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 outline-none"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    disabled={sendingReminder}
-                    onClick={() => handleSendMasterclassReminder("j_minus_2", true)}
-                    className="w-full py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition-colors cursor-pointer"
-                  >
-                    {sendingReminder ? "Test..." : "🧪 Tester l'Email"}
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Section 2: Replays Library (YouTube) */}

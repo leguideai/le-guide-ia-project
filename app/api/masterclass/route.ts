@@ -93,6 +93,7 @@ export async function GET(req: Request) {
       instructorRole: "Fondateur Le Guide IA & Expert en Intelligence Artificielle",
       scheduledAt: scheduledAt,
       dateDisplay: dateDisplay,
+      thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
       meetUrl: settingsMap.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
       youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
       duration: "1h 30min",
@@ -114,16 +115,16 @@ export async function GET(req: Request) {
       }
     }
 
-    // 3. Récupérer les replays configurés et filtrer les replays publiés
-    let replays = DEFAULT_REPLAYS
+    // 3. Récupérer les replays configurés et filtrer les replays publiés directement depuis Supabase
+    let replays: any[] = []
     if (settingsMap.masterclass_replays) {
       try {
         const parsed = JSON.parse(settingsMap.masterclass_replays)
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           replays = parsed.filter((r: any) => r.is_published !== false)
         }
       } catch (pErr) {
-        console.warn("Could not parse masterclass_replays JSON:", pErr)
+        console.warn("Could not parse masterclass_replays JSON from Supabase:", pErr)
       }
     }
 

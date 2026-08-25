@@ -146,6 +146,24 @@ export function MasterclassHomeSection() {
             {/* Right Countdown Box */}
             <div className="lg:col-span-5">
               <div className="rounded-xl bg-[#090d16] border border-border p-6 sm:p-7 text-center space-y-4 shadow-inner">
+                
+                {/* Affiche Officielle Uploader */}
+                {sessionData.thumbnailUrl && (
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-black/60 shadow-md">
+                    <img
+                      src={sessionData.thumbnailUrl}
+                      alt={sessionData.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {sessionData.is_active && (
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
+                        <span className="size-1.5 rounded-full bg-white animate-ping" />
+                        Session en Direct
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="space-y-1">
                   <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
                     {sessionData.is_active ? "Compte à Rebours du Direct" : "Accès Immédiat"}
