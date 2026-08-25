@@ -605,3 +605,238 @@ export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
   }
 }
 
+// EMAIL 1: Confirmation d'Inscription Immédiate à la Masterclass
+export async function sendMasterclassRegistrationEmail(
+  name: string,
+  email: string,
+  session: {
+    title: string
+    scheduledAt?: string
+    dateDisplay?: string
+    meetUrl?: string
+    youtubeLiveUrl?: string
+    instructor?: string
+  }
+) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const firstName = name.split(' ')[0] || 'Apprenant'
+    const sessionTitle = session.title || "Masterclass IA en Direct"
+    const instructor = session.instructor || "Alfred Dah"
+    const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "À venir")
+    const meetUrl = session.meetUrl || "https://meet.google.com/qvt-gkyh-yuv"
+    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
+
+    const textContent = `Bonjour ${firstName},\n\nVotre inscription à la Masterclass IA "${sessionTitle}" est bien confirmée !\n\nDétails de la session :\n- Date & Heure : ${dateFormatted}\n- Intervenant : ${instructor}\n- Format : Direct interactif 100% gratuit\n\nLiens d'accès au direct :\n- Google Meet : ${meetUrl}\n- YouTube Live : ${youtubeUrl}\n\nÀ très bientôt,\nAlfred Dah & L'équipe LE GUIDE IA`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject: `🎉 Inscription Confirmée : Votre place pour la Masterclass IA est réservée !`,
+      text: textContent,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Confirmation Masterclass IA</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #090d16; color: #e2e8f0; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 18px; overflow: hidden; }
+            .header { background-color: #1e293b; padding: 32px 24px; text-align: center; border-bottom: 2px solid #3b82f6; }
+            .header h1 { margin: 0; font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; }
+            .header p { margin: 6px 0 0; font-size: 13px; color: #94a3b8; }
+            .content { padding: 32px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+            .badge { display: inline-block; background-color: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; color: #60a5fa; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
+            .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin: 20px 0; }
+            .btn-primary { display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+            .btn-secondary { display: inline-block; background-color: #334155; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+            .footer { background-color: #090d16; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>LE GUIDE IA</h1>
+              <p>Centre d'Excellence en Intelligence Artificielle</p>
+            </div>
+            <div class="content">
+              <span class="badge">🎟️ PLACE RÉSERVÉE AVEC SUCCÈS</span>
+              <p style="font-size: 16px; font-weight: bold; color: #ffffff; margin-top: 0;">Bonjour ${firstName} 👋,</p>
+              <p>
+                Votre inscription à la Masterclass IA <strong>"${sessionTitle}"</strong> a bien été enregistrée.
+              </p>
+              
+              <div class="card-box">
+                <strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px;">📋 Récapitulatif de la session :</strong>
+                📅 <strong>Date & Heure :</strong> ${dateFormatted}<br>
+                👨‍🏫 <strong>Intervenant :</strong> ${instructor}<br>
+                ⚡ <strong>Format :</strong> Direct interactif, démonstrations & Q&A<br>
+                🎟️ <strong>Tarif :</strong> 100% Gratuit
+              </div>
+
+              <p style="margin-bottom: 8px;"><strong>Voici vos liens pour rejoindre le direct :</strong></p>
+              <div style="text-align: center; margin: 16px 0 24px;">
+                <a href="${meetUrl}" class="btn-primary" target="_blank">Rejoindre sur Google Meet</a>
+                <a href="${youtubeUrl}" class="btn-secondary" target="_blank">Regarder sur YouTube Live</a>
+              </div>
+
+              <div style="background-color: #1e293b; border-radius: 10px; padding: 14px; font-size: 12px; color: #94a3b8; border-left: 3px solid #3b82f6;">
+                💡 <strong>Conseil :</strong> Connectez-vous 5 minutes avant le début de la session pour vous installer confortablement et préparer vos questions.
+              </div>
+
+              <p style="margin-top: 24px;">
+                À très bientôt en direct,<br>
+                <strong>${instructor} & L'équipe LE GUIDE IA</strong>
+              </p>
+            </div>
+            <div class="footer">
+              © 2026 LE GUIDE IA — Tous droits réservés.
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    })
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending masterclass registration email:', error)
+    return { success: false, error }
+  }
+}
+
+// EMAIL 2 & 3: Rappels Automatisés Masterclass (J-2, H-1 ou Personnalisé)
+export async function sendMasterclassReminderEmail(
+  name: string,
+  email: string,
+  session: {
+    title: string
+    scheduledAt?: string
+    dateDisplay?: string
+    meetUrl?: string
+    youtubeLiveUrl?: string
+    instructor?: string
+  },
+  reminderType: 'j_minus_2' | 'h_minus_1' | 'custom',
+  customMessage?: string
+) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const firstName = name.split(' ')[0] || 'Apprenant'
+    const sessionTitle = session.title || "Masterclass IA en Direct"
+    const instructor = session.instructor || "Alfred Dah"
+    const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
+    const meetUrl = session.meetUrl || "https://meet.google.com/qvt-gkyh-yuv"
+    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
+
+    let subject = `⏳ Rappel : Votre Masterclass IA en direct (${dateFormatted})`
+    let badgeText = `⏳ RAPPEL SESSION MASTERCLASS`
+    let mainHeading = `Votre Masterclass IA approche !`
+    let introText = `Nous vous rappelons que votre session interactive <strong>"${sessionTitle}"</strong> aura lieu <strong>${dateFormatted}</strong>.`
+
+    if (reminderType === 'j_minus_2') {
+      subject = `⏳ Dans 48h : Masterclass IA en Direct avec ${instructor}`
+      badgeText = `⏳ RAPPEL : J-2 AVANT LE DIRECT`
+      mainHeading = `Votre Masterclass en direct dans 48 heures !`
+      introText = `Plus que 2 jours avant notre rendez-vous <strong>"${sessionTitle}"</strong> prévu <strong>${dateFormatted}</strong>.`
+    } else if (reminderType === 'h_minus_1') {
+      subject = `🔴 EN DIRECT DANS 1 HEURE : Masterclass IA avec ${instructor}`
+      badgeText = `🔴 DIRECT DANS 60 MINUTES`
+      mainHeading = `La Masterclass démarre dans 1 heure !`
+      introText = `Préparez-vous ! La session interactive <strong>"${sessionTitle}"</strong> commence dans quelques instants.`
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${subject}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #090d16; color: #e2e8f0; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 20px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 18px; overflow: hidden; }
+          .header { background-color: #1e293b; padding: 28px 24px; text-align: center; border-bottom: 2px solid ${reminderType === 'h_minus_1' ? '#ef4444' : '#3b82f6'}; }
+          .header h1 { margin: 0; font-size: 20px; font-weight: 900; color: #ffffff; }
+          .content { padding: 32px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+          .badge { display: inline-block; background-color: ${reminderType === 'h_minus_1' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)'}; border: 1px solid ${reminderType === 'h_minus_1' ? '#ef4444' : '#3b82f6'}; color: ${reminderType === 'h_minus_1' ? '#f87171' : '#60a5fa'}; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
+          .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin: 20px 0; }
+          .btn-meet { display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+          .btn-yt { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+          .footer { background-color: #090d16; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>LE GUIDE IA</h1>
+          </div>
+          <div class="content">
+            <span class="badge">${badgeText}</span>
+            <p style="font-size: 17px; font-weight: bold; color: #ffffff; margin-top: 0;">${mainHeading}</p>
+            <p>Bonjour <strong>${firstName}</strong>,</p>
+            <p>${introText}</p>
+            
+            ${customMessage ? `<div style="background-color: #1e293b; padding: 14px; border-radius: 8px; margin: 16px 0; border-left: 3px solid #3b82f6; font-size: 13px;">${customMessage}</div>` : ''}
+
+            <div class="card-box">
+              <strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px;">📍 Informations du Direct :</strong>
+              📅 <strong>Date :</strong> ${dateFormatted}<br>
+              👨‍🏫 <strong>Formateur :</strong> ${instructor}<br>
+              🎯 <strong>Thème :</strong> ${sessionTitle}
+            </div>
+
+            <p style="text-align: center; margin-bottom: 8px; font-weight: bold;">Cliquez ci-dessous pour rejoindre la session :</p>
+            <div style="text-align: center; margin: 16px 0 24px;">
+              <a href="${meetUrl}" class="btn-meet" target="_blank">👉 Rejoindre sur Google Meet</a>
+              <a href="${youtubeUrl}" class="btn-yt" target="_blank">📺 Suivre sur YouTube Live</a>
+            </div>
+
+            <p style="font-size: 13px; color: #94a3b8;">
+              N'hésitez pas à poser vos questions en direct dans le chat.
+            </p>
+
+            <p style="margin-top: 24px;">
+              À très vite,<br>
+              <strong>${instructor} & L'équipe LE GUIDE IA</strong>
+            </p>
+          </div>
+          <div class="footer">
+            © 2026 LE GUIDE IA — Tous droits réservés.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const textContent = `Bonjour ${firstName},\n\n${mainHeading}\n\n${introText}\n\nDate : ${dateFormatted}\nLien Google Meet : ${meetUrl}\nLien YouTube Live : ${youtubeUrl}\n\nÀ très vite,\n${instructor}`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject,
+      text: textContent,
+      html: htmlContent
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending masterclass reminder email:', error)
+    return { success: false, error }
+  }
+}
+
+

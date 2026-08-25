@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { 
   Sparkles, Clock, Video, Radio, 
@@ -8,38 +8,57 @@ import {
 } from "lucide-react"
 
 export function MasterclassHomeSection() {
-  // Calcul dynamique de la date du prochain dimanche à 19h00 GMT
-  const targetDate = useMemo(() => {
-    const now = new Date()
-    const day = now.getUTCDay()
-    const daysUntilSunday = (7 - day) % 7 === 0 && now.getUTCHours() < 20 ? 0 : ((7 - day) % 7 || 7)
-    const nextSunday = new Date(now)
-    nextSunday.setUTCDate(now.getUTCDate() + daysUntilSunday)
-    nextSunday.setUTCHours(19, 0, 0, 0)
-    return nextSunday.getTime()
-  }, [])
-
-  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
+  const [sessionData, setSessionData] = useState<any>({
+    is_active: true,
+    title: "Masterclass IA Interactive en Direct",
+    description: "Rejoignez Alfred Dah pour 1h30 de formation intensive et interactive. Cas pratiques concrets, démonstrations d'outils et Q&A en direct.",
+    scheduledAt: "",
+    dateDisplay: "Chaque Dimanche à 19h00 (GMT)"
   })
 
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null)
+
   useEffect(() => {
-    const updateCountdown = () => {
-      const now = Date.now()
-      const diff = Math.max(0, targetDate - now)
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-      setTimeLeft({ days, hours, minutes, seconds })
+    async function loadSession() {
+      try {
+        const res = await fetch("/api/masterclass")
+        const data = await res.json()
+        if (data.upcomingSession) {
+          setSessionData(data.upcomingSession)
+        }
+      } catch (e) {
+        console.warn("Could not fetch masterclass for homepage:", e)
+      }
     }
+    loadSession()
+  }, [])
+
+  useEffect(() => {
+    if (!sessionData?.is_active || !sessionData?.scheduledAt) {
+      setTimeLeft(null)
+      return
+    }
+
+    const updateCountdown = () => {
+      const targetTime = new Date(sessionData.scheduledAt).getTime()
+      const now = Date.now()
+      const diff = Math.max(0, targetTime - now)
+
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+        setTimeLeft({ days, hours, minutes, seconds })
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      }
+    }
+
     updateCountdown()
     const interval = setInterval(updateCountdown, 1000)
     return () => clearInterval(interval)
-  }, [targetDate])
+  }, [sessionData?.scheduledAt, sessionData?.is_active])
 
   return (
     <section className="relative py-14 px-4 sm:px-6 lg:px-8 border-y border-border bg-[#090d16]">
@@ -52,20 +71,38 @@ export function MasterclassHomeSection() {
             <div className="lg:col-span-7 space-y-5 text-left">
               
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold uppercase tracking-wider">
-                <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
-                <Radio className="size-3.5" />
-                <span>Rendez-vous Hebdomadaire en Direct</span>
+                {sessionData.is_active ? (
+                  <>
+                    <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
+                    <Radio className="size-3.5" />
+                    <span>Session en Direct & Replays</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-3.5 text-primary" />
+                    <span>Vidéothèque Masterclasses & Replays</span>
+                  </>
+                )}
               </div>
 
               <h2 className="text-2xl sm:text-4xl font-heading font-black text-white leading-tight">
-                Masterclass IA Gratuite <br />
-                <span className="text-primary">
-                  Chaque Dimanche à 19h00 (GMT)
-                </span>
+                {sessionData.is_active ? (
+                  <>
+                    Masterclass IA Gratuite <br />
+                    <span className="text-primary">
+                      {sessionData.dateDisplay || "En Direct Prochainement"}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Masterclasses & Replays IA <br />
+                    <span className="text-primary">Accès 100% Libre & Gratuit</span>
+                  </>
+                )}
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">
-                Rejoignez <strong>Alfred Dah</strong> chaque dimanche pour 1h30 de formation intensive et interactive. Cas pratiques concrets, prompts avancés, démonstrations d'outils et session de questions/réponses en direct.
+                {sessionData.description || "Rejoignez Alfred Dah pour 1h30 de formation intensive et interactive. Cas pratiques concrets, prompts avancés, démonstrations d'outils et session de questions/réponses en direct."}
               </p>
 
               {/* Badges Reassurance */}
@@ -91,54 +128,76 @@ export function MasterclassHomeSection() {
                   className="inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs shadow-md active:scale-95 transition-all"
                 >
                   <Sparkles className="size-4 text-primary-foreground" />
-                  <span>Réserver ma place pour ce Dimanche</span>
+                  <span>{sessionData.is_active ? "Réserver ma place gratuite" : "Découvrir les Masterclasses"}</span>
                   <ArrowRight className="size-3.5" />
                 </Link>
 
                 <Link
-                  href="/masterclass"
+                  href="/masterclass#replays-section"
                   className="inline-flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold text-xs border border-border active:scale-95 transition-all"
                 >
-                  <Play className="size-3.5 fill-foreground" />
-                  <span>Voir les Replays Précédents</span>
+                  <Play className="size-3.5 text-primary" />
+                  <span>Vidéothèque Replays</span>
                 </Link>
               </div>
 
             </div>
 
             {/* Right Countdown Box */}
-            <div className="lg:col-span-5 flex flex-col items-center justify-center">
-              <div className="w-full max-w-sm rounded-2xl bg-slate-950 border border-border p-6 text-center space-y-4 shadow-lg">
-                
-                <div className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                  <Clock className="size-4 text-primary" />
-                  <span>Début du direct dans :</span>
+            <div className="lg:col-span-5">
+              <div className="rounded-xl bg-[#090d16] border border-border p-6 sm:p-7 text-center space-y-4 shadow-inner">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                    {sessionData.is_active ? "Compte à Rebours du Direct" : "Accès Immédiat"}
+                  </span>
+                  <p className="text-xs font-semibold text-slate-300">
+                    {sessionData.is_active ? (sessionData.dateDisplay || "Prochaine Session") : "Replays Disponibles 24h/24"}
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 text-center">
-                  <div className="bg-card border border-border/60 rounded-xl p-2.5">
-                    <span className="font-mono text-xl sm:text-2xl font-black text-white">{timeLeft.days}</span>
-                    <span className="block text-[9px] text-muted-foreground font-bold uppercase mt-0.5">Jours</span>
-                  </div>
-                  <div className="bg-card border border-border/60 rounded-xl p-2.5">
-                    <span className="font-mono text-xl sm:text-2xl font-black text-white">{String(timeLeft.hours).padStart(2, '0')}</span>
-                    <span className="block text-[9px] text-muted-foreground font-bold uppercase mt-0.5">Heures</span>
-                  </div>
-                  <div className="bg-card border border-border/60 rounded-xl p-2.5">
-                    <span className="font-mono text-xl sm:text-2xl font-black text-white">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                    <span className="block text-[9px] text-muted-foreground font-bold uppercase mt-0.5">Min</span>
-                  </div>
-                  <div className="bg-card border border-border/60 rounded-xl p-2.5">
-                    <span className="font-mono text-xl sm:text-2xl font-black text-primary">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                    <span className="block text-[9px] text-muted-foreground font-bold uppercase mt-0.5">Sec</span>
-                  </div>
-                </div>
+                {sessionData.is_active && timeLeft ? (
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="rounded-lg bg-card border border-border p-2.5">
+                      <span className="text-xl sm:text-2xl font-black text-white font-mono block">
+                        {String(timeLeft.days).padStart(2, "0")}
+                      </span>
+                      <span className="text-[9px] uppercase font-bold text-muted-foreground">Jours</span>
+                    </div>
 
-                <div className="pt-2 text-[11px] text-muted-foreground border-t border-border/60 flex items-center justify-center gap-2">
-                  <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>Session interactive animée par <strong className="text-white">Alfred Dah</strong></span>
-                </div>
+                    <div className="rounded-lg bg-card border border-border p-2.5">
+                      <span className="text-xl sm:text-2xl font-black text-white font-mono block">
+                        {String(timeLeft.hours).padStart(2, "0")}
+                      </span>
+                      <span className="text-[9px] uppercase font-bold text-muted-foreground">Heures</span>
+                    </div>
 
+                    <div className="rounded-lg bg-card border border-border p-2.5">
+                      <span className="text-xl sm:text-2xl font-black text-white font-mono block">
+                        {String(timeLeft.minutes).padStart(2, "0")}
+                      </span>
+                      <span className="text-[9px] uppercase font-bold text-muted-foreground">Min</span>
+                    </div>
+
+                    <div className="rounded-lg bg-card border border-border p-2.5">
+                      <span className="text-xl sm:text-2xl font-black text-primary font-mono block">
+                        {String(timeLeft.seconds).padStart(2, "0")}
+                      </span>
+                      <span className="text-[9px] uppercase font-bold text-muted-foreground">Sec</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-4 space-y-2">
+                    <Play className="size-8 text-primary mx-auto" />
+                    <p className="text-xs text-muted-foreground">
+                      Regardez les sessions passées sur notre vidéothèque en ligne.
+                    </p>
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Animé par <strong>Alfred Dah</strong></span>
+                  <span className="text-emerald-400 font-bold">100% Gratuit</span>
+                </div>
               </div>
             </div>
 

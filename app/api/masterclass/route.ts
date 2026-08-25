@@ -1,20 +1,37 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
+import { sendMasterclassRegistrationEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
-// Liste initiale de replays YouTube par défaut (modifiables via Admin)
+// Helper pour extraire l'ID YouTube à partir d'un lien standard, raccourci ou ID brut
+function extractYouTubeId(urlOrId: string): string {
+  if (!urlOrId) return ""
+  const clean = urlOrId.trim()
+  if (/^[a-zA-Z0-9_-]{11}$/.test(clean)) return clean
+  const vMatch = clean.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
+  if (vMatch && vMatch[1]) return vMatch[1]
+  const shortMatch = clean.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
+  if (shortMatch && shortMatch[1]) return shortMatch[1]
+  const embedMatch = clean.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/)
+  if (embedMatch && embedMatch[1]) return embedMatch[1]
+  const liveMatch = clean.match(/youtube\.com\/live\/([a-zA-Z0-9_-]{11})/)
+  if (liveMatch && liveMatch[1]) return liveMatch[1]
+  return clean
+}
+
 const DEFAULT_REPLAYS = [
   {
     id: "rep-1",
     title: "Masterclass #1 : Les Fondamentaux du Prompt Engineering & ChatGPT",
     description: "Apprenez à structurer des prompts professionnels pour obtenir des résultats précis dès la première tentative.",
-    youtubeId: "dQw4w9WgXcQ", // Ex. placeholder ID YouTube
+    youtubeId: "dQw4w9WgXcQ",
     youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     duration: "1h 15min",
     category: "Prompting",
     instructor: "Alfred Dah",
-    date: "Dimanche 18 Août 2026",
+    date: "18 Août 2026",
+    is_published: true,
     views: "1 240",
   },
   {
@@ -26,7 +43,8 @@ const DEFAULT_REPLAYS = [
     duration: "1h 22min",
     category: "Automatisation",
     instructor: "Alfred Dah",
-    date: "Dimanche 11 Août 2026",
+    date: "11 Août 2026",
+    is_published: true,
     views: "980",
   },
   {
@@ -38,48 +56,47 @@ const DEFAULT_REPLAYS = [
     duration: "1h 05min",
     category: "Création de Contenu",
     instructor: "Alfred Dah",
-    date: "Dimanche 4 Août 2026",
+    date: "4 Août 2026",
+    is_published: true,
     views: "1 450",
   }
 ]
-
-// Calcul dynamique de la date du prochain dimanche à 19h00 GMT
-function getNextSundayDate(): string {
-  const now = new Date()
-  const day = now.getUTCDay() // 0 = Dimanche
-  const daysUntilSunday = (7 - day) % 7 === 0 && now.getUTCHours() < 20 ? 0 : ((7 - day) % 7 || 7)
-  
-  const nextSunday = new Date(now)
-  nextSunday.setUTCDate(now.getUTCDate() + daysUntilSunday)
-  nextSunday.setUTCHours(19, 0, 0, 0)
-  return nextSunday.toISOString()
-}
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const emailParam = searchParams.get("email")?.toLowerCase().trim()
 
-    // 1. Récupérer les paramètres de la masterclass depuis les settings si disponibles
-    const { data: settingsData } = await supabaseServer
-      .from("platform_settings")
-      .select("*")
-      .maybeSingle()
+    // 1. Récupérer les paramètres et replays depuis site_settings
+    const { data: rows } = await supabaseServer
+      .from("site_settings")
+      .select("key, value")
 
-    const settings = settingsData || {}
-    const nextSundayIso = getNextSundayDate()
+    const settingsMap: Record<string, string> = {}
+    if (rows && rows.length > 0) {
+      rows.forEach((r) => {
+        if (r.key && r.value !== undefined) {
+          settingsMap[r.key] = r.value
+        }
+      })
+    }
+
+    const isActive = settingsMap.masterclass_is_active !== "false" && !!settingsMap.masterclass_date
+    const scheduledAt = settingsMap.masterclass_date || ""
+    const dateDisplay = settingsMap.masterclass_date_display || (scheduledAt ? new Date(scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
 
     const upcomingSession = {
-      title: settings.masterclass_title || "Masterclass IA Hebdomadaire : Fondamentaux & Cas Pratiques en Direct",
-      description: settings.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Questions & réponses, démonstrations d'outils et cas concrets appliqués au marché africain.",
-      instructor: "Alfred Dah",
+      is_active: isActive,
+      title: settingsMap.masterclass_title || "Masterclass IA Interactive en Direct",
+      description: settingsMap.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Démonstrations d'outils, cas pratiques et questions-réponses.",
+      instructor: settingsMap.masterclass_instructor || "Alfred Dah",
       instructorRole: "Fondateur Le Guide IA & Expert en Intelligence Artificielle",
-      scheduledAt: settings.masterclass_date || nextSundayIso,
-      meetUrl: settings.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
-      youtubeLiveUrl: settings.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
-      duration: "1h30",
-      price: "100% Gratuit (Accès Libre)",
-      isLive: false,
+      scheduledAt: scheduledAt,
+      dateDisplay: dateDisplay,
+      meetUrl: settingsMap.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
+      duration: "1h 30min",
+      price: "100% Gratuit (Accès Libre)"
     }
 
     // 2. Vérifier si l'utilisateur est déjà inscrit
@@ -97,8 +114,18 @@ export async function GET(req: Request) {
       }
     }
 
-    // 3. Récupérer les replays (ou fallback sur la liste par défaut)
-    const replays = DEFAULT_REPLAYS
+    // 3. Récupérer les replays configurés et filtrer les replays publiés
+    let replays = DEFAULT_REPLAYS
+    if (settingsMap.masterclass_replays) {
+      try {
+        const parsed = JSON.parse(settingsMap.masterclass_replays)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          replays = parsed.filter((r: any) => r.is_published !== false)
+        }
+      } catch (pErr) {
+        console.warn("Could not parse masterclass_replays JSON:", pErr)
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -180,21 +207,42 @@ export async function POST(req: Request) {
       console.warn("Newsletter sync note:", newsErr)
     }
 
-    // 3. Récupérer les liens de connexion
-    const { data: settingsData } = await supabaseServer
-      .from("platform_settings")
-      .select("masterclass_meet_url, masterclass_youtube_url")
-      .maybeSingle()
+    // 3. Récupérer les données de la session actuelle pour le retour et pour l'email
+    const { data: rows } = await supabaseServer
+      .from("site_settings")
+      .select("key, value")
 
-    const meetUrl = settingsData?.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv"
-    const youtubeLiveUrl = settingsData?.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA"
+    const settingsMap: Record<string, string> = {}
+    if (rows && rows.length > 0) {
+      rows.forEach((r) => {
+        if (r.key && r.value !== undefined) {
+          settingsMap[r.key] = r.value
+        }
+      })
+    }
+
+    const sessionInfo = {
+      title: settingsMap.masterclass_title || "Masterclass IA en Direct",
+      scheduledAt: settingsMap.masterclass_date || "",
+      dateDisplay: settingsMap.masterclass_date_display || "",
+      meetUrl: settingsMap.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
+      instructor: settingsMap.masterclass_instructor || "Alfred Dah"
+    }
+
+    // 4. Envoyer l'email de confirmation immédiat via Resend
+    try {
+      await sendMasterclassRegistrationEmail(fullName, email, sessionInfo)
+    } catch (emailErr) {
+      console.warn("Could not send immediate masterclass confirmation email:", emailErr)
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Inscription confirmée avec succès !",
+      message: "Inscription confirmée avec succès ! Un email avec vos liens d'accès vous a été envoyé.",
       isRegistered: true,
-      meetUrl,
-      youtubeLiveUrl
+      meetUrl: sessionInfo.meetUrl,
+      youtubeLiveUrl: sessionInfo.youtubeLiveUrl
     })
   } catch (error: any) {
     console.error("Masterclass POST error:", error)
