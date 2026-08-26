@@ -4,10 +4,12 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { 
   Sparkles, Clock, Video, Radio, 
-  ArrowRight, ShieldCheck, Play 
+  ArrowRight, ShieldCheck, Play, CheckCircle2 
 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export function MasterclassHomeSection() {
+  const [isRegistered, setIsRegistered] = useState(false)
   const [sessionData, setSessionData] = useState<any>({
     is_active: true,
     title: "Masterclass IA Interactive en Direct",
@@ -21,10 +23,23 @@ export function MasterclassHomeSection() {
   useEffect(() => {
     async function loadSession() {
       try {
-        const res = await fetch("/api/masterclass")
+        const { data: { session: authSession } } = await supabase.auth.getSession()
+        const userEmail = authSession?.user?.email
+        const storedEmail = typeof window !== "undefined" ? localStorage.getItem("masterclass_registered_email") : null
+        const isLocallyRegistered = typeof window !== "undefined" && localStorage.getItem("masterclass_registered") === "true"
+
+        if (isLocallyRegistered) {
+          setIsRegistered(true)
+        }
+
+        const emailToCheck = userEmail || storedEmail || ""
+        const res = await fetch(`/api/masterclass${emailToCheck ? `?email=${encodeURIComponent(emailToCheck)}` : ""}`)
         const data = await res.json()
         if (data.upcomingSession) {
           setSessionData(data.upcomingSession)
+        }
+        if (data.isRegistered || isLocallyRegistered) {
+          setIsRegistered(true)
         }
       } catch (e) {
         console.warn("Could not fetch masterclass for homepage:", e)
@@ -125,10 +140,23 @@ export function MasterclassHomeSection() {
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Link
                   href="/masterclass"
-                  className="inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs shadow-md active:scale-95 transition-all"
+                  className={`inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-black text-xs shadow-md active:scale-95 transition-all ${
+                    isRegistered
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/30"
+                      : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                  }`}
                 >
-                  <Sparkles className="size-4 text-primary-foreground" />
-                  <span>{sessionData.is_active ? "Réserver ma place gratuite" : "Découvrir les Masterclasses"}</span>
+                  {isRegistered ? (
+                    <>
+                      <CheckCircle2 className="size-4 text-white" />
+                      <span>✓ Déjà inscrit (Accéder au direct)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="size-4 text-primary-foreground" />
+                      <span>{sessionData.is_active ? "Réserver ma place gratuite" : "Découvrir les Masterclasses"}</span>
+                    </>
+                  )}
                   <ArrowRight className="size-3.5" />
                 </Link>
 

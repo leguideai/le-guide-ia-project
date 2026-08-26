@@ -523,11 +523,25 @@ export default function DashboardPage() {
 
       // 10. Synchroniser les données Masterclasses & Replays
       try {
+        const isLocallyReg = typeof window !== "undefined" && (
+          localStorage.getItem("masterclass_registered") === "true" ||
+          localStorage.getItem("masterclass_registered_email") === userEmailClean
+        )
+        if (isLocallyReg) {
+          setIsMasterclassRegistered(true)
+        }
+
         const mcRes = await fetch(`/api/masterclass?email=${encodeURIComponent(userEmailClean)}`)
         const mcData = await mcRes.json()
         if (mcData?.upcomingSession) setMasterclassSession(mcData.upcomingSession)
         if (mcData?.replays && Array.isArray(mcData.replays)) setMasterclassReplays(mcData.replays)
-        if (mcData?.isRegistered) setIsMasterclassRegistered(true)
+        if (mcData?.isRegistered || isLocallyReg) {
+          setIsMasterclassRegistered(true)
+          if (typeof window !== "undefined") {
+            localStorage.setItem("masterclass_registered", "true")
+            localStorage.setItem("masterclass_registered_email", userEmailClean)
+          }
+        }
       } catch (mcErr) {
         console.warn("Could not load masterclass data in dashboard:", mcErr)
       }
@@ -557,6 +571,10 @@ export default function DashboardPage() {
       const data = await res.json()
       if (data.success) {
         setIsMasterclassRegistered(true)
+        if (typeof window !== "undefined") {
+          localStorage.setItem("masterclass_registered", "true")
+          localStorage.setItem("masterclass_registered_email", user.email)
+        }
         setMasterclassRegisterSuccess("🎉 Votre place en direct est confirmée ! Vos liens d'accès vous ont été envoyés par email.")
       } else {
         alert(data.error || "Erreur lors de la réservation.")
@@ -1200,9 +1218,20 @@ export default function DashboardPage() {
                 className="group w-full py-2 px-3 rounded-xl border border-slate-200 bg-white hover:border-primary/50 transition-colors cursor-pointer flex items-center gap-3 overflow-hidden shadow-2xs"
               >
                 {/* Badge Fixe Gauche */}
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider shrink-0 shadow-2xs">
-                  <span className="size-1.5 rounded-full bg-white animate-ping" />
-                  <span>DIRECT</span>
+                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-white text-[10px] font-black uppercase tracking-wider shrink-0 shadow-2xs ${
+                  isMasterclassRegistered ? "bg-emerald-600" : "bg-rose-500"
+                }`}>
+                  {isMasterclassRegistered ? (
+                    <>
+                      <CheckCircle2 className="size-3" />
+                      <span>INSCRIT</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="size-1.5 rounded-full bg-white animate-ping" />
+                      <span>DIRECT</span>
+                    </>
+                  )}
                 </div>
 
                 {/* Conteneur Texte Défilant Continu */}
@@ -1215,7 +1244,9 @@ export default function DashboardPage() {
                       <span className="text-slate-300">•</span>
                       <span className="text-slate-600">Animé par {masterclassSession.instructor || "Alfred Dah"}</span>
                       <span className="text-slate-300">•</span>
-                      <span className="text-emerald-700 font-bold">100% Inclus Membre</span>
+                      <span className="text-emerald-700 font-bold">
+                        {isMasterclassRegistered ? "✓ Place réservée pour vous" : "100% Inclus Membre"}
+                      </span>
                     </span>
 
                     <span className="inline-flex items-center gap-2" aria-hidden="true">
@@ -1225,14 +1256,18 @@ export default function DashboardPage() {
                       <span className="text-slate-300">•</span>
                       <span className="text-slate-600">Animé par {masterclassSession.instructor || "Alfred Dah"}</span>
                       <span className="text-slate-300">•</span>
-                      <span className="text-emerald-700 font-bold">100% Inclus Membre</span>
+                      <span className="text-emerald-700 font-bold">
+                        {isMasterclassRegistered ? "✓ Place réservée pour vous" : "100% Inclus Membre"}
+                      </span>
                     </span>
                   </div>
                 </div>
 
                 {/* Lien Fixe Droite */}
                 <div className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:translate-x-0.5 transition-transform shrink-0">
-                  <span className="hidden sm:inline">Rejoindre</span>
+                  <span className="hidden sm:inline">
+                    {isMasterclassRegistered ? "Accéder au direct" : "Rejoindre"}
+                  </span>
                   <ChevronRight className="size-4" />
                 </div>
               </div>

@@ -10,7 +10,7 @@ import {
   Play, Video, Calendar, Clock, CheckCircle2, 
   Sparkles, ArrowRight, Radio, ExternalLink, 
   LogIn, UserCheck, Search, Filter, ShieldCheck, X,
-  Tv, Award, Zap
+  Tv, Award, Zap, Mail
 } from "lucide-react"
 
 interface ReplayItem {
@@ -33,6 +33,8 @@ export default function MasterclassHubPage() {
   const [isRegistered, setIsRegistered] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
+  const [guestEmail, setGuestEmail] = useState("")
+  const [guestName, setGuestName] = useState("")
   
   const [upcomingSession, setUpcomingSession] = useState<any>({
     is_active: false,
@@ -57,7 +59,7 @@ export default function MasterclassHubPage() {
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null)
 
-  // 1. Initial Load & Auth check
+  // 1. Initial Load & Auth / Registration check
   useEffect(() => {
     async function init() {
       try {
@@ -65,15 +67,29 @@ export default function MasterclassHubPage() {
         const user = session?.user || null
         setCurrentUser(user)
 
-        // Fetch dynamic session and replays
-        const res = await fetch(`/api/masterclass${user?.email ? `?email=${encodeURIComponent(user.email)}` : ""}`)
+        // Check local storage for persistent registration status
+        const storedEmail = typeof window !== "undefined" ? localStorage.getItem("masterclass_registered_email") : null
+        const isLocallyRegistered = typeof window !== "undefined" && localStorage.getItem("masterclass_registered") === "true"
+
+        if (isLocallyRegistered) {
+          setIsRegistered(true)
+        }
+
+        const emailToCheck = user?.email || storedEmail || ""
+
+        // Fetch dynamic session and replays from Supabase
+        const res = await fetch(`/api/masterclass${emailToCheck ? `?email=${encodeURIComponent(emailToCheck)}` : ""}`)
         const data = await res.json()
 
         if (data.upcomingSession) {
           setUpcomingSession(data.upcomingSession)
         }
-        if (data.isRegistered) {
+        if (data.isRegistered || isLocallyRegistered) {
           setIsRegistered(true)
+          if (emailToCheck && typeof window !== "undefined") {
+            localStorage.setItem("masterclass_registered", "true")
+            localStorage.setItem("masterclass_registered_email", emailToCheck)
+          }
         }
         if (data.replays && Array.isArray(data.replays)) {
           setReplays(data.replays)
@@ -104,7 +120,7 @@ export default function MasterclassHubPage() {
         return {
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
           hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
+          minutes: Math.floor((difference / (1000 * 60 * 60)) % 24),
           seconds: Math.floor((difference / 1000) % 60),
         }
       }
@@ -119,9 +135,16 @@ export default function MasterclassHubPage() {
     return () => clearInterval(timer)
   }, [upcomingSession?.scheduledAt, upcomingSession?.is_active])
 
-  // 3. One-click frictionless registration for connected user
-  async function handleOneClickRegister() {
-    if (!currentUser?.email) return
+  // 3. Registration handler (for both logged-in and guest users)
+  async function handleRegister(explicitEmail?: string, explicitName?: string) {
+    const emailToSubmit = explicitEmail || currentUser?.email || guestEmail.trim()
+    const nameToSubmit = explicitName || currentUser?.user_metadata?.full_name || guestName.trim() || emailToSubmit.split("@")[0]
+
+    if (!emailToSubmit || !emailToSubmit.includes("@")) {
+      setFeedbackMsg("Veuillez saisir une adresse email valide.")
+      return
+    }
+
     setRegistering(true)
     setFeedbackMsg(null)
 
@@ -130,16 +153,20 @@ export default function MasterclassHubPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: currentUser.email,
-          fullName: currentUser.user_metadata?.full_name || currentUser.email.split("@")[0],
-          country: currentUser.user_metadata?.country || "CI"
+          email: emailToSubmit,
+          fullName: nameToSubmit,
+          country: currentUser?.user_metadata?.country || "CI"
         })
       })
 
       const data = await res.json()
       if (data.success) {
         setIsRegistered(true)
-        setFeedbackMsg("🎉 Votre place est confirmée ! Vos liens d'accès vous ont été envoyés par email.")
+        if (typeof window !== "undefined") {
+          localStorage.setItem("masterclass_registered", "true")
+          localStorage.setItem("masterclass_registered_email", emailToSubmit)
+        }
+        setFeedbackMsg("🎉 Votre place est confirmée ! Vos liens d'accès direct sont débloqués.")
       } else {
         setFeedbackMsg(data.error || "Erreur lors de la réservation.")
       }
@@ -159,6 +186,146 @@ export default function MasterclassHubPage() {
     return matchCat && matchQuery
   })
 
+  // Composant du bloc d'action (Boutons de réservation ou Liens direct débloqués)
+  const renderActionBox = () => (
+    <div className="p-5 sm:p-6 rounded-2xl border border-border bg-card space-y-4 text-left shadow-lg">
+      {authChecking ? (
+        <div className="py-3 text-center text-xs text-muted-foreground animate-pulse">
+          Vérification de votre statut d'inscription...
+        </div>
+      ) : isRegistered ? (
+        /* État : DÉJÀ INSCRIT */
+        <div className="space-y-4">
+          <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-sm bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl">
+            <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
+            <span>Votre place est confirmée pour ce direct !</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <a
+              href={upcomingSession.meetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md"
+            >
+              <Video className="size-4" />
+              <span>Rejoindre sur Google Meet</span>
+              <ExternalLink className="size-3.5 opacity-80" />
+            </a>
+
+            <a
+              href={upcomingSession.youtubeLiveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md"
+            >
+              <Play className="size-4 fill-current" />
+              <span>Suivre sur YouTube Live</span>
+            </a>
+          </div>
+
+          <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>Email enregistré : {currentUser?.email || (typeof window !== "undefined" && localStorage.getItem("masterclass_registered_email")) || "Confirmé"}</span>
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  localStorage.removeItem("masterclass_registered")
+                  localStorage.removeItem("masterclass_registered_email")
+                }
+                setIsRegistered(false)
+              }}
+              className="text-primary hover:underline font-semibold cursor-pointer"
+            >
+              Changer d'email
+            </button>
+          </div>
+        </div>
+      ) : currentUser ? (
+        /* État : Utilisateur connecté mais pas encore inscrit */
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <UserCheck className="size-4 text-primary" />
+            <span>Connecté en tant que <strong className="text-white">{currentUser.email}</strong></span>
+          </div>
+
+          <button
+            type="button"
+            disabled={registering}
+            onClick={() => handleRegister()}
+            className="w-full py-3.5 px-6 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+          >
+            {registering ? (
+              <span>Réservation en cours...</span>
+            ) : (
+              <>
+                <span>Réserver ma place gratuite en 1 clic</span>
+                <ArrowRight className="size-4" />
+              </>
+            )}
+          </button>
+          <p className="text-[11px] text-muted-foreground text-center">
+            🔒 Inscription 100% gratuite • Liens Google Meet et YouTube envoyés instantanément.
+          </p>
+        </div>
+      ) : (
+        /* État : Visiteur non connecté */
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+              Réservez votre place gratuite :
+            </h4>
+            <p className="text-[11px] text-muted-foreground">
+              Recevez les liens Google Meet et YouTube Live directement par email.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleRegister()
+            }}
+            className="space-y-2.5"
+          >
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="email"
+                required
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                placeholder="Votre adresse email..."
+                className="flex-1 rounded-xl border border-border bg-[#090d16] px-3.5 py-2.5 text-xs text-white placeholder:text-muted-foreground outline-none focus:border-primary"
+              />
+              <button
+                type="submit"
+                disabled={registering}
+                className="py-2.5 px-5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md cursor-pointer"
+              >
+                {registering ? "..." : "Réserver ma place"}
+                <ArrowRight className="size-3.5" />
+              </button>
+            </div>
+          </form>
+
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border">
+            <span>Déjà inscrit sur la plateforme ?</span>
+            <Link
+              href="/login?redirect=/masterclass"
+              className="text-primary hover:underline font-bold"
+            >
+              Se connecter
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {feedbackMsg && (
+        <div className="p-3 rounded-lg bg-[#090d16] border border-border text-xs text-emerald-400 font-semibold">
+          {feedbackMsg}
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <main className="min-h-screen bg-[#090d16] text-white selection:bg-primary selection:text-slate-950 font-sans">
       
@@ -167,10 +334,128 @@ export default function MasterclassHubPage() {
 
       {/* 2. SI MASTERCLASS EN DIRECT PROGRAMMÉE (is_active === true) */}
       {upcomingSession?.is_active ? (
-        <section className="relative pt-10 pb-14 px-4 max-w-7xl mx-auto overflow-hidden">
-          <div className="grid gap-12 lg:grid-cols-12 items-center">
+        <section className="relative pt-6 sm:pt-10 pb-14 px-4 max-w-7xl mx-auto overflow-hidden">
+          
+          {/* ========================================================================= */}
+          {/* VERSION MOBILE (< lg) : AFFICHE EN HAUT + BOUTON D'ACTION JUSTE EN DESSOUS */}
+          {/* ========================================================================= */}
+          <div className="lg:hidden space-y-6 text-left">
             
-            {/* Colonne Gauche: Infos & Réservation 1-Clic */}
+            {/* Tag Direct & Titre Mobile */}
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold">
+                <Radio className="size-3.5 text-rose-500 animate-pulse" />
+                <span className="text-white">
+                  {upcomingSession.dateDisplay ? `DIRECT : ${upcomingSession.dateDisplay.toUpperCase()}` : "PROCHAINE SESSION EN DIRECT"}
+                </span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight font-heading">
+                {upcomingSession.title}
+              </h1>
+            </div>
+
+            {/* BLOC AFFICHE + BOUTON D'INSCRIPTION EN BAS DE L'AFFICHE (Mobile First) */}
+            <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-2xl space-y-4 text-center">
+              
+              {/* Miniature / Affiche Officielle */}
+              {upcomingSession.thumbnailUrl && (
+                <div className="relative aspect-video rounded-2xl overflow-hidden border border-border bg-black/60 shadow-lg">
+                  <img
+                    src={upcomingSession.thumbnailUrl}
+                    alt={upcomingSession.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                    <span className="size-1.5 rounded-full bg-white animate-ping" />
+                    Session en Direct
+                  </span>
+                </div>
+              )}
+
+              {/* Date & Compte à Rebours Mobile */}
+              <div className="space-y-2">
+                <h3 className="text-base sm:text-lg font-bold text-white font-heading">
+                  {upcomingSession.dateDisplay || "En Direct Prochainement"}
+                </h3>
+
+                {timeLeft && (
+                  <div className="grid grid-cols-4 gap-1.5 py-1">
+                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
+                      <span className="text-xl font-black text-white font-mono">{timeLeft.days}</span>
+                      <span className="block text-[9px] text-muted-foreground uppercase font-bold">Jours</span>
+                    </div>
+                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
+                      <span className="text-xl font-black text-white font-mono">{timeLeft.hours}</span>
+                      <span className="block text-[9px] text-muted-foreground uppercase font-bold">Heures</span>
+                    </div>
+                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
+                      <span className="text-xl font-black text-white font-mono">{timeLeft.minutes}</span>
+                      <span className="block text-[9px] text-muted-foreground uppercase font-bold">Min</span>
+                    </div>
+                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
+                      <span className="text-xl font-black text-primary font-mono">{timeLeft.seconds}</span>
+                      <span className="block text-[9px] text-muted-foreground uppercase font-bold">Sec</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* BOUTON D'INSCRIPTION / LIENS LIVE DÉBLOQUÉS (Placé directement en bas de l'affiche) */}
+              <div className="pt-1">
+                {renderActionBox()}
+              </div>
+
+            </div>
+
+            {/* Détails et Highlights (Mobile) */}
+            <div className="space-y-4 pt-2">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {upcomingSession.description}
+              </p>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
+                  <Clock className="size-4 text-primary mx-auto" />
+                  <span className="block text-[10px] text-muted-foreground font-bold uppercase">Durée</span>
+                  <p className="text-[11px] text-white font-bold">{upcomingSession.duration}</p>
+                </div>
+                <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
+                  <Video className="size-4 text-primary mx-auto" />
+                  <span className="block text-[10px] text-muted-foreground font-bold uppercase">Plateforme</span>
+                  <p className="text-[11px] text-white font-bold">Google Meet</p>
+                </div>
+                <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
+                  <ShieldCheck className="size-4 text-emerald-400 mx-auto" />
+                  <span className="block text-[10px] text-muted-foreground font-bold uppercase">Tarif</span>
+                  <p className="text-[11px] text-emerald-400 font-bold">100% Gratuit</p>
+                </div>
+              </div>
+
+              {/* Formateur Mobile */}
+              <div className="p-4 rounded-2xl border border-border bg-card flex items-center gap-3">
+                <div className="size-11 rounded-full overflow-hidden border border-border shrink-0 bg-slate-800">
+                  <img
+                    src="/Logo avatar.png"
+                    alt={upcomingSession.instructor}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-xs text-white truncate">{upcomingSession.instructor}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{upcomingSession.instructorRole}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ========================================================================= */}
+          {/* VERSION DESKTOP (lg:grid-cols-12) : 2 COLONNES CLASSIC CLEAN LAYOUT       */}
+          {/* ========================================================================= */}
+          <div className="hidden lg:grid gap-12 lg:grid-cols-12 items-center">
+            
+            {/* Colonne Gauche: Infos & Action Box Desktop */}
             <div className="lg:col-span-7 space-y-6 text-left">
               
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold">
@@ -180,7 +465,7 @@ export default function MasterclassHubPage() {
                 </span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight font-heading">
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight font-heading">
                 {upcomingSession.title}
               </h1>
 
@@ -215,111 +500,16 @@ export default function MasterclassHubPage() {
                 </div>
               </div>
 
-              {/* Zone d'action: Réservation 1-Clic ou Liens directs */}
-              <div className="p-6 rounded-2xl border border-border bg-card space-y-4">
-                {authChecking ? (
-                  <div className="py-4 text-center text-xs text-muted-foreground animate-pulse">
-                    Vérification de votre compte...
-                  </div>
-                ) : isRegistered ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-sm">
-                      <CheckCircle2 className="size-5 shrink-0" />
-                      <span>Votre place est confirmée pour ce direct !</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Un email de confirmation vous a été envoyé. Vous pouvez rejoindre la salle directement ci-dessous le jour J.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                      <a
-                        href={upcomingSession.meetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 py-3 px-4 rounded-xl bg-primary text-slate-950 font-bold text-xs text-center flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                      >
-                        <Video className="size-4" />
-                        <span>Rejoindre la salle Google Meet</span>
-                        <ExternalLink className="size-3.5" />
-                      </a>
-
-                      <a
-                        href={upcomingSession.youtubeLiveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-3 px-4 rounded-xl border border-border bg-card text-white font-bold text-xs text-center flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
-                      >
-                        <Play className="size-4 text-rose-500 fill-rose-500" />
-                        <span>Suivre sur YouTube</span>
-                      </a>
-                    </div>
-                  </div>
-                ) : currentUser ? (
-                  /* Utilisateur connecté: 1-Clic sans formulaire */
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <UserCheck className="size-4 text-primary" />
-                        <span>Connecté en tant que <strong className="text-white">{currentUser.email}</strong></span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={registering}
-                      onClick={handleOneClickRegister}
-                      className="w-full py-3.5 px-6 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
-                    >
-                      {registering ? (
-                        <span>Réservation en cours...</span>
-                      ) : (
-                        <>
-                          <span>Réserver ma place en 1 clic</span>
-                          <ArrowRight className="size-4" />
-                        </>
-                      )}
-                    </button>
-                
-                  </div>
-                ) : (
-                  /* Visiteur non connecté: boutons de connexion */
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold text-white">
-                      Connectez-vous pour réserver votre place en 1 clic :
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Link
-                        href="/login?redirect=/masterclass"
-                        className="flex-1 py-3 px-4 rounded-xl bg-primary text-slate-950 font-bold text-xs text-center flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                      >
-                        <LogIn className="size-4" />
-                        <span>Se connecter au site</span>
-                      </Link>
-
-                      <Link
-                        href="/register-account?redirect=/masterclass"
-                        className="flex-1 py-3 px-4 rounded-xl border border-border bg-card text-white font-bold text-xs text-center flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
-                      >
-                        <span>Créer un compte gratuit</span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                {feedbackMsg && (
-                  <div className="p-3 rounded-lg bg-card border border-border text-xs text-white">
-                    {feedbackMsg}
-                  </div>
-                )}
-              </div>
+              {/* Action Box Desktop */}
+              {renderActionBox()}
 
             </div>
 
-            {/* Colonne Droite: Affiche & Compte à Rebours */}
+            {/* Colonne Droite: Affiche & Compte à Rebours Desktop */}
             <div className="lg:col-span-5">
               <div className="p-6 sm:p-8 rounded-3xl border border-border bg-card shadow-2xl space-y-6 text-center">
                 
-                {/* Miniature / Affiche Officielle Uploader */}
+                {/* Miniature / Affiche Officielle */}
                 {upcomingSession.thumbnailUrl && (
                   <div className="relative aspect-video rounded-2xl overflow-hidden border border-border bg-black/60 shadow-lg">
                     <img
@@ -335,7 +525,6 @@ export default function MasterclassHubPage() {
                 )}
 
                 <div className="space-y-1">
-                
                   <h3 className="text-xl font-bold text-white font-heading">
                     {upcomingSession.dateDisplay || "En Direct Prochainement"}
                   </h3>
@@ -518,64 +707,54 @@ export default function MasterclassHubPage() {
                 </div>
 
                 {/* Contenu de la Carte */}
-                <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="font-bold text-sm text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <h3 className="font-heading font-bold text-base text-white group-hover:text-primary transition-colors line-clamp-2">
                       {replay.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1.5">
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {replay.description}
                     </p>
                   </div>
 
-                  <div className="space-y-3 pt-3 border-t border-border">
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span>{replay.instructor}</span>
-                      <span>{replay.date}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveVideoModal(replay)}
-                      className="w-full py-2.5 px-4 rounded-xl border border-border bg-[#090d16] hover:bg-primary hover:text-slate-950 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Play className="size-3.5 fill-current" />
-                      <span>Regarder le Replay</span>
-                    </button>
+                  <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="font-medium text-slate-300">{replay.instructor}</span>
+                    <span>{replay.date}</span>
                   </div>
+
+                  <button
+                    onClick={() => setActiveVideoModal(replay)}
+                    className="w-full py-2.5 px-4 rounded-xl border border-border bg-[#090d16] hover:bg-primary hover:text-slate-950 hover:border-primary text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  >
+                    <Play className="size-3.5 fill-current" />
+                    <span>Visionner le Replay</span>
+                  </button>
                 </div>
               </div>
             ))}
           </div>
 
-          {filteredReplays.length === 0 && (
-            <div className="py-16 text-center text-muted-foreground text-xs">
-              Aucun replay ne correspond à votre recherche.
-            </div>
-          )}
-
         </section>
       )}
 
-      {/* Lecteur Vidéo Modal YouTube */}
+      {/* 5. Modal Lecteur Vidéo HD */}
       {activeVideoModal && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl space-y-4">
+          <div className="bg-card border border-border rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl space-y-4">
             
             <div className="p-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold text-white truncate max-w-[80%]">
-                <Radio className="size-4 text-rose-500" />
+                <Play className="size-4 text-primary fill-primary" />
                 <span className="truncate">{activeVideoModal.title}</span>
               </div>
               <button
                 onClick={() => setActiveVideoModal(null)}
-                className="p-1.5 rounded-lg border border-border bg-[#090d16] text-muted-foreground hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            {/* Iframe YouTube */}
             <div className="px-4">
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
                 <iframe
@@ -588,10 +767,10 @@ export default function MasterclassHubPage() {
               </div>
             </div>
 
-            <div className="p-4 pt-0 text-left space-y-1">
-              <p className="text-xs text-muted-foreground">{activeVideoModal.description}</p>
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-2">
-                <span>Formateur : {activeVideoModal.instructor}</span>
+            <div className="p-5 pt-1 text-left space-y-2">
+              <p className="text-xs text-muted-foreground leading-relaxed">{activeVideoModal.description}</p>
+              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-border">
+                <span>Formateur : <strong className="text-white">{activeVideoModal.instructor}</strong></span>
                 <span>Date : {activeVideoModal.date}</span>
               </div>
             </div>
@@ -600,12 +779,13 @@ export default function MasterclassHubPage() {
         </div>
       )}
 
-      {/* 5. Pied de Page Global du Site */}
+      {/* 6. Footer Global */}
       <CtaFooter />
 
       {/* Éléments Flottants */}
       <ScrollToTop />
       <WhatsAppFloat />
+
     </main>
   )
 }

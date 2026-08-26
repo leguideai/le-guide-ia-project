@@ -2,18 +2,33 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, CheckCircle2 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export function MasterclassTicker() {
   const [session, setSession] = useState<any>(null)
+  const [isRegistered, setIsRegistered] = useState(false)
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/masterclass")
+        const { data: { session: authSession } } = await supabase.auth.getSession()
+        const userEmail = authSession?.user?.email
+        const storedEmail = typeof window !== "undefined" ? localStorage.getItem("masterclass_registered_email") : null
+        const isLocallyRegistered = typeof window !== "undefined" && localStorage.getItem("masterclass_registered") === "true"
+
+        if (isLocallyRegistered) {
+          setIsRegistered(true)
+        }
+
+        const emailToCheck = userEmail || storedEmail || ""
+        const res = await fetch(`/api/masterclass${emailToCheck ? `?email=${encodeURIComponent(emailToCheck)}` : ""}`)
         const data = await res.json()
         if (data?.upcomingSession?.is_active) {
           setSession(data.upcomingSession)
+        }
+        if (data?.isRegistered || isLocallyRegistered) {
+          setIsRegistered(true)
         }
       } catch (e) {
         console.warn("Could not load masterclass ticker:", e)
@@ -31,10 +46,21 @@ export function MasterclassTicker() {
         {/* Badge Fixe Gauche */}
         <Link 
           href="/masterclass"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shrink-0 transition-colors shadow-xs"
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] font-black uppercase tracking-wider shrink-0 transition-colors shadow-xs ${
+            isRegistered ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-500 hover:bg-rose-600"
+          }`}
         >
-          <span className="size-1.5 rounded-full bg-white animate-ping" />
-          <span>DIRECT</span>
+          {isRegistered ? (
+            <>
+              <CheckCircle2 className="size-3" />
+              <span>INSCRIT</span>
+            </>
+          ) : (
+            <>
+              <span className="size-1.5 rounded-full bg-white animate-ping" />
+              <span>DIRECT</span>
+            </>
+          )}
         </Link>
 
         {/* Texte Défilant Continu (Marquee) */}
@@ -47,7 +73,9 @@ export function MasterclassTicker() {
               <span className="text-muted-foreground">•</span>
               <span>Animé par {session.instructor || "Alfred Dah"}</span>
               <span className="text-muted-foreground">•</span>
-              <span className="text-emerald-400 font-bold">100% Gratuit (Accès Libre)</span>
+              <span className="text-emerald-400 font-bold">
+                {isRegistered ? "✓ Place réservée pour vous" : "100% Gratuit (Accès Libre)"}
+              </span>
             </span>
 
             <span className="inline-flex items-center gap-2" aria-hidden="true">
@@ -57,7 +85,9 @@ export function MasterclassTicker() {
               <span className="text-muted-foreground">•</span>
               <span>Animé par {session.instructor || "Alfred Dah"}</span>
               <span className="text-muted-foreground">•</span>
-              <span className="text-emerald-400 font-bold">100% Gratuit (Accès Libre)</span>
+              <span className="text-emerald-400 font-bold">
+                {isRegistered ? "✓ Place réservée pour vous" : "100% Gratuit (Accès Libre)"}
+              </span>
             </span>
           </div>
         </Link>
@@ -67,7 +97,9 @@ export function MasterclassTicker() {
           href="/masterclass"
           className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors shrink-0"
         >
-          <span className="hidden sm:inline">Réserver ma place</span>
+          <span className="hidden sm:inline">
+            {isRegistered ? "Accéder au direct" : "Réserver ma place"}
+          </span>
           <ChevronRight className="size-4" />
         </Link>
 
