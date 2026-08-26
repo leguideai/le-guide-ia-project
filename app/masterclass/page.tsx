@@ -155,6 +155,7 @@ export default function MasterclassHubPage() {
         body: JSON.stringify({
           email: emailToSubmit,
           fullName: nameToSubmit,
+          whatsapp: currentUser?.user_metadata?.whatsapp || "",
           country: currentUser?.user_metadata?.country || "CI"
         })
       })

@@ -144,9 +144,14 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
     const email = (body.email || "").toLowerCase().trim()
-    const fullName = body.fullName || body.name || "Participant Masterclass"
+    const fullName = body.fullName || body.name || ""
     const whatsapp = body.whatsapp || ""
     const country = body.country || "CI"
+
+    const cleanWhatsApp = (whatsapp && whatsapp.trim()) ? whatsapp.trim() : `wa_${email}`
+    const cleanFullName = (fullName && fullName.trim() && fullName !== "Participant Masterclass") 
+      ? fullName.trim() 
+      : email.split("@")[0]
 
     if (!email) {
       return NextResponse.json({ error: "Adresse email requise." }, { status: 400 })
@@ -163,10 +168,10 @@ export async function POST(req: Request) {
     let regId = existingReg?.id
 
     const regPayload: any = {
-      full_name: fullName,
+      full_name: cleanFullName,
       email: email,
-      whatsapp: whatsapp || null,
-      country: country || null,
+      whatsapp: cleanWhatsApp,
+      country: country || "CI",
       source: "masterclass_dimanche",
       course_slug: "masterclass-ia",
       status: "inscrit",
@@ -177,10 +182,13 @@ export async function POST(req: Request) {
     }
 
     if (existingReg) {
-      await supabaseServer
+      const { error: updErr } = await supabaseServer
         .from("registrations")
         .update(regPayload)
         .eq("id", existingReg.id)
+      if (updErr) {
+        console.warn("Masterclass registration update error:", updErr)
+      }
     } else {
       const { data: newReg, error: regErr } = await supabaseServer
         .from("registrations")
@@ -189,7 +197,17 @@ export async function POST(req: Request) {
         .single()
 
       if (regErr) {
-        console.warn("Masterclass registration insert note:", regErr)
+        console.warn("Masterclass registration insert error:", regErr)
+        // Retry with timestamped unique whatsapp if conflict
+        if (regErr.code === "23505") {
+          regPayload.whatsapp = `wa_${email}_${Date.now()}`
+          const { data: retryReg } = await supabaseServer
+            .from("registrations")
+            .insert(regPayload)
+            .select("id")
+            .single()
+          if (retryReg) regId = retryReg.id
+        }
       }
       if (newReg) {
         regId = newReg.id
@@ -200,7 +218,7 @@ export async function POST(req: Request) {
     try {
       await supabaseServer.from("newsletter_subscribers").upsert({
         email: email,
-        name: fullName,
+        name: cleanFullName,
         status: "active",
         subscribed_at: new Date().toISOString()
       }, { onConflict: "email" })

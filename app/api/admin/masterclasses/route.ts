@@ -108,11 +108,16 @@ export async function GET() {
     }
 
     // 2. Récupérer les inscriptions liées à la Masterclass
-    const { data: participants } = await supabaseServer
+    const { data: rawParticipants } = await supabaseServer
       .from("registrations")
       .select("id, full_name, email, whatsapp, country, status, created_at, notes, course_slug, source")
-      .or("course_slug.eq.masterclass-ia,source.eq.masterclass_dimanche")
+      .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,course_slug.eq.masterclass-live,source.eq.masterclass_dimanche")
       .order("created_at", { ascending: false })
+
+    const participants = (rawParticipants || []).map(p => ({
+      ...p,
+      whatsapp: (p.whatsapp && !p.whatsapp.startsWith("wa_") && !p.whatsapp.includes("@")) ? p.whatsapp : ""
+    }))
 
     return NextResponse.json({
       success: true,
@@ -255,6 +260,96 @@ export async function POST(req: Request) {
         success: true,
         replays,
         message: "Replay supprimé avec succès !"
+      })
+    }
+
+    if (action === "add_participant") {
+      const { participantData } = body
+      if (!participantData?.email) {
+        return NextResponse.json({ error: "Email requis pour l'inscription." }, { status: 400 })
+      }
+
+      const emailClean = participantData.email.toLowerCase().trim()
+      const cleanWhatsApp = (participantData.whatsapp && participantData.whatsapp.trim()) 
+        ? participantData.whatsapp.trim() 
+        : `wa_${emailClean}`
+      const cleanFullName = participantData.fullName || participantData.full_name || emailClean.split("@")[0]
+
+      const regPayload = {
+        full_name: cleanFullName,
+        email: emailClean,
+        whatsapp: cleanWhatsApp,
+        country: participantData.country || "CI",
+        source: "masterclass_dimanche",
+        course_slug: "masterclass-ia",
+        status: "inscrit",
+        notes: JSON.stringify({
+          added_by_admin: true,
+          created_at: new Date().toISOString()
+        })
+      }
+
+      let newParticipant: any = null
+      const { data: insData, error: pErr } = await supabaseServer
+        .from("registrations")
+        .insert(regPayload)
+        .select()
+        .single()
+
+      if (pErr) {
+        if (pErr.code === "23505") {
+          regPayload.whatsapp = `wa_${emailClean}_${Date.now()}`
+          const { data: retryData, error: retryErr } = await supabaseServer
+            .from("registrations")
+            .insert(regPayload)
+            .select()
+            .single()
+          if (retryErr) {
+            return NextResponse.json({ error: retryErr.message }, { status: 500 })
+          }
+          newParticipant = retryData
+        } else {
+          return NextResponse.json({ error: pErr.message }, { status: 500 })
+        }
+      } else {
+        newParticipant = insData
+      }
+
+      // Also add to newsletter
+      try {
+        await supabaseServer.from("newsletter_subscribers").upsert({
+          email: emailClean,
+          name: participantData.fullName || participantData.full_name || emailClean.split("@")[0],
+          status: "active",
+          subscribed_at: new Date().toISOString()
+        }, { onConflict: "email" })
+      } catch (nErr) {}
+
+      return NextResponse.json({
+        success: true,
+        participant: newParticipant,
+        message: "Apprenant inscrit à la Masterclass avec succès !"
+      })
+    }
+
+    if (action === "delete_participant") {
+      const { participantId } = body
+      if (!participantId) {
+        return NextResponse.json({ error: "ID participant requis." }, { status: 400 })
+      }
+
+      const { error: delErr } = await supabaseServer
+        .from("registrations")
+        .delete()
+        .eq("id", participantId)
+
+      if (delErr) {
+        return NextResponse.json({ error: delErr.message }, { status: 500 })
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Inscription supprimée avec succès !"
       })
     }
 

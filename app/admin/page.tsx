@@ -207,6 +207,15 @@ export default function SuperAdminDashboard() {
   const [notifyAllUsersOnSave, setNotifyAllUsersOnSave] = useState(false)
   const [sendingPlatformInvite, setSendingPlatformInvite] = useState(false)
   const [platformInviteStatus, setPlatformInviteStatus] = useState<string | null>(null)
+  const [isManualAddParticipantOpen, setIsManualAddParticipantOpen] = useState(false)
+  const [manualParticipantForm, setManualParticipantForm] = useState({
+    fullName: "",
+    email: "",
+    whatsapp: "",
+    country: "CI"
+  })
+  const [addingManualParticipant, setAddingManualParticipant] = useState(false)
+  const [refreshingMasterclass, setRefreshingMasterclass] = useState(false)
 
   // Data states
   const [stats, setStats] = useState({
@@ -800,6 +809,12 @@ export default function SuperAdminDashboard() {
     fetchAllData()
   }, [])
 
+  useEffect(() => {
+    if (activeTab === "masterclasses") {
+      refreshMasterclassData()
+    }
+  }, [activeTab])
+
   async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault()
     setSavingSettings(true)
@@ -1136,6 +1151,69 @@ export default function SuperAdminDashboard() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  async function refreshMasterclassData() {
+    setRefreshingMasterclass(true)
+    try {
+      const res = await fetch("/api/admin/masterclasses")
+      const data = await res.json()
+      if (data.success) {
+        if (data.upcomingSession) setMasterclassSession(data.upcomingSession)
+        if (data.replays) setMasterclassReplays(data.replays)
+        if (data.participants) setMasterclassParticipants(data.participants)
+      }
+    } catch (mErr) {
+      console.warn("Masterclasses refresh warning:", mErr)
+    } finally {
+      setRefreshingMasterclass(false)
+    }
+  }
+
+  async function handleDeleteMasterclassParticipant(participantId: string) {
+    if (!confirm("Voulez-vous vraiment supprimer cette inscription à la Masterclass ?")) return
+    try {
+      const res = await fetch("/api/admin/masterclasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_participant", participantId })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setMasterclassParticipants(prev => prev.filter(p => p.id !== participantId))
+        showNotice("Inscription supprimée avec succès !")
+      } else {
+        alert("Erreur suppression: " + (data.error || ""))
+      }
+    } catch (e: any) {
+      alert("Erreur réseau: " + e.message)
+    }
+  }
+
+  async function handleManualAddMasterclassParticipant(e: React.FormEvent) {
+    e.preventDefault()
+    if (!manualParticipantForm.email) return
+    setAddingManualParticipant(true)
+    try {
+      const res = await fetch("/api/admin/masterclasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add_participant", participantData: manualParticipantForm })
+      })
+      const data = await res.json()
+      if (data.success && data.participant) {
+        setMasterclassParticipants(prev => [data.participant, ...prev])
+        setIsManualAddParticipantOpen(false)
+        setManualParticipantForm({ fullName: "", email: "", whatsapp: "", country: "CI" })
+        showNotice("Apprenant inscrit avec succès à la Masterclass !")
+      } else {
+        alert("Erreur: " + (data.error || ""))
+      }
+    } catch (err: any) {
+      alert("Erreur réseau: " + err.message)
+    } finally {
+      setAddingManualParticipant(false)
+    }
   }
 
   function handleOpenAddTestimonial() {
@@ -5959,15 +6037,46 @@ export default function SuperAdminDashboard() {
                   </h3>
                 </div>
 
-                <div className="relative w-full sm:w-64">
-                  <Search className="size-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={masterclassSearch}
-                    onChange={e => setMasterclassSearch(e.target.value)}
-                    placeholder="Rechercher nom, email..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:border-primary"
-                  />
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={refreshMasterclassData}
+                    disabled={refreshingMasterclass}
+                    className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
+                    title="Actualiser la liste en direct"
+                  >
+                    <RefreshCw className={`size-3.5 ${refreshingMasterclass ? "animate-spin text-primary" : ""}`} />
+                    <span>Actualiser</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsManualAddParticipantOpen(true)}
+                    className="px-3 py-1.5 rounded-xl bg-primary text-slate-950 hover:bg-primary/90 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Inscrire un apprenant</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExportMasterclassParticipants}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Download className="size-3.5" />
+                    <span>Exporter CSV</span>
+                  </button>
+
+                  <div className="relative w-full sm:w-56">
+                    <Search className="size-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={masterclassSearch}
+                      onChange={e => setMasterclassSearch(e.target.value)}
+                      placeholder="Rechercher nom, email..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:border-primary"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -5981,7 +6090,8 @@ export default function SuperAdminDashboard() {
                       <th className="py-2.5 px-3">WhatsApp</th>
                       <th className="py-2.5 px-3">Pays</th>
                       <th className="py-2.5 px-3">Date Inscription</th>
-                      <th className="py-2.5 px-3 text-right">Statut</th>
+                      <th className="py-2.5 px-3 text-center">Statut</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -5998,30 +6108,129 @@ export default function SuperAdminDashboard() {
                       .map((p) => (
                         <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                           <td className="py-2.5 px-3 font-bold text-slate-900">{p.full_name || "—"}</td>
-                          <td className="py-2.5 px-3 font-mono">{p.email}</td>
+                          <td className="py-2.5 px-3 font-mono text-primary font-semibold">{p.email}</td>
                           <td className="py-2.5 px-3 font-mono">{p.whatsapp || "—"}</td>
                           <td className="py-2.5 px-3">{p.country || "CI"}</td>
                           <td className="py-2.5 px-3 text-slate-500">
                             {new Date(p.created_at).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                           </td>
-                          <td className="py-2.5 px-3 text-right">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600">
+                          <td className="py-2.5 px-3 text-center">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-200">
                               {p.status || "inscrit"}
                             </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteMasterclassParticipant(p.id)}
+                              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Supprimer l'inscription"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
                           </td>
                         </tr>
                       ))}
 
                     {masterclassParticipants.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-8 text-center text-slate-400">
-                          Aucun inscrit pour le moment.
+                        <td colSpan={7} className="py-8 text-center text-slate-400">
+                          Aucun inscrit pour le moment. Cliquez sur « Inscrire un apprenant » pour ajouter une inscription ou testez l'inscription sur la page /masterclass.
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+
+              {/* Modal Inscription Manuelle d'un Apprenant */}
+              {isManualAddParticipantOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                      <div className="flex items-center gap-2">
+                        <UserPlus className="size-5 text-primary" />
+                        <h4 className="font-heading text-sm font-bold text-slate-800">
+                          Inscrire Manuellement un Apprenant
+                        </h4>
+                      </div>
+                      <button
+                        onClick={() => setIsManualAddParticipantOpen(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleManualAddMasterclassParticipant} className="space-y-3 text-xs">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700">Nom Complet *</label>
+                        <input
+                          type="text"
+                          required
+                          value={manualParticipantForm.fullName}
+                          onChange={e => setManualParticipantForm({ ...manualParticipantForm, fullName: e.target.value })}
+                          placeholder="Ex: Samba Diop"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700">Adresse Email *</label>
+                        <input
+                          type="email"
+                          required
+                          value={manualParticipantForm.email}
+                          onChange={e => setManualParticipantForm({ ...manualParticipantForm, email: e.target.value })}
+                          placeholder="Ex: apprenant@gmail.com"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="font-bold text-slate-700">WhatsApp</label>
+                          <input
+                            type="text"
+                            value={manualParticipantForm.whatsapp}
+                            onChange={e => setManualParticipantForm({ ...manualParticipantForm, whatsapp: e.target.value })}
+                            placeholder="+221..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="font-bold text-slate-700">Pays</label>
+                          <input
+                            type="text"
+                            value={manualParticipantForm.country}
+                            onChange={e => setManualParticipantForm({ ...manualParticipantForm, country: e.target.value })}
+                            placeholder="Sénégal, CI..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={() => setIsManualAddParticipantOpen(false)}
+                          className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={addingManualParticipant}
+                          className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold hover:bg-primary/90 shadow-xs cursor-pointer"
+                        >
+                          {addingManualParticipant ? "Inscription..." : "Confirmer l'inscription"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
