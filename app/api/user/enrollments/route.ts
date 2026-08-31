@@ -48,35 +48,51 @@ export async function GET(req: Request) {
     const { data: dbCourses } = await supabaseServer.from("courses").select("id, title, slug")
     const allCourses = dbCourses || []
 
-    // 3. Check if user is admin
+    // 3. Check if user is admin (by userId or by email)
+    let profile: any = null
     if (userId) {
-      const { data: profile } = await supabaseServer
+      const { data } = await supabaseServer
         .from("profiles")
         .select("role")
         .eq("id", userId)
         .maybeSingle()
+      profile = data
+    }
+    if (!profile && userEmail) {
+      const { data } = await supabaseServer
+        .from("profiles")
+        .select("role")
+        .ilike("email", userEmail)
+        .maybeSingle()
+      profile = data
+    }
 
-      if (profile?.role === "admin" || profile?.role === "super_admin") {
-        const allIds = ["*"]
-        allCourses.forEach(c => {
-          if (c.id) allIds.push(String(c.id).toLowerCase())
-          if (c.slug) allIds.push(String(c.slug).toLowerCase())
-          if (c.title) allIds.push(normalizeStr(c.title))
-        })
-        return NextResponse.json({
-          success: true,
-          isLoggedIn: true,
-          isAdmin: true,
-          confirmed: allIds,
-          pending: [],
-          pendingDetails: []
-        })
-      }
+    if (profile?.role === "admin" || profile?.role === "super_admin") {
+      const allIds = ["*"]
+      allCourses.forEach(c => {
+        if (c.id) allIds.push(String(c.id).toLowerCase())
+        if (c.slug) allIds.push(String(c.slug).toLowerCase())
+        if (c.title) allIds.push(normalizeStr(c.title))
+      })
+      return NextResponse.json({
+        success: true,
+        isLoggedIn: true,
+        isAdmin: true,
+        confirmed: allIds,
+        pending: [],
+        pendingDetails: []
+      })
     }
 
     const confirmedSet = new Set<string>()
     const pendingSet = new Set<string>()
     const pendingDetails: any[] = []
+
+    const isMasterclass = (slug?: string | null) => {
+      if (!slug) return false
+      const s = slug.toLowerCase()
+      return s.includes("masterclass") || s.includes("dimanche")
+    }
 
     const addCourseIdentifiers = (targetSet: Set<string>, idOrSlugOrTitle?: string | null) => {
       if (!idOrSlugOrTitle) return
@@ -107,7 +123,7 @@ export async function GET(req: Request) {
     // 4. Fetch registrations for user
     const { data: userRegs } = await supabaseServer
       .from("registrations")
-      .select("id, course_id, course_slug, status, created_at, notes")
+      .select("id, course_id, course_slug, status, created_at, notes, source")
       .ilike("email", userEmail)
 
     const regIdToSlug = new Map<string, string>()
@@ -126,7 +142,7 @@ export async function GET(req: Request) {
           regIdToSlug.set(r.id, slugOrId)
           if (["paye", "confirmed", "active"].includes(r.status)) {
             addCourseIdentifiers(confirmedSet, slugOrId)
-          } else {
+          } else if (["en_attente", "pending", "pending_verification"].includes(r.status) && !isMasterclass(slugOrId) && r.source !== "masterclass_dimanche") {
             addCourseIdentifiers(pendingSet, slugOrId)
             pendingDetails.push({
               course_slug: slugOrId,
@@ -150,9 +166,9 @@ export async function GET(req: Request) {
         const targetIdentifier = matchingSlug || p.course_title || (p.course_id ? String(p.course_id) : "")
 
         if (p.registration_id && regIdToSlug.has(p.registration_id)) {
-          if (p.status === "confirmed") {
+          if (["confirmed", "paye", "active"].includes(p.status)) {
             addCourseIdentifiers(confirmedSet, targetIdentifier)
-          } else {
+          } else if (["pending", "en_attente", "pending_verification"].includes(p.status) && !isMasterclass(targetIdentifier)) {
             addCourseIdentifiers(pendingSet, targetIdentifier)
             pendingDetails.push({
               course_slug: targetIdentifier,
@@ -178,7 +194,7 @@ export async function GET(req: Request) {
         const identifier = uc.course_slug || (uc.course_id ? String(uc.course_id) : "")
         if (["active", "confirmed", "completed"].includes(uc.status)) {
           addCourseIdentifiers(confirmedSet, identifier)
-        } else {
+        } else if (["pending", "en_attente", "pending_verification"].includes(uc.status) && !isMasterclass(identifier)) {
           addCourseIdentifiers(pendingSet, identifier)
           pendingDetails.push({
             course_slug: identifier,

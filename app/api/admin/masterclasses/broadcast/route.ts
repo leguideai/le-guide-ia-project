@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       scheduledAt: settingsMap.masterclass_date || "",
       dateDisplay: settingsMap.masterclass_date_display || "",
       thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
-      meetUrl: settingsMap.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
+      whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
       youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
       instructor: settingsMap.masterclass_instructor || "Alfred Dah"
     }

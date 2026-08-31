@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase"
 import { isCourseOpenForPublic } from "@/lib/courses-visibility"
 import { useUserEnrollments } from "@/lib/user-enrollments"
 
-export function UdemyHeroBanner() {
+export function HeroBanner() {
   const { isEnrolledInCourse, isPendingInCourse } = useUserEnrollments()
   const [badge, setBadge] = useState("CO-CRÉEZ VOTRE AVENIR PROFESSIONNEL")
   const [title, setTitle] = useState("Maîtrisez l'IA. Transformez votre carrière et votre business.")

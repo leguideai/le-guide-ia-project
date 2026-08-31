@@ -89,7 +89,7 @@ export async function GET() {
       scheduledAt: scheduledAt,
       dateDisplay: dateDisplay,
       thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
-      meetUrl: settingsMap.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
+      whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
       youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
       duration: "1h 30min",
       price: "100% Gratuit (Accès Libre)"
@@ -144,7 +144,7 @@ export async function POST(req: Request) {
         { key: "masterclass_date", value: sessionData.scheduledAt || "" },
         { key: "masterclass_date_display", value: sessionData.dateDisplay || "" },
         { key: "masterclass_thumbnail_url", value: sessionData.thumbnailUrl || "" },
-        { key: "masterclass_meet_url", value: sessionData.meetUrl || "" },
+        { key: "masterclass_whatsapp_group_url", value: sessionData.whatsappGroupUrl || "" },
         { key: "masterclass_youtube_url", value: sessionData.youtubeLiveUrl || "" },
         { key: "masterclass_instructor", value: sessionData.instructor || "Alfred Dah" },
         { key: "masterclass_is_active", value: sessionData.is_active !== false ? "true" : "false" }

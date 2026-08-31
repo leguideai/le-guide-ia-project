@@ -15,7 +15,15 @@ export async function GET() {
       return NextResponse.json({ success: true, requests: [] })
     }
 
-    return NextResponse.json({ success: true, requests: b2bRequests || [] })
+    const mapped = (b2bRequests || []).map((r: any) => ({
+      ...r,
+      sector: r.sector || r.service_type || "Formation B2B",
+      employees: r.employees || r.company_size || "10-50",
+      needs: r.needs || r.message || "Formation & Audit IA",
+      phone: r.phone || ""
+    }))
+
+    return NextResponse.json({ success: true, requests: mapped })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -29,9 +37,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "requestId et status requis." }, { status: 400 })
     }
 
+    // Map French or display status to valid DB constraint if needed
+    const statusMap: Record<string, string> = {
+      "Nouveau": "new",
+      "Contacté": "contacted",
+      "Devis Envoyé": "quoted",
+      "Gagné": "won",
+      "Perdu": "lost"
+    }
+    const dbStatus = statusMap[status] || status
+
     const { data, error } = await supabaseServer
       .from("service_requests")
-      .update({ status })
+      .update({ status: dbStatus })
       .eq("id", requestId)
       .select()
       .single()

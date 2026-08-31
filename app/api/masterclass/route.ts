@@ -94,7 +94,7 @@ export async function GET(req: Request) {
       scheduledAt: scheduledAt,
       dateDisplay: dateDisplay,
       thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
-      meetUrl: settingsMap.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
+      whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
       youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
       duration: "1h 30min",
       price: "100% Gratuit (Accès Libre)"
@@ -244,14 +244,14 @@ export async function POST(req: Request) {
       title: settingsMap.masterclass_title || "Masterclass IA en Direct",
       scheduledAt: settingsMap.masterclass_date || "",
       dateDisplay: settingsMap.masterclass_date_display || "",
-      meetUrl: settingsMap.masterclass_meet_url || "https://meet.google.com/qvt-gkyh-yuv",
+      whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
       youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
       instructor: settingsMap.masterclass_instructor || "Alfred Dah"
     }
 
     // 4. Envoyer l'email de confirmation immédiat via Resend
     try {
-      await sendMasterclassRegistrationEmail(fullName, email, sessionInfo)
+      await sendMasterclassRegistrationEmail(cleanFullName, email, sessionInfo)
     } catch (emailErr) {
       console.warn("Could not send immediate masterclass confirmation email:", emailErr)
     }
@@ -260,7 +260,7 @@ export async function POST(req: Request) {
       success: true,
       message: "Inscription confirmée avec succès ! Un email avec vos liens d'accès vous a été envoyé.",
       isRegistered: true,
-      meetUrl: sessionInfo.meetUrl,
+      whatsappGroupUrl: sessionInfo.whatsappGroupUrl,
       youtubeLiveUrl: sessionInfo.youtubeLiveUrl
     })
   } catch (error: any) {

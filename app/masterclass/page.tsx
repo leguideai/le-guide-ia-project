@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import { UdemyHeader } from "@/components/udemy-header"
+import { Header } from "@/components/header"
 import { CtaFooter } from "@/components/cta-footer"
 import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
 import { 
   Play, Video, Calendar, Clock, CheckCircle2, 
   Sparkles, ArrowRight, Radio, ExternalLink, 
   LogIn, UserCheck, Search, Filter, ShieldCheck, X,
-  Tv, Award, Zap, Mail
+  Tv, Award, Zap, Mail, MessageCircle
 } from "lucide-react"
 
 interface ReplayItem {
@@ -39,13 +39,13 @@ export default function MasterclassHubPage() {
   const [upcomingSession, setUpcomingSession] = useState<any>({
     is_active: false,
     title: "Masterclass IA : Fondamentaux & Cas Pratiques en Direct",
-    description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Démonstrations d'outils, cas pratiques et questions-réponses.",
+    description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
     instructor: "Alfred Dah",
     instructorRole: "Fondateur Le Guide IA & Expert en Intelligence Artificielle",
     scheduledAt: "",
     dateDisplay: "",
     thumbnailUrl: "",
-    meetUrl: "https://meet.google.com/qvt-gkyh-yuv",
+    whatsappGroupUrl: "",
     youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
     duration: "1h 30min",
     price: "100% Gratuit"
@@ -167,7 +167,7 @@ export default function MasterclassHubPage() {
           localStorage.setItem("masterclass_registered", "true")
           localStorage.setItem("masterclass_registered_email", emailToSubmit)
         }
-        setFeedbackMsg("🎉 Votre place est confirmée ! Vos liens d'accès direct sont débloqués.")
+        setFeedbackMsg("🎉 Votre place est confirmée ! Rejoignez dès maintenant le groupe WhatsApp des apprenants ci-dessous.")
       } else {
         setFeedbackMsg(data.error || "Erreur lors de la réservation.")
       }
@@ -197,33 +197,43 @@ export default function MasterclassHubPage() {
       ) : isRegistered ? (
         /* État : DÉJÀ INSCRIT */
         <div className="space-y-4">
-          <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-sm bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl">
+          <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-sm bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl">
             <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
-            <span>Votre place est confirmée pour ce direct !</span>
+            <span>Votre place est confirmée pour cette Masterclass !</span>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          {/* GROUPE WHATSAPP CARD / BUTTON PROÉMINENT */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/60 to-emerald-900/30 border border-emerald-500/30 space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+              <MessageCircle className="size-4 text-emerald-400" />
+              <span>GROUPE WHATSAPP</span>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Intégrez le groupe WhatsApp officiel pour échanger avec Alfred Dah et tous les participants.
+            </p>
             <a
-              href={upcomingSession.meetUrl}
+              href={upcomingSession.whatsappGroupUrl || ""}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md"
+              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-emerald-600/30 cursor-pointer"
             >
-              <Video className="size-4" />
-              <span>Rejoindre sur Google Meet</span>
+              <MessageCircle className="size-4" />
+              <span>Rejoindre le Groupe WhatsApp</span>
               <ExternalLink className="size-3.5 opacity-80" />
             </a>
-
-            <a
-              href={upcomingSession.youtubeLiveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md"
-            >
-              <Play className="size-4 fill-current" />
-              <span>Suivre sur YouTube Live</span>
-            </a>
           </div>
+
+          {/* BOUTON YOUTUBE LIVE */}
+          <a
+            href={upcomingSession.youtubeLiveUrl || ""}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+          >
+            <Play className="size-4 fill-current" />
+            <span>Suivre la Session sur YouTube Live</span>
+            <ExternalLink className="size-3.5 opacity-80" />
+          </a>
 
           <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
             <span>Email enregistré : {currentUser?.email || (typeof window !== "undefined" && localStorage.getItem("masterclass_registered_email")) || "Confirmé"}</span>
@@ -265,7 +275,7 @@ export default function MasterclassHubPage() {
             )}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
-            🔒 Inscription 100% gratuite • Liens Google Meet et YouTube envoyés instantanément.
+            🔒 Inscription 100% gratuite • Lien YouTube Live et accès au groupe WhatsApp envoyés instantanément.
           </p>
         </div>
       ) : (
@@ -276,7 +286,7 @@ export default function MasterclassHubPage() {
               Réservez votre place gratuite :
             </h4>
             <p className="text-[11px] text-muted-foreground">
-              Recevez les liens Google Meet et YouTube Live directement par email.
+              Recevez le lien YouTube Live et l'accès au groupe WhatsApp des apprenants directement par email.
             </p>
           </div>
 
@@ -331,7 +341,7 @@ export default function MasterclassHubPage() {
     <main className="min-h-screen bg-[#090d16] text-white selection:bg-primary selection:text-slate-950 font-sans">
       
       {/* 1. Header Global du Site */}
-      <UdemyHeader />
+      <Header />
 
       {/* 2. SI MASTERCLASS EN DIRECT PROGRAMMÉE (is_active === true) */}
       {upcomingSession?.is_active ? (
@@ -424,7 +434,7 @@ export default function MasterclassHubPage() {
                 <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
                   <Video className="size-4 text-primary mx-auto" />
                   <span className="block text-[10px] text-muted-foreground font-bold uppercase">Plateforme</span>
-                  <p className="text-[11px] text-white font-bold">Google Meet</p>
+                  <p className="text-[11px] text-white font-bold">YouTube Live</p>
                 </div>
                 <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
                   <ShieldCheck className="size-4 text-emerald-400 mx-auto" />
@@ -489,7 +499,7 @@ export default function MasterclassHubPage() {
                     <Video className="size-4" />
                     <span className="font-bold text-xs">Plateforme</span>
                   </div>
-                  <p className="text-xs text-white font-semibold">Google Meet + YouTube Live</p>
+                  <p className="text-xs text-white font-semibold">YouTube Live (En Direct)</p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-border bg-card/80 space-y-1">

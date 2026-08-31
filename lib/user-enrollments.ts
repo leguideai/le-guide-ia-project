@@ -161,7 +161,7 @@ export function useUserEnrollments() {
             const id = r.course_slug || (r.course_id ? String(r.course_id) : "")
             if (["paye", "confirmed", "active"].includes(r.status)) {
               identifiers.add(id.toLowerCase())
-            } else {
+            } else if (["pending", "en_attente", "pending_verification"].includes(r.status) && !id.toLowerCase().includes("masterclass")) {
               pendings.add(id.toLowerCase())
             }
           })

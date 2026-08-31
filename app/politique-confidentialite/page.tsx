@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { UdemyHeader } from "@/components/udemy-header"
+import { Header } from "@/components/header"
 
 export const metadata: Metadata = {
   title: "Politique de Confidentialité | Le Guide IA",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function PolitiqueConfidentialitePage() {
   return (
     <main className="relative min-h-screen bg-background text-foreground flex flex-col">
-      <UdemyHeader />
+      <Header />
       <div className="mx-auto max-w-3xl px-4 py-16 md:px-8">
         <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline mb-10">
           ← Retour au site

@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { Zap, Video, ShieldCheck, Award, Users, ArrowRight, CheckCircle2, Sparkles, PlayCircle } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 
-export function UdemyBanner() {
+export function Banner() {
   const [programmeUrl, setProgrammeUrl] = useState("/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf")
 
   useEffect(() => {

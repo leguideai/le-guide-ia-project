@@ -6,7 +6,7 @@ import { motion } from "motion/react"
 import { Cpu, Briefcase, Sparkles, ArrowRight } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 
-export function UdemyTrustLogos() {
+export function TrustLogos() {
   const [activePillar, setActivePillar] = useState("all")
   const [dbTools, setDbTools] = useState<any[]>([])
 
@@ -56,7 +56,7 @@ export function UdemyTrustLogos() {
     <section className="py-16 bg-slate-950/80 border-y border-border/60 relative overflow-hidden" id="outils">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8 relative z-10">
         
-        {/* Header with Arrow Link (Udemy Style) */}
+        {/* Header with Arrow Link ( Style) */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-3 text-left">
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">

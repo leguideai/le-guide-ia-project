@@ -19,7 +19,7 @@ function formatPriceNum(num: number): string {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " FCFA"
 }
 
-export function UdemyTabbedCourses() {
+export function TabbedCourses() {
   const [activeTab, setActiveTab] = useState<string>("all")
   const [formations, setFormations] = useState<FormationItem[]>([])
   const [categories, setCategories] = useState<FormationCategory[]>([])
@@ -149,7 +149,7 @@ export function UdemyTabbedCourses() {
                   </div>
                 </div>
 
-                {/* 2. Détails & Typographie Style Udemy */}
+                {/* 2. Détails & Typographie Style  */}
                 <div className="p-4 sm:p-5 pb-0 mb-0 space-y-3">
                   {/* Titre */}
                   <h3 className="font-heading text-sm sm:text-base font-bold text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug">

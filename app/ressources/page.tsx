@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
-import { UdemyHeader } from "@/components/udemy-header"
-import { UdemyTabbedCourses } from "@/components/udemy-tabbed-courses"
+import { Header } from "@/components/header"
+import { TabbedCourses } from "@/components/tabbed-courses"
 import { CtaFooter } from "@/components/cta-footer"
 import { GridBackground } from "@/components/grid-background"
 import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
@@ -133,10 +133,10 @@ export default function RessourcesPage() {
   return (
     <main className="relative min-h-screen text-foreground overflow-x-hidden bg-background">
       <GridBackground />
-      <UdemyHeader />
+      <Header />
 
       {/* 1. Section Tutoriels Vidéos Pratiques */}
-      {/* <UdemyTabbedCourses /> */}
+      {/* <TabbedCourses /> */}
 
       {/* 2. Section Prompts Métiers & Business Plans IA (Search & Filter) */}
       <section className="py-12 bg-background border-t border-border/50" id="prompts-templates">

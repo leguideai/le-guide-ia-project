@@ -613,7 +613,7 @@ export async function sendMasterclassRegistrationEmail(
     title: string
     scheduledAt?: string
     dateDisplay?: string
-    meetUrl?: string
+    whatsappGroupUrl?: string
     youtubeLiveUrl?: string
     instructor?: string
   }
@@ -629,10 +629,10 @@ export async function sendMasterclassRegistrationEmail(
     const sessionTitle = session.title || "Masterclass IA en Direct"
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "À venir")
-    const meetUrl = session.meetUrl || "https://meet.google.com/qvt-gkyh-yuv"
+    const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass"
     const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
 
-    const textContent = `Bonjour ${firstName},\n\nVotre inscription à la Masterclass IA "${sessionTitle}" est bien confirmée !\n\nDétails de la session :\n- Date & Heure : ${dateFormatted}\n- Intervenant : ${instructor}\n- Format : Direct interactif 100% gratuit\n\nLiens d'accès au direct :\n- Google Meet : ${meetUrl}\n- YouTube Live : ${youtubeUrl}\n\nÀ très bientôt,\nAlfred Dah & L'équipe LE GUIDE IA`
+    const textContent = `Bonjour ${firstName},\n\nVotre inscription à la Masterclass IA "${sessionTitle}" est bien confirmée !\n\nDétails de la session :\n- Date & Heure : ${dateFormatted}\n- Intervenant : ${instructor}\n- Format : Direct interactif 100% gratuit sur YouTube Live\n\n1. Rejoindre le Groupe WhatsApp des Apprenants : ${whatsappUrl}\n2. Lien du direct YouTube Live : ${youtubeUrl}\n\nÀ très bientôt,\nAlfred Dah & L'équipe LE GUIDE IA`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -650,14 +650,14 @@ export async function sendMasterclassRegistrationEmail(
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #090d16; color: #e2e8f0; margin: 0; padding: 0; }
             .container { max-width: 600px; margin: 20px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 18px; overflow: hidden; }
-            .header { background-color: #1e293b; padding: 32px 24px; text-align: center; border-bottom: 2px solid #3b82f6; }
+            .header { background-color: #1e293b; padding: 32px 24px; text-align: center; border-bottom: 2px solid #10b981; }
             .header h1 { margin: 0; font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; }
             .header p { margin: 6px 0 0; font-size: 13px; color: #94a3b8; }
             .content { padding: 32px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
-            .badge { display: inline-block; background-color: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; color: #60a5fa; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
+            .badge { display: inline-block; background-color: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
             .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin: 20px 0; }
-            .btn-primary { display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
-            .btn-secondary { display: inline-block; background-color: #334155; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+            .btn-wa { display: inline-block; background-color: #16a34a; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 14px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35); }
+            .btn-yt { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
             .footer { background-color: #090d16; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
           </style>
         </head>
@@ -678,18 +678,27 @@ export async function sendMasterclassRegistrationEmail(
                 <strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px;">📋 Récapitulatif de la session :</strong>
                 📅 <strong>Date & Heure :</strong> ${dateFormatted}<br>
                 👨‍🏫 <strong>Intervenant :</strong> ${instructor}<br>
-                ⚡ <strong>Format :</strong> Direct interactif, démonstrations & Q&A<br>
+                ⚡ <strong>Format :</strong> Direct 100% sur YouTube Live & Q&A en direct<br>
                 🎟️ <strong>Tarif :</strong> 100% Gratuit
               </div>
 
-              <p style="margin-bottom: 8px;"><strong>Voici vos liens pour rejoindre le direct :</strong></p>
-              <div style="text-align: center; margin: 16px 0 24px;">
-                <a href="${meetUrl}" class="btn-primary" target="_blank">Rejoindre sur Google Meet</a>
-                <a href="${youtubeUrl}" class="btn-secondary" target="_blank">Regarder sur YouTube Live</a>
+              <div style="background: linear-gradient(135deg, rgba(22, 163, 74, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1.5px solid #16a34a; border-radius: 14px; padding: 20px; text-align: center; margin: 24px 0 16px;">
+                <p style="font-size: 15px; font-weight: 800; color: #ffffff; margin: 0 0 8px;">
+                  💬 Rejoignez le Groupe WhatsApp des Apprenants
+                </p>
+                <p style="font-size: 12px; color: #cbd5e1; margin: 0 0 16px; line-height: 1.5;">
+                  Ce groupe regroupe tous les participants pour recevoir les rappels en direct, poser vos questions, échanger avec Alfred Dah et accéder aux ressources partagées.
+                </p>
+                <a href="${whatsappUrl}" class="btn-wa" target="_blank">👉 Intégrer le Groupe WhatsApp</a>
               </div>
 
-              <div style="background-color: #1e293b; border-radius: 10px; padding: 14px; font-size: 12px; color: #94a3b8; border-left: 3px solid #3b82f6;">
-                💡 <strong>Conseil :</strong> Connectez-vous 5 minutes avant le début de la session pour vous installer confortablement et préparer vos questions.
+              <p style="margin-bottom: 8px; text-align: center; font-weight: 700; color: #ffffff;">Lien du Direct YouTube :</p>
+              <div style="text-align: center; margin: 10px 0 20px;">
+                <a href="${youtubeUrl}" class="btn-yt" target="_blank">📺 Suivre sur YouTube Live</a>
+              </div>
+
+              <div style="background-color: #1e293b; border-radius: 10px; padding: 14px; font-size: 12px; color: #94a3b8; border-left: 3px solid #16a34a;">
+                💡 <strong>Conseil :</strong> Rejoignez le groupe WhatsApp dès maintenant pour ne pas manquer le coup d'envoi du direct sur YouTube.
               </div>
 
               <p style="margin-top: 24px;">
@@ -720,7 +729,7 @@ export async function sendMasterclassReminderEmail(
     title: string
     scheduledAt?: string
     dateDisplay?: string
-    meetUrl?: string
+    whatsappGroupUrl?: string
     youtubeLiveUrl?: string
     instructor?: string
   },
@@ -738,24 +747,24 @@ export async function sendMasterclassReminderEmail(
     const sessionTitle = session.title || "Masterclass IA en Direct"
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
-    const meetUrl = session.meetUrl || "https://meet.google.com/qvt-gkyh-yuv"
+    const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass"
     const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
 
     let subject = `⏳ Rappel : Votre Masterclass IA en direct (${dateFormatted})`
     let badgeText = `⏳ RAPPEL SESSION MASTERCLASS`
     let mainHeading = `Votre Masterclass IA approche !`
-    let introText = `Nous vous rappelons que votre session interactive <strong>"${sessionTitle}"</strong> aura lieu <strong>${dateFormatted}</strong>.`
+    let introText = `Nous vous rappelons que votre session interactive <strong>"${sessionTitle}"</strong> aura lieu <strong>${dateFormatted}</strong> sur YouTube Live.`
 
     if (reminderType === 'j_minus_2') {
       subject = `⏳ Dans 48h : Masterclass IA en Direct avec ${instructor}`
       badgeText = `⏳ RAPPEL : J-2 AVANT LE DIRECT`
       mainHeading = `Votre Masterclass en direct dans 48 heures !`
-      introText = `Plus que 2 jours avant notre rendez-vous <strong>"${sessionTitle}"</strong> prévu <strong>${dateFormatted}</strong>.`
+      introText = `Plus que 2 jours avant notre rendez-vous <strong>"${sessionTitle}"</strong> prévu <strong>${dateFormatted}</strong> sur YouTube Live.`
     } else if (reminderType === 'h_minus_1') {
       subject = `🔴 EN DIRECT DANS 1 HEURE : Masterclass IA avec ${instructor}`
       badgeText = `🔴 DIRECT DANS 60 MINUTES`
       mainHeading = `La Masterclass démarre dans 1 heure !`
-      introText = `Préparez-vous ! La session interactive <strong>"${sessionTitle}"</strong> commence dans quelques instants.`
+      introText = `Préparez-vous ! La session interactive <strong>"${sessionTitle}"</strong> commence dans quelques instants sur YouTube Live.`
     }
 
     const htmlContent = `
@@ -768,12 +777,12 @@ export async function sendMasterclassReminderEmail(
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #090d16; color: #e2e8f0; margin: 0; padding: 0; }
           .container { max-width: 600px; margin: 20px auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 18px; overflow: hidden; }
-          .header { background-color: #1e293b; padding: 28px 24px; text-align: center; border-bottom: 2px solid ${reminderType === 'h_minus_1' ? '#ef4444' : '#3b82f6'}; }
+          .header { background-color: #1e293b; padding: 28px 24px; text-align: center; border-bottom: 2px solid ${reminderType === 'h_minus_1' ? '#ef4444' : '#10b981'}; }
           .header h1 { margin: 0; font-size: 20px; font-weight: 900; color: #ffffff; }
           .content { padding: 32px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
-          .badge { display: inline-block; background-color: ${reminderType === 'h_minus_1' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)'}; border: 1px solid ${reminderType === 'h_minus_1' ? '#ef4444' : '#3b82f6'}; color: ${reminderType === 'h_minus_1' ? '#f87171' : '#60a5fa'}; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
+          .badge { display: inline-block; background-color: ${reminderType === 'h_minus_1' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)'}; border: 1px solid ${reminderType === 'h_minus_1' ? '#ef4444' : '#10b981'}; color: ${reminderType === 'h_minus_1' ? '#f87171' : '#34d399'}; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
           .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin: 20px 0; }
-          .btn-meet { display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+          .btn-wa { display: inline-block; background-color: #16a34a; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
           .btn-yt { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
           .footer { background-color: #090d16; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
         </style>
@@ -789,23 +798,24 @@ export async function sendMasterclassReminderEmail(
             <p>Bonjour <strong>${firstName}</strong>,</p>
             <p>${introText}</p>
             
-            ${customMessage ? `<div style="background-color: #1e293b; padding: 14px; border-radius: 8px; margin: 16px 0; border-left: 3px solid #3b82f6; font-size: 13px;">${customMessage}</div>` : ''}
+            ${customMessage ? `<div style="background-color: #1e293b; padding: 14px; border-radius: 8px; margin: 16px 0; border-left: 3px solid #10b981; font-size: 13px;">${customMessage}</div>` : ''}
 
             <div class="card-box">
               <strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px;">📍 Informations du Direct :</strong>
               📅 <strong>Date :</strong> ${dateFormatted}<br>
               👨‍🏫 <strong>Formateur :</strong> ${instructor}<br>
-              🎯 <strong>Thème :</strong> ${sessionTitle}
+              🎯 <strong>Thème :</strong> ${sessionTitle}<br>
+              💻 <strong>Plateforme :</strong> YouTube Live (Diffusion en direct)
             </div>
 
-            <p style="text-align: center; margin-bottom: 8px; font-weight: bold;">Cliquez ci-dessous pour rejoindre la session :</p>
+            <p style="text-align: center; margin-bottom: 8px; font-weight: bold;">Accédez au direct et au groupe des apprenants :</p>
             <div style="text-align: center; margin: 16px 0 24px;">
-              <a href="${meetUrl}" class="btn-meet" target="_blank">👉 Rejoindre sur Google Meet</a>
               <a href="${youtubeUrl}" class="btn-yt" target="_blank">📺 Suivre sur YouTube Live</a>
+              <a href="${whatsappUrl}" class="btn-wa" target="_blank">💬 Groupe WhatsApp Masterclass</a>
             </div>
 
             <p style="font-size: 13px; color: #94a3b8;">
-              N'hésitez pas à poser vos questions en direct dans le chat.
+              N'hésitez pas à poser vos questions en direct dans le chat YouTube ou dans le groupe WhatsApp.
             </p>
 
             <p style="margin-top: 24px;">
@@ -821,7 +831,7 @@ export async function sendMasterclassReminderEmail(
       </html>
     `
 
-    const textContent = `Bonjour ${firstName},\n\n${mainHeading}\n\n${introText}\n\nDate : ${dateFormatted}\nLien Google Meet : ${meetUrl}\nLien YouTube Live : ${youtubeUrl}\n\nÀ très vite,\n${instructor}`
+    const textContent = `Bonjour ${firstName},\n\n${mainHeading}\n\n${introText}\n\nDate : ${dateFormatted}\nLien YouTube Live : ${youtubeUrl}\nGroupe WhatsApp des Apprenants : ${whatsappUrl}\n\nÀ très vite,\n${instructor}`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -850,7 +860,7 @@ export async function sendMasterclassPlatformInvitationEmail(
     dateDisplay?: string
     instructor?: string
     thumbnailUrl?: string
-    meetUrl?: string
+    whatsappGroupUrl?: string
     youtubeLiveUrl?: string
   }
 ) {
@@ -865,7 +875,7 @@ export async function sendMasterclassPlatformInvitationEmail(
     const sessionTitle = session.title || "Masterclass IA Interactive en Direct"
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
-    const description = session.description || "Rejoignez-nous pour une session exclusive de formation pratique en direct avec démonstrations et cas réels."
+    const description = session.description || "Rejoignez-nous pour une session exclusive de formation pratique en direct sur YouTube Live avec démonstrations et cas réels."
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideai.com"
     const registerUrl = `${siteUrl}/masterclass`
 
@@ -914,7 +924,7 @@ export async function sendMasterclassPlatformInvitationEmail(
                 📅 <strong>Date & Heure :</strong> ${dateFormatted}<br>
                 👨‍🏫 <strong>Intervenant :</strong> ${instructor}<br>
                 🎟️ <strong>Tarif :</strong> 100% Gratuit (Accès Libre)<br>
-                💻 <strong>Plateforme :</strong> Google Meet & YouTube Live
+                💻 <strong>Plateforme :</strong> YouTube Live & Groupe WhatsApp des Apprenants
               </div>
             </div>
 
@@ -924,7 +934,7 @@ export async function sendMasterclassPlatformInvitationEmail(
             <a href="${registerUrl}" class="cta-button">👉 Réserver ma place à la Masterclass</a>
 
             <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 20px;">
-              Les places en direct sur Google Meet sont limitées pour permettre l'interaction et les questions/réponses en direct.
+              Dès votre inscription, vous recevrez l'accès au direct YouTube Live et le lien pour rejoindre la communauté d'apprenants sur WhatsApp.
             </p>
 
             <p style="margin-top: 28px;">
@@ -958,6 +968,131 @@ export async function sendMasterclassPlatformInvitationEmail(
     return { success: false, error }
   }
 }
+
+export interface B2BQuoteEmailParams {
+  companyName: string
+  contactName: string
+  email: string
+  phone?: string
+  serviceType?: string
+  companySize?: string
+  message?: string
+}
+
+export async function sendB2BConfirmationEmail(params: B2BQuoteEmailParams) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const { companyName, contactName, email, phone, serviceType = "Formation & Audit IA", companySize = "10-50", message } = params
+    const firstName = contactName ? contactName.split(' ')[0] : 'Monsieur / Madame'
+
+    const subject = `Confirmation de votre demande de devis B2B — LE GUIDE IA (${companyName})`
+    const textContent = `Bonjour ${firstName},\n\nNous confirmons la bonne réception de votre demande de devis et accompagnement B2B pour ${companyName}.\n\nRécapitulatif de votre demande :\n- Entreprise : ${companyName}\n- Contact : ${contactName}\n- Téléphone / WhatsApp : ${phone || 'Non renseigné'}\n- Type de besoin : ${serviceType}\n- Effectif estimé : ${companySize} employés\n- Projet : ${message || 'Formation / Audit d\'équipe'}\n\nNotre équipe et Alfred Dah (Auditeur CISA & Expert IA) analysent votre besoin et vous recontacteront avec une proposition sur-mesure sous 24 heures ouvrées.\n\nEn cas d'urgence, vous pouvez également nous joindre directement sur WhatsApp au +226 0505 0577 ou par email à alfred@leguideai.com.\n\nCordialement,\nAlfred Dah & L'équipe Entreprises LE GUIDE IA`
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #090d16; color: #f8fafc; margin: 0; padding: 0; }
+          .wrapper { max-width: 600px; margin: 20px auto; background-color: #0d1322; border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+          .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 2px solid #D4AF37; padding: 32px 24px; text-align: center; }
+          .logo-text { font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #ffffff; text-transform: uppercase; margin: 0; }
+          .badge { display: inline-block; background-color: rgba(212, 175, 55, 0.15); border: 1px solid #D4AF37; color: #ECC86B; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; border-radius: 9999px; margin-top: 10px; }
+          .content { padding: 32px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+          .recap-box { background-color: #131b2e; border: 1px solid #334155; border-left: 4px solid #D4AF37; border-radius: 12px; padding: 20px; margin: 24px 0; }
+          .recap-item { margin-bottom: 8px; font-size: 13px; }
+          .recap-label { color: #94a3b8; font-weight: 600; }
+          .recap-value { color: #f8fafc; font-weight: 700; }
+          .cta-wa { display: block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 24px; border-radius: 12px; text-align: center; margin: 24px 0 12px 0; font-size: 14px; }
+          .footer { background-color: #090d16; padding: 20px 24px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="header">
+            <h1 class="logo-text">LE GUIDE IA</h1>
+            <span class="badge">SOLUTIONS ENTREPRISES & INSTITUTIONS</span>
+          </div>
+          <div class="content">
+            <p style="font-size: 16px; color: #f8fafc;">Bonjour <strong>${firstName}</strong>,</p>
+            <p>Nous vous remercions pour votre intérêt envers les programmes d'accompagnement et de formation de <strong>LE GUIDE IA</strong>.</p>
+            <p>Votre demande de devis sur-mesure pour <strong>${companyName}</strong> a bien été enregistrée avec succès.</p>
+
+            <div class="recap-box">
+              <div style="font-size: 13px; font-weight: 800; color: #ECC86B; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+                📋 Récapitulatif de votre besoin B2B
+              </div>
+              <div class="recap-item"><span class="recap-label">🏢 Entreprise :</span> <span class="recap-value">${companyName}</span></div>
+              <div class="recap-item"><span class="recap-label">👤 Responsable :</span> <span class="recap-value">${contactName}</span></div>
+              <div class="recap-item"><span class="recap-label">📧 Email professionnel :</span> <span class="recap-value">${email}</span></div>
+              ${phone ? `<div class="recap-item"><span class="recap-label">📞 Téléphone / WhatsApp :</span> <span class="recap-value">${phone}</span></div>` : ''}
+              <div class="recap-item"><span class="recap-label">🎯 Service souhaité :</span> <span class="recap-value">${serviceType}</span></div>
+              <div class="recap-item"><span class="recap-label">👥 Effectif concerné :</span> <span class="recap-value">${companySize} personnes</span></div>
+              ${message ? `<div class="recap-item" style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed #334155;"><span class="recap-label">📝 Message / Objectifs :</span><br><span style="color: #e2e8f0; font-style: italic;">« ${message} »</span></div>` : ''}
+            </div>
+
+            <div style="background-color: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+              <strong style="color: #ECC86B;">⏱️ Traitement sous 24h ouvrées</strong><br>
+              <span style="font-size: 13px; color: #cbd5e1;">Notre équipe pédagogique et Alfred Dah (Auditeur certifié CISA & Fondateur) préparent un programme personnalisé adapté à vos objectifs métiers. Vous recevrez une proposition détaillée très rapidement.</span>
+            </div>
+
+            <p style="font-size: 13px; color: #94a3b8;">
+              Un besoin urgent ? Contactez directement notre pôle B2B sur WhatsApp :
+            </p>
+            <a href="https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens d'envoyer une demande de devis B2B pour l'entreprise ${companyName}.`)}" class="cta-wa">
+              💬 Échanger avec l'équipe B2B sur WhatsApp
+            </a>
+
+            <p style="margin-top: 24px;">
+              Bien cordialement,<br>
+              <strong>Alfred Dah & L'équipe Entreprises LE GUIDE IA</strong><br>
+              <span style="font-size: 12px; color: #64748b;">alfred@leguideai.com • +226 0505 0577</span>
+            </p>
+          </div>
+          <div class="footer">
+            © 2026 LE GUIDE IA — Solutions IA & Gouvernance pour Entreprises et Cadres Dirigeants.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject,
+      text: textContent,
+      html: htmlContent
+    })
+
+    // Also notify internal admin email
+    try {
+      await resend.emails.send({
+        from: fromEmail,
+        to: 'alfred@leguideai.com',
+        subject: `🔔 Nouvelle demande de devis B2B : ${companyName} (${contactName})`,
+        text: `Nouvelle demande de devis B2B reçue :\n- Entreprise : ${companyName}\n- Contact : ${contactName}\n- Email : ${email}\n- Téléphone : ${phone || 'N/A'}\n- Service : ${serviceType}\n- Effectif : ${companySize}\n- Message : ${message || 'N/A'}`,
+        html: `<div style="font-family: sans-serif; padding: 20px;"><h2>Nouvelle demande de devis B2B</h2><p><strong>Entreprise :</strong> ${companyName}</p><p><strong>Contact :</strong> ${contactName} (${email} / ${phone})</p><p><strong>Service :</strong> ${serviceType} (Effectif: ${companySize})</p><p><strong>Message :</strong> ${message || 'N/A'}</p></div>`
+      })
+    } catch (adminErr) {
+      console.warn("Could not notify admin for B2B request:", adminErr)
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending B2B confirmation email:', error)
+    return { success: false, error }
+  }
+}
+
 
 
 

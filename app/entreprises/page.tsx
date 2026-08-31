@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { UdemyHeader } from "@/components/udemy-header"
+import { Header } from "@/components/header"
 import { CtaFooter } from "@/components/cta-footer"
 import { GridBackground } from "@/components/grid-background"
 import { Building2, ShieldCheck, Users, Send, CheckCircle2, AlertCircle, Sparkles, ArrowRight, PhoneCall, Mail, Award, Check } from "lucide-react"
@@ -57,9 +57,9 @@ export default function EntreprisesPage() {
   return (
     <main className="relative min-h-screen text-foreground overflow-x-hidden">
       <GridBackground />
-      <UdemyHeader />
+      <Header />
 
-      {/* 1. Hero Section B2B (Style Udemy 2 colonnes aligné à gauche) */}
+      {/* 1. Hero Section B2B (Style  2 colonnes aligné à gauche) */}
       <section className="py-14 bg-slate-950/80 border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
           

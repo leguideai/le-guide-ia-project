@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { supabase } from "@/lib/supabase"
 import { FormationItem, FormationCategory, DEFAULT_FORMATIONS, DEFAULT_FORMATION_CATEGORIES } from "@/lib/formations-data"
-import { UdemyHeader } from "@/components/udemy-header"
+import { Header } from "@/components/header"
 import { CtaFooter } from "@/components/cta-footer"
 import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
 import { 
@@ -309,8 +309,8 @@ function FormationsContent() {
   return (
     <main className="relative min-h-screen text-foreground overflow-x-hidden bg-[#090d16]">
       
-      {/* 1. Header Global Udemy Style */}
-      <UdemyHeader />
+      {/* 1. Header Global  Style */}
+      <Header />
 
       {/* 2. Hero Section : Alignement Propre & Harmonisé avec le reste du site */}
       <section className="relative py-12 sm:py-16 md:py-20 border-b border-border/50 bg-slate-950/70 overflow-hidden">

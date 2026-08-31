@@ -1,12 +1,12 @@
 "use client"
 
 import { GridBackground } from "@/components/grid-background"
-import { UdemyHeader } from "@/components/udemy-header"
+import { Header } from "@/components/header"
 import { MasterclassTicker } from "@/components/masterclass-ticker"
 import { VslHeroVideo } from "@/components/vsl-hero-video"
-import { UdemyTrustLogos } from "@/components/udemy-trust-logos"
-import { UdemySkillPathways } from "@/components/udemy-skill-pathways"
-import { UdemyBusinessBanner } from "@/components/udemy-business-banner"
+import { TrustLogos } from "@/components/trust-logos"
+import { SkillPathways } from "@/components/skill-pathways"
+import { BusinessBanner } from "@/components/business-banner"
 import { Authority } from "@/components/authority"
 import { Testimonials } from "@/components/testimonials"
 import { FAQ } from "@/components/faq"
@@ -18,8 +18,8 @@ export default function Page() {
     <main className="relative min-h-screen text-foreground overflow-x-hidden bg-[#090d16]">
       <GridBackground />
       
-      {/* 1. Header Global Udemy Style */}
-      <UdemyHeader />
+      {/* 1. Header Global  Style */}
+      <Header />
 
       {/* Bandeau Défilant Masterclass Live (Actif uniquement si session programmée) */}
       <MasterclassTicker />
@@ -28,10 +28,10 @@ export default function Page() {
       <VslHeroVideo />
 
       {/* 3. Les 3 Parcours d'Apprentissage */}
-      <UdemySkillPathways />
+      <SkillPathways />
 
       {/* 5. Banner Le Guide IA Business (B2B) */}
-      <UdemyBusinessBanner />
+      <BusinessBanner />
 
       {/* 6. Expertise & Autorité (Alfred Dah) */}
       <Authority />
@@ -40,7 +40,7 @@ export default function Page() {
       <Testimonials />
 
       {/* 8. Bandeau Écosystème & Stack Technologique Officielle */}
-      <UdemyTrustLogos />
+      <TrustLogos />
 
       {/* 9. FAQ */}
       <FAQ />

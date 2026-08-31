@@ -178,11 +178,11 @@ export default function SuperAdminDashboard() {
   const [masterclassSession, setMasterclassSession] = useState<any>({
     is_active: true,
     title: "Masterclass IA : Fondamentaux & Cas Pratiques en Direct",
-    description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Démonstrations d'outils, cas pratiques et questions-réponses.",
+    description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
     scheduledAt: "",
     dateDisplay: "",
     thumbnailUrl: "",
-    meetUrl: "https://meet.google.com/qvt-gkyh-yuv",
+    whatsappGroupUrl: "",
     youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
     instructor: "Alfred Dah",
     duration: "1h 30min"
@@ -683,7 +683,7 @@ export default function SuperAdminDashboard() {
     masterclass_title: "",
     masterclass_description: "",
     masterclass_date: "",
-    masterclass_meet_url: "",
+    masterclass_whatsapp_group_url: "",
     masterclass_youtube_url: ""
   })
   const [savingSettings, setSavingSettings] = useState(false)
@@ -2379,40 +2379,44 @@ export default function SuperAdminDashboard() {
                     <span>Dashboard & KPIs</span>
                   </div>
                 </button>
-
-                <button
-                  onClick={() => { setActiveTab("payments"); setMobileMenuOpen(false) }}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "payments" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <FileCheck className="size-4 shrink-0" />
-                    <span>Inscriptions</span>
-                  </div>
-                  {stats.pendingPaymentsCount > 0 && (
-                    <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full">
-                      {stats.pendingPaymentsCount}
-                    </span>
-                  )}
-                </button>
               </div>
 
               {/* Section 2 */}
               <div className="space-y-1">
                 <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Gestion du Contenu</p>
-                <button
-                  onClick={() => { setActiveTab("courses"); setMobileMenuOpen(false) }}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Layers className="size-4 shrink-0" />
-                    <span>Bootcamps</span>
-                  </div>
-                  <span className="text-[10px] opacity-75">({courses.length})</span>
-                </button>
+                
+                {/* Bootcamps & Sous-section Inscriptions */}
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => { setActiveTab("courses"); setMobileMenuOpen(false) }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Layers className="size-4 shrink-0" />
+                      <span>Bootcamps</span>
+                    </div>
+                    <span className="text-[10px] opacity-75">({courses.length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab("payments"); setMobileMenuOpen(false) }}
+                    className={`w-full flex items-center justify-between pl-7 pr-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                      activeTab === "payments" ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FileCheck className="size-3.5 shrink-0" />
+                      <span>Inscriptions</span>
+                    </div>
+                    {stats.pendingPaymentsCount > 0 && (
+                      <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full">
+                        {stats.pendingPaymentsCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
 
                 <button
                   onClick={() => { setActiveTab("formations"); setMobileMenuOpen(false) }}
@@ -2619,40 +2623,47 @@ export default function SuperAdminDashboard() {
                   <span>Dashboard & KPIs</span>
                 </div>
               </button>
-
-              <button
-                onClick={() => setActiveTab("payments")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "payments" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <FileCheck className="size-4 shrink-0" />
-                  <span>Inscriptions</span>
-                </div>
-                {stats.pendingPaymentsCount > 0 && (
-                  <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
-                    {stats.pendingPaymentsCount}
-                  </span>
-                )}
-              </button>
             </div>
 
             {/* Section 2: GESTION DU CONTENU */}
             <div className="space-y-1">
               <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Gestion du Contenu</p>
-              <button
-                onClick={() => setActiveTab("courses")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Layers className="size-4 shrink-0" />
-                  <span>Bootcamps</span>
-                </div>
-                <span className="text-[10px] opacity-75">({courses.length})</span>
-              </button>
+              
+              {/* Bootcamps & Sous-section Inscriptions */}
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => setActiveTab("courses")}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Layers className="size-4 shrink-0" />
+                    <span>Bootcamps</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({courses.length})</span>
+                </button>
+
+                {/* Sous-section Inscriptions */}
+                <button
+                  onClick={() => setActiveTab("payments")}
+                  className={`w-full flex items-center justify-between pl-7 pr-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    activeTab === "payments" 
+                      ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="size-3.5 shrink-0" />
+                    <span>Inscriptions</span>
+                  </div>
+                  {stats.pendingPaymentsCount > 0 && (
+                    <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
+                      {stats.pendingPaymentsCount}
+                    </span>
+                  )}
+                </button>
+              </div>
 
               {/* <button
                 onClick={() => setActiveTab("formations")}
@@ -5857,26 +5868,34 @@ export default function SuperAdminDashboard() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Lien Google Meet de la session</label>
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <span>💬 Lien du Groupe WhatsApp des Apprenants</span>
+                      <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">Recommandé</span>
+                    </label>
                     <input
                       type="url"
-                      required
-                      value={masterclassSession.meetUrl}
-                      onChange={e => setMasterclassSession({ ...masterclassSession, meetUrl: e.target.value })}
-                      placeholder="https://meet.google.com/..."
+                      value={masterclassSession.whatsappGroupUrl || ""}
+                      onChange={e => setMasterclassSession({ ...masterclassSession, whatsappGroupUrl: e.target.value })}
+                      placeholder="https://chat.whatsapp.com/..."
                       className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
                     />
+                    <p className="text-[10px] text-slate-400">
+                      Ce lien sera présenté aux apprenants dès leur inscription et envoyé dans tous les emails de confirmation.
+                    </p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Lien YouTube Live / Replay Stream</label>
+                    <label className="text-xs font-bold text-slate-700">📺 Lien YouTube Live / Stream du Direct</label>
                     <input
                       type="url"
-                      value={masterclassSession.youtubeLiveUrl}
+                      value={masterclassSession.youtubeLiveUrl || ""}
                       onChange={e => setMasterclassSession({ ...masterclassSession, youtubeLiveUrl: e.target.value })}
-                      placeholder="https://www.youtube.com/..."
+                      placeholder="https://www.youtube.com/@LeGuideIA ou lien direct"
                       className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
                     />
+                    <p className="text-[10px] text-slate-400">
+                      La diffusion du direct Masterclass se fait 100% sur YouTube Live.
+                    </p>
                   </div>
                 </div>
 
@@ -7351,41 +7370,85 @@ export default function SuperAdminDashboard() {
             <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-700">
-                  <thead className="bg-white text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                  <thead className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="p-4">Entreprise & Contact</th>
                       <th className="p-4">Email / Tél</th>
                       <th className="p-4">Secteur & Effectif</th>
-                      <th className="p-4">Besoins</th>
+                      <th className="p-4">Besoins / Projet</th>
                       <th className="p-4">Statut Lead</th>
+                      <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200/80">
-                    {b2bRequests.map(b => (
-                      <tr key={b.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
-                        <td className="p-4">
-                          <div className="font-bold text-slate-800">{b.company_name}</div>
-                          <div className="text-slate-500 text-[11px]">{b.contact_name}</div>
-                        </td>
-                        <td className="p-4">
-                          <div>{b.email}</div>
-                          <div className="text-slate-500">{b.phone || "N/A"}</div>
-                        </td>
-                        <td className="p-4">
-                          <div>{b.sector || "Général"}</div>
-                          <div className="text-slate-500 text-[10px]">{b.employees || "10-50"} employés</div>
-                        </td>
-                        <td className="p-4 max-w-xs text-slate-700 truncate">{b.needs || "Formation & Audit IA"}</td>
-                        <td className="p-4">
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                            {b.status || "Nouveau"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                    {b2bRequests.map(b => {
+                      const displayStatus = b.status === "new" ? "Nouveau" : b.status === "contacted" ? "Contacté" : b.status === "quoted" ? "Devis Envoyé" : b.status === "won" ? "Gagné / Signé" : b.status === "lost" ? "Perdu" : b.status || "Nouveau"
+                      const rawPhone = b.phone ? b.phone.replace(/[^0-9+]/g, "") : ""
+                      const waLink = rawPhone ? `https://wa.me/${rawPhone.replace('+', '')}?text=${encodeURIComponent(`Bonjour ${b.contact_name}, je fais suite à votre demande de devis B2B pour l'entreprise ${b.company_name} sur Le Guide IA.`)}` : null
+
+                      return (
+                        <tr key={b.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
+                          <td className="p-4">
+                            <div className="font-bold text-slate-800 text-sm">{b.company_name}</div>
+                            <div className="text-slate-500 text-[11px] font-medium">{b.contact_name}</div>
+                            <div className="text-slate-400 text-[10px]">{b.created_at ? new Date(b.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ""}</div>
+                          </td>
+                          <td className="p-4">
+                            <a href={`mailto:${b.email}`} className="font-semibold text-primary hover:underline block">{b.email}</a>
+                            <div className="text-slate-600 font-mono text-[11px]">{b.phone || "Non renseigné"}</div>
+                          </td>
+                          <td className="p-4">
+                            <div className="font-bold text-slate-700">{b.sector || "Formation B2B"}</div>
+                            <div className="text-slate-500 text-[11px]">{b.employees || "10-50"} employés</div>
+                          </td>
+                          <td className="p-4 max-w-xs text-slate-700 text-[11px] leading-relaxed">
+                            <p className="line-clamp-2">{b.needs || "Demande de formation et audit"}</p>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                              b.status === "new" || b.status === "Nouveau"
+                                ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                                : b.status === "contacted"
+                                ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                                : b.status === "quoted"
+                                ? "bg-purple-500/10 text-purple-600 border-purple-500/30"
+                                : b.status === "won"
+                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                                : "bg-slate-100 text-slate-600 border-slate-200"
+                            }`}>
+                              {displayStatus}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {waLink && (
+                                <a
+                                  href={waLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all flex items-center gap-1.5"
+                                  title="Contacter sur WhatsApp"
+                                >
+                                  <MessageCircle className="size-3.5" />
+                                  <span>WhatsApp</span>
+                                </a>
+                              )}
+                              <a
+                                href={`mailto:${b.email}?subject=${encodeURIComponent(`Proposition / Devis Formation IA — ${b.company_name}`)}`}
+                                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5"
+                                title="Envoyer un email"
+                              >
+                                <Mail className="size-3.5" />
+                                <span>Email</span>
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                     {b2bRequests.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="p-8 text-center text-slate-500">
+                        <td colSpan={6} className="p-8 text-center text-slate-500">
                           Aucune demande de devis B2B enregistrée.
                         </td>
                       </tr>
@@ -7835,18 +7898,18 @@ export default function SuperAdminDashboard() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">Lien Google Meet de la Session en Direct</label>
+                      <label className="text-xs font-bold text-slate-700">💬 Lien du Groupe WhatsApp des Apprenants</label>
                       <input
                         type="url"
-                        value={siteSettings.masterclass_meet_url || ""}
-                        onChange={e => setSiteSettings({ ...siteSettings, masterclass_meet_url: e.target.value })}
-                        placeholder="https://meet.google.com/..."
+                        value={siteSettings.masterclass_whatsapp_group_url || ""}
+                        onChange={e => setSiteSettings({ ...siteSettings, masterclass_whatsapp_group_url: e.target.value })}
+                        placeholder="https://chat.whatsapp.com/..."
                         className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">Lien YouTube Live / Chaine YouTube</label>
+                      <label className="text-xs font-bold text-slate-700">📺 Lien YouTube Live / Chaîne YouTube</label>
                       <input
                         type="url"
                         value={siteSettings.masterclass_youtube_url || ""}

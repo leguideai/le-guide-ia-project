@@ -485,26 +485,30 @@ export default function DashboardPage() {
         const enrollRes = await fetch(`/api/user/enrollments?email=${encodeURIComponent(userEmailClean)}`)
         const enrollData = await enrollRes.json()
 
+        const isUserAdmin = profData?.role === "admin" || profData?.role === "super_admin" || Boolean(enrollData?.isAdmin)
+
         if (enrollData && enrollData.success) {
-          if (enrollData.isAdmin) {
+          if (isUserAdmin) {
             setIsAdmin(true)
             setUserEnrollments((cData || []).flatMap((c: any) => [c.id, c.slug, c.title]))
             setPendingCourses([])
           } else {
             setUserEnrollments(enrollData.confirmed || [])
-            const pendings = (enrollData.pending || []).map((slug: string) => ({
-              course_slug: slug,
-              created_at: new Date().toISOString(),
-              status: "pending_verification"
-            }))
+            const pendings = (enrollData.pending || [])
+              .filter((slug: string) => slug && !slug.toLowerCase().includes("masterclass"))
+              .map((slug: string) => ({
+                course_slug: slug,
+                created_at: new Date().toISOString(),
+                status: "pending_verification"
+              }))
             setPendingCourses(pendings)
           }
         } else {
           // Fallback if API fails
-          const isAdminUser = profData?.role === "admin" || profData?.role === "super_admin"
-          setIsAdmin(isAdminUser)
-          if (isAdminUser) {
+          setIsAdmin(isUserAdmin)
+          if (isUserAdmin) {
             setUserEnrollments((cData || []).flatMap((c: any) => [c.id, c.slug]))
+            setPendingCourses([])
           } else {
             const fromPayments = userPayments.flatMap((p: any) => [
               p.registrations?.course_id,
@@ -565,7 +569,7 @@ export default function DashboardPage() {
           email: user.email,
           fullName: profile?.full_name || fullName || user.email.split("@")[0],
           country: profile?.country || country || "CI",
-          whatsapp: profile?.whatsapp || whatsappNumber || ""
+          whatsapp: profile?.whatsapp || user?.user_metadata?.whatsapp || ""
         })
       })
       const data = await res.json()
@@ -1802,13 +1806,13 @@ export default function DashboardPage() {
 
                           <div className="flex flex-wrap items-center gap-3">
                             <a
-                              href={masterclassSession.meetUrl || "https://meet.google.com/qvt-gkyh-yuv"}
+                              href={masterclassSession.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass"}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all"
+                              className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
                             >
-                              <Video className="size-4" />
-                              <span>Rejoindre sur Google Meet</span>
+                              <MessageCircle className="size-4" />
+                              <span>Rejoindre le Groupe WhatsApp</span>
                               <ExternalLink className="size-3.5 opacity-80" />
                             </a>
 
@@ -1816,10 +1820,11 @@ export default function DashboardPage() {
                               href={masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all"
+                              className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
                             >
                               <Play className="size-4 fill-current" />
                               <span>Suivre sur YouTube Live</span>
+                              <ExternalLink className="size-3.5 opacity-80" />
                             </a>
                           </div>
                         </div>

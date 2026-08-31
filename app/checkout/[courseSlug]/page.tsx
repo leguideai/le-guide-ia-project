@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, use, useRef, useMemo } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { UdemyHeader } from "@/components/udemy-header"
+import { Header } from "@/components/header"
 import { supabase } from "@/lib/supabase"
 import { useUserEnrollments } from "@/lib/user-enrollments"
 import { 
@@ -553,7 +553,7 @@ function CheckoutContent({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col">
-      <UdemyHeader />
+      <Header />
       <div className="py-12 px-4 md:px-8">
       <div className="mx-auto max-w-4xl space-y-8">
         

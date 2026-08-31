@@ -61,7 +61,7 @@ export function FAQ() {
     <section className="py-24 bg-card/5 relative overflow-hidden" id="faq">
       <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
-        {/* Header with Arrow Link (Udemy Style) */}
+        {/* Header with Arrow Link ( Style) */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="text-left space-y-3">
             <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">

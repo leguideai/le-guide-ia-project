@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { CheckCircle2, ArrowRight, Building2, ShieldCheck, Zap } from "lucide-react"
 
-export function UdemyBusinessBanner() {
+export function BusinessBanner() {
   return (
     <section className="py-16 bg-background">
       <div className="mx-auto max-w-7xl px-4 md:px-8">

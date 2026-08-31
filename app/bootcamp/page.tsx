@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { UdemyHeader } from "@/components/udemy-header"
+import { Header } from "@/components/header"
 import { Pricing } from "@/components/pricing"
 import { Testimonials } from "@/components/testimonials"
 import { CtaFooter } from "@/components/cta-footer"
@@ -148,7 +148,7 @@ function BootcampContent() {
   return (
     <main className="relative min-h-screen text-foreground overflow-x-hidden">
       <GridBackground />
-      <UdemyHeader />
+      <Header />
 
       {/* Hero Section Adaptée aux Formules de Bootcamp */}
       <section className="py-14 bg-slate-950/80 border-b border-border/60">

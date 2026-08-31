@@ -126,7 +126,7 @@ function formatPriceStr(val: any): string {
   return str
 }
 
-export function UdemySkillPathways() {
+export function SkillPathways() {
   const [dbCourses, setDbCourses] = useState<any[]>([])
 
   useEffect(() => {

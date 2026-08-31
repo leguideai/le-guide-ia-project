@@ -24,7 +24,7 @@ function getOfferEndTimestamp(rawDate?: string | null): number | null {
   return isNaN(parsed) ? null : parsed
 }
 
-export function UdemyHeader() {
+export function Header() {
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categoriesOpen, setCategoriesOpen] = useState(false)
@@ -143,7 +143,7 @@ export function UdemyHeader() {
 
         {/* Categories Dropdown */}
         <div
-          className="relative hidden md:block group"
+          className="relative hidden flex-1 md:block group"
           onMouseEnter={() => setCategoriesOpen(true)}
           onMouseLeave={() => setCategoriesOpen(false)}
         >
@@ -161,7 +161,7 @@ export function UdemyHeader() {
                
                 <Link href="/bootcamp" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
                   <GraduationCap className="size-4 text-primary" />
-                  <span>Bootcamps IA Live</span>
+                  <span>Bootcamps IA</span>
                 </Link>
                 {/* <Link href="/formations" className="flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-semibold hover:bg-secondary text-foreground">
                   <Sparkles className="size-4 text-blue-400" />
@@ -184,8 +184,8 @@ export function UdemyHeader() {
           )}
         </div>
 
-        {/* Search Bar (Udemy Style) */}
-        <div className="flex-1 max-w-md hidden md:block">
+        {/* Search Bar ( Style) */}
+        {/* <div className="flex-1 max-w-md hidden md:block">
           <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="size-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
@@ -197,7 +197,7 @@ export function UdemyHeader() {
               className="w-full rounded-full border border-border bg-input/40 pl-10 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
             />
           </form>
-        </div>
+        </div> */}
 
         {/* Nav Links & Actions */}
         <div className="flex items-center gap-3 shrink-0">
@@ -292,7 +292,7 @@ export function UdemyHeader() {
               className="flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-foreground hover:bg-secondary"
             >
               <GraduationCap className="size-4 text-primary" />
-              <span>Bootcamps IA Live</span>
+              <span>Bootcamps IA</span>
             </Link>
             <Link
               href="/formations"
