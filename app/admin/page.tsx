@@ -14,7 +14,8 @@ import {
   ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X,
   Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star,
   Image as ImageIcon, Bold, Italic, Underline, List, ListOrdered, Heading2, Heading3,
-  Link2, Minus, MousePointerClick, AlertCircle, Code, AlignLeft, Send, Radio
+  Link2, Minus, MousePointerClick, AlertCircle, Code, AlignLeft, Send, Radio,
+  ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { AnalyticsChart } from "@/components/analytics-chart"
@@ -150,8 +151,11 @@ interface B2BRecord {
   email: string
   phone?: string
   sector?: string
+  service_type?: string
   employees?: string
+  company_size?: string
   needs?: string
+  message?: string
   status: string
   created_at: string
 }
@@ -287,6 +291,28 @@ export default function SuperAdminDashboard() {
   const [payments, setPayments] = useState<PaymentRecord[]>([])
   const [submissions, setSubmissions] = useState<SubmissionRecord[]>([])
   const [b2bRequests, setB2bRequests] = useState<B2BRecord[]>([])
+  const [expandedB2bNeeds, setExpandedB2bNeeds] = useState<Record<string, boolean>>({})
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("admin_sidebar_collapsed")
+      if (saved !== null) {
+        setSidebarCollapsed(saved === "true")
+      }
+    } catch (_) {}
+  }, [])
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev
+      try {
+        localStorage.setItem("admin_sidebar_collapsed", String(next))
+      } catch (_) {}
+      return next
+    })
+  }
+
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([])
   const [showTestimonialModal, setShowTestimonialModal] = useState(false)
   const [editingTestimonialId, setEditingTestimonialId] = useState<string | null>(null)
@@ -1310,6 +1336,74 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  async function handleDeleteB2B(id: string) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette demande de devis B2B ?")) return
+    setProcessingId(id)
+    try {
+      const res = await fetch(`/api/admin/b2b?id=${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Demande de devis B2B supprimée avec succès.")
+        setB2bRequests(prev => prev.filter(b => b.id !== id))
+        setStats(prev => ({ ...prev, b2bCount: Math.max(0, prev.b2bCount - 1) }))
+      } else {
+        alert(data.error || "Erreur lors de la suppression")
+      }
+    } catch (err: any) {
+      alert("Erreur: " + err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  async function handleForwardB2B(record: B2BRecord) {
+    if (!confirm(`Confirmez-vous l'envoi d'un email de transfert à Alfred Dah (alfred@leguideai.com) pour la demande de devis de "${record.company_name}" ?`)) return
+    setProcessingId(`forward_${record.id}`)
+    try {
+      const res = await fetch("/api/admin/b2b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "forward",
+          requestId: record.id,
+          requestData: record
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice(data.message || `Demande de devis transmise avec succès à Alfred Dah !`)
+      } else {
+        alert(data.error || "Erreur lors du transfert de l'email")
+      }
+    } catch (err: any) {
+      alert("Erreur de connexion: " + err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  async function handleUpdateB2BStatus(requestId: string, newStatus: string) {
+    setProcessingId(`status_${requestId}`)
+    try {
+      const res = await fetch("/api/admin/b2b", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, status: newStatus })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice(`Statut B2B mis à jour : ${newStatus}`)
+        setB2bRequests(prev => prev.map(b => b.id === requestId ? { ...b, status: newStatus } : b))
+      } else {
+        alert(data.error || "Erreur de mise à jour du statut")
+      }
+    } catch (err: any) {
+      alert("Erreur de connexion: " + err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
   // Create or Update Bootcamp Course
   async function handleSaveCourse(e: React.FormEvent) {
     e.preventDefault()
@@ -2026,7 +2120,7 @@ export default function SuperAdminDashboard() {
         startTime: s.scheduled_at && s.scheduled_at.includes("T") ? s.scheduled_at.split("T")[1].slice(0, 5) : "19:00",
         endTime: s.ends_at && s.ends_at.includes("T") ? s.ends_at.split("T")[1].slice(0, 5) : "21:00",
         instructor: course?.instructor || "Alfred Dah",
-        meetUrl: s.meet_url || course?.live_meet_url,
+        meetUrl: (s.meet_url && s.meet_url.trim() && s.meet_url !== "https://meet.google.com") ? s.meet_url.trim() : (course?.live_meet_url && course.live_meet_url.trim() && course.live_meet_url !== "https://meet.google.com" ? course.live_meet_url.trim() : ""),
         recordingUrl: s.recording_url,
         whatsappUrl: course?.whatsapp_url,
         status: s.status || "upcoming"
@@ -2111,7 +2205,7 @@ export default function SuperAdminDashboard() {
         description: `Session intensive en direct avec ${course.instructor || "le formateur"} sur Google Meet.`,
         scheduled_at: sched,
         ends_at: end,
-        meet_url: course.live_meet_url || "https://meet.google.com",
+        meet_url: (course.live_meet_url && course.live_meet_url.trim() && course.live_meet_url !== "https://meet.google.com") ? course.live_meet_url.trim() : null,
         status: "upcoming"
       }
     })
@@ -2592,233 +2686,271 @@ export default function SuperAdminDashboard() {
       )}
 
       {/* Desktop Sidebar (Left - Fixed on viewport) */}
-      <aside className="w-64 border-r border-slate-200 bg-white backdrop-blur-xl p-4 hidden md:flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto z-30">
+      <aside className={`${sidebarCollapsed ? "w-20 p-3" : "w-64 p-4"} transition-all duration-300 ease-in-out border-r border-slate-200 bg-white backdrop-blur-xl hidden md:flex flex-col justify-between shrink-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto z-30`}>
         <div className="space-y-6 text-left">
-          {/* Logo & Platform Info */}
-          <Link href="/" className="flex items-center gap-3 px-2 group">
-            <img
-              src="/Logo%20avatar.png"
-              alt="Logo Le Guide IA"
-              className="size-9 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform"
-            />
-            <div>
-              <span className="font-heading font-black text-sm text-slate-800 tracking-wide block">LE GUIDE IA</span>
-              <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block">ADMIN PORTAL</span>
-            </div>
-          </Link>
+          {/* Logo & Platform Info + Toggle */}
+          <div className={`flex items-center ${sidebarCollapsed ? "justify-center flex-col gap-2.5" : "justify-between"} px-1`}>
+            <Link href="/" className="flex items-center gap-3 group min-w-0" title="LE GUIDE IA — Retour à l'accueil">
+              <img
+                src="/Logo%20avatar.png"
+                alt="Logo Le Guide IA"
+                className="size-9 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform shrink-0"
+              />
+              {!sidebarCollapsed && (
+                <div className="min-w-0">
+                  <span className="font-heading font-black text-sm text-slate-800 tracking-wide block truncate">LE GUIDE IA</span>
+                  <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block truncate">ADMIN PORTAL</span>
+                </div>
+              )}
+            </Link>
+
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              title={sidebarCollapsed ? "Agrandir le menu" : "Réduire le menu"}
+            >
+              {sidebarCollapsed ? <PanelLeftOpen className="size-4.5" /> : <PanelLeftClose className="size-4.5" />}
+            </button>
+          </div>
 
           {/* Nav Categories */}
           <div className="space-y-4">
             {/* Section 1: ANALYTIQUES & REVENUS */}
             <div className="space-y-1">
-              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
+              {!sidebarCollapsed ? (
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
+              ) : (
+                <div className="my-2 border-t border-slate-100" />
+              )}
               <button
                 onClick={() => setActiveTab("kpi")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title="Dashboard & KPIs"
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <DollarSign className="size-4 shrink-0" />
-                  <span>Dashboard & KPIs</span>
+                  {!sidebarCollapsed && <span>Dashboard & KPIs</span>}
                 </div>
               </button>
             </div>
 
             {/* Section 2: GESTION DU CONTENU */}
             <div className="space-y-1">
-              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Gestion du Contenu</p>
+              {!sidebarCollapsed ? (
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Gestion du Contenu</p>
+              ) : (
+                <div className="my-2 border-t border-slate-100" />
+              )}
               
-              {/* Bootcamps & Sous-section Inscriptions */}
-              <div className="space-y-0.5">
-                <button
-                  onClick={() => setActiveTab("courses")}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Layers className="size-4 shrink-0" />
-                    <span>Bootcamps</span>
-                  </div>
-                  <span className="text-[10px] opacity-75">({courses.length})</span>
-                </button>
+              {/* Bootcamps */}
+              <button
+                onClick={() => setActiveTab("courses")}
+                title={`Bootcamps (${courses.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+                  activeTab === "courses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
+                  <Layers className="size-4 shrink-0" />
+                  {!sidebarCollapsed && <span>Bootcamps</span>}
+                </div>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({courses.length})</span>}
+              </button>
 
-                {/* Sous-section Inscriptions */}
-                <button
-                  onClick={() => setActiveTab("payments")}
-                  className={`w-full flex items-center justify-between pl-7 pr-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                    activeTab === "payments" 
-                      ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <FileCheck className="size-3.5 shrink-0" />
-                    <span>Inscriptions</span>
-                  </div>
-                  {stats.pendingPaymentsCount > 0 && (
+              {/* Inscriptions */}
+              <button
+                onClick={() => setActiveTab("payments")}
+                title={`Inscriptions & Paiements ${stats.pendingPaymentsCount > 0 ? `(${stats.pendingPaymentsCount} en attente)` : ''}`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between pl-7 pr-3.5 py-2"} rounded-xl text-xs font-medium transition-all cursor-pointer relative ${
+                  activeTab === "payments" 
+                    ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                }`}
+              >
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+                  <FileCheck className="size-3.5 shrink-0" />
+                  {!sidebarCollapsed && <span>Inscriptions</span>}
+                </div>
+                {stats.pendingPaymentsCount > 0 && (
+                  sidebarCollapsed ? (
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-amber-500 ring-2 ring-white" />
+                  ) : (
                     <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
                       {stats.pendingPaymentsCount}
                     </span>
-                  )}
-                </button>
-              </div>
-
-              {/* <button
-                onClick={() => setActiveTab("formations")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "formations" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Sparkles className="size-4 shrink-0 text-primary" />
-                  <span>Formations Vidéos</span>
-                </div>
-                <span className="text-[10px] opacity-75">({formations.length})</span>
-              </button> */}
+                  )
+                )}
+              </button>
 
               <button
                 onClick={() => setActiveTab("resources")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title={`Bibliothèque (${resources.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "resources" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <BookOpen className="size-4 shrink-0" />
-                  <span>Bibliothèque</span>
+                  {!sidebarCollapsed && <span>Bibliothèque</span>}
                 </div>
-                <span className="text-[10px] opacity-75">({resources.length})</span>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({resources.length})</span>}
               </button>
 
               <button
-                onClick={() => { setActiveTab("lives"); setMobileMenuOpen(false) }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                onClick={() => setActiveTab("lives")}
+                title={`Calendrier & Directs (${adminCalendarEvents.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Calendar className="size-4 shrink-0" />
-                  <span>Calendrier & Directs</span>
+                  {!sidebarCollapsed && <span>Calendrier & Directs</span>}
                 </div>
-                <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>}
               </button>
 
               <button
-                onClick={() => { setActiveTab("masterclasses"); setMobileMenuOpen(false) }}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                onClick={() => setActiveTab("masterclasses")}
+                title={`Masterclasses (${masterclassReplays.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "masterclasses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Radio className="size-4 shrink-0 text-rose-500" />
-                  <span>Masterclasses</span>
+                  {!sidebarCollapsed && <span>Masterclasses</span>}
                 </div>
-                <span className="text-[10px] opacity-75">({masterclassReplays.length})</span>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({masterclassReplays.length})</span>}
               </button>
             </div>
 
             {/* Section 3: APPRENANTS & DEVOIRS */}
             <div className="space-y-1">
-              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Apprenants & Devoirs</p>
+              {!sidebarCollapsed ? (
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Apprenants & Devoirs</p>
+              ) : (
+                <div className="my-2 border-t border-slate-100" />
+              )}
               <button
                 onClick={() => setActiveTab("users")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title={`Membres & Rôles (${users.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Users className="size-4 shrink-0" />
-                  <span>Membres & Rôles</span>
+                  {!sidebarCollapsed && <span>Membres & Rôles</span>}
                 </div>
-                <span className="text-[10px] opacity-75">({users.length})</span>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({users.length})</span>}
               </button>
 
               <button
                 onClick={() => setActiveTab("submissions")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title={`Correction Devoirs ${stats.pendingSubmissions > 0 ? `(${stats.pendingSubmissions} en attente)` : ''}`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "submissions" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <FileCheck className="size-4 shrink-0" />
-                  <span>Correction Devoirs</span>
+                  {!sidebarCollapsed && <span>Correction Devoirs</span>}
                 </div>
                 {stats.pendingSubmissions > 0 && (
-                  <span className="bg-rose-500 text-white font-black text-[9px] px-1.5 py-0.2 rounded-full">
-                    {stats.pendingSubmissions}
-                  </span>
+                  sidebarCollapsed ? (
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-rose-500 ring-2 ring-white" />
+                  ) : (
+                    <span className="bg-rose-500 text-white font-black text-[9px] px-1.5 py-0.2 rounded-full">
+                      {stats.pendingSubmissions}
+                    </span>
+                  )
                 )}
               </button>
             </div>
 
             {/* Section 4: ORGANISATION */}
             <div className="space-y-1">
-              <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Organisation</p>
+              {!sidebarCollapsed ? (
+                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Organisation</p>
+              ) : (
+                <div className="my-2 border-t border-slate-100" />
+              )}
               <button
                 onClick={() => setActiveTab("newsletter")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title={`Newsletter & Diffusion (${newsletterSubscribers.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "newsletter" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Mail className="size-4 shrink-0" />
-                  <span>Newsletter & Diffusion</span>
+                  {!sidebarCollapsed && <span>Newsletter & Diffusion</span>}
                 </div>
-                <span className="text-[10px] opacity-75">({newsletterSubscribers.length})</span>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({newsletterSubscribers.length})</span>}
               </button>
 
               <button
                 onClick={() => setActiveTab("testimonials")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title={`Avis & Témoignages (${testimonials.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "testimonials" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Quote className="size-4 shrink-0" />
-                  <span>Avis & Témoignages</span>
+                  {!sidebarCollapsed && <span>Avis & Témoignages</span>}
                 </div>
-                <span className="text-[10px] opacity-75">({testimonials.length})</span>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({testimonials.length})</span>}
               </button>
 
               <button
                 onClick={() => setActiveTab("b2b")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title={`Demandes B2B (${stats.b2bCount})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "b2b" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Building2 className="size-4 shrink-0" />
-                  <span>Demandes B2B</span>
+                  {!sidebarCollapsed && <span>Demandes B2B</span>}
                 </div>
                 {stats.b2bCount > 0 && (
-                  <span className="bg-primary text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
-                    {stats.b2bCount}
-                  </span>
+                  sidebarCollapsed ? (
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary ring-2 ring-white" />
+                  ) : (
+                    <span className="bg-primary text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
+                      {stats.b2bCount}
+                    </span>
+                  )
                 )}
               </button>
 
               <button
                 onClick={() => setActiveTab("settings")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title="Paramètres"
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Award className="size-4 shrink-0" />
-                  <span>Paramètres</span>
+                  {!sidebarCollapsed && <span>Paramètres</span>}
                 </div>
               </button>
 
               <button
                 onClick={() => setActiveTab("export")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                title="Exports"
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <div className="flex items-center gap-2.5">
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Download className="size-4 shrink-0" />
-                  <span>Exports</span>
+                  {!sidebarCollapsed && <span>Exports</span>}
                 </div>
               </button>
             </div>
@@ -2827,24 +2959,33 @@ export default function SuperAdminDashboard() {
 
         {/* User Info & Signout */}
         <div className="pt-4 border-t border-slate-200 space-y-2.5">
-          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-[#F4F6F8] border border-slate-200/80">
-            <div className="size-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-slate-900 text-xs font-black shrink-0">
-              {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
+          {sidebarCollapsed ? (
+            <div className="flex justify-center" title={`${currentUser?.email || "Administrateur"} (${userRole || "admin"})`}>
+              <div className="size-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-slate-900 text-xs font-black shrink-0">
+                {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
+              </div>
             </div>
-            <div className="min-w-0 flex-1 text-left">
-              <p className="text-xs font-bold text-slate-800 truncate">{currentUser?.email || "Administrateur"}</p>
-              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                <ShieldCheck className="size-3" /> {userRole || "admin"}
-              </span>
+          ) : (
+            <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-[#F4F6F8] border border-slate-200/80">
+              <div className="size-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-slate-900 text-xs font-black shrink-0">
+                {(currentUser?.email || "AD").substring(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-xs font-bold text-slate-800 truncate">{currentUser?.email || "Administrateur"}</p>
+                <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                  <ShieldCheck className="size-3" /> {userRole || "admin"}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200/80 transition-all cursor-pointer bg-white"
+            title="Déconnexion"
+            className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2" : "justify-center gap-2 px-3 py-2"} rounded-xl text-xs font-bold text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200/80 transition-all cursor-pointer bg-white`}
           >
-            <LogOut className="size-3.5 text-rose-500" />
-            <span>Déconnexion</span>
+            <LogOut className="size-3.5 text-rose-500 shrink-0" />
+            {!sidebarCollapsed && <span>Déconnexion</span>}
           </button>
         </div>
       </aside>
@@ -5670,14 +5811,19 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">Lien de la Réunion Google Meet</label>
+                      <label className="text-slate-600 block mb-1 font-bold">
+                        Lien de la Réunion Google Meet <span className="text-slate-400 font-normal">(Optionnel)</span>
+                      </label>
                       <input
                         type="text"
-                        required
-                        value={liveForm.meet_url}
+                        value={liveForm.meet_url || ""}
                         onChange={e => setLiveForm({ ...liveForm, meet_url: e.target.value })}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
+                        placeholder="https://meet.google.com/... (optionnel, peut être ajouté plus tard)"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
                       />
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        Laissez vide si le lien n'est pas encore défini. Vous pourrez l'ajouter ultérieurement.
+                      </p>
                     </div>
 
                     <div>
@@ -7374,73 +7520,117 @@ export default function SuperAdminDashboard() {
                     <tr>
                       <th className="p-4">Entreprise & Contact</th>
                       <th className="p-4">Email / Tél</th>
-                      <th className="p-4">Secteur & Effectif</th>
-                      <th className="p-4">Besoins / Projet</th>
+                      <th className="p-4">Service Souhaité</th>
+                      <th className="p-4">Effectif</th>
+                      <th className="p-4 max-w-sm">Besoins / Cahier des Charges</th>
                       <th className="p-4">Statut Lead</th>
                       <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200/80">
                     {b2bRequests.map(b => {
-                      const displayStatus = b.status === "new" ? "Nouveau" : b.status === "contacted" ? "Contacté" : b.status === "quoted" ? "Devis Envoyé" : b.status === "won" ? "Gagné / Signé" : b.status === "lost" ? "Perdu" : b.status || "Nouveau"
-                      const rawPhone = b.phone ? b.phone.replace(/[^0-9+]/g, "") : ""
-                      const waLink = rawPhone ? `https://wa.me/${rawPhone.replace('+', '')}?text=${encodeURIComponent(`Bonjour ${b.contact_name}, je fais suite à votre demande de devis B2B pour l'entreprise ${b.company_name} sur Le Guide IA.`)}` : null
+                      const isExpanded = !!expandedB2bNeeds[b.id]
+                      const rawNeeds = b.needs || b.message || "Aucune description fournie."
 
                       return (
-                        <tr key={b.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
+                        <tr key={b.id} className="hover:bg-[#F4F6F8]/60 transition-colors align-top">
                           <td className="p-4">
-                            <div className="font-bold text-slate-800 text-sm">{b.company_name}</div>
-                            <div className="text-slate-500 text-[11px] font-medium">{b.contact_name}</div>
-                            <div className="text-slate-400 text-[10px]">{b.created_at ? new Date(b.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ""}</div>
+                            <div className="font-bold text-slate-900 text-sm">{b.company_name}</div>
+                            <div className="text-slate-600 text-xs font-semibold mt-0.5">{b.contact_name}</div>
+                            <div className="text-slate-400 text-[10px] mt-1">{b.created_at ? new Date(b.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ""}</div>
                           </td>
                           <td className="p-4">
-                            <a href={`mailto:${b.email}`} className="font-semibold text-primary hover:underline block">{b.email}</a>
-                            <div className="text-slate-600 font-mono text-[11px]">{b.phone || "Non renseigné"}</div>
+                            <a href={`mailto:${b.email}`} className="font-semibold text-primary hover:underline block text-xs">{b.email}</a>
+                            <div className="text-slate-600 font-mono text-[11px] mt-0.5">{b.phone || "Non renseigné"}</div>
                           </td>
                           <td className="p-4">
-                            <div className="font-bold text-slate-700">{b.sector || "Formation B2B"}</div>
-                            <div className="text-slate-500 text-[11px]">{b.employees || "10-50"} employés</div>
-                          </td>
-                          <td className="p-4 max-w-xs text-slate-700 text-[11px] leading-relaxed">
-                            <p className="line-clamp-2">{b.needs || "Demande de formation et audit"}</p>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                              b.status === "new" || b.status === "Nouveau"
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
-                                : b.status === "contacted"
-                                ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
-                                : b.status === "quoted"
-                                ? "bg-purple-500/10 text-purple-600 border-purple-500/30"
-                                : b.status === "won"
-                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                                : "bg-slate-100 text-slate-600 border-slate-200"
-                            }`}>
-                              {displayStatus}
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200/80">
+                              {b.sector || b.service_type || "Formation B2B"}
                             </span>
                           </td>
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {waLink && (
-                                <a
-                                  href={waLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all flex items-center gap-1.5"
-                                  title="Contacter sur WhatsApp"
+                          <td className="p-4 whitespace-nowrap">
+                            <div className="font-bold text-slate-800 text-xs">{b.employees || b.company_size || "10 à 50 personnes"}</div>
+                          </td>
+                          <td className="p-4 max-w-sm">
+                            <div className="space-y-1.5">
+                              <div className={`text-slate-700 text-xs leading-relaxed ${isExpanded ? "whitespace-pre-wrap bg-slate-50 p-2.5 rounded-xl border border-slate-200" : "line-clamp-2"}`}>
+                                {rawNeeds}
+                              </div>
+                              {rawNeeds.length > 70 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedB2bNeeds(prev => ({ ...prev, [b.id]: !prev[b.id] }))}
+                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline cursor-pointer pt-0.5"
                                 >
-                                  <MessageCircle className="size-3.5" />
-                                  <span>WhatsApp</span>
-                                </a>
+                                  {isExpanded ? (
+                                    <>
+                                      <span>Réduire</span>
+                                      <ChevronUp className="size-3" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span>Voir plus</span>
+                                      <ChevronDown className="size-3" />
+                                    </>
+                                  )}
+                                </button>
                               )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <select
+                              value={b.status === "Nouveau" ? "new" : b.status || "new"}
+                              onChange={e => handleUpdateB2BStatus(b.id, e.target.value)}
+                              disabled={processingId === `status_${b.id}`}
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border outline-none cursor-pointer ${
+                                b.status === "new" || b.status === "Nouveau"
+                                  ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                                  : b.status === "contacted"
+                                  ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                                  : b.status === "quoted"
+                                  ? "bg-purple-500/10 text-purple-600 border-purple-500/30"
+                                  : b.status === "won"
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                                  : "bg-slate-100 text-slate-600 border-slate-200"
+                              }`}
+                            >
+                              <option value="new">Nouveau</option>
+                              <option value="contacted">Contacté</option>
+                              <option value="quoted">Devis Envoyé</option>
+                              <option value="won">Gagné / Signé</option>
+                              <option value="lost">Perdu</option>
+                            </select>
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Action 1: Transférer à Alfred */}
+                              <button
+                                onClick={() => handleForwardB2B(b)}
+                                disabled={processingId === `forward_${b.id}`}
+                                className="size-8 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 shadow-2xs"
+                                title="Transférer cette demande à Alfred Dah (alfred@leguideai.com)"
+                              >
+                                <Send className="size-3.5" />
+                              </button>
+
+                              {/* Action 2: Répondre par Email */}
                               <a
-                                href={`mailto:${b.email}?subject=${encodeURIComponent(`Proposition / Devis Formation IA — ${b.company_name}`)}`}
-                                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5"
-                                title="Envoyer un email"
+                                href={`mailto:${b.email}?subject=${encodeURIComponent(`Proposition de Devis B2B — ${b.company_name}`)}`}
+                                className="size-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all flex items-center justify-center shadow-2xs"
+                                title="Envoyer un email au prospect"
                               >
                                 <Mail className="size-3.5" />
-                                <span>Email</span>
                               </a>
+
+                              {/* Action 3: Supprimer */}
+                              <button
+                                onClick={() => handleDeleteB2B(b.id)}
+                                disabled={processingId === b.id}
+                                className="size-8 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 shadow-2xs"
+                                title="Supprimer définitivement cette demande"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -7448,7 +7638,7 @@ export default function SuperAdminDashboard() {
                     })}
                     {b2bRequests.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-slate-500">
+                        <td colSpan={7} className="p-8 text-center text-slate-500">
                           Aucune demande de devis B2B enregistrée.
                         </td>
                       </tr>

@@ -1093,6 +1093,94 @@ export async function sendB2BConfirmationEmail(params: B2BQuoteEmailParams) {
   }
 }
 
+export async function forwardB2BQuoteToAlfred(params: B2BQuoteEmailParams & { customNote?: string }) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const { companyName, contactName, email, phone, serviceType = "Formation & Audit IA", companySize = "10-50", message, customNote } = params
+
+    const subject = `📥 [DEVIS B2B] Nouvelle demande transmise : ${companyName} (${contactName})`
+    const textContent = `Bonjour Alfred,\n\nUne demande de devis B2B a été transmise depuis le Dashboard d'administration :\n\n- Entreprise : ${companyName}\n- Contact : ${contactName}\n- Email : ${email}\n- Téléphone / WhatsApp : ${phone || 'Non renseigné'}\n- Service souhaité : ${serviceType}\n- Effectif estimé : ${companySize}\n- Message / Besoins : ${message || 'Non renseigné'}\n${customNote ? `\nNote : ${customNote}\n` : ''}\nLien Admin : https://leguideai.com/admin\n\nÀ très vite,\nConsole Admin Le Guide IA`
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 0; }
+          .wrapper { max-width: 600px; margin: 20px auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+          .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 2px solid #D4AF37; padding: 24px; text-align: center; }
+          .badge { display: inline-block; background-color: rgba(212, 175, 55, 0.15); border: 1px solid #D4AF37; color: #ECC86B; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 4px 12px; border-radius: 9999px; }
+          .content { padding: 28px 24px; font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+          .card { background-color: #0f172a; border: 1px solid #334155; border-left: 4px solid #3b82f6; border-radius: 10px; padding: 18px; margin: 20px 0; }
+          .item { margin-bottom: 8px; font-size: 13px; }
+          .label { color: #94a3b8; font-weight: 600; width: 140px; display: inline-block; }
+          .value { color: #f8fafc; font-weight: 700; }
+          .btn-reply { display: inline-block; background-color: #3b82f6; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 8px; margin-right: 10px; margin-top: 15px; }
+          .btn-wa { display: inline-block; background-color: #10b981; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 8px; margin-top: 15px; }
+          .footer { background-color: #0b0f19; padding: 16px 24px; text-align: center; font-size: 11px; color: #64748b; }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="header">
+            <h2 style="margin: 0 0 6px 0; color: #ffffff; font-size: 20px;">Opportunité Devis B2B transmise</h2>
+            <span class="badge">Transfert Admin vers Alfred Dah</span>
+          </div>
+          <div class="content">
+            <p>Bonjour <strong>Alfred</strong>,</p>
+            <p>Une demande de devis B2B a été transmise depuis le Dashboard d'administration.</p>
+            
+            <div class="card">
+              <div style="font-weight: 800; color: #60a5fa; font-size: 13px; text-transform: uppercase; margin-bottom: 12px;">
+                🏢 Détails de l'entreprise &amp; du lead
+              </div>
+              <div class="item"><span class="label">Entreprise :</span> <span class="value">${companyName}</span></div>
+              <div class="item"><span class="label">Responsable :</span> <span class="value">${contactName}</span></div>
+              <div class="item"><span class="label">Email :</span> <span class="value"><a href="mailto:${email}" style="color: #60a5fa;">${email}</a></span></div>
+              <div class="item"><span class="label">Téléphone :</span> <span class="value">${phone || 'Non renseigné'}</span></div>
+              <div class="item"><span class="label">Service souhaité :</span> <span class="value">${serviceType}</span></div>
+              <div class="item"><span class="label">Effectif estimé :</span> <span class="value">${companySize}</span></div>
+              ${message ? `<div class="item" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #334155;"><span class="label">Message / Besoin :</span><br><span style="color: #cbd5e1; font-style: italic;">« ${message} »</span></div>` : ''}
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="mailto:${email}?subject=${encodeURIComponent(`Proposition de Devis B2B — ${companyName}`)}" class="btn-reply">
+                ✉️ Répondre par Email au prospect
+              </a>
+              ${phone ? `<a href="https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Bonjour ${contactName}, je suis Alfred Dah de LE GUIDE IA suite à votre demande de devis pour ${companyName}.`)}" class="btn-wa">💬 Contacter sur WhatsApp</a>` : ''}
+            </div>
+          </div>
+          <div class="footer">
+            LE GUIDE IA — Notification Admin Automatique • Destinataire : alfred@leguideai.com
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: 'alfred@leguideai.com',
+      replyTo: email,
+      subject,
+      text: textContent,
+      html: htmlContent
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error forwarding B2B quote to Alfred:', error)
+    return { success: false, error }
+  }
+}
+
+
 
 
 

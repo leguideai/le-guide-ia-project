@@ -537,7 +537,7 @@ export function BootcampCalendar({
                 </>
               ) : (
                 <>
-                  {selectedEvent.meetUrl && (
+                  {selectedEvent.meetUrl && selectedEvent.meetUrl.trim() && selectedEvent.meetUrl !== "https://meet.google.com" ? (
                     <a
                       href={selectedEvent.meetUrl}
                       target="_blank"
@@ -547,7 +547,12 @@ export function BootcampCalendar({
                       <Video className="size-4" />
                       <span>Rejoindre sur Google Meet</span>
                     </a>
-                  )}
+                  ) : !selectedEvent.recordingUrl ? (
+                    <div className="w-full py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium text-center flex items-center justify-center gap-2">
+                      <Video className="size-4 text-slate-400" />
+                      <span>Lien Google Meet disponible avant le direct</span>
+                    </div>
+                  ) : null}
 
                   {selectedEvent.recordingUrl && (
                     <a

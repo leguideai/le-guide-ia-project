@@ -47,7 +47,9 @@ import {
   AlertCircle,
   Radio,
   Tv,
-  ArrowRight
+  ArrowRight,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 
@@ -101,6 +103,27 @@ export default function DashboardPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabType>("overview")
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("dashboard_sidebar_collapsed")
+      if (saved !== null) {
+        setSidebarCollapsed(saved === "true")
+      }
+    } catch (_) {}
+  }, [])
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev
+      try {
+        localStorage.setItem("dashboard_sidebar_collapsed", String(next))
+      } catch (_) {}
+      return next
+    })
+  }
+
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -720,7 +743,7 @@ export default function DashboardPage() {
           startTime: s.start_time || "19:00",
           endTime: s.end_time || "21:00",
           instructor: targetCourse?.instructor || "Alfred Dah",
-          meetUrl: s.meet_url || targetCourse?.live_meet_url || "https://meet.google.com",
+          meetUrl: (s.meet_url && s.meet_url.trim() && s.meet_url !== "https://meet.google.com") ? s.meet_url.trim() : (targetCourse?.live_meet_url && targetCourse.live_meet_url.trim() && targetCourse.live_meet_url !== "https://meet.google.com" ? targetCourse.live_meet_url.trim() : ""),
           recordingUrl: s.recording_url,
           whatsappUrl: targetCourse?.whatsapp_url || "https://wa.me/22605050577",
           status: s.status || "upcoming"
@@ -749,7 +772,7 @@ export default function DashboardPage() {
           startTime: "19:00",
           endTime: "21:00",
           instructor: c.instructor || "Alfred Dah",
-          meetUrl: c.live_meet_url || "https://meet.google.com",
+          meetUrl: (c.live_meet_url && c.live_meet_url.trim() && c.live_meet_url !== "https://meet.google.com") ? c.live_meet_url.trim() : "",
           whatsappUrl: c.whatsapp_url || "https://wa.me/22605050577",
           status: "upcoming" as const
         }
@@ -1053,29 +1076,49 @@ export default function DashboardPage() {
       )}
 
       {/* Desktop Sidebar Navigation (Fixed full height on desktop) */}
-      <aside className="hidden md:flex w-64 border-r border-slate-200/90 bg-white p-4 flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto shadow-xs">
+      <aside className={`hidden md:flex ${sidebarCollapsed ? "w-20 p-3" : "w-64 p-4"} transition-all duration-300 ease-in-out border-r border-slate-200/90 bg-white flex-col justify-between shrink-0 sticky top-0 h-screen overflow-y-auto shadow-xs z-30`}>
         <div className="space-y-5">
           
-          {/* Brand Logo inside Dashboard Sidebar */}
-          <Link href="/" className="flex items-center gap-2.5 px-2 py-1 hover:opacity-90 transition-opacity">
-            <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
-            <span className="font-heading text-base font-black tracking-tight text-slate-800">
-              LE GUIDE <span className="text-primary">IA</span>
-            </span>
-          </Link>
+          {/* Brand Logo inside Dashboard Sidebar + Toggle Button */}
+          <div className={`flex items-center ${sidebarCollapsed ? "justify-center flex-col gap-2.5" : "justify-between"} px-1`}>
+            <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity min-w-0" title="LE GUIDE IA — Retour à l'accueil">
+              <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover shrink-0" />
+              {!sidebarCollapsed && (
+                <span className="font-heading text-base font-black tracking-tight text-slate-800 truncate">
+                  LE GUIDE <span className="text-primary">IA</span>
+                </span>
+              )}
+            </Link>
+
+            <button
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              title={sidebarCollapsed ? "Agrandir le menu" : "Réduire le menu"}
+            >
+              {sidebarCollapsed ? <PanelLeftOpen className="size-4.5" /> : <PanelLeftClose className="size-4.5" />}
+            </button>
+          </div>
 
           {/* User Profile Summary Card */}
-          <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-3 flex items-center gap-3">
-            <div className="size-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs border border-white/20 shrink-0 shadow-xs">
-              {(fullName || user?.email || "U").substring(0, 2).toUpperCase()}
+          {sidebarCollapsed ? (
+            <div className="flex justify-center" title={`${fullName || "Membre Apprenant"} (${user?.email || ""})`}>
+              <div className="size-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs border border-white/20 shadow-xs">
+                {(fullName || user?.email || "U").substring(0, 2).toUpperCase()}
+              </div>
             </div>
-            <div className="min-w-0 flex-1 text-left">
-              <p className="text-xs font-bold text-slate-800 truncate">{fullName || "Membre Apprenant"}</p>
-              <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                <ShieldCheck className="size-3" /> Espace Membre
-              </span>
+          ) : (
+            <div className="rounded-2xl border border-slate-200/90 bg-[#F4F6F8] p-3 flex items-center gap-3">
+              <div className="size-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs border border-white/20 shrink-0 shadow-xs">
+                {(fullName || user?.email || "U").substring(0, 2).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-xs font-bold text-slate-800 truncate">{fullName || "Membre Apprenant"}</p>
+                <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                  <ShieldCheck className="size-3" /> Espace Membre
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Nav Menu */}
           <nav className="space-y-1">
@@ -1086,22 +1129,26 @@ export default function DashboardPage() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as TabType)}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  title={item.label}
+                  className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                     isActive
                       ? "bg-primary text-white shadow-xs"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                     <Icon className="size-4 shrink-0" />
-                    <span>{item.label}</span>
+                    {!sidebarCollapsed && <span>{item.label}</span>}
                   </div>
-                  {item.badge && (
+                  {!sidebarCollapsed && item.badge && (
                     <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold ${
                       isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary border border-primary/20"
                     }`}>
                       {item.badge}
                     </span>
+                  )}
+                  {sidebarCollapsed && item.badge && (
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary ring-2 ring-white" />
                   )}
                 </button>
               )
@@ -1111,30 +1158,42 @@ export default function DashboardPage() {
 
         <div className="pt-4 border-t border-slate-200 space-y-2">
           {(profile?.role === "admin" || profile?.role === "super_admin") && (
-            <Link
-              href="/admin"
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:opacity-90 shadow-xs transition-all"
-            >
-              <div className="flex items-center gap-2">
+            sidebarCollapsed ? (
+              <Link
+                href="/admin"
+                title="Portail Super Admin"
+                className="w-full flex items-center justify-center p-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:opacity-90 shadow-xs transition-all"
+              >
                 <ShieldCheck className="size-4" />
-                <span>Portail Super Admin</span>
-              </div>
-              <ChevronRight className="size-3.5" />
-            </Link>
+              </Link>
+            ) : (
+              <Link
+                href="/admin"
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:opacity-90 shadow-xs transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="size-4" />
+                  <span>Portail Super Admin</span>
+                </div>
+                <ChevronRight className="size-3.5" />
+              </Link>
+            )
           )}
           <Link
             href="/"
-            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+            title="Voir le site public"
+            className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "gap-2 px-3.5 py-2"} rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors`}
           >
-            <ExternalLink className="size-3.5" />
-            <span>Voir le site public</span>
+            <ExternalLink className="size-3.5 shrink-0" />
+            {!sidebarCollapsed && <span>Voir le site public</span>}
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+            title="Déconnexion"
+            className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "gap-2 px-3.5 py-2"} rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer`}
           >
-            <LogOut className="size-3.5" />
-            <span>Déconnexion</span>
+            <LogOut className="size-3.5 shrink-0" />
+            {!sidebarCollapsed && <span>Déconnexion</span>}
           </button>
         </div>
       </aside>
@@ -1526,15 +1585,22 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          <a
-                            href={selectedLesson.meetUrl || DEFAULT_MEET_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all mt-2 cursor-pointer"
-                          >
-                            <Video className="size-4" />
-                            <span>Rejoindre la Session Live sur Google Meet</span>
-                          </a>
+                          {selectedLesson.meetUrl && selectedLesson.meetUrl.trim() && selectedLesson.meetUrl !== "https://meet.google.com" ? (
+                            <a
+                              href={selectedLesson.meetUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all mt-2 cursor-pointer"
+                            >
+                              <Video className="size-4" />
+                              <span>Rejoindre la Session Live sur Google Meet</span>
+                            </a>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center">
+                              <Video className="size-4 text-amber-400 shrink-0" />
+                              <span>Lien Google Meet disponible avant le début de la session</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         /* Completed/Replay Video Player (iframe) */

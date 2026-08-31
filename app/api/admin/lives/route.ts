@@ -26,9 +26,11 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { id, title, course_slug, meet_url, replay_url, scheduled_at, status } = body
 
-    if (!title || !meet_url) {
-      return NextResponse.json({ error: "Titre et lien Google Meet requis." }, { status: 400 })
+    if (!title) {
+      return NextResponse.json({ error: "Le titre de la session est requis." }, { status: 400 })
     }
+
+    const cleanMeetUrl = meet_url && String(meet_url).trim() !== "https://meet.google.com" ? String(meet_url).trim() : null
 
     const { data: live, error } = await supabaseServer
       .from("live_sessions")
@@ -36,7 +38,7 @@ export async function POST(req: Request) {
         ...(id ? { id } : {}),
         title,
         course_slug: course_slug || "bootcamp-pro-2",
-        meet_url,
+        meet_url: cleanMeetUrl,
         replay_url: replay_url || null,
         scheduled_at: scheduled_at || new Date().toISOString(),
         status: status || "upcoming"

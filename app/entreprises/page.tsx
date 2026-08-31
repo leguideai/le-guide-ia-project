@@ -12,8 +12,8 @@ export default function EntreprisesPage() {
     contactName: "",
     email: "",
     phone: "",
-    companySize: "10-50",
-    serviceType: "formation",
+    companySize: "10 à 50 personnes",
+    serviceType: "Formations d'Équipe Sur-Mesure",
     message: ""
   })
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -52,6 +52,11 @@ export default function EntreprisesPage() {
     if (el) {
       el.scrollIntoView({ behavior: "smooth" })
     }
+  }
+
+  const selectServiceAndScroll = (service: string) => {
+    setForm(prev => ({ ...prev, serviceType: service }))
+    scrollToForm()
   }
 
   return (
@@ -183,7 +188,7 @@ export default function EntreprisesPage() {
                   </li>
                 </ul>
               </div>
-              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-[#D4AF37] hover:text-[#ECC86B] text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={() => selectServiceAndScroll("Formations d'Équipe Sur-Mesure")} className="w-full py-2.5 rounded-xl border border-border hover:border-[#D4AF37] hover:text-[#ECC86B] text-xs font-bold text-foreground transition-all cursor-pointer">
                 Demander cette formation →
               </button>
             </div>
@@ -213,7 +218,7 @@ export default function EntreprisesPage() {
                   </li>
                 </ul>
               </div>
-              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-primary hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={() => selectServiceAndScroll("Audit & Gouvernance IA (CISA)")} className="w-full py-2.5 rounded-xl border border-border hover:border-primary hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer">
                 Demander un audit →
               </button>
             </div>
@@ -243,7 +248,7 @@ export default function EntreprisesPage() {
                   </li>
                 </ul>
               </div>
-              <button onClick={scrollToForm} className="w-full py-2.5 rounded-xl border border-border hover:border-blue-500 hover:text-blue-400 text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={() => selectServiceAndScroll("Accompagnement Stratégique & Automatisation")} className="w-full py-2.5 rounded-xl border border-border hover:border-blue-500 hover:text-blue-400 text-xs font-bold text-foreground transition-all cursor-pointer">
                 Planifier un entretien →
               </button>
             </div>
@@ -355,6 +360,36 @@ export default function EntreprisesPage() {
                           placeholder="+226 0505 0577"
                           className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/80">Service souhaité *</label>
+                        <select
+                          value={form.serviceType}
+                          onChange={(e) => setForm({ ...form, serviceType: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-slate-900 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                        >
+                          <option value="Formations d'Équipe Sur-Mesure">Formations d'Équipe Sur-Mesure</option>
+                          <option value="Audit & Gouvernance IA (CISA)">Audit & Gouvernance IA (CISA)</option>
+                          <option value="Accompagnement Stratégique & Automatisation">Accompagnement Stratégique & Automatisation</option>
+                          <option value="Conférence & Masterclass Privée">Conférence & Masterclass Privée</option>
+                          <option value="Autre / Projet Spécifique">Autre / Projet Spécifique</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-foreground/80">Effectif de l'organisation *</label>
+                        <select
+                          value={form.companySize}
+                          onChange={(e) => setForm({ ...form, companySize: e.target.value })}
+                          className="w-full rounded-xl border border-border bg-slate-900 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                        >
+                          <option value="1 à 10 personnes">1 à 10 personnes</option>
+                          <option value="10 à 50 personnes">10 à 50 personnes</option>
+                          <option value="50 à 200 personnes">50 à 200 personnes</option>
+                          <option value="Plus de 200 personnes">Plus de 200 personnes</option>
+                        </select>
                       </div>
                     </div>
 
