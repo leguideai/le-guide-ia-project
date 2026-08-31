@@ -10,7 +10,7 @@ import {
   Play, Video, Calendar, Clock, CheckCircle2, 
   Sparkles, ArrowRight, Radio, ExternalLink, 
   LogIn, UserCheck, Search, Filter, ShieldCheck, X,
-  Tv, Award, Zap, Mail, MessageCircle
+  Tv, Award, Zap, Mail, MessageCircle, Lock
 } from "lucide-react"
 
 interface ReplayItem {
@@ -33,8 +33,6 @@ export default function MasterclassHubPage() {
   const [isRegistered, setIsRegistered] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
-  const [guestEmail, setGuestEmail] = useState("")
-  const [guestName, setGuestName] = useState("")
   
   const [upcomingSession, setUpcomingSession] = useState<any>(null)
   const [allUpcomingSessions, setAllUpcomingSessions] = useState<any[]>([])
@@ -53,7 +51,7 @@ export default function MasterclassHubPage() {
     (!upcomingSession.scheduledAt || new Date(upcomingSession.scheduledAt).getTime() >= Date.now() - 4 * 3600 * 1000)
   )
 
-  // 1. Initial Load & Auth / Registration check
+  // 1. Initial Load & Auth / Registration check (Authentification requise)
   useEffect(() => {
     async function init() {
       try {
@@ -61,17 +59,19 @@ export default function MasterclassHubPage() {
         const user = session?.user || null
         setCurrentUser(user)
 
-        // Check local storage for persistent registration status
-        const storedEmail = typeof window !== "undefined" ? localStorage.getItem("masterclass_registered_email") : null
-        const isLocallyRegistered = typeof window !== "undefined" && localStorage.getItem("masterclass_registered") === "true"
-
-        if (isLocallyRegistered) {
-          setIsRegistered(true)
+        // Si l'utilisateur n'est pas connecté, pas d'inscription persistée ni de message résiduel
+        if (!user) {
+          setIsRegistered(false)
+          setFeedbackMsg(null)
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("masterclass_registered")
+            localStorage.removeItem("masterclass_registered_email")
+          }
         }
 
-        const emailToCheck = user?.email || storedEmail || ""
+        const emailToCheck = user?.email || ""
 
-        // Fetch dynamic session and replays from Supabase
+        // Fetch dynamic session, replays and session-specific registration from Supabase
         const res = await fetch(`/api/masterclass${emailToCheck ? `?email=${encodeURIComponent(emailToCheck)}` : ""}`)
         const data = await res.json()
 
@@ -87,13 +87,13 @@ export default function MasterclassHubPage() {
           setAllUpcomingSessions([])
         }
 
-        if (data.isRegistered || isLocallyRegistered) {
+        // Seul un utilisateur connecté et inscrit en base est considéré comme inscrit
+        if (user && data.isRegistered) {
           setIsRegistered(true)
-          if (emailToCheck && typeof window !== "undefined") {
-            localStorage.setItem("masterclass_registered", "true")
-            localStorage.setItem("masterclass_registered_email", emailToCheck)
-          }
+        } else {
+          setIsRegistered(false)
         }
+
         if (data.replays && Array.isArray(data.replays)) {
           setReplays(data.replays)
         }
@@ -138,18 +138,40 @@ export default function MasterclassHubPage() {
     return () => clearInterval(timer)
   }, [upcomingSession?.scheduledAt, upcomingSession?.is_active])
 
-  // 3. Registration handler (for both logged-in and guest users)
-  async function handleRegister(explicitEmail?: string, explicitName?: string) {
-    const emailToSubmit = explicitEmail || currentUser?.email || guestEmail.trim()
-    const nameToSubmit = explicitName || currentUser?.user_metadata?.full_name || guestName.trim() || emailToSubmit.split("@")[0]
+  // Helper pour vérifier le statut d'inscription lors du changement de session
+  async function handleSelectSession(session: any) {
+    setUpcomingSession(session)
+    setFeedbackMsg(null)
+    const emailToCheck = currentUser?.email || ""
+    if (emailToCheck) {
+      try {
+        const res = await fetch(`/api/masterclass?email=${encodeURIComponent(emailToCheck)}&sessionId=${encodeURIComponent(session.id)}`)
+        const data = await res.json()
+        setIsRegistered(Boolean(data.isRegistered))
+      } catch (_) {
+        setIsRegistered(false)
+      }
+    } else {
+      setIsRegistered(false)
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
 
-    if (!emailToSubmit || !emailToSubmit.includes("@")) {
-      setFeedbackMsg("Veuillez saisir une adresse email valide.")
+  // 3. Registration handler (Utilisateur connecté requis)
+  async function handleRegister() {
+    if (!currentUser?.email) {
+      window.location.href = "/login?redirect=/masterclass"
       return
     }
 
+    const emailToSubmit = currentUser.email.toLowerCase().trim()
+    const nameToSubmit = currentUser.user_metadata?.full_name || emailToSubmit.split("@")[0]
+
     setRegistering(true)
     setFeedbackMsg(null)
+
+    const targetSessionId = upcomingSession?.id || "mc_default"
+    const targetSessionTitle = upcomingSession?.title || "Masterclass IA en Direct"
 
     try {
       const res = await fetch("/api/masterclass", {
@@ -158,21 +180,21 @@ export default function MasterclassHubPage() {
         body: JSON.stringify({
           email: emailToSubmit,
           fullName: nameToSubmit,
-          whatsapp: currentUser?.user_metadata?.whatsapp || "",
-          country: currentUser?.user_metadata?.country || "CI",
-          masterclassId: "current_live",
-          masterclassTitle: upcomingSession?.title || "Masterclass IA en Direct"
+          whatsapp: currentUser.user_metadata?.whatsapp || "",
+          country: currentUser.user_metadata?.country || "CI",
+          masterclassId: targetSessionId,
+          masterclassTitle: targetSessionTitle
         })
       })
 
       const data = await res.json()
       if (data.success) {
         setIsRegistered(true)
-        if (typeof window !== "undefined") {
-          localStorage.setItem("masterclass_registered", "true")
-          localStorage.setItem("masterclass_registered_email", emailToSubmit)
+        if (data.alreadyRegistered) {
+          setFeedbackMsg("ℹ️ Vous êtes déjà inscrit à cette Masterclass ! Vos accès sont débloqués ci-dessous.")
+        } else {
+          setFeedbackMsg("🎉 Inscription confirmée avec succès ! Rejoignez le groupe WhatsApp des apprenants ci-dessous.")
         }
-        setFeedbackMsg("🎉 Votre place est confirmée ! Rejoignez dès maintenant le groupe WhatsApp des apprenants ci-dessous.")
       } else {
         setFeedbackMsg(data.error || "Erreur lors de la réservation.")
       }
@@ -202,9 +224,14 @@ export default function MasterclassHubPage() {
       ) : isRegistered ? (
         /* État : DÉJÀ INSCRIT */
         <div className="space-y-4">
-          <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-sm bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl">
-            <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
-            <span>Votre place est confirmée pour cette Masterclass !</span>
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
+            <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-sm">
+              <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
+              <span>Vous êtes déjà inscrit à cette Masterclass !</span>
+            </div>
+            <p className="text-xs text-slate-300 pl-7 leading-relaxed">
+              Votre place est confirmée et réservée. Accédez directement au direct et au groupe d'échange des apprenants ci-dessous.
+            </p>
           </div>
 
           {/* GROUPE WHATSAPP CARD / BUTTON PROÉMINENT */}
@@ -241,34 +268,22 @@ export default function MasterclassHubPage() {
           </a>
 
           <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Email enregistré : {currentUser?.email || (typeof window !== "undefined" && localStorage.getItem("masterclass_registered_email")) || "Confirmé"}</span>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  localStorage.removeItem("masterclass_registered")
-                  localStorage.removeItem("masterclass_registered_email")
-                }
-                setIsRegistered(false)
-              }}
-              className="text-primary hover:underline font-semibold cursor-pointer"
-            >
-              Changer d'email
-            </button>
+            <span>Inscrit avec le compte : <strong className="text-white">{currentUser?.email}</strong></span>
           </div>
         </div>
       ) : currentUser ? (
         /* État : Utilisateur connecté mais pas encore inscrit */
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <UserCheck className="size-4 text-primary" />
-            <span>Connecté en tant que <strong className="text-white">{currentUser.email}</strong></span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-card/60 border border-border p-3 rounded-xl">
+            <UserCheck className="size-4 text-emerald-400 shrink-0" />
+            <span className="truncate">Connecté en tant que <strong className="text-white">{currentUser.email}</strong></span>
           </div>
 
           <button
             type="button"
             disabled={registering}
             onClick={() => handleRegister()}
-            className="w-full py-3.5 px-6 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+            className="w-full py-3.5 px-6 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-50"
           >
             {registering ? (
               <span>Réservation en cours...</span>
@@ -280,57 +295,45 @@ export default function MasterclassHubPage() {
             )}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
-            🔒 Inscription 100% gratuite • Lien YouTube Live et accès au groupe WhatsApp envoyés instantanément.
+            🔒 Inscription 100% gratuite • Débloque le lien YouTube Live et l'accès au groupe WhatsApp des apprenants.
           </p>
         </div>
       ) : (
-        /* État : Visiteur non connecté */
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Réservez votre place gratuite :
+        /* État : Visiteur non connecté -> Connexion Obligatoire */
+        <div className="space-y-4">
+          <div className="space-y-1.5 text-left">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
+              <Lock className="size-3.5" />
+              <span>Connexion Requise</span>
+            </div>
+            <h4 className="text-sm font-bold text-white">
+              Connectez-vous pour réserver votre place
             </h4>
-            <p className="text-[11px] text-muted-foreground">
-              Recevez le lien YouTube Live et l'accès au groupe WhatsApp des apprenants directement par email.
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Pour participer à cette Masterclass en direct et débloquer les accès, veuillez vous connecter ou créer votre compte gratuit.
             </p>
           </div>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleRegister()
-            }}
-            className="space-y-2.5"
-          >
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="email"
-                required
-                value={guestEmail}
-                onChange={(e) => setGuestEmail(e.target.value)}
-                placeholder="Votre adresse email..."
-                className="flex-1 rounded-xl border border-border bg-[#090d16] px-3.5 py-2.5 text-xs text-white placeholder:text-muted-foreground outline-none focus:border-primary"
-              />
-              <button
-                type="submit"
-                disabled={registering}
-                className="py-2.5 px-5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-md cursor-pointer"
-              >
-                {registering ? "..." : "Réserver ma place"}
-                <ArrowRight className="size-3.5" />
-              </button>
-            </div>
-          </form>
-
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border">
-            <span>Déjà inscrit sur la plateforme ?</span>
+          <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
             <Link
               href="/login?redirect=/masterclass"
-              className="text-primary hover:underline font-bold"
+              className="flex-1 py-3 px-4 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
             >
-              Se connecter
+              <LogIn className="size-4" />
+              <span>Se connecter</span>
+              <ArrowRight className="size-3.5" />
+            </Link>
+            <Link
+              href="/register-account?redirect=/masterclass"
+              className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-xs text-center border border-border transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Créer un compte</span>
             </Link>
           </div>
+
+          <p className="text-[11px] text-muted-foreground text-center">
+            🔒 Inscription 100% gratuite • Accès débloqués immédiatement dès la connexion.
+          </p>
         </div>
       )}
 
@@ -721,10 +724,7 @@ export default function MasterclassHubPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        setUpcomingSession(s)
-                        window.scrollTo({ top: 0, behavior: "smooth" })
-                      }}
+                      onClick={() => handleSelectSession(s)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isSelected
                           ? "bg-primary text-slate-950 font-extrabold"

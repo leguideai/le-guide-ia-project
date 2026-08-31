@@ -147,18 +147,29 @@ export async function GET(req: Request) {
       }
     }
 
-    // 2. Vérifier si l'utilisateur est déjà inscrit
+    // 2. Vérifier si l'utilisateur est déjà inscrit spécifiquement à CETTE session
     let isRegistered = false
-    if (emailParam) {
-      const { data: reg } = await supabaseServer
-        .from("registrations")
-        .select("id, status")
-        .ilike("email", emailParam)
-        .or("course_slug.eq.masterclass-ia,source.eq.masterclass_dimanche")
-        .maybeSingle()
+    const requestedSessionId = searchParams.get("sessionId") || upcomingSession?.id
 
-      if (reg) {
-        isRegistered = true
+    if (emailParam && requestedSessionId) {
+      const { data: userRegistrations } = await supabaseServer
+        .from("registrations")
+        .select("id, status, notes, course_slug, source")
+        .ilike("email", emailParam)
+        .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,source.eq.masterclass_dimanche")
+
+      if (userRegistrations && userRegistrations.length > 0) {
+        // Vérifier si l'une des inscriptions correspond à la session demandée
+        isRegistered = userRegistrations.some((r) => {
+          if (!r.notes) return false
+          try {
+            const pNotes = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
+            if (pNotes && pNotes.masterclass_id) {
+              return pNotes.masterclass_id === requestedSessionId
+            }
+          } catch (_) {}
+          return false
+        })
       }
     }
 
@@ -205,18 +216,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Adresse email requise." }, { status: 400 })
     }
 
-    // 1. Vérifier si déjà inscrit
-    const { data: existingReg } = await supabaseServer
-      .from("registrations")
-      .select("id")
-      .ilike("email", email)
-      .or("course_slug.eq.masterclass-ia,source.eq.masterclass_dimanche")
-      .maybeSingle()
-
-    let regId = existingReg?.id
-
     const masterclassId = body.masterclassId || body.masterclass_id || "current_live"
     const masterclassTitle = body.masterclassTitle || body.masterclass_title || "Masterclass IA en Direct"
+
+    // 1. Vérifier si déjà inscrit spécifiquement à cette Masterclass
+    const { data: userRegistrations } = await supabaseServer
+      .from("registrations")
+      .select("id, notes")
+      .ilike("email", email)
+      .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,source.eq.masterclass_dimanche")
+
+    const existingMatch = (userRegistrations || []).find(r => {
+      if (!r.notes) return false
+      try {
+        const pNotes = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
+        return pNotes && pNotes.masterclass_id === masterclassId
+      } catch (_) {}
+      return false
+    })
+
+    if (existingMatch) {
+      return NextResponse.json({
+        success: true,
+        alreadyRegistered: true,
+        message: "Vous êtes déjà inscrit à cette Masterclass !"
+      })
+    }
 
     const regPayload: any = {
       full_name: cleanFullName,
@@ -234,15 +259,7 @@ export async function POST(req: Request) {
       })
     }
 
-    if (existingReg) {
-      const { error: updErr } = await supabaseServer
-        .from("registrations")
-        .update(regPayload)
-        .eq("id", existingReg.id)
-      if (updErr) {
-        console.warn("Masterclass registration update error:", updErr)
-      }
-    } else {
+    let regId: string | null = null
       const { data: newReg, error: regErr } = await supabaseServer
         .from("registrations")
         .insert(regPayload)
@@ -265,7 +282,6 @@ export async function POST(req: Request) {
       if (newReg) {
         regId = newReg.id
       }
-    }
 
     // 2. Ajouter automatiquement aux abonnés newsletter
     try {
