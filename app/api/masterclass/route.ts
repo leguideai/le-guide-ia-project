@@ -81,23 +81,70 @@ export async function GET(req: Request) {
       })
     }
 
-    const isActive = settingsMap.masterclass_is_active !== "false" && !!settingsMap.masterclass_date
-    const scheduledAt = settingsMap.masterclass_date || ""
-    const dateDisplay = settingsMap.masterclass_date_display || (scheduledAt ? new Date(scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
+    // Récupérer la liste des sessions configurées
+    let sessions: any[] = []
+    if (settingsMap.masterclass_sessions) {
+      try {
+        const parsed = JSON.parse(settingsMap.masterclass_sessions)
+        if (Array.isArray(parsed)) {
+          sessions = parsed
+        }
+      } catch (e) {
+        console.warn("Could not parse masterclass_sessions JSON:", e)
+      }
+    }
 
-    const upcomingSession = {
-      is_active: isActive,
-      title: settingsMap.masterclass_title || "Masterclass IA Interactive en Direct",
-      description: settingsMap.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Démonstrations d'outils, cas pratiques et questions-réponses.",
-      instructor: settingsMap.masterclass_instructor || "Alfred Dah",
-      instructorRole: "Fondateur Le Guide IA & Expert en Intelligence Artificielle",
-      scheduledAt: scheduledAt,
-      dateDisplay: dateDisplay,
-      thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
-      whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
-      duration: "1h 30min",
-      price: "100% Gratuit (Accès Libre)"
+    const now = Date.now()
+    let upcomingSession: any = null
+    let allUpcomingSessions: any[] = []
+
+    if (sessions.length > 0) {
+      // Filtrer STRICTEMENT les sessions futures et actives (date >= now - 4h et statut !== 'past')
+      allUpcomingSessions = sessions
+        .filter(s => s.status === "upcoming" || (!s.status && s.status !== "past" && (!s.scheduledAt || new Date(s.scheduledAt).getTime() >= now - 4 * 3600 * 1000)))
+        .filter(s => s.status !== "past" && (s.is_active !== false))
+        .filter(s => !s.scheduledAt || new Date(s.scheduledAt).getTime() >= now - 4 * 3600 * 1000)
+        .sort((a, b) => {
+          const timeA = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity
+          const timeB = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity
+          return timeA - timeB
+        })
+
+      if (allUpcomingSessions.length > 0) {
+        upcomingSession = allUpcomingSessions.find(s => s.is_active !== false) || allUpcomingSessions[0]
+      }
+    }
+
+    // Fallback uniquement si une date future est explicitement configurée dans site_settings
+    if (!upcomingSession) {
+      const scheduledAt = settingsMap.masterclass_date || ""
+      const isExplicitActive = settingsMap.masterclass_is_active === "true"
+      const isFuture = scheduledAt && new Date(scheduledAt).getTime() >= now - 4 * 3600 * 1000
+
+      if (isExplicitActive && isFuture) {
+        const dateDisplay = settingsMap.masterclass_date_display || (scheduledAt ? new Date(scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
+
+        upcomingSession = {
+          id: "mc_default",
+          is_active: true,
+          title: settingsMap.masterclass_title || "Masterclass IA Interactive en Direct",
+          description: settingsMap.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Démonstrations d'outils, cas pratiques et questions-réponses.",
+          instructor: settingsMap.masterclass_instructor || "Alfred Dah",
+          instructorRole: "Fondateur Le Guide IA & Expert en Intelligence Artificielle",
+          scheduledAt: scheduledAt,
+          dateDisplay: dateDisplay,
+          thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
+          whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
+          youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
+          duration: "1h 30min",
+          price: "100% Gratuit (Accès Libre)"
+        }
+        allUpcomingSessions = [upcomingSession]
+      } else {
+        // Aucune session future n'est active : afficher l'état propre sans direct
+        upcomingSession = null
+        allUpcomingSessions = []
+      }
     }
 
     // 2. Vérifier si l'utilisateur est déjà inscrit
@@ -131,6 +178,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       upcomingSession,
+      allUpcomingSessions,
       isRegistered,
       replays
     })
@@ -167,6 +215,9 @@ export async function POST(req: Request) {
 
     let regId = existingReg?.id
 
+    const masterclassId = body.masterclassId || body.masterclass_id || "current_live"
+    const masterclassTitle = body.masterclassTitle || body.masterclass_title || "Masterclass IA en Direct"
+
     const regPayload: any = {
       full_name: cleanFullName,
       email: email,
@@ -177,6 +228,8 @@ export async function POST(req: Request) {
       status: "inscrit",
       notes: JSON.stringify({
         source: "masterclass_dimanche",
+        masterclass_id: masterclassId,
+        masterclass_title: masterclassTitle,
         registered_at: new Date().toISOString()
       })
     }

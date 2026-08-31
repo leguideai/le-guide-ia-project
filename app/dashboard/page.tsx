@@ -1919,13 +1919,17 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Affiche Officielle de la Masterclass */}
+                  {/* Affiche Officielle de la Masterclass (Affichage Intégral Sans Rognage) */}
                   {masterclassSession.thumbnailUrl && (
-                    <div className="w-full lg:w-72 aspect-video rounded-2xl overflow-hidden border border-slate-200 shadow-md shrink-0 bg-slate-900">
+                    <div className="relative w-full lg:w-72 min-h-[160px] max-h-[220px] rounded-2xl overflow-hidden border border-slate-200 shadow-md shrink-0 bg-slate-950 flex items-center justify-center">
+                      <div
+                        className="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110 pointer-events-none"
+                        style={{ backgroundImage: `url(${masterclassSession.thumbnailUrl})` }}
+                      />
                       <img
                         src={masterclassSession.thumbnailUrl}
                         alt={masterclassSession.title}
-                        className="w-full h-full object-cover"
+                        className="relative z-10 w-full h-auto max-h-[220px] object-contain mx-auto"
                       />
                     </div>
                   )}

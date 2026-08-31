@@ -172,7 +172,7 @@ interface TestimonialItem {
 }
 
 export default function SuperAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "masterclasses" | "newsletter" | "testimonials" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
+  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "masterclasses" | "masterclasses_past" | "masterclass_participants" | "masterclass_replays" | "newsletter" | "testimonials" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
@@ -180,6 +180,7 @@ export default function SuperAdminDashboard() {
 
   // Masterclass states
   const [masterclassSession, setMasterclassSession] = useState<any>({
+    id: "mc_default",
     is_active: true,
     title: "Masterclass IA : Fondamentaux & Cas Pratiques en Direct",
     description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
@@ -189,7 +190,27 @@ export default function SuperAdminDashboard() {
     whatsappGroupUrl: "",
     youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
     instructor: "Alfred Dah",
-    duration: "1h 30min"
+    duration: "1h 30min",
+    status: "upcoming"
+  })
+  const [masterclassSessions, setMasterclassSessions] = useState<any[]>([])
+  const [upcomingMasterclasses, setUpcomingMasterclasses] = useState<any[]>([])
+  const [pastMasterclasses, setPastMasterclasses] = useState<any[]>([])
+  const [showMasterclassModal, setShowMasterclassModal] = useState(false)
+  const [editingMasterclass, setEditingMasterclass] = useState<any | null>(null)
+  const [masterclassForm, setMasterclassForm] = useState<any>({
+    id: "",
+    title: "",
+    description: "",
+    instructor: "Alfred Dah",
+    scheduledAt: "",
+    dateDisplay: "",
+    thumbnailUrl: "",
+    whatsappGroupUrl: "",
+    youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
+    duration: "1h 30min",
+    status: "upcoming",
+    is_active: true
   })
   const [masterclassReplays, setMasterclassReplays] = useState<any[]>([])
   const [masterclassParticipants, setMasterclassParticipants] = useState<any[]>([])
@@ -211,12 +232,24 @@ export default function SuperAdminDashboard() {
   const [notifyAllUsersOnSave, setNotifyAllUsersOnSave] = useState(false)
   const [sendingPlatformInvite, setSendingPlatformInvite] = useState(false)
   const [platformInviteStatus, setPlatformInviteStatus] = useState<string | null>(null)
+  const [selectedMasterclassFilter, setSelectedMasterclassFilter] = useState<string>("all")
+  const [showTargetedEmailModal, setShowTargetedEmailModal] = useState(false)
+  const [targetedEmailTarget, setTargetedEmailTarget] = useState<string>("current_live")
+  const [targetedEmailType, setTargetedEmailType] = useState<"reminder" | "replay" | "custom">("reminder")
+  const [targetedEmailSubject, setTargetedEmailSubject] = useState<string>("")
+  const [targetedEmailCustomMessage, setTargetedEmailCustomMessage] = useState<string>("")
+  const [targetedEmailTestAddress, setTargetedEmailTestAddress] = useState<string>("")
+  const [sendingTargetedEmail, setSendingTargetedEmail] = useState(false)
+  const [sendingTestEmail, setSendingTestEmail] = useState(false)
+
   const [isManualAddParticipantOpen, setIsManualAddParticipantOpen] = useState(false)
   const [manualParticipantForm, setManualParticipantForm] = useState({
     fullName: "",
     email: "",
     whatsapp: "",
-    country: "CI"
+    country: "CI",
+    masterclassId: "current_live",
+    masterclassTitle: ""
   })
   const [addingManualParticipant, setAddingManualParticipant] = useState(false)
   const [refreshingMasterclass, setRefreshingMasterclass] = useState(false)
@@ -836,7 +869,7 @@ export default function SuperAdminDashboard() {
   }, [])
 
   useEffect(() => {
-    if (activeTab === "masterclasses") {
+    if (activeTab === "masterclasses" || activeTab === "masterclasses_past" || activeTab === "masterclass_participants" || activeTab === "masterclass_replays") {
       refreshMasterclassData()
     }
   }, [activeTab])
@@ -978,6 +1011,9 @@ export default function SuperAdminDashboard() {
         const dataMaster = await resMaster.json()
         if (dataMaster.success) {
           if (dataMaster.upcomingSession) setMasterclassSession(dataMaster.upcomingSession)
+          if (dataMaster.sessions) setMasterclassSessions(dataMaster.sessions)
+          if (dataMaster.upcomingSessions) setUpcomingMasterclasses(dataMaster.upcomingSessions)
+          if (dataMaster.pastSessions) setPastMasterclasses(dataMaster.pastSessions)
           if (dataMaster.replays) setMasterclassReplays(dataMaster.replays)
           if (dataMaster.participants) setMasterclassParticipants(dataMaster.participants)
         }
@@ -1156,16 +1192,18 @@ export default function SuperAdminDashboard() {
   }
 
   function handleExportMasterclassParticipants() {
-    if (masterclassParticipants.length === 0) {
-      alert("Aucun participant inscrit à exporter.")
+    const listToExport = filteredMasterclassParticipants
+    if (listToExport.length === 0) {
+      alert("Aucun participant inscrit à exporter pour cette sélection.")
       return
     }
-    const headers = ["Nom Complet", "Email", "WhatsApp", "Pays", "Date Inscription", "Statut"]
-    const rows = masterclassParticipants.map(p => [
+    const headers = ["Nom Complet", "Email", "WhatsApp", "Pays", "Masterclass", "Date Inscription", "Statut"]
+    const rows = listToExport.map(p => [
       `"${(p.full_name || "").replace(/"/g, '""')}"`,
       `"${(p.email || "").replace(/"/g, '""')}"`,
       `"${(p.whatsapp || "").replace(/"/g, '""')}"`,
-      `"${(p.country || "").replace(/"/g, '""')}"`,
+      `"${(p.country || "CI").replace(/"/g, '""')}"`,
+      `"${(p.masterclass_title || masterclassSession.title || "Masterclass IA").replace(/"/g, '""')}"`,
       `"${new Date(p.created_at).toLocaleString("fr-FR")}"`,
       `"${p.status || "inscrit"}"`
     ])
@@ -1173,7 +1211,7 @@ export default function SuperAdminDashboard() {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement("a")
     link.setAttribute("href", encodedUri)
-    link.setAttribute("download", `inscrits_masterclass_${new Date().toISOString().split("T")[0]}.csv`)
+    link.setAttribute("download", `inscrits_masterclass_${selectedMasterclassFilter}_${new Date().toISOString().split("T")[0]}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -1186,6 +1224,9 @@ export default function SuperAdminDashboard() {
       const data = await res.json()
       if (data.success) {
         if (data.upcomingSession) setMasterclassSession(data.upcomingSession)
+        if (data.sessions) setMasterclassSessions(data.sessions)
+        if (data.upcomingSessions) setUpcomingMasterclasses(data.upcomingSessions)
+        if (data.pastSessions) setPastMasterclasses(data.pastSessions)
         if (data.replays) setMasterclassReplays(data.replays)
         if (data.participants) setMasterclassParticipants(data.participants)
       }
@@ -1194,6 +1235,144 @@ export default function SuperAdminDashboard() {
     } finally {
       setRefreshingMasterclass(false)
     }
+  }
+
+  function handleOpenAddMasterclass() {
+    setEditingMasterclass(null)
+    setMasterclassForm({
+      id: "new",
+      title: "Masterclass IA : Cas Pratiques & Outils en Direct",
+      description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
+      instructor: "Alfred Dah",
+      scheduledAt: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16),
+      dateDisplay: "Dimanche Prochain à 19h00 (GMT)",
+      thumbnailUrl: "",
+      whatsappGroupUrl: "",
+      youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
+      duration: "1h 30min",
+      status: "upcoming",
+      is_active: true
+    })
+    setShowMasterclassModal(true)
+  }
+
+  function handleOpenEditMasterclass(s: any) {
+    setEditingMasterclass(s)
+    setMasterclassForm({
+      id: s.id,
+      title: s.title || "",
+      description: s.description || "",
+      instructor: s.instructor || "Alfred Dah",
+      scheduledAt: s.scheduledAt ? s.scheduledAt.slice(0, 16) : "",
+      dateDisplay: s.dateDisplay || "",
+      thumbnailUrl: s.thumbnailUrl || "",
+      whatsappGroupUrl: s.whatsappGroupUrl || "",
+      youtubeLiveUrl: s.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA",
+      duration: s.duration || "1h 30min",
+      status: s.status || "upcoming",
+      is_active: s.is_active !== false
+    })
+    setShowMasterclassModal(true)
+  }
+
+  async function handleSaveMasterclassModal(e: React.FormEvent) {
+    e.preventDefault()
+    if (!masterclassForm.title) {
+      alert("Veuillez renseigner le titre de la Masterclass.")
+      return
+    }
+    setSavingMasterclassSession(true)
+    try {
+      const res = await fetch("/api/admin/masterclasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save_session",
+          sessionData: masterclassForm
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowMasterclassModal(false)
+        showNotice(data.message || "Masterclass enregistrée avec succès !")
+        if (data.sessions) setMasterclassSessions(data.sessions)
+        if (data.upcomingSessions) setUpcomingMasterclasses(data.upcomingSessions)
+        if (data.pastSessions) setPastMasterclasses(data.pastSessions)
+        refreshMasterclassData()
+      } else {
+        alert(data.error || "Erreur lors de l'enregistrement.")
+      }
+    } catch (err: any) {
+      alert("Erreur : " + err.message)
+    } finally {
+      setSavingMasterclassSession(false)
+    }
+  }
+
+  async function handleDeleteMasterclassSession(sessionId: string) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette Masterclass programmée ?")) return
+    try {
+      const res = await fetch("/api/admin/masterclasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete_session",
+          sessionId
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice("Masterclass supprimée avec succès !")
+        if (data.sessions) setMasterclassSessions(data.sessions)
+        if (data.upcomingSessions) setUpcomingMasterclasses(data.upcomingSessions)
+        if (data.pastSessions) setPastMasterclasses(data.pastSessions)
+        refreshMasterclassData()
+      } else {
+        alert(data.error || "Erreur lors de la suppression.")
+      }
+    } catch (err: any) {
+      alert("Erreur : " + err.message)
+    }
+  }
+
+  async function handleToggleMasterclassStatus(s: any) {
+    const newStatus = s.status === "past" ? "upcoming" : "past"
+    try {
+      const res = await fetch("/api/admin/masterclasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "toggle_session_status",
+          id: s.id,
+          status: newStatus
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice(`Statut basculé en « ${newStatus === "past" ? "Passée" : "À Venir"} »`)
+        if (data.sessions) setMasterclassSessions(data.sessions)
+        if (data.upcomingSessions) setUpcomingMasterclasses(data.upcomingSessions)
+        if (data.pastSessions) setPastMasterclasses(data.pastSessions)
+        refreshMasterclassData()
+      }
+    } catch (err: any) {
+      alert("Erreur : " + err.message)
+    }
+  }
+
+  function handleConvertPastSessionToReplay(s: any) {
+    setEditingReplay(null)
+    setReplayForm({
+      title: s.title || "Replay Masterclass",
+      description: s.description || "",
+      youtubeUrl: s.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA",
+      duration: s.duration || "1h 30min",
+      category: "Prompting",
+      instructor: s.instructor || "Alfred Dah",
+      date: s.dateDisplay || new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }),
+      is_published: true
+    })
+    setShowReplayModal(true)
   }
 
   async function handleDeleteMasterclassParticipant(participantId: string) {
@@ -1221,16 +1400,33 @@ export default function SuperAdminDashboard() {
     if (!manualParticipantForm.email) return
     setAddingManualParticipant(true)
     try {
+      let chosenTitle = masterclassSession.title
+      if (manualParticipantForm.masterclassId && manualParticipantForm.masterclassId !== "current_live") {
+        const found = masterclassReplays.find(r => r.id === manualParticipantForm.masterclassId)
+        if (found) chosenTitle = found.title
+      }
+
       const res = await fetch("/api/admin/masterclasses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add_participant", participantData: manualParticipantForm })
+        body: JSON.stringify({ 
+          action: "add_participant", 
+          participantData: {
+            ...manualParticipantForm,
+            masterclassTitle: chosenTitle
+          } 
+        })
       })
       const data = await res.json()
       if (data.success && data.participant) {
-        setMasterclassParticipants(prev => [data.participant, ...prev])
+        const parsed = {
+          ...data.participant,
+          masterclass_id: manualParticipantForm.masterclassId || "current_live",
+          masterclass_title: chosenTitle
+        }
+        setMasterclassParticipants(prev => [parsed, ...prev])
         setIsManualAddParticipantOpen(false)
-        setManualParticipantForm({ fullName: "", email: "", whatsapp: "", country: "CI" })
+        setManualParticipantForm({ fullName: "", email: "", whatsapp: "", country: "CI", masterclassId: "current_live", masterclassTitle: "" })
         showNotice("Apprenant inscrit avec succès à la Masterclass !")
       } else {
         alert("Erreur: " + (data.error || ""))
@@ -1239,6 +1435,75 @@ export default function SuperAdminDashboard() {
       alert("Erreur réseau: " + err.message)
     } finally {
       setAddingManualParticipant(false)
+    }
+  }
+
+  async function handleSendTargetedMasterclassEmail(isTest = false) {
+    if (isTest) {
+      if (!targetedEmailTestAddress || !targetedEmailTestAddress.includes("@")) {
+        alert("Veuillez saisir une adresse email valide pour le test.")
+        return
+      }
+      setSendingTestEmail(true)
+    } else {
+      let targetDesc = "tous les inscrits"
+      if (targetedEmailTarget === "current_live") {
+        targetDesc = `les apprenants de la Masterclass Actuelle (« ${masterclassSession.title} »)`
+      } else if (targetedEmailTarget === "all_platform_users") {
+        targetDesc = "TOUS les utilisateurs de la plateforme (Newsletter, Apprenants & Membres)"
+      } else if (targetedEmailTarget === "all_masterclasses") {
+        targetDesc = "TOUS les apprenants inscrits à l'ensemble des Masterclasses"
+      } else {
+        const rep = masterclassReplays.find(r => r.id === targetedEmailTarget)
+        targetDesc = `les apprenants du Replay « ${rep?.title || targetedEmailTarget} »`
+      }
+
+      if (!confirm(`Confirmez-vous l'envoi de cet email à ${targetDesc} ?`)) {
+        return
+      }
+      setSendingTargetedEmail(true)
+    }
+
+    try {
+      let chosenTitle = masterclassSession.title
+      if (targetedEmailTarget !== "current_live" && targetedEmailTarget !== "all_masterclasses" && targetedEmailTarget !== "all_platform_users") {
+        const rep = masterclassReplays.find(r => r.id === targetedEmailTarget)
+        if (rep) chosenTitle = rep.title
+      }
+
+      const res = await fetch("/api/admin/masterclasses/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target: targetedEmailTarget === "all_platform_users" 
+            ? "all_platform_users" 
+            : targetedEmailTarget === "all_masterclasses" 
+            ? "registered_only" 
+            : "specific_masterclass",
+          masterclassId: targetedEmailTarget,
+          masterclassTitle: chosenTitle,
+          emailType: targetedEmailType,
+          subject: targetedEmailSubject.trim(),
+          customMessage: targetedEmailCustomMessage.trim(),
+          testEmail: isTest ? targetedEmailTestAddress.trim() : undefined
+        })
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        showNotice(data.message || (isTest ? "Email test envoyé !" : "Campagne envoyée avec succès !"))
+        if (!isTest) {
+          setShowTargetedEmailModal(false)
+          setTargetedEmailCustomMessage("")
+        }
+      } else {
+        alert("Erreur: " + (data.error || "Erreur lors de l'envoi."))
+      }
+    } catch (err: any) {
+      alert("Erreur réseau: " + err.message)
+    } finally {
+      if (isTest) setSendingTestEmail(false)
+      else setSendingTargetedEmail(false)
     }
   }
 
@@ -2338,6 +2603,59 @@ export default function SuperAdminDashboard() {
     ? newsletterSubscribers.length + nonSubscribedMembers.length
     : newsletterSubscribers.length
 
+  // Masterclass Participant Filtering and Counts
+  const masterclassCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      all: masterclassParticipants.length,
+      current_live: 0
+    }
+    masterclassReplays.forEach(r => {
+      counts[r.id] = 0
+    })
+
+    masterclassParticipants.forEach(p => {
+      const pId = p.masterclass_id || "current_live"
+      if (counts[pId] !== undefined) {
+        counts[pId]++
+      } else {
+        counts.current_live++
+      }
+    })
+
+    return counts
+  }, [masterclassParticipants, masterclassReplays])
+
+  const filteredMasterclassParticipants = useMemo(() => {
+    return masterclassParticipants.filter(p => {
+      // 1. Filter by Masterclass selection
+      if (selectedMasterclassFilter !== "all") {
+        const pId = p.masterclass_id || "current_live"
+        const pTitle = (p.masterclass_title || "").toLowerCase()
+        if (selectedMasterclassFilter === "current_live") {
+          if (pId !== "current_live" && !pTitle.includes(masterclassSession.title.toLowerCase())) {
+            return false
+          }
+        } else {
+          const replay = masterclassReplays.find(r => r.id === selectedMasterclassFilter)
+          const replayTitle = (replay?.title || "").toLowerCase()
+          if (pId !== selectedMasterclassFilter && (!replayTitle || !pTitle.includes(replayTitle))) {
+            return false
+          }
+        }
+      }
+
+      // 2. Filter by search query
+      if (!masterclassSearch) return true
+      const q = masterclassSearch.toLowerCase()
+      return (
+        (p.full_name || "").toLowerCase().includes(q) ||
+        (p.email || "").toLowerCase().includes(q) ||
+        (p.whatsapp || "").toLowerCase().includes(q) ||
+        (p.masterclass_title || "").toLowerCase().includes(q)
+      )
+    })
+  }, [masterclassParticipants, selectedMasterclassFilter, masterclassSearch, masterclassSession.title, masterclassReplays])
+
   if (unauthorized) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center space-y-4">
@@ -2551,6 +2869,7 @@ export default function SuperAdminDashboard() {
                   <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>
                 </button>
 
+                {/* Masterclasses (À Venir) */}
                 <button
                   onClick={() => { setActiveTab("masterclasses"); setMobileMenuOpen(false) }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -2559,7 +2878,55 @@ export default function SuperAdminDashboard() {
                 >
                   <div className="flex items-center gap-2.5">
                     <Radio className="size-4 shrink-0 text-rose-500" />
-                    <span>Masterclasses</span>
+                    <span>Masterclasses (À Venir)</span>
+                  </div>
+                  <span className="text-[10px] font-bold opacity-75">({upcomingMasterclasses.length})</span>
+                </button>
+
+                {/* Sub-nav Sessions Passées */}
+                <button
+                  onClick={() => { setActiveTab("masterclasses_past"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between pl-7 pr-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    activeTab === "masterclasses_past"
+                      ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Clock className="size-3.5 shrink-0" />
+                    <span>Sessions Passées</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({pastMasterclasses.length})</span>
+                </button>
+
+                {/* Sub-nav Inscrits Masterclass */}
+                <button
+                  onClick={() => { setActiveTab("masterclass_participants"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between pl-7 pr-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    activeTab === "masterclass_participants"
+                      ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="size-3.5 shrink-0" />
+                    <span>Participants & Inscrits</span>
+                  </div>
+                  <span className="text-[10px] opacity-75">({masterclassParticipants.length})</span>
+                </button>
+
+                {/* Sub-nav Replays Masterclass */}
+                <button
+                  onClick={() => { setActiveTab("masterclass_replays"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between pl-7 pr-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    activeTab === "masterclass_replays"
+                      ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Video className="size-3.5 shrink-0" />
+                    <span>Replays</span>
                   </div>
                   <span className="text-[10px] opacity-75">({masterclassReplays.length})</span>
                 </button>
@@ -2812,9 +3179,10 @@ export default function SuperAdminDashboard() {
                 {!sidebarCollapsed && <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>}
               </button>
 
+              {/* Masterclasses (À Venir) */}
               <button
                 onClick={() => setActiveTab("masterclasses")}
-                title={`Masterclasses (${masterclassReplays.length})`}
+                title={`Masterclasses à Venir (${upcomingMasterclasses.length})`}
                 className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "masterclasses" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
@@ -2823,7 +3191,66 @@ export default function SuperAdminDashboard() {
                   <Radio className="size-4 shrink-0 text-rose-500" />
                   {!sidebarCollapsed && <span>Masterclasses</span>}
                 </div>
-                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({masterclassReplays.length})</span>}
+                {!sidebarCollapsed && (
+                  <span className="text-[10px] opacity-75">({upcomingMasterclasses.length})</span>
+                )}
+              </button>
+
+              {/* Sub-nav: Sessions Passées */}
+              <button
+                onClick={() => setActiveTab("masterclasses_past")}
+                title={`Sessions Passées (${pastMasterclasses.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between pl-7 pr-3.5 py-2"} rounded-xl text-xs font-medium transition-all cursor-pointer relative ${
+                  activeTab === "masterclasses_past" 
+                    ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                }`}
+              >
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+                  <Clock className="size-3.5 shrink-0" />
+                  {!sidebarCollapsed && <span>Sessions Passées</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <span className="text-[10px] opacity-75">({pastMasterclasses.length})</span>
+                )}
+              </button>
+
+              {/* Sub-nav: Inscrits / Participants */}
+              <button
+                onClick={() => setActiveTab("masterclass_participants")}
+                title={`Participants Masterclasses (${masterclassParticipants.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between pl-7 pr-3.5 py-2"} rounded-xl text-xs font-medium transition-all cursor-pointer relative ${
+                  activeTab === "masterclass_participants" 
+                    ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                }`}
+              >
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+                  <Users className="size-3.5 shrink-0" />
+                  {!sidebarCollapsed && <span>Participants & Inscrits</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <span className="text-[10px] opacity-75">({masterclassParticipants.length})</span>
+                )}
+              </button>
+
+              {/* Sub-nav: Replays */}
+              <button
+                onClick={() => setActiveTab("masterclass_replays")}
+                title={`Replays Masterclasses (${masterclassReplays.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between pl-7 pr-3.5 py-2"} rounded-xl text-xs font-medium transition-all cursor-pointer relative ${
+                  activeTab === "masterclass_replays" 
+                    ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                }`}
+              >
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+                  <Video className="size-3.5 shrink-0" />
+                  {!sidebarCollapsed && <span>Replays</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <span className="text-[10px] opacity-75">({masterclassReplays.length})</span>
+                )}
               </button>
             </div>
 
@@ -3001,7 +3428,10 @@ export default function SuperAdminDashboard() {
               {activeTab === "formations" && "Gestion des Formations Vidéos (À la demande)"}
               {activeTab === "resources" && "Bibliothèque de Prompts & Templates"}
               {activeTab === "lives" && "Sessions Live & Replays"}
-              {activeTab === "masterclasses" && "Gestion des Masterclasses & Replays"}
+              {activeTab === "masterclasses" && "Masterclasses — Sessions à Venir"}
+              {activeTab === "masterclasses_past" && "Masterclasses — Sessions Passées & Historique"}
+              {activeTab === "masterclass_participants" && "Masterclasses — Participants & Inscrits"}
+              {activeTab === "masterclass_replays" && "Masterclasses — Replays & Rediffusions"}
               {activeTab === "payments" && "Inscriptions & Validation"}
               {activeTab === "users" && "Gestion des Membres & Rôles RBAC"}
               {activeTab === "submissions" && "Correction des Devoirs"}
@@ -5871,252 +6301,1193 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* TAB MASTERCLASSES */}
+        {/* TAB 1: MASTERCLASSES (SESSIONS À VENIR & DIRECT LIVE) */}
         {activeTab === "masterclasses" && (
-          <div className="space-y-8 animate-fadeIn text-left">
+          <div className="space-y-6 animate-fadeIn text-left">
             
-            {/* Top Bar with Title and Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="font-heading text-xl font-bold text-slate-800 flex items-center gap-2">
-                  <Radio className="size-6 text-rose-500" />
-                  Gestion Dynamique des Masterclasses & Replays
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Gérez la session hebdomadaire du dimanche, ajoutez des replays YouTube et suivez vos inscrits en direct.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Masterclasses Sub-Navigation Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleOpenAddReplay}
-                  className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+                  onClick={() => setActiveTab("masterclasses")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-primary text-slate-950 shadow-sm cursor-pointer"
                 >
-                  <Plus className="size-4" />
-                  Ajouter un Replay YouTube
+                  <Radio className="size-3.5 text-rose-500" />
+                  <span>Sessions à Venir</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-white text-[10px] font-extrabold">
+                    {upcomingMasterclasses.length}
+                  </span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={handleExportMasterclassParticipants}
-                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 flex items-center gap-2 cursor-pointer shadow-xs"
+                  onClick={() => setActiveTab("masterclasses_past")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
                 >
-                  <Download className="size-4" />
-                  Exporter les Inscrits ({masterclassParticipants.length})
+                  <Clock className="size-3.5" />
+                  <span>Sessions Passées</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {pastMasterclasses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_participants")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Users className="size-3.5" />
+                  <span>Participants & Inscrits</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {masterclassParticipants.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_replays")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Video className="size-3.5" />
+                  <span>Replays</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {masterclassReplays.length}
+                  </span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleOpenAddMasterclass}
+                  className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-xs cursor-pointer"
+                >
+                  <Plus className="size-3.5" />
+                  <span>Programmer une Masterclass</span>
                 </button>
               </div>
             </div>
 
-            {/* Section 1: Live Session Settings (No Hardcoding, 100% Configurable) */}
+            {/* Section A: Prochaine Masterclass Active (Diffusée aux apprenants) */}
+            {masterclassSession && (
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-white to-primary/10 border border-amber-300 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2.5 rounded-full bg-rose-500 animate-pulse" />
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500 text-white shadow-xs">
+                      Prochain Direct Diffusé sur le Site
+                    </span>
+                    <span className="text-xs text-slate-600 font-semibold">
+                      (Visible en priorité sur /masterclass)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditMasterclass(masterclassSession)}
+                      className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Edit3 className="size-3.5" />
+                      <span>Modifier cette session</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-3">
+                  <div className="md:col-span-2 space-y-3">
+                    <h3 className="font-heading text-lg sm:text-xl font-black text-slate-900 leading-snug">
+                      {masterclassSession.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {masterclassSession.description || "Session interactive en direct animée par Alfred Dah."}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-700 font-medium">
+                      <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                        <Calendar className="size-3.5 text-primary shrink-0" />
+                        <span>{masterclassSession.dateDisplay || (masterclassSession.scheduledAt ? new Date(masterclassSession.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Date à définir")}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                        <Users className="size-3.5 text-blue-600 shrink-0" />
+                        <span><strong>{masterclassCounts[masterclassSession.id] || masterclassCounts.current_live || masterclassCounts.mc_default || 0}</strong> apprenants inscrits</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                        <span className="size-2 rounded-full bg-emerald-500" />
+                        <span>Formateur : <strong>{masterclassSession.instructor || "Alfred Dah"}</strong></span>
+                      </div>
+                    </div>
+
+                    {/* Liens d'accès direct */}
+                    <div className="grid sm:grid-cols-2 gap-2.5 pt-2">
+                      <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800">
+                          <span className="flex items-center gap-1.5">
+                            <MessageCircle className="size-3.5 text-emerald-600" />
+                            Groupe WhatsApp
+                          </span>
+                          {masterclassSession.whatsappGroupUrl ? (
+                            <a href={masterclassSession.whatsappGroupUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-700 hover:underline flex items-center gap-1 text-[10px]">
+                              Tester <ExternalLink className="size-2.5" />
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-amber-600">Non renseigné</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500 truncate">
+                          {masterclassSession.whatsappGroupUrl || "Ajoutez le lien du groupe WhatsApp pour les apprenants"}
+                        </p>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-white border border-rose-200 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-rose-800">
+                          <span className="flex items-center gap-1.5">
+                            <Radio className="size-3.5 text-rose-600" />
+                            YouTube Live
+                          </span>
+                          {masterclassSession.youtubeLiveUrl ? (
+                            <a href={masterclassSession.youtubeLiveUrl} target="_blank" rel="noopener noreferrer" className="text-rose-700 hover:underline flex items-center gap-1 text-[10px]">
+                              Ouvrir <ExternalLink className="size-2.5" />
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-amber-600">Non renseigné</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500 truncate">
+                          {masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right side Thumbnail & Broadcast */}
+                  <div className="space-y-3 flex flex-col justify-between">
+                    <div className="relative min-h-[160px] max-h-[220px] rounded-xl bg-slate-950 overflow-hidden border border-slate-200 shadow-xs flex items-center justify-center">
+                      {masterclassSession.thumbnailUrl ? (
+                        <>
+                          <div
+                            className="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110 pointer-events-none"
+                            style={{ backgroundImage: `url(${masterclassSession.thumbnailUrl})` }}
+                          />
+                          <img
+                            src={masterclassSession.thumbnailUrl}
+                            alt={masterclassSession.title}
+                            className="relative z-10 w-full h-auto max-h-[220px] object-contain mx-auto"
+                          />
+                        </>
+                      ) : (
+                        <div className="w-full h-full min-h-[160px] flex flex-col items-center justify-center bg-slate-900 text-slate-400 p-4 text-center">
+                          <Radio className="size-8 text-rose-500 mb-1" />
+                          <span className="text-[10px] font-semibold">Affiche non définie</span>
+                        </div>
+                      )}
+                      <span className="absolute bottom-2 right-2 z-20 px-2 py-0.5 rounded bg-black/80 text-white text-[10px] font-mono">
+                        {masterclassSession.duration || "1h 30min"}
+                      </span>
+                    </div>
+
+                    {/* Invitation Broadcast Button */}
+                    <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-sky-900">
+                        <span>✉️ Inviter tous les membres</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={sendingPlatformInvite}
+                          onClick={() => handleSendPlatformInvite(false)}
+                          className="flex-1 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          <Mail className="size-3" />
+                          <span>{sendingPlatformInvite ? "Envoi..." : "Diffuser email"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={sendingPlatformInvite}
+                          onClick={() => handleSendPlatformInvite(true)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white border border-sky-300 text-slate-700 text-xs font-semibold hover:bg-sky-100 cursor-pointer"
+                          title="Envoyer un email test à mon adresse"
+                        >
+                          🧪 Test
+                        </button>
+                      </div>
+                      {platformInviteStatus && (
+                        <p className="text-[10px] font-bold text-slate-700">{platformInviteStatus}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section B: Liste de Toutes les Masterclasses Programmées à Venir */}
             <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                <div className="flex items-center gap-2">
-                  <Video className="size-5 text-primary" />
-                  <h3 className="font-heading text-base font-bold text-slate-800">Programmation de la Prochaine Masterclass </h3>
+                <div>
+                  <h3 className="font-heading text-base font-bold text-slate-800 flex items-center gap-2">
+                    <Calendar className="size-5 text-primary" />
+                    <span>Planning des Masterclasses à Venir ({upcomingMasterclasses.length})</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Préconfigurez vos prochaines sessions à l'avance pour planifier vos thématiques et inscriptions.
+                  </p>
                 </div>
-             
+
+                <button
+                  type="button"
+                  onClick={handleOpenAddMasterclass}
+                  className="px-3.5 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Plus className="size-3.5" />
+                  <span>+ Programmer une autre session</span>
+                </button>
               </div>
 
-              <form onSubmit={handleSaveMasterclassSession} className="space-y-4 text-xs">
-                
-                {/* Active Session Toggle */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <label htmlFor="masterclass_active_toggle" className="font-bold text-slate-800 block cursor-pointer">
-                      Activer / Programmer une Masterclass en Direct
-                    </label>
-                    <p className="text-[11px] text-slate-500">
-                      Si décoché, les apprenants verront un écran propre indiquant qu'aucune session n'est prévue pour l'instant et accéderont à la vidéothèque.
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    id="masterclass_active_toggle"
-                    checked={masterclassSession.is_active !== false}
-                    onChange={e => setMasterclassSession({ ...masterclassSession, is_active: e.target.checked })}
-                    className="size-5 rounded accent-primary cursor-pointer"
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Titre de la Masterclass *</label>
-                    <input
-                      type="text"
-                      required
-                      value={masterclassSession.title}
-                      onChange={e => setMasterclassSession({ ...masterclassSession, title: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Formateur / Intervenant</label>
-                    <input
-                      type="text"
-                      value={masterclassSession.instructor || "Alfred Dah"}
-                      onChange={e => setMasterclassSession({ ...masterclassSession, instructor: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Date & Heure du Direct *</label>
-                    <input
-                      type="datetime-local"
-                      value={masterclassSession.scheduledAt ? masterclassSession.scheduledAt.slice(0, 16) : ""}
-                      onChange={e => setMasterclassSession({ 
-                        ...masterclassSession, 
-                        scheduledAt: e.target.value ? new Date(e.target.value).toISOString() : "" 
-                      })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Texte d'affichage de la date (Ex: Dimanche 30 Août à 19h00 GMT)</label>
-                    <input
-                      type="text"
-                      value={masterclassSession.dateDisplay || ""}
-                      onChange={e => setMasterclassSession({ ...masterclassSession, dateDisplay: e.target.value })}
-                      placeholder="Ex: Dimanche 30 Août 2026 à 19h00 (GMT)"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Description & Thématiques abordées</label>
-                  <textarea
-                    rows={2}
-                    value={masterclassSession.description}
-                    onChange={e => setMasterclassSession({ ...masterclassSession, description: e.target.value })}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary resize-none"
-                  />
-                </div>
-
-                {/* Miniature / Affiche Upload vers Supabase */}
-                <div className="space-y-1.5">
-                  <FileUploadField
-                    label="Miniature / Affiche Officielle de la Masterclass (PNG, JPG, WebP)"
-                    value={masterclassSession.thumbnailUrl || ""}
-                    onChange={url => setMasterclassSession({ ...masterclassSession, thumbnailUrl: url })}
-                    accept="image/*"
-                    bucket="resources-files"
-                    folder="masterclass"
-                    placeholder="https://... ou téléversez l'affiche de la masterclass"
-                    preview="image"
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                      <span>💬 Lien du Groupe WhatsApp des Apprenants</span>
-                      <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">Recommandé</span>
-                    </label>
-                    <input
-                      type="url"
-                      value={masterclassSession.whatsappGroupUrl || ""}
-                      onChange={e => setMasterclassSession({ ...masterclassSession, whatsappGroupUrl: e.target.value })}
-                      placeholder="https://chat.whatsapp.com/..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
-                    />
-                    <p className="text-[10px] text-slate-400">
-                      Ce lien sera présenté aux apprenants dès leur inscription et envoyé dans tous les emails de confirmation.
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">📺 Lien YouTube Live / Stream du Direct</label>
-                    <input
-                      type="url"
-                      value={masterclassSession.youtubeLiveUrl || ""}
-                      onChange={e => setMasterclassSession({ ...masterclassSession, youtubeLiveUrl: e.target.value })}
-                      placeholder="https://www.youtube.com/@LeGuideIA ou lien direct"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 outline-none focus:border-primary"
-                    />
-                    <p className="text-[10px] text-slate-400">
-                      La diffusion du direct Masterclass se fait 100% sur YouTube Live.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Option d'Invitation par Email pour Tous les Membres */}
-                <div className="p-4 rounded-xl border border-sky-200 bg-sky-50/60 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      id="notifyAllUsers"
-                      checked={notifyAllUsersOnSave}
-                      onChange={e => setNotifyAllUsersOnSave(e.target.checked)}
-                      className="mt-0.5 size-4 rounded accent-primary cursor-pointer"
-                    />
-                    <label htmlFor="notifyAllUsers" className="text-xs text-slate-800 font-semibold cursor-pointer">
-                      ✉️ Envoyer automatiquement un email d'invitation à TOUS les utilisateurs de la plateforme (Newsletter, Apprenants & Membres) lors de la mise à jour
-                    </label>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-sky-100">
-                    <button
-                      type="button"
-                      disabled={sendingPlatformInvite}
-                      onClick={() => handleSendPlatformInvite(false)}
-                      className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {upcomingMasterclasses.map((s: any, idx: number) => {
+                  const participantCount = masterclassCounts[s.id] || (idx === 0 ? (masterclassCounts.current_live || masterclassCounts.mc_default || 0) : 0)
+                  return (
+                    <div
+                      key={s.id || idx}
+                      className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow"
                     >
-                      <Mail className="size-3.5" />
-                      <span>{sendingPlatformInvite ? "Envoi en cours..." : "Inviter tous les membres maintenant"}</span>
-                    </button>
+                      <div className="relative min-h-[150px] max-h-[200px] bg-slate-950 overflow-hidden flex items-center justify-center">
+                        {s.thumbnailUrl ? (
+                          <>
+                            <div
+                              className="absolute inset-0 bg-cover bg-center blur-lg opacity-30 scale-110 pointer-events-none"
+                              style={{ backgroundImage: `url(${s.thumbnailUrl})` }}
+                            />
+                            <img
+                              src={s.thumbnailUrl}
+                              alt={s.title}
+                              className="relative z-10 w-full h-auto max-h-[200px] object-contain mx-auto"
+                            />
+                          </>
+                        ) : (
+                          <div className="w-full h-full min-h-[150px] flex flex-col items-center justify-center bg-gradient-to-tr from-slate-900 via-slate-800 to-slate-900 text-slate-400 p-4 text-center">
+                            <Radio className="size-8 text-rose-500 mb-1" />
+                            <span className="text-[10px] font-bold text-slate-300">Masterclass #{idx + 1}</span>
+                          </div>
+                        )}
+                        <span className="absolute bottom-2 right-2 z-20 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-mono font-bold">
+                          {s.duration || "1h 30min"}
+                        </span>
+                        <span className="absolute top-2 left-2 z-20 px-2 py-0.5 rounded-full bg-primary text-slate-950 text-[10px] font-black uppercase">
+                          {idx === 0 ? "🔴 Prochaine Session" : `Session #${idx + 1}`}
+                        </span>
+                      </div>
 
-                    <button
-                      type="button"
-                      disabled={sendingPlatformInvite}
-                      onClick={() => handleSendPlatformInvite(true)}
-                      className="px-3.5 py-2 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
-                    >
-                      🧪 M'envoyer un email test
-                    </button>
+                      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between gap-1 text-[10px] font-bold text-slate-500 mb-1">
+                            <span className="flex items-center gap-1 text-primary">
+                              <Calendar className="size-3 shrink-0" />
+                              {s.dateDisplay || (s.scheduledAt ? new Date(s.scheduledAt).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "Date à venir")}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-extrabold">
+                              👥 {participantCount} inscrits
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-xs text-slate-900 line-clamp-2">{s.title}</h4>
+                          <p className="text-[11px] text-slate-500 line-clamp-2 mt-1">{s.description || "Session interactive en direct."}</p>
+                        </div>
 
-                    {platformInviteStatus && (
-                      <span className="text-xs font-bold text-slate-700 pl-2">
-                        {platformInviteStatus}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                        <div className="space-y-2 pt-2 border-t border-slate-200 text-[11px]">
+                          <div className="flex items-center justify-between text-slate-500">
+                            <span>Formateur : <strong>{s.instructor || "Alfred Dah"}</strong></span>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleMasterclassStatus(s)}
+                              className="text-[10px] font-bold text-slate-600 hover:text-slate-900 hover:underline cursor-pointer"
+                            >
+                              Marquer comme passée
+                            </button>
+                          </div>
 
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="submit"
-                    disabled={savingMasterclassSession || sendingPlatformInvite}
-                    className="px-6 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 cursor-pointer shadow-md"
-                  >
-                    {savingMasterclassSession ? "Enregistrement..." : "💾 Mettre à Jour la Masterclass"}
-                  </button>
-                </div>
-              </form>
+                          <div className="flex items-center justify-between gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedMasterclassFilter(s.id)
+                                setActiveTab("masterclass_participants")
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-[10px] font-bold cursor-pointer"
+                            >
+                              Voir les inscrits
+                            </button>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditMasterclass(s)}
+                                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                title="Modifier"
+                              >
+                                <Edit3 className="size-3.5" />
+                              </button>
+
+                              {upcomingMasterclasses.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteMasterclassSession(s.id)}
+                                  className="p-1.5 rounded-lg bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: MASTERCLASSES PASSÉES & HISTORIQUE */}
+        {activeTab === "masterclasses_past" && (
+          <div className="space-y-6 animate-fadeIn text-left">
+            
+            {/* Masterclasses Sub-Navigation Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclasses")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Radio className="size-3.5 text-rose-500" />
+                  <span>Sessions à Venir</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {upcomingMasterclasses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclasses_past")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-primary text-slate-950 shadow-sm cursor-pointer"
+                >
+                  <Clock className="size-3.5" />
+                  <span>Sessions Passées</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-white text-[10px] font-extrabold">
+                    {pastMasterclasses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_participants")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Users className="size-3.5" />
+                  <span>Participants & Inscrits</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {masterclassParticipants.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_replays")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Video className="size-3.5" />
+                  <span>Replays</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {masterclassReplays.length}
+                  </span>
+                </button>
+              </div>
             </div>
 
-            {/* Section 2: Replays Library (YouTube) */}
+            {/* Sessions Passées Table & Cards */}
+            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div>
+                  <h3 className="font-heading text-base font-bold text-slate-800 flex items-center gap-2">
+                    <Clock className="size-5 text-slate-600" />
+                    <span>Historique des Masterclasses Passées ({pastMasterclasses.length})</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Consultez les sessions achevées, convertissez-les en Replay vidéo pour la vidéothèque publique ou recontactez leurs participants.
+                  </p>
+                </div>
+              </div>
+
+              {pastMasterclasses.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 space-y-2">
+                  <Clock className="size-10 mx-auto text-slate-300" />
+                  <p className="text-xs font-semibold">Aucune session passée archivée pour le moment.</p>
+                  <p className="text-[11px] text-slate-400">Lorsqu'une date de direct est passée ou marquée comme achevée, elle apparaîtra ici.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {pastMasterclasses.map((s: any) => {
+                    const participantCount = masterclassCounts[s.id] || 0
+                    return (
+                      <div
+                        key={s.id}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow"
+                      >
+                        <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between gap-1 text-[10px] font-bold text-slate-500 mb-1">
+                              <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                                🕰️ Session passée
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-extrabold">
+                                👥 {participantCount} participants
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-xs text-slate-900 line-clamp-2">{s.title}</h4>
+                            <p className="text-[10px] text-slate-500 mt-1">
+                              Diffusée le : <strong>{s.dateDisplay || (s.scheduledAt ? new Date(s.scheduledAt).toLocaleDateString("fr-FR") : "—")}</strong>
+                            </p>
+                            <p className="text-[11px] text-slate-500 line-clamp-2 mt-1">{s.description || "Session passée."}</p>
+                          </div>
+
+                          <div className="space-y-2 pt-2 border-t border-slate-200 text-[11px]">
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => handleConvertPastSessionToReplay(s)}
+                                className="flex-1 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                                title="Créer un Replay public à partir de cette session"
+                              >
+                                <Play className="size-3 fill-white" />
+                                <span>Publier en Replay</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMasterclassFilter(s.id)
+                                  setActiveTab("masterclass_participants")
+                                }}
+                                className="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-[10px] font-bold cursor-pointer"
+                                title="Voir les apprenants qui étaient inscrits"
+                              >
+                                Inscrits
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleToggleMasterclassStatus(s)}
+                                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer"
+                                title="Reprogrammer en session à venir"
+                              >
+                                <RefreshCw className="size-3.5" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMasterclassSession(s.id)}
+                                className="p-1.5 rounded-lg bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: MASTERCLASSES PARTICIPANTS (APPRENANTS INSCRITS & EMAILING CIBLÉ) */}
+        {activeTab === "masterclass_participants" && (
+          <div className="space-y-6 animate-fadeIn text-left">
+            
+            {/* Masterclasses Sub-Navigation Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclasses")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Radio className="size-3.5 text-rose-500" />
+                  <span>Sessions à Venir</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {upcomingMasterclasses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclasses_past")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Clock className="size-3.5" />
+                  <span>Sessions Passées</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {pastMasterclasses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_participants")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-primary text-slate-950 shadow-sm cursor-pointer"
+                >
+                  <Users className="size-3.5" />
+                  <span>Participants & Inscrits</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-white text-[10px] font-extrabold">
+                    {masterclassParticipants.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_replays")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Video className="size-3.5" />
+                  <span>Replays</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {masterclassReplays.length}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Registered Participants Table & Targeted Emailing */}
+            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-5">
+              
+              {/* 1. Card Top Bar : Title & Primary Actions */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-8 rounded-xl bg-primary/20 text-slate-900 flex items-center justify-center font-bold">
+                      <Users className="size-4 text-slate-900" />
+                    </div>
+                    <h3 className="font-heading text-base font-bold text-slate-800">
+                      Apprenants Inscrits aux Masterclasses
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-primary/15 text-slate-900 border border-primary/30">
+                      {filteredMasterclassParticipants.length} {filteredMasterclassParticipants.length > 1 ? "inscrits" : "inscrit"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 pl-10.5">
+                    Gérez les inscrits, filtrez par session spécifique et diffusez des communications ciblées.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setIsManualAddParticipantOpen(true)}
+                    className="px-3.5 py-2 rounded-xl bg-primary text-slate-950 hover:bg-primary/90 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Inscrire un apprenant</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTargetedEmailTarget(selectedMasterclassFilter === "all" ? "current_live" : selectedMasterclassFilter)
+                      setTargetedEmailSubject("")
+                      setTargetedEmailCustomMessage("")
+                      setShowTargetedEmailModal(true)
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    title="Envoyer un email ciblé aux apprenants de cette Masterclass"
+                  >
+                    <Mail className="size-3.5" />
+                    <span>Contacter les inscrits ({filteredMasterclassParticipants.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={refreshMasterclassData}
+                    disabled={refreshingMasterclass}
+                    className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
+                    title="Actualiser la liste en direct"
+                  >
+                    <RefreshCw className={`size-3.5 ${refreshingMasterclass ? "animate-spin text-primary" : ""}`} />
+                    <span>Actualiser</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Filter & Search Toolbar (Dedicated Clean Row) */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                {/* Left: Filter and CSV Export */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs">
+                    <Filter className="size-3.5 text-slate-500 shrink-0" />
+                    <span className="text-xs font-bold text-slate-600 shrink-0">Filtrer par session :</span>
+                    <select
+                      value={selectedMasterclassFilter}
+                      onChange={e => setSelectedMasterclassFilter(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-slate-900 outline-none cursor-pointer pr-2 max-w-[260px] truncate"
+                    >
+                      <option value="all">🌐 Toutes les Masterclasses ({masterclassParticipants.length})</option>
+                      
+                      {upcomingMasterclasses.length > 0 && (
+                        <optgroup label="🔴 Sessions à Venir">
+                          {upcomingMasterclasses.map((s, idx) => (
+                            <option key={s.id || idx} value={s.id}>
+                              {idx === 0 ? "🔴 Prochain direct" : "📅 Session"} : {s.title.length > 28 ? s.title.substring(0, 28) + '...' : s.title} ({masterclassCounts[s.id] || (idx === 0 ? (masterclassCounts.current_live || masterclassCounts.mc_default || 0) : 0)})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      {pastMasterclasses.length > 0 && (
+                        <optgroup label="🕰️ Sessions Passées">
+                          {pastMasterclasses.map(s => (
+                            <option key={s.id} value={s.id}>
+                              🕰️ {s.title.length > 28 ? s.title.substring(0, 28) + '...' : s.title} ({masterclassCounts[s.id] || 0})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      {masterclassReplays.length > 0 && (
+                        <optgroup label="📼 Replays Vidéo">
+                          {masterclassReplays.map(r => (
+                            <option key={r.id} value={r.id}>
+                              📼 {r.title.length > 28 ? r.title.substring(0, 28) + '...' : r.title} ({masterclassCounts[r.id] || 0})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleExportMasterclassParticipants}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <Download className="size-3.5" />
+                    <span>Exporter CSV</span>
+                  </button>
+                </div>
+
+                {/* Right: Search Input */}
+                <div className="relative w-full md:w-80">
+                  <Search className="size-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={masterclassSearch}
+                    onChange={e => setMasterclassSearch(e.target.value)}
+                    placeholder="Rechercher par nom, email, tél, pays..."
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:border-primary shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              {/* 3. Structured Data Table */}
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-100/80 text-slate-600">
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Nom Complet</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Adresse Email</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">WhatsApp</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Pays</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Masterclass Ciblée</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Date Inscription</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] text-center whitespace-nowrap">Statut</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] text-right whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700 bg-white">
+                    {filteredMasterclassParticipants.map((p) => {
+                      const isLiveSession = p.masterclass_id === "current_live" || p.masterclass_id === "mc_default" || !p.masterclass_id || (p.masterclass_title && p.masterclass_title.includes(masterclassSession.title))
+                      return (
+                        <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">{p.full_name || "—"}</td>
+                          <td className="py-3 px-4 font-mono text-primary font-semibold whitespace-nowrap">{p.email}</td>
+                          <td className="py-3 px-4 font-mono whitespace-nowrap">{p.whatsapp || "—"}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">{p.country || "CI"}</td>
+                          <td className="py-3 px-4">
+                            {isLiveSession ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-900 border border-amber-300 max-w-[260px] truncate" title={p.masterclass_title || masterclassSession.title}>
+                                <span className="size-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                                <span className="truncate">{p.masterclass_title || "Session Direct Actuelle"}</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-500/10 text-purple-900 border border-purple-300 max-w-[260px] truncate" title={p.masterclass_title}>
+                                <Video className="size-3 text-purple-600 shrink-0" />
+                                <span className="truncate">{p.masterclass_title}</span>
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
+                            {new Date(p.created_at).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="py-3 px-4 text-center whitespace-nowrap">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-200">
+                              {p.status || "inscrit"}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteMasterclassParticipant(p.id)}
+                              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Supprimer l'inscription"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+
+                    {filteredMasterclassParticipants.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="py-10 text-center text-slate-400">
+                          {selectedMasterclassFilter !== "all" 
+                            ? `Aucun apprenant inscrit pour cette Masterclass spécifique.` 
+                            : `Aucun inscrit pour le moment. Cliquez sur « Inscrire un apprenant » pour ajouter une inscription.`}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Modal Inscription Manuelle d'un Apprenant */}
+              {isManualAddParticipantOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                      <div className="flex items-center gap-2">
+                        <UserPlus className="size-5 text-primary" />
+                        <h4 className="font-heading text-sm font-bold text-slate-800">
+                          Inscrire Manuellement un Apprenant
+                        </h4>
+                      </div>
+                      <button
+                        onClick={() => setIsManualAddParticipantOpen(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleManualAddMasterclassParticipant} className="space-y-3 text-xs">
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700">Masterclass Ciblée *</label>
+                        <select
+                          value={manualParticipantForm.masterclassId}
+                          onChange={e => setManualParticipantForm({ ...manualParticipantForm, masterclassId: e.target.value })}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-semibold"
+                        >
+                          <optgroup label="🔴 Sessions à Venir">
+                            {upcomingMasterclasses.map(s => (
+                              <option key={s.id} value={s.id}>🔴 {s.title}</option>
+                            ))}
+                          </optgroup>
+                          {pastMasterclasses.length > 0 && (
+                            <optgroup label="🕰️ Sessions Passées">
+                              {pastMasterclasses.map(s => (
+                                <option key={s.id} value={s.id}>🕰️ {s.title}</option>
+                              ))}
+                            </optgroup>
+                          )}
+                          {masterclassReplays.length > 0 && (
+                            <optgroup label="📼 Replays">
+                              {masterclassReplays.map(r => (
+                                <option key={r.id} value={r.id}>📼 {r.title}</option>
+                              ))}
+                            </optgroup>
+                          )}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700">Nom Complet *</label>
+                        <input
+                          type="text"
+                          required
+                          value={manualParticipantForm.fullName}
+                          onChange={e => setManualParticipantForm({ ...manualParticipantForm, fullName: e.target.value })}
+                          placeholder="Ex: Samba Diop"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700">Adresse Email *</label>
+                        <input
+                          type="email"
+                          required
+                          value={manualParticipantForm.email}
+                          onChange={e => setManualParticipantForm({ ...manualParticipantForm, email: e.target.value })}
+                          placeholder="Ex: apprenant@gmail.com"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="font-bold text-slate-700">WhatsApp</label>
+                          <input
+                            type="text"
+                            value={manualParticipantForm.whatsapp}
+                            onChange={e => setManualParticipantForm({ ...manualParticipantForm, whatsapp: e.target.value })}
+                            placeholder="+221..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="font-bold text-slate-700">Pays</label>
+                          <input
+                            type="text"
+                            value={manualParticipantForm.country}
+                            onChange={e => setManualParticipantForm({ ...manualParticipantForm, country: e.target.value })}
+                            placeholder="Sénégal, CI..."
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={() => setIsManualAddParticipantOpen(false)}
+                          className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={addingManualParticipant}
+                          className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold hover:bg-primary/90 shadow-xs cursor-pointer"
+                        >
+                          {addingManualParticipant ? "Inscription..." : "Confirmer l'inscription"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL EMAIL CIBLÉ PAR MASTERCLASS */}
+              {showTargetedEmailModal && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="size-9 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center border border-blue-200">
+                          <Mail className="size-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-heading text-base font-bold text-slate-800">
+                            Emailing Ciblé Masterclass
+                          </h4>
+                          <p className="text-xs text-slate-500">
+                            Envoyez un email spécifiquement aux apprenants de la Masterclass choisie.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowTargetedEmailModal(false)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4 text-xs">
+                      {/* Target selection */}
+                      <div className="space-y-1.5">
+                        <label className="font-bold text-slate-700 flex items-center justify-between">
+                          <span>1. Destinataires ciblés</span>
+                          <span className="text-blue-600 font-extrabold">
+                            {targetedEmailTarget === "all_platform_users" 
+                              ? `Tous les membres & abonnés` 
+                              : targetedEmailTarget === "all_masterclasses"
+                              ? `${masterclassParticipants.length} apprenants (toutes masterclasses)`
+                              : `${masterclassCounts[targetedEmailTarget] || 0} apprenants ciblés`}
+                          </span>
+                        </label>
+                        <select
+                          value={targetedEmailTarget}
+                          onChange={e => setTargetedEmailTarget(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-blue-500 font-bold"
+                        >
+                          <optgroup label="🔴 Sessions à Venir">
+                            {upcomingMasterclasses.map((s, idx) => (
+                              <option key={s.id || idx} value={s.id}>
+                                {idx === 0 ? "🔴 Prochain direct" : "📅 Session"} : {s.title} ({masterclassCounts[s.id] || (idx === 0 ? (masterclassCounts.current_live || masterclassCounts.mc_default || 0) : 0)} inscrits)
+                              </option>
+                            ))}
+                          </optgroup>
+                          {pastMasterclasses.length > 0 && (
+                            <optgroup label="🕰️ Sessions Passées">
+                              {pastMasterclasses.map(s => (
+                                <option key={s.id} value={s.id}>
+                                  🕰️ {s.title} ({masterclassCounts[s.id] || 0} participants)
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                          {masterclassReplays.length > 0 && (
+                            <optgroup label="📼 Replays">
+                              {masterclassReplays.map(r => (
+                                <option key={r.id} value={r.id}>
+                                  📼 {r.title} ({masterclassCounts[r.id] || 0} inscrits)
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                          <optgroup label="🌐 Diffusion Globale">
+                            <option value="all_masterclasses">
+                              👥 Tous les inscrits à l'ensemble des Masterclasses ({masterclassParticipants.length} inscrits)
+                            </option>
+                            <option value="all_platform_users">
+                              🌐 Tous les utilisateurs de la plateforme (Newsletter, Apprenants & Membres)
+                            </option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      {/* Email template / type */}
+                      <div className="space-y-1.5">
+                        <label className="font-bold text-slate-700">2. Type d'email &amp; Modèle</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetedEmailType("reminder")
+                              setTargetedEmailSubject(`⏰ Rappel Masterclass : ${masterclassSession.title}`)
+                            }}
+                            className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
+                              targetedEmailType === "reminder"
+                                ? "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-xs"
+                                : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            <div className="text-[11px] font-black text-emerald-700">⏰ Rappel Direct</div>
+                            <div className="text-[10px] text-slate-500 font-normal mt-0.5">Date + Liens YouTube & WhatsApp</div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetedEmailType("replay")
+                              setTargetedEmailSubject(`📼 Replay disponible : ${masterclassSession.title}`)
+                            }}
+                            className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
+                              targetedEmailType === "replay"
+                                ? "bg-purple-50 border-purple-500 text-purple-800 shadow-xs"
+                                : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            <div className="text-[11px] font-black text-purple-700">📼 Replay & Support</div>
+                            <div className="text-[10px] text-slate-500 font-normal mt-0.5">Lien vidéo + Ressources</div>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetedEmailType("custom")
+                              setTargetedEmailSubject(`📢 Message important : Masterclass IA`)
+                            }}
+                            className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
+                              targetedEmailType === "custom"
+                                ? "bg-blue-50 border-blue-500 text-blue-800 shadow-xs"
+                                : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                            }`}
+                          >
+                            <div className="text-[11px] font-black text-blue-700">✍️ Message Libre</div>
+                            <div className="text-[10px] text-slate-500 font-normal mt-0.5">Contenu personnalisé</div>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Subject */}
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700">Objet de l'email *</label>
+                        <input
+                          type="text"
+                          required
+                          value={targetedEmailSubject}
+                          onChange={e => setTargetedEmailSubject(e.target.value)}
+                          placeholder="Ex: ⏰ Rappel : Début de la Masterclass ce Dimanche à 19h00 GMT"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-blue-500 font-medium"
+                        />
+                      </div>
+
+                      {/* Custom Message Body */}
+                      <div className="space-y-1">
+                        <label className="font-bold text-slate-700">
+                          Message personnalisé / Instructions supplémentaires
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={targetedEmailCustomMessage}
+                          onChange={e => setTargetedEmailCustomMessage(e.target.value)}
+                          placeholder="Saisissez ici le texte de votre message ou vos consignes pratiques..."
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-blue-500 text-xs"
+                        />
+                      </div>
+
+                      {/* Summary Box */}
+                      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-[11px] text-slate-600">
+                        <div className="font-bold text-slate-800">📌 Éléments automatiquement inclus dans cet email :</div>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          <li>Prénom personnalisé de l'apprenant</li>
+                          <li>Titre de la session : <strong>{masterclassSession.title}</strong></li>
+                          {masterclassSession.dateDisplay && <li>Date : <strong>{masterclassSession.dateDisplay}</strong></li>}
+                          <li>Bouton d'accès direct <strong>YouTube Live</strong></li>
+                          <li>Bouton d'accès au <strong>Groupe WhatsApp des Apprenants</strong></li>
+                          <li>Signature officielle <strong>Alfred Dah &amp; LE GUIDE IA</strong></li>
+                        </ul>
+                      </div>
+
+                      {/* Test Send Section */}
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
+                          <CheckCircle2 className="size-3.5 text-amber-700" />
+                          <span>Envoyer un email test (Recommandé avant envoi en masse)</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="email"
+                            value={targetedEmailTestAddress}
+                            onChange={e => setTargetedEmailTestAddress(e.target.value)}
+                            placeholder="Votre email (ex: alfred@leguideai.com)"
+                            className="flex-1 bg-white border border-amber-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSendTargetedMasterclassEmail(true)}
+                            disabled={sendingTestEmail || !targetedEmailTestAddress}
+                            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs disabled:opacity-50 cursor-pointer shadow-xs shrink-0"
+                          >
+                            {sendingTestEmail ? "Envoi test..." : "Envoyer test"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 flex items-center justify-between border-t border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setShowTargetedEmailModal(false)}
+                        className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendTargetedMasterclassEmail(false)}
+                        disabled={sendingTargetedEmail}
+                        className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        <Send className="size-4" />
+                        <span>
+                          {sendingTargetedEmail 
+                            ? "Envoi en cours..." 
+                            : `Diffuser l'email (${targetedEmailTarget === "all_platform_users" ? "Tous les membres" : targetedEmailTarget === "all_masterclasses" ? `${masterclassParticipants.length} inscrits` : `${masterclassCounts[targetedEmailTarget] || 0} ciblés`})`}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: MASTERCLASSES REPLAYS (VIDÉOTHÈQUE REPLAYS) */}
+        {activeTab === "masterclass_replays" && (
+          <div className="space-y-6 animate-fadeIn text-left">
+            
+            {/* Masterclasses Sub-Navigation Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclasses")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Radio className="size-3.5 text-rose-500" />
+                  <span>Sessions à Venir</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {upcomingMasterclasses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclasses_past")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Clock className="size-3.5" />
+                  <span>Sessions Passées</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {pastMasterclasses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_participants")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer"
+                >
+                  <Users className="size-3.5" />
+                  <span>Participants & Inscrits</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-800 text-[10px] font-extrabold">
+                    {masterclassParticipants.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("masterclass_replays")}
+                  className="px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 bg-primary text-slate-950 shadow-sm cursor-pointer"
+                >
+                  <Video className="size-3.5" />
+                  <span>Replays</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-slate-900 text-white text-[10px] font-extrabold">
+                    {masterclassReplays.length}
+                  </span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenAddReplay}
+                className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-sm cursor-pointer"
+              >
+                <Plus className="size-4" />
+                <span>Ajouter un Replay YouTube</span>
+              </button>
+            </div>
+
+            {/* Replays Library (YouTube) */}
             <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <div className="flex items-center gap-2">
                   <Play className="size-5 text-primary fill-primary" />
                   <h3 className="font-heading text-base font-bold text-slate-800">
-                    Replays des Masterclasses
+                    Replays &amp; Rediffusions des Masterclasses ({masterclassReplays.length})
                   </h3>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleOpenAddReplay}
-                  className="px-3.5 py-1.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="size-3.5" />
-                  <span>Ajouter un Replay</span>
-                </button>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -6191,213 +7562,171 @@ export default function SuperAdminDashboard() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Section 3: Registered Participants Table */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        {/* MODAL PROGRAMMER / MODIFIER UNE MASTERCLASS */}
+        {showMasterclassModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <div className="flex items-center gap-2">
-                  <Users className="size-5 text-primary" />
-                  <h3 className="font-heading text-base font-bold text-slate-800">
-                    Apprenants Inscrits à la Masterclass ({masterclassParticipants.length})
-                  </h3>
+                  <Radio className="size-5 text-rose-500" />
+                  <h4 className="font-heading text-base font-bold text-slate-800">
+                    {editingMasterclass ? "Modifier la Masterclass" : "Programmer une Nouvelle Masterclass"}
+                  </h4>
                 </div>
+                <button
+                  onClick={() => setShowMasterclassModal(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={refreshMasterclassData}
-                    disabled={refreshingMasterclass}
-                    className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
-                    title="Actualiser la liste en direct"
-                  >
-                    <RefreshCw className={`size-3.5 ${refreshingMasterclass ? "animate-spin text-primary" : ""}`} />
-                    <span>Actualiser</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsManualAddParticipantOpen(true)}
-                    className="px-3 py-1.5 rounded-xl bg-primary text-slate-950 hover:bg-primary/90 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <Plus className="size-3.5" />
-                    <span>Inscrire un apprenant</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleExportMasterclassParticipants}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Download className="size-3.5" />
-                    <span>Exporter CSV</span>
-                  </button>
-
-                  <div className="relative w-full sm:w-56">
-                    <Search className="size-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <form onSubmit={handleSaveMasterclassModal} className="space-y-4 text-xs">
+                
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">Titre de la Masterclass *</label>
                     <input
                       type="text"
-                      value={masterclassSearch}
-                      onChange={e => setMasterclassSearch(e.target.value)}
-                      placeholder="Rechercher nom, email..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:border-primary"
+                      required
+                      value={masterclassForm.title}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, title: e.target.value })}
+                      placeholder="Ex: Masterclass IA : Automatisation & Agents"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">Formateur / Intervenant</label>
+                    <input
+                      type="text"
+                      value={masterclassForm.instructor}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, instructor: e.target.value })}
+                      placeholder="Alfred Dah"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-bold">
-                      <th className="py-2.5 px-3">Nom Complet</th>
-                      <th className="py-2.5 px-3">Adresse Email</th>
-                      <th className="py-2.5 px-3">WhatsApp</th>
-                      <th className="py-2.5 px-3">Pays</th>
-                      <th className="py-2.5 px-3">Date Inscription</th>
-                      <th className="py-2.5 px-3 text-center">Statut</th>
-                      <th className="py-2.5 px-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {masterclassParticipants
-                      .filter(p => {
-                        if (!masterclassSearch) return true
-                        const q = masterclassSearch.toLowerCase()
-                        return (
-                          (p.full_name || "").toLowerCase().includes(q) ||
-                          (p.email || "").toLowerCase().includes(q) ||
-                          (p.whatsapp || "").toLowerCase().includes(q)
-                        )
-                      })
-                      .map((p) => (
-                        <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-2.5 px-3 font-bold text-slate-900">{p.full_name || "—"}</td>
-                          <td className="py-2.5 px-3 font-mono text-primary font-semibold">{p.email}</td>
-                          <td className="py-2.5 px-3 font-mono">{p.whatsapp || "—"}</td>
-                          <td className="py-2.5 px-3">{p.country || "CI"}</td>
-                          <td className="py-2.5 px-3 text-slate-500">
-                            {new Date(p.created_at).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                          </td>
-                          <td className="py-2.5 px-3 text-center">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-200">
-                              {p.status || "inscrit"}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteMasterclassParticipant(p.id)}
-                              className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                              title="Supprimer l'inscription"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">Date & Heure du Direct *</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={masterclassForm.scheduledAt}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, scheduledAt: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                    />
+                  </div>
 
-                    {masterclassParticipants.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="py-8 text-center text-slate-400">
-                          Aucun inscrit pour le moment. Cliquez sur « Inscrire un apprenant » pour ajouter une inscription ou testez l'inscription sur la page /masterclass.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Modal Inscription Manuelle d'un Apprenant */}
-              {isManualAddParticipantOpen && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-                  <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                      <div className="flex items-center gap-2">
-                        <UserPlus className="size-5 text-primary" />
-                        <h4 className="font-heading text-sm font-bold text-slate-800">
-                          Inscrire Manuellement un Apprenant
-                        </h4>
-                      </div>
-                      <button
-                        onClick={() => setIsManualAddParticipantOpen(false)}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                      >
-                        <X className="size-4" />
-                      </button>
-                    </div>
-
-                    <form onSubmit={handleManualAddMasterclassParticipant} className="space-y-3 text-xs">
-                      <div className="space-y-1">
-                        <label className="font-bold text-slate-700">Nom Complet *</label>
-                        <input
-                          type="text"
-                          required
-                          value={manualParticipantForm.fullName}
-                          onChange={e => setManualParticipantForm({ ...manualParticipantForm, fullName: e.target.value })}
-                          placeholder="Ex: Samba Diop"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="font-bold text-slate-700">Adresse Email *</label>
-                        <input
-                          type="email"
-                          required
-                          value={manualParticipantForm.email}
-                          onChange={e => setManualParticipantForm({ ...manualParticipantForm, email: e.target.value })}
-                          placeholder="Ex: apprenant@gmail.com"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <label className="font-bold text-slate-700">WhatsApp</label>
-                          <input
-                            type="text"
-                            value={manualParticipantForm.whatsapp}
-                            onChange={e => setManualParticipantForm({ ...manualParticipantForm, whatsapp: e.target.value })}
-                            placeholder="+221..."
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="font-bold text-slate-700">Pays</label>
-                          <input
-                            type="text"
-                            value={manualParticipantForm.country}
-                            onChange={e => setManualParticipantForm({ ...manualParticipantForm, country: e.target.value })}
-                            placeholder="Sénégal, CI..."
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200">
-                        <button
-                          type="button"
-                          onClick={() => setIsManualAddParticipantOpen(false)}
-                          className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
-                        >
-                          Annuler
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={addingManualParticipant}
-                          className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold hover:bg-primary/90 shadow-xs cursor-pointer"
-                        >
-                          {addingManualParticipant ? "Inscription..." : "Confirmer l'inscription"}
-                        </button>
-                      </div>
-                    </form>
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">Texte d'affichage de la date</label>
+                    <input
+                      type="text"
+                      value={masterclassForm.dateDisplay}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, dateDisplay: e.target.value })}
+                      placeholder="Ex: Dimanche 7 Septembre 2026 à 19h00 (GMT)"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                    />
                   </div>
                 </div>
-              )}
-            </div>
 
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700">Description & Thématiques</label>
+                  <textarea
+                    rows={3}
+                    value={masterclassForm.description}
+                    onChange={e => setMasterclassForm({ ...masterclassForm, description: e.target.value })}
+                    placeholder="Détaillez les points abordés lors de la masterclass..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary"
+                  />
+                </div>
+
+                {/* Miniature / Affiche Upload vers Supabase */}
+                <div className="space-y-1.5">
+                  <FileUploadField
+                    label="Miniature / Affiche Officielle (PNG, JPG, WebP)"
+                    value={masterclassForm.thumbnailUrl || ""}
+                    onChange={url => setMasterclassForm({ ...masterclassForm, thumbnailUrl: url })}
+                    accept="image/*"
+                    bucket="resources-files"
+                    folder="masterclass"
+                    placeholder="https://... ou téléversez l'affiche de la masterclass"
+                    preview="image"
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">💬 Lien du Groupe WhatsApp</label>
+                    <input
+                      type="url"
+                      value={masterclassForm.whatsappGroupUrl}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, whatsappGroupUrl: e.target.value })}
+                      placeholder="https://chat.whatsapp.com/..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">📺 Lien YouTube Live / Stream</label>
+                    <input
+                      type="url"
+                      value={masterclassForm.youtubeLiveUrl}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, youtubeLiveUrl: e.target.value })}
+                      placeholder="https://www.youtube.com/@LeGuideIA ou lien direct"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">Statut de la session</label>
+                    <select
+                      value={masterclassForm.status}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, status: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-bold"
+                    >
+                      <option value="upcoming">🔴 À Venir (Session active)</option>
+                      <option value="past">🕰️ Passée (Archivée)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-slate-700">Durée estimée</label>
+                    <input
+                      type="text"
+                      value={masterclassForm.duration}
+                      onChange={e => setMasterclassForm({ ...masterclassForm, duration: e.target.value })}
+                      placeholder="1h 30min"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowMasterclassModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingMasterclassSession}
+                    className="px-5 py-2 rounded-xl bg-primary text-slate-950 font-bold hover:bg-primary/90 shadow-md cursor-pointer"
+                  >
+                    {savingMasterclassSession ? "Enregistrement..." : (editingMasterclass ? "💾 Mettre à jour" : "🚀 Programmer la Masterclass")}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

@@ -61,30 +61,43 @@ const DEFAULT_REPLAYS = [
   }
 ]
 
-export async function GET() {
-  try {
-    // 1. Récupérer les paramètres et replays depuis site_settings
-    const { data: rows } = await supabaseServer
-      .from("site_settings")
-      .select("key, value")
+// Helper robuste pour charger toutes les sessions et initialiser le stockage si vide
+async function loadAllMasterclassSessions(): Promise<{ sessions: any[]; settingsMap: Record<string, string> }> {
+  const { data: rows } = await supabaseServer
+    .from("site_settings")
+    .select("key, value")
 
-    const settingsMap: Record<string, string> = {}
-    if (rows && rows.length > 0) {
-      rows.forEach((r) => {
-        if (r.key && r.value !== undefined) {
-          settingsMap[r.key] = r.value
-        }
-      })
+  const settingsMap: Record<string, string> = {}
+  if (rows && rows.length > 0) {
+    rows.forEach((r) => {
+      if (r.key && r.value !== undefined) {
+        settingsMap[r.key] = r.value
+      }
+    })
+  }
+
+  let sessions: any[] = []
+  if (settingsMap.masterclass_sessions) {
+    try {
+      const parsed = JSON.parse(settingsMap.masterclass_sessions)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        sessions = parsed
+      }
+    } catch (e) {
+      console.warn("Could not parse masterclass_sessions JSON:", e)
     }
+  }
 
-    const scheduledAt = settingsMap.masterclass_date || ""
-    const isActive = settingsMap.masterclass_is_active !== "false" && !!scheduledAt
-    const dateDisplay = settingsMap.masterclass_date_display || (scheduledAt ? new Date(scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
+  // Si aucune session n'est encore enregistrée dans le tableau JSON, initialiser avec la session historique
+  if (sessions.length === 0) {
+    const scheduledAt = settingsMap.masterclass_date || new Date(Date.now() + 7 * 86400000).toISOString()
+    const isActive = settingsMap.masterclass_is_active !== "false"
+    const dateDisplay = settingsMap.masterclass_date_display || (scheduledAt ? new Date(scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Dimanche Prochain à 19h00 (GMT)")
 
-    const upcomingSession = {
-      is_active: isActive,
-      title: settingsMap.masterclass_title || "Masterclass IA Interactive en Direct",
-      description: settingsMap.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct. Démonstrations d'outils, cas pratiques et questions-réponses.",
+    const initialSession = {
+      id: "mc_default",
+      title: settingsMap.masterclass_title || "Masterclass IA : Fondamentaux & Cas Pratiques en Direct",
+      description: settingsMap.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
       instructor: settingsMap.masterclass_instructor || "Alfred Dah",
       scheduledAt: scheduledAt,
       dateDisplay: dateDisplay,
@@ -92,8 +105,88 @@ export async function GET() {
       whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
       youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
       duration: "1h 30min",
-      price: "100% Gratuit (Accès Libre)"
+      status: "upcoming",
+      is_active: isActive,
+      created_at: new Date().toISOString()
     }
+
+    sessions = [initialSession]
+
+    // Sauvegarder immédiatement dans site_settings pour que les prochains ajouts n'écrasent rien
+    try {
+      await supabaseServer
+        .from("site_settings")
+        .upsert({
+          key: "masterclass_sessions",
+          value: JSON.stringify(sessions),
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" })
+    } catch (saveErr) {
+      console.warn("Could not initialize masterclass_sessions in site_settings:", saveErr)
+    }
+  }
+
+  return { sessions, settingsMap }
+}
+
+// Helper pour synchroniser les clés individuelles avec la session active la plus proche
+async function syncPrimarySessionKeys(sessions: any[]) {
+  const now = Date.now()
+  const upcomingSessions = sessions
+    .filter(s => s.status === "upcoming" || (!s.status && (!s.scheduledAt || new Date(s.scheduledAt).getTime() >= now - 4 * 3600 * 1000)))
+    .sort((a, b) => {
+      const timeA = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity
+      const timeB = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity
+      return timeA - timeB
+    })
+
+  const primary = upcomingSessions.find(s => s.is_active !== false) || upcomingSessions[0] || sessions[0]
+
+  if (primary) {
+    const updates = [
+      { key: "masterclass_title", value: primary.title || "Masterclass IA en Direct" },
+      { key: "masterclass_description", value: primary.description || "" },
+      { key: "masterclass_date", value: primary.scheduledAt || "" },
+      { key: "masterclass_date_display", value: primary.dateDisplay || "" },
+      { key: "masterclass_thumbnail_url", value: primary.thumbnailUrl || "" },
+      { key: "masterclass_whatsapp_group_url", value: primary.whatsappGroupUrl || "" },
+      { key: "masterclass_youtube_url", value: primary.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA" },
+      { key: "masterclass_instructor", value: primary.instructor || "Alfred Dah" },
+      { key: "masterclass_is_active", value: primary.is_active !== false ? "true" : "false" }
+    ]
+
+    for (const item of updates) {
+      await supabaseServer
+        .from("site_settings")
+        .upsert({ key: item.key, value: item.value, updated_at: new Date().toISOString() }, { onConflict: "key" })
+    }
+  }
+}
+
+export async function GET() {
+  try {
+    const { sessions, settingsMap } = await loadAllMasterclassSessions()
+
+    // Séparer les sessions à venir et passées
+    const now = Date.now()
+    const upcomingSessions = sessions
+      .filter(s => s.status === "upcoming" || (!s.status && (!s.scheduledAt || new Date(s.scheduledAt).getTime() >= now - 4 * 3600 * 1000)))
+      .sort((a, b) => {
+        const timeA = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity
+        const timeB = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity
+        return timeA - timeB
+      })
+
+    const pastSessions = sessions
+      .filter(s => s.status === "past" || (s.scheduledAt && new Date(s.scheduledAt).getTime() < now - 4 * 3600 * 1000 && s.status !== "upcoming"))
+      .sort((a, b) => {
+        const timeA = a.scheduledAt ? new Date(a.scheduledAt).getTime() : 0
+        const timeB = b.scheduledAt ? new Date(b.scheduledAt).getTime() : 0
+        return timeB - timeA
+      })
+
+    // La session la plus proche à venir
+    const closestUpcomingSession = upcomingSessions.find(s => s.is_active !== false) || upcomingSessions[0] || sessions[0]
 
     let replays: any[] = []
     if (settingsMap.masterclass_replays) {
@@ -107,21 +200,45 @@ export async function GET() {
       }
     }
 
-    // 2. Récupérer les inscriptions liées à la Masterclass
+    // 2. Récupérer les inscriptions liées aux Masterclasses
     const { data: rawParticipants } = await supabaseServer
       .from("registrations")
       .select("id, full_name, email, whatsapp, country, status, created_at, notes, course_slug, source")
       .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,course_slug.eq.masterclass-live,source.eq.masterclass_dimanche")
       .order("created_at", { ascending: false })
 
-    const participants = (rawParticipants || []).map(p => ({
-      ...p,
-      whatsapp: (p.whatsapp && !p.whatsapp.startsWith("wa_") && !p.whatsapp.includes("@")) ? p.whatsapp : ""
-    }))
+    const participants = (rawParticipants || []).map(p => {
+      let masterclassId = "mc_default"
+      let masterclassTitle = closestUpcomingSession?.title || "Masterclass IA Interactive"
+      let parsedNotes: any = {}
+
+      if (p.notes) {
+        try {
+          parsedNotes = typeof p.notes === "string" ? JSON.parse(p.notes) : p.notes
+          if (parsedNotes.masterclass_id) masterclassId = parsedNotes.masterclass_id
+          if (parsedNotes.masterclass_title) masterclassTitle = parsedNotes.masterclass_title
+        } catch (_) {
+          if (typeof p.notes === "string" && p.notes.length > 0) {
+            masterclassTitle = p.notes
+          }
+        }
+      }
+
+      return {
+        ...p,
+        whatsapp: (p.whatsapp && !p.whatsapp.startsWith("wa_") && !p.whatsapp.includes("@")) ? p.whatsapp : "",
+        masterclass_id: masterclassId,
+        masterclass_title: masterclassTitle,
+        parsed_notes: parsedNotes
+      }
+    })
 
     return NextResponse.json({
       success: true,
-      upcomingSession,
+      upcomingSession: closestUpcomingSession,
+      sessions,
+      upcomingSessions,
+      pastSessions,
       replays,
       participants: participants || []
     })
@@ -134,40 +251,166 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { action, sessionData, replayData, replayId } = body
+    const { action, sessionData, sessionId, replayData, replayId, participantData, participantId } = body
 
-    if (action === "save_session") {
-      // Sauvegarder les paramètres de la session live
-      const updates = [
-        { key: "masterclass_title", value: sessionData.title || "" },
-        { key: "masterclass_description", value: sessionData.description || "" },
-        { key: "masterclass_date", value: sessionData.scheduledAt || "" },
-        { key: "masterclass_date_display", value: sessionData.dateDisplay || "" },
-        { key: "masterclass_thumbnail_url", value: sessionData.thumbnailUrl || "" },
-        { key: "masterclass_whatsapp_group_url", value: sessionData.whatsappGroupUrl || "" },
-        { key: "masterclass_youtube_url", value: sessionData.youtubeLiveUrl || "" },
-        { key: "masterclass_instructor", value: sessionData.instructor || "Alfred Dah" },
-        { key: "masterclass_is_active", value: sessionData.is_active !== false ? "true" : "false" }
-      ]
+    // 1. Charger toutes les sessions existantes (garantit qu'aucune session historique n'est omise)
+    const { sessions: existingSessions } = await loadAllMasterclassSessions()
+    let sessionsList = [...existingSessions]
 
-      for (const item of updates) {
-        await supabaseServer
-          .from("site_settings")
-          .upsert({
-            key: item.key,
-            value: item.value,
-            updated_at: new Date().toISOString()
-          }, { onConflict: "key" })
+    if (action === "save_session" || action === "create_session" || action === "update_session") {
+      const isNew = !sessionData.id || sessionData.id === "new" || sessionData.id === "create"
+      const currentId = isNew ? `mc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}` : sessionData.id
+
+      const dateDisplay = sessionData.dateDisplay || (sessionData.scheduledAt ? new Date(sessionData.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
+
+      const formattedSession = {
+        id: currentId,
+        title: sessionData.title || "Masterclass IA en Direct",
+        description: sessionData.description || "",
+        instructor: sessionData.instructor || "Alfred Dah",
+        scheduledAt: sessionData.scheduledAt || "",
+        dateDisplay: dateDisplay,
+        thumbnailUrl: sessionData.thumbnailUrl || "",
+        whatsappGroupUrl: sessionData.whatsappGroupUrl || "",
+        youtubeLiveUrl: sessionData.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA",
+        duration: sessionData.duration || "1h 30min",
+        status: sessionData.status || "upcoming",
+        is_active: sessionData.is_active !== false,
+        updated_at: new Date().toISOString()
       }
+
+      if (isNew) {
+        // Ajouter la nouvelle session SANS écraser les anciennes
+        sessionsList = [formattedSession, ...sessionsList]
+      } else {
+        // Mettre à jour la session existante ciblée
+        const index = sessionsList.findIndex(s => s.id === currentId)
+        if (index >= 0) {
+          sessionsList[index] = { ...sessionsList[index], ...formattedSession }
+        } else {
+          // Si l'ID n'était pas trouvé, l'ajouter
+          sessionsList = [formattedSession, ...sessionsList]
+        }
+      }
+
+      // Sauvegarder la liste complète dans site_settings
+      await supabaseServer
+        .from("site_settings")
+        .upsert({
+          key: "masterclass_sessions",
+          value: JSON.stringify(sessionsList),
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" })
+
+      // Synchroniser la session active la plus proche pour les clés legacy
+      await syncPrimarySessionKeys(sessionsList)
+
+      const now = Date.now()
+      const upcomingSessions = sessionsList
+        .filter(s => s.status === "upcoming" || (!s.status && (!s.scheduledAt || new Date(s.scheduledAt).getTime() >= now - 4 * 3600 * 1000)))
+        .sort((a, b) => {
+          const tA = a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity
+          const tB = b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity
+          return tA - tB
+        })
+
+      const pastSessions = sessionsList
+        .filter(s => s.status === "past" || (s.scheduledAt && new Date(s.scheduledAt).getTime() < now - 4 * 3600 * 1000 && s.status !== "upcoming"))
+        .sort((a, b) => {
+          const tA = a.scheduledAt ? new Date(a.scheduledAt).getTime() : 0
+          const tB = b.scheduledAt ? new Date(b.scheduledAt).getTime() : 0
+          return tB - tA
+        })
 
       return NextResponse.json({
         success: true,
-        message: "Session Masterclass mise à jour avec succès dans Supabase !"
+        session: formattedSession,
+        sessions: sessionsList,
+        upcomingSessions,
+        pastSessions,
+        message: isNew ? "Nouvelle Masterclass programmée avec succès !" : "Masterclass mise à jour !"
+      })
+    }
+
+    if (action === "delete_session") {
+      const targetId = sessionId || sessionData?.id
+      if (!targetId) {
+        return NextResponse.json({ error: "ID de session requis." }, { status: 400 })
+      }
+
+      sessionsList = sessionsList.filter(s => s.id !== targetId)
+
+      await supabaseServer
+        .from("site_settings")
+        .upsert({
+          key: "masterclass_sessions",
+          value: JSON.stringify(sessionsList),
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" })
+
+      await syncPrimarySessionKeys(sessionsList)
+
+      const now = Date.now()
+      const upcomingSessions = sessionsList
+        .filter(s => s.status === "upcoming" || (!s.status && (!s.scheduledAt || new Date(s.scheduledAt).getTime() >= now - 4 * 3600 * 1000)))
+        .sort((a, b) => (a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity) - (b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity))
+
+      const pastSessions = sessionsList
+        .filter(s => s.status === "past" || (s.scheduledAt && new Date(s.scheduledAt).getTime() < now - 4 * 3600 * 1000 && s.status !== "upcoming"))
+        .sort((a, b) => (b.scheduledAt ? new Date(b.scheduledAt).getTime() : 0) - (a.scheduledAt ? new Date(a.scheduledAt).getTime() : 0))
+
+      return NextResponse.json({
+        success: true,
+        sessions: sessionsList,
+        upcomingSessions,
+        pastSessions,
+        message: "Masterclass supprimée avec succès !"
+      })
+    }
+
+    if (action === "toggle_session_status") {
+      const { id, status, is_active } = body
+      sessionsList = sessionsList.map(s => {
+        if (s.id === id) {
+          return {
+            ...s,
+            status: status !== undefined ? status : s.status,
+            is_active: is_active !== undefined ? is_active : s.is_active,
+            updated_at: new Date().toISOString()
+          }
+        }
+        return s
+      })
+
+      await supabaseServer
+        .from("site_settings")
+        .upsert({
+          key: "masterclass_sessions",
+          value: JSON.stringify(sessionsList),
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" })
+
+      await syncPrimarySessionKeys(sessionsList)
+
+      const now = Date.now()
+      const upcomingSessions = sessionsList
+        .filter(s => s.status === "upcoming" || (!s.status && (!s.scheduledAt || new Date(s.scheduledAt).getTime() >= now - 4 * 3600 * 1000)))
+        .sort((a, b) => (a.scheduledAt ? new Date(a.scheduledAt).getTime() : Infinity) - (b.scheduledAt ? new Date(b.scheduledAt).getTime() : Infinity))
+
+      const pastSessions = sessionsList
+        .filter(s => s.status === "past" || (s.scheduledAt && new Date(s.scheduledAt).getTime() < now - 4 * 3600 * 1000 && s.status !== "upcoming"))
+        .sort((a, b) => (b.scheduledAt ? new Date(b.scheduledAt).getTime() : 0) - (a.scheduledAt ? new Date(a.scheduledAt).getTime() : 0))
+
+      return NextResponse.json({
+        success: true,
+        sessions: sessionsList,
+        upcomingSessions,
+        pastSessions,
+        message: "Statut mis à jour avec succès !"
       })
     }
 
     if (action === "add_replay" || action === "update_replay") {
-      // Récupérer la liste existante des replays
       const { data: existingRow } = await supabaseServer
         .from("site_settings")
         .select("value")
@@ -201,7 +444,6 @@ export async function POST(req: Request) {
         }
         replays = [newReplay, ...replays]
       } else {
-        // update_replay
         replays = replays.map((r) => {
           if (r.id === replayData.id) {
             return {
@@ -275,6 +517,9 @@ export async function POST(req: Request) {
         : `wa_${emailClean}`
       const cleanFullName = participantData.fullName || participantData.full_name || emailClean.split("@")[0]
 
+      const masterclassId = participantData.masterclassId || participantData.masterclass_id || "current_live"
+      const masterclassTitle = participantData.masterclassTitle || participantData.masterclass_title || "Masterclass IA Interactive"
+
       const regPayload = {
         full_name: cleanFullName,
         email: emailClean,
@@ -285,6 +530,8 @@ export async function POST(req: Request) {
         status: "inscrit",
         notes: JSON.stringify({
           added_by_admin: true,
+          masterclass_id: masterclassId,
+          masterclass_title: masterclassTitle,
           created_at: new Date().toISOString()
         })
       }
@@ -315,7 +562,6 @@ export async function POST(req: Request) {
         newParticipant = insData
       }
 
-      // Also add to newsletter
       try {
         await supabaseServer.from("newsletter_subscribers").upsert({
           email: emailClean,

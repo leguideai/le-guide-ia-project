@@ -1180,6 +1180,125 @@ export async function forwardB2BQuoteToAlfred(params: B2BQuoteEmailParams & { cu
   }
 }
 
+export async function sendMasterclassTargetedEmail(params: {
+  name: string
+  email: string
+  subject: string
+  emailType: "reminder" | "replay" | "custom"
+  customMessage: string
+  session: {
+    title: string
+    description?: string
+    scheduledAt?: string
+    dateDisplay?: string
+    instructor?: string
+    thumbnailUrl?: string
+    whatsappGroupUrl?: string
+    youtubeLiveUrl?: string
+  }
+}) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping email send: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const { name, email, subject, emailType, customMessage, session } = params
+    const firstName = (name && name !== "Apprenant") ? name.split(' ')[0] : 'Apprenant'
+    const sessionTitle = session.title || "Masterclass IA en Direct"
+    const instructor = session.instructor || "Alfred Dah"
+    const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
+    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
+    const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com"
+
+    let badgeText = "📢 MESSAGE DE L'INSTRUCTEUR"
+    let badgeColor = "#3b82f6"
+    if (emailType === "reminder") {
+      badgeText = "⏰ RAPPEL DE VOTRE MASTERCLASS"
+      badgeColor = "#10b981"
+    } else if (emailType === "replay") {
+      badgeText = "📼 REPLAY & RESSOURCES DISPONIBLES"
+      badgeColor = "#8b5cf6"
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${subject}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #e2e8f0; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 24px auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+          .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 2px solid #D4AF37; padding: 28px 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; text-transform: uppercase; }
+          .badge { display: inline-block; background-color: rgba(59, 130, 246, 0.15); border: 1px solid ${badgeColor}; color: ${badgeColor}; font-weight: 800; font-size: 11px; padding: 4px 14px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 14px; }
+          .content { padding: 30px 24px; line-height: 1.65; font-size: 14px; color: #cbd5e1; }
+          .msg-box { background-color: #1f2937; border: 1px solid #374151; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 18px; margin: 20px 0; color: #f9fafb; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+          .info-card { background-color: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 18px; margin: 20px 0; font-size: 13px; }
+          .btn-yt { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 12px 22px; border-radius: 10px; font-size: 13px; margin: 6px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+          .btn-wa { display: inline-block; background-color: #16a34a; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 12px 22px; border-radius: 10px; font-size: 13px; margin: 6px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); }
+          .footer { background-color: #0b0f19; padding: 20px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #1f2937; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>LE GUIDE IA</h1>
+          </div>
+          <div class="content">
+            <span class="badge" style="color: ${badgeColor}; border-color: ${badgeColor};">${badgeText}</span>
+            <p style="font-size: 17px; font-weight: 800; color: #ffffff; margin-top: 0;">Bonjour ${firstName} 👋,</p>
+            
+            ${customMessage ? `<div class="msg-box">${customMessage}</div>` : ''}
+
+            <div class="info-card">
+              <strong style="color: #60a5fa; font-size: 14px; display: block; margin-bottom: 8px;">🎯 Masterclass : ${sessionTitle}</strong>
+              ${dateFormatted ? `📅 <strong>Date :</strong> ${dateFormatted}<br>` : ''}
+              👨‍🏫 <strong>Formateur :</strong> ${instructor}<br>
+              💻 <strong>Diffusion :</strong> YouTube Live
+            </div>
+
+            <div style="text-align: center; margin: 24px 0 16px;">
+              ${youtubeUrl ? `<a href="${youtubeUrl}" class="btn-yt" target="_blank">📺 Accéder à YouTube Live</a>` : ''}
+              ${whatsappUrl ? `<a href="${whatsappUrl}" class="btn-wa" target="_blank">💬 Groupe WhatsApp des Apprenants</a>` : ''}
+            </div>
+
+            <p style="margin-top: 28px; font-size: 13px;">
+              Bien cordialement,<br>
+              <strong>${instructor} & L'équipe LE GUIDE IA</strong>
+            </p>
+          </div>
+          <div class="footer">
+            Cet email vous est adressé en tant qu'inscrit à la Masterclass « ${sessionTitle} ».<br>
+            © 2026 LE GUIDE IA — Tous droits réservés.
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const textContent = `Bonjour ${firstName},\n\nConcernant la Masterclass : ${sessionTitle}\n\n${customMessage}\n\nLien YouTube Live : ${youtubeUrl}\nGroupe WhatsApp : ${whatsappUrl}\n\nBien cordialement,\n${instructor}`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject,
+      text: textContent,
+      html: htmlContent
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending targeted masterclass email:', error)
+    return { success: false, error }
+  }
+}
+
+
 
 
 

@@ -36,21 +36,8 @@ export default function MasterclassHubPage() {
   const [guestEmail, setGuestEmail] = useState("")
   const [guestName, setGuestName] = useState("")
   
-  const [upcomingSession, setUpcomingSession] = useState<any>({
-    is_active: false,
-    title: "Masterclass IA : Fondamentaux & Cas Pratiques en Direct",
-    description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
-    instructor: "Alfred Dah",
-    instructorRole: "Fondateur Le Guide IA & Expert en Intelligence Artificielle",
-    scheduledAt: "",
-    dateDisplay: "",
-    thumbnailUrl: "",
-    whatsappGroupUrl: "",
-    youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
-    duration: "1h 30min",
-    price: "100% Gratuit"
-  })
-
+  const [upcomingSession, setUpcomingSession] = useState<any>(null)
+  const [allUpcomingSessions, setAllUpcomingSessions] = useState<any[]>([])
   const [replays, setReplays] = useState<ReplayItem[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous")
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -58,6 +45,13 @@ export default function MasterclassHubPage() {
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null)
+
+  // Vérifier si une session en direct future et active est réellement disponible
+  const hasActiveLive = Boolean(
+    upcomingSession && 
+    upcomingSession.is_active !== false && 
+    (!upcomingSession.scheduledAt || new Date(upcomingSession.scheduledAt).getTime() >= Date.now() - 4 * 3600 * 1000)
+  )
 
   // 1. Initial Load & Auth / Registration check
   useEffect(() => {
@@ -83,7 +77,16 @@ export default function MasterclassHubPage() {
 
         if (data.upcomingSession) {
           setUpcomingSession(data.upcomingSession)
+        } else {
+          setUpcomingSession(null)
         }
+
+        if (data.allUpcomingSessions && Array.isArray(data.allUpcomingSessions)) {
+          setAllUpcomingSessions(data.allUpcomingSessions)
+        } else {
+          setAllUpcomingSessions([])
+        }
+
         if (data.isRegistered || isLocallyRegistered) {
           setIsRegistered(true)
           if (emailToCheck && typeof window !== "undefined") {
@@ -124,7 +127,7 @@ export default function MasterclassHubPage() {
           seconds: Math.floor((difference / 1000) % 60),
         }
       }
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+      return null
     }
 
     setTimeLeft(calculateTimeLeft())
@@ -156,7 +159,9 @@ export default function MasterclassHubPage() {
           email: emailToSubmit,
           fullName: nameToSubmit,
           whatsapp: currentUser?.user_metadata?.whatsapp || "",
-          country: currentUser?.user_metadata?.country || "CI"
+          country: currentUser?.user_metadata?.country || "CI",
+          masterclassId: "current_live",
+          masterclassTitle: upcomingSession?.title || "Masterclass IA en Direct"
         })
       })
 
@@ -212,7 +217,7 @@ export default function MasterclassHubPage() {
               Intégrez le groupe WhatsApp officiel pour échanger avec Alfred Dah et tous les participants.
             </p>
             <a
-              href={upcomingSession.whatsappGroupUrl || ""}
+              href={upcomingSession?.whatsappGroupUrl || ""}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-emerald-600/30 cursor-pointer"
@@ -225,7 +230,7 @@ export default function MasterclassHubPage() {
 
           {/* BOUTON YOUTUBE LIVE */}
           <a
-            href={upcomingSession.youtubeLiveUrl || ""}
+            href={upcomingSession?.youtubeLiveUrl || ""}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
@@ -343,8 +348,8 @@ export default function MasterclassHubPage() {
       {/* 1. Header Global du Site */}
       <Header />
 
-      {/* 2. SI MASTERCLASS EN DIRECT PROGRAMMÉE (is_active === true) */}
-      {upcomingSession?.is_active ? (
+      {/* 2. SI MASTERCLASS EN DIRECT ACTIVE & À VENIR */}
+      {hasActiveLive && upcomingSession ? (
         <section className="relative pt-6 sm:pt-10 pb-14 px-4 max-w-7xl mx-auto overflow-hidden">
           
           {/* ========================================================================= */}
@@ -369,15 +374,21 @@ export default function MasterclassHubPage() {
             {/* BLOC AFFICHE + BOUTON D'INSCRIPTION EN BAS DE L'AFFICHE (Mobile First) */}
             <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-2xl space-y-4 text-center">
               
-              {/* Miniature / Affiche Officielle */}
+              {/* Miniature / Affiche Officielle (Affichage Intégral Sans Rognage) */}
               {upcomingSession.thumbnailUrl && (
-                <div className="relative aspect-video rounded-2xl overflow-hidden border border-border bg-black/60 shadow-lg">
+                <div className="relative rounded-2xl overflow-hidden border border-border bg-[#090d16]/90 shadow-2xl flex items-center justify-center min-h-[220px] max-h-[360px]">
+                  {/* Flou d'ambiance d'arrière-plan */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
+                    style={{ backgroundImage: `url(${upcomingSession.thumbnailUrl})` }}
+                  />
+                  {/* Affiche Complète Nette (100% visible) */}
                   <img
                     src={upcomingSession.thumbnailUrl}
                     alt={upcomingSession.title}
-                    className="w-full h-full object-cover"
+                    className="relative z-10 w-full h-auto max-h-[360px] object-contain mx-auto rounded-xl drop-shadow-md"
                   />
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                  <span className="absolute top-2.5 left-2.5 z-20 px-2.5 py-0.5 rounded-full bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-rose-400/30">
                     <span className="size-1.5 rounded-full bg-white animate-ping" />
                     Session en Direct
                   </span>
@@ -520,15 +531,21 @@ export default function MasterclassHubPage() {
             <div className="lg:col-span-5">
               <div className="p-6 sm:p-8 rounded-3xl border border-border bg-card shadow-2xl space-y-6 text-center">
                 
-                {/* Miniature / Affiche Officielle */}
+                {/* Miniature / Affiche Officielle (Affichage Intégral Sans Rognage) */}
                 {upcomingSession.thumbnailUrl && (
-                  <div className="relative aspect-video rounded-2xl overflow-hidden border border-border bg-black/60 shadow-lg">
+                  <div className="relative rounded-2xl overflow-hidden border border-border bg-[#090d16]/90 shadow-2xl flex items-center justify-center min-h-[260px] max-h-[420px]">
+                    {/* Flou d'ambiance d'arrière-plan */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
+                      style={{ backgroundImage: `url(${upcomingSession.thumbnailUrl})` }}
+                    />
+                    {/* Affiche Complète Nette (100% visible) */}
                     <img
                       src={upcomingSession.thumbnailUrl}
                       alt={upcomingSession.title}
-                      className="w-full h-full object-cover"
+                      className="relative z-10 w-full h-auto max-h-[420px] object-contain mx-auto rounded-xl drop-shadow-md"
                     />
-                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                    <span className="absolute top-3 left-3 z-20 px-2.5 py-0.5 rounded-full bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-rose-400/30">
                       <span className="size-1.5 rounded-full bg-white animate-ping" />
                       Session en Direct
                     </span>
@@ -629,7 +646,7 @@ export default function MasterclassHubPage() {
               <p className="text-[11px] text-muted-foreground">
                 {replays.length > 0 
                   ? "Nos formateurs préparent le prochain live. Visionnez tous les replays ci-dessous !" 
-                  : "Rejoignez le Bootcamp PRO 2 ou explorez nos formations vidéo complètes."}
+                  : "N'attendez plus améliorez votre potentiel en vous inscrivant à nos bootcamps !"}
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -637,17 +654,90 @@ export default function MasterclassHubPage() {
                 href="/bootcamp"
                 className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 transition-opacity"
               >
-                Voir le Bootcamp
-              </Link>
-              <Link
-                href="/formations"
-                className="px-4 py-2 rounded-xl border border-border bg-[#090d16] text-white font-bold text-xs hover:bg-white/5 transition-colors"
-              >
-                Formations
+                Voir les Bootcamp AI
               </Link>
             </div>
           </div>
 
+        </section>
+      )}
+
+      {/* 2. CALENDRIER DES PROCHAINES MASTERCLASSES AU PROGRAMME (si plusieurs sessions configurées) */}
+      {allUpcomingSessions.length > 1 && (
+        <section className="py-8 max-w-7xl mx-auto px-4 border-t border-border">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 text-left">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card text-xs text-primary font-bold">
+                <Calendar className="size-3 text-primary" />
+                <span>CALENDRIER DES MASTERCLASSES</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold font-heading text-white">
+                Prochaines Sessions en Direct au Programme
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Découvrez les thématiques des prochaines sessions interactives hebdomadaires animées par Alfred Dah.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {allUpcomingSessions.map((s, idx) => {
+              const isSelected = s.id === upcomingSession.id
+              return (
+                <div
+                  key={s.id || idx}
+                  className={`p-5 rounded-2xl border transition-all text-left flex flex-col justify-between space-y-4 ${
+                    isSelected
+                      ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                      : "border-border bg-card/60 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                        {idx === 0 ? "🔴 Prochaine Session" : `Session #${idx + 1}`}
+                      </span>
+                      <span className="text-[11px] font-mono text-muted-foreground">
+                        {s.duration || "1h 30min"}
+                      </span>
+                    </div>
+
+                    <h3 className="font-bold text-sm text-white line-clamp-2">
+                      {s.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {s.description || "Session interactive animée par Alfred Dah."}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 pt-1">
+                      <Calendar className="size-3.5 text-primary shrink-0" />
+                      <span>{s.dateDisplay || (s.scheduledAt ? new Date(s.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Date à venir")}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-border flex items-center justify-between">
+                    <span className="text-[11px] text-emerald-400 font-bold">
+                      ✓ 100% Gratuit
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUpcomingSession(s)
+                        window.scrollTo({ top: 0, behavior: "smooth" })
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-primary text-slate-950 font-extrabold"
+                          : "bg-white/5 hover:bg-white/10 text-white border border-border"
+                      }`}
+                    >
+                      {isSelected ? "Session Sélectionnée" : "Participer à ce direct"}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </section>
       )}
 
