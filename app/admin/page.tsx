@@ -15,7 +15,7 @@ import {
   Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star,
   Image as ImageIcon, Bold, Italic, Underline, List, ListOrdered, Heading2, Heading3,
   Link2, Minus, MousePointerClick, AlertCircle, Code, AlignLeft, Send, Radio,
-  ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen
+  ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Crown, Check, Save
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { AnalyticsChart } from "@/components/analytics-chart"
@@ -173,11 +173,46 @@ interface TestimonialItem {
 }
 
 export default function SuperAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "masterclasses" | "masterclasses_past" | "masterclass_participants" | "masterclass_replays" | "newsletter" | "testimonials" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
+  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "masterclasses" | "masterclasses_past" | "masterclass_participants" | "masterclass_replays" | "subscriptions" | "newsletter" | "testimonials" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
   const [unauthorized, setUnauthorized] = useState(false)
+
+  // Subscription management states
+  const [adminSubscriptions, setAdminSubscriptions] = useState<any[]>([])
+  const [adminSubscriptionStats, setAdminSubscriptionStats] = useState<any>({
+    totalActive: 0,
+    totalPending: 0,
+    totalExpired: 0,
+    totalRevenue: 0,
+    totalRevenueFormatted: "0 FCFA"
+  })
+  const [subscriptionPricing, setSubscriptionPricing] = useState<any>({
+    price3m: 10000,
+    price1y: 30000,
+    price3mDisplay: "10 000 FCFA",
+    price1yDisplay: "30 000 FCFA"
+  })
+  const [subStatusFilter, setSubStatusFilter] = useState<"all" | "active" | "pending" | "expired">("all")
+  const [subSearchQuery, setSubSearchQuery] = useState("")
+  const [showManualSubModal, setShowManualSubModal] = useState(false)
+  const [manualSubForm, setManualSubForm] = useState({
+    fullName: "",
+    email: "",
+    whatsapp: "",
+    country: "Côte d'Ivoire",
+    plan: "3_months" as "3_months" | "1_year",
+    customDays: ""
+  })
+  const [savingManualSub, setSavingManualSub] = useState(false)
+  const [showPriceEditModal, setShowPriceEditModal] = useState(false)
+  const [priceEditForm, setPriceEditForm] = useState({
+    price3m: "10000",
+    price1y: "30000"
+  })
+  const [savingPriceEdit, setSavingPriceEdit] = useState(false)
+  const [receiptModalUrl, setReceiptModalUrl] = useState<string | null>(null)
 
   // Masterclass states
   const [masterclassSession, setMasterclassSession] = useState<any>({})
@@ -1007,6 +1042,25 @@ export default function SuperAdminDashboard() {
         }
       } catch (mErr) {
         console.warn("Masterclasses fetch warning:", mErr)
+      }
+
+      // 13. Subscriptions VIP (Replays & Prompts)
+      try {
+        const resSub = await fetch("/api/admin/subscriptions")
+        const dataSub = await resSub.json()
+        if (dataSub.success) {
+          if (dataSub.subscriptions) setAdminSubscriptions(dataSub.subscriptions)
+          if (dataSub.stats) setAdminSubscriptionStats(dataSub.stats)
+          if (dataSub.pricing) {
+            setSubscriptionPricing(dataSub.pricing)
+            setPriceEditForm({
+              price3m: String(dataSub.pricing.price3m || 10000),
+              price1y: String(dataSub.pricing.price1y || 30000)
+            })
+          }
+        }
+      } catch (sErr) {
+        console.warn("Subscriptions fetch warning:", sErr)
       }
     } catch (err) {
       console.error("Fetch admin data error:", err)
@@ -2266,6 +2320,174 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  // =========================================================================
+  // ACTIONS GESTION DES ABONNEMENTS VIP (REPLAYS & PROMPTS)
+  // =========================================================================
+
+  const handleValidateSubscription = async (subId: string, email?: string) => {
+    setProcessingId(subId)
+    try {
+      const res = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "validate_subscription",
+          subscriptionId: subId,
+          email: email || undefined
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setAdminSubscriptions(prev => prev.map(s => (s.id === subId || (email && s.email.toLowerCase() === email.toLowerCase())) ? {
+          ...s,
+          status: "active",
+          starts_at: new Date().toISOString(),
+          expires_at: data.expiresAt || s.expires_at,
+          days_remaining: 90
+        } : s))
+        showNotice(data.message || "Abonnement VIP validé avec succès !")
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de la validation.")
+      }
+    } catch (err: any) {
+      alert("Erreur réseau : " + err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleProlongSubscription = async (subId: string, extraDays: number = 30) => {
+    setProcessingId(subId)
+    try {
+      const res = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "prolong_subscription",
+          subscriptionId: subId,
+          extraDays
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice(data.message || `Abonnement prolongé de ${extraDays} jours !`)
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de la prolongation.")
+      }
+    } catch (err: any) {
+      alert("Erreur : " + err.message)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleCancelSubscription = async (subId: string) => {
+    if (!confirm("Voulez-vous vraiment révoquer cet abonnement ?")) return
+    setProcessingId(subId)
+    try {
+      const res = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "cancel_subscription",
+          subscriptionId: subId
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setAdminSubscriptions(prev => prev.map(s => s.id === subId ? { ...s, status: "cancelled", days_remaining: 0 } : s))
+        showNotice("Abonnement révoqué.")
+        fetchAllData()
+      }
+    } catch (_) {}
+    finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleDeleteSubscription = async (subId: string) => {
+    if (!confirm("Voulez-vous supprimer définitivement cet enregistrement d'abonnement ?")) return
+    setProcessingId(subId)
+    try {
+      const res = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete_subscription",
+          subscriptionId: subId
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setAdminSubscriptions(prev => prev.filter(s => s.id !== subId))
+        showNotice("Enregistrement d'abonnement supprimé.")
+        fetchAllData()
+      }
+    } catch (_) {}
+    finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleSaveManualSub = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!manualSubForm.fullName || !manualSubForm.email) return
+    setSavingManualSub(true)
+    try {
+      const res = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_manual_subscription",
+          ...manualSubForm
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowManualSubModal(false)
+        setManualSubForm({ fullName: "", email: "", whatsapp: "", country: "Côte d'Ivoire", plan: "3_months", customDays: "" })
+        showNotice("Abonnement actif créé avec succès !")
+        fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de la création de l'abonnement.")
+      }
+    } catch (err: any) {
+      alert("Erreur : " + err.message)
+    } finally {
+      setSavingManualSub(false)
+    }
+  }
+
+  const handleSavePricing = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingPriceEdit(true)
+    try {
+      const res = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_pricing",
+          price3m: priceEditForm.price3m,
+          price1y: priceEditForm.price1y
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setSubscriptionPricing(data.pricing)
+        setShowPriceEditModal(false)
+        showNotice("Prix des abonnements mis à jour avec succès !")
+      } else {
+        alert(data.error || "Erreur lors de la mise à jour.")
+      }
+    } catch (err: any) {
+      alert("Erreur : " + err.message)
+    } finally {
+      setSavingPriceEdit(false)
+    }
+  }
+
   // Handle Submissions Grading
   async function handleGradeSubmission() {
     if (!gradingSub) return
@@ -2923,6 +3145,28 @@ export default function SuperAdminDashboard() {
                   </div>
                   <span className="text-[10px] opacity-75">({masterclassReplays.length})</span>
                 </button>
+
+                {/* Sub-nav Abonnements Replays & Prompts */}
+                <button
+                  onClick={() => { setActiveTab("subscriptions"); setMobileMenuOpen(false) }}
+                  className={`w-full flex items-center justify-between pl-7 pr-3.5 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    activeTab === "subscriptions"
+                      ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Crown className="size-3.5 shrink-0 text-amber-500" />
+                    <span>Abonnements VIP</span>
+                  </div>
+                  {adminSubscriptionStats.totalPending > 0 ? (
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] animate-pulse">
+                      {adminSubscriptionStats.totalPending} en attente
+                    </span>
+                  ) : (
+                    <span className="text-[10px] opacity-75">({adminSubscriptions.length})</span>
+                  )}
+                </button>
               </div>
 
               {/* Section 3 */}
@@ -3245,6 +3489,31 @@ export default function SuperAdminDashboard() {
                   <span className="text-[10px] opacity-75">({masterclassReplays.length})</span>
                 )}
               </button>
+
+              {/* Sub-nav: Abonnements Replays & Prompts */}
+              <button
+                onClick={() => setActiveTab("subscriptions")}
+                title={`Abonnements VIP Replays & Prompts (${adminSubscriptions.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between pl-7 pr-3.5 py-2"} rounded-xl text-xs font-medium transition-all cursor-pointer relative ${
+                  activeTab === "subscriptions" 
+                    ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                }`}
+              >
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2"}`}>
+                  <Crown className="size-3.5 shrink-0 text-amber-500" />
+                  {!sidebarCollapsed && <span>Abonnements VIP</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  adminSubscriptionStats.totalPending > 0 ? (
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] animate-pulse">
+                      {adminSubscriptionStats.totalPending}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] opacity-75">({adminSubscriptions.length})</span>
+                  )
+                )}
+              </button>
             </div>
 
             {/* Section 3: APPRENANTS & DEVOIRS */}
@@ -3425,6 +3694,7 @@ export default function SuperAdminDashboard() {
               {activeTab === "masterclasses_past" && "Masterclasses — Sessions Passées & Historique"}
               {activeTab === "masterclass_participants" && "Masterclasses — Participants & Inscrits"}
               {activeTab === "masterclass_replays" && "Masterclasses — Replays & Rediffusions"}
+              {activeTab === "subscriptions" && "Abonnements VIP (Replays Masterclasses & Prompts)"}
               {activeTab === "payments" && "Inscriptions & Validation"}
               {activeTab === "users" && "Gestion des Membres & Rôles RBAC"}
               {activeTab === "submissions" && "Correction des Devoirs"}
@@ -8284,6 +8554,577 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
+        {/* TAB: ABONNEMENTS VIP (REPLAYS & PROMPTS) */}
+        {activeTab === "subscriptions" && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Header & Quick Action Buttons */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 text-[10px] font-black uppercase border border-amber-500/20">
+                    Monétisation Masterclasses &amp; Prompts
+                  </span>
+                </div>
+                <h3 className="font-heading text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Crown className="size-5 text-amber-500 fill-amber-500 shrink-0" />
+                  <span>Gestion des Abonnements VIP (Replays &amp; Prompts)</span>
+                </h3>
+                <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
+                  Validez les paiements Mobile Money en 1-clic, suivez les jours restants de vos abonnés et ajustez dynamiquement les tarifs publics du pass 3 mois et 1 an.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowPriceEditModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:border-slate-800 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="size-3.5 text-amber-500" />
+                  <span>Modifier les Tarifs ({subscriptionPricing.price3mDisplay || "10 000 F"} / {subscriptionPricing.price1yDisplay || "30 000 F"})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowManualSubModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-slate-950 text-xs font-black shadow-md hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="size-4" />
+                  <span>Créer un Abonnement Manuel</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Cartes KPI Synthèse */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-500">Abonnés Actifs</span>
+                  <div className="size-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <CheckCircle2 className="size-4" />
+                  </div>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-800">
+                  {adminSubscriptionStats.totalActive || 0}
+                </div>
+                <p className="text-[10px] text-slate-400">Accès ouvert aux replays &amp; prompts</p>
+              </div>
+
+              <div className={`p-5 rounded-3xl bg-white border shadow-xs space-y-1 ${
+                adminSubscriptionStats.totalPending > 0 ? "border-amber-400 bg-amber-50/20" : "border-slate-200/90"
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-amber-700">En Attente de Validation</span>
+                  <div className="size-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                    <Clock className="size-4 animate-pulse" />
+                  </div>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-amber-700">
+                  {adminSubscriptionStats.totalPending || 0}
+                </div>
+                <p className="text-[10px] text-amber-700/80">Virements Mobile Money à vérifier</p>
+              </div>
+
+              <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-500">Expirés / Résiliés</span>
+                  <div className="size-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+                    <XCircle className="size-4" />
+                  </div>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-700">
+                  {adminSubscriptionStats.totalExpired || 0}
+                </div>
+                <p className="text-[10px] text-slate-400">Accès VIP suspendus</p>
+              </div>
+
+              <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 text-white shadow-md space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Revenus Abonnements</span>
+                  <div className="size-8 rounded-xl bg-primary text-slate-950 flex items-center justify-center">
+                    <DollarSign className="size-4" />
+                  </div>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
+                  {adminSubscriptionStats.totalRevenueFormatted || `${Number(adminSubscriptionStats.totalRevenue || 0).toLocaleString("fr-FR")} FCFA`}
+                </div>
+                <p className="text-[10px] text-slate-400">Collectés via Mobile Money &amp; Stripe</p>
+              </div>
+            </div>
+
+            {/* Barre de Recherche et Filtres */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs">
+              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                {[
+                  { id: "all", label: "Tous", count: adminSubscriptions.length },
+                  { id: "pending", label: "En Attente", count: adminSubscriptions.filter(s => s.status === "pending").length },
+                  { id: "active", label: "Actifs", count: adminSubscriptions.filter(s => s.status === "active").length },
+                  { id: "expired", label: "Expirés", count: adminSubscriptions.filter(s => s.status === "expired" || s.status === "cancelled").length }
+                ].map(f => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setSubStatusFilter(f.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      subStatusFilter === f.id
+                        ? "bg-slate-900 text-white shadow-xs"
+                        : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span>{f.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                      subStatusFilter === f.id ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+                    }`}>
+                      {f.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <Search className="size-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={subSearchQuery}
+                  onChange={e => setSubSearchQuery(e.target.value)}
+                  placeholder="Rechercher par nom, email, réf..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            {/* Tableau des Abonnés */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs">
+              {(() => {
+                const filtered = adminSubscriptions
+                  .filter(s => {
+                    if (subStatusFilter === "all") return true
+                    if (subStatusFilter === "pending") return s.status === "pending"
+                    if (subStatusFilter === "active") return s.status === "active"
+                    if (subStatusFilter === "expired") return s.status === "expired" || s.status === "cancelled"
+                    return true
+                  })
+                  .filter(s => {
+                    if (!subSearchQuery.trim()) return true
+                    const q = subSearchQuery.toLowerCase()
+                    return (
+                      s.full_name?.toLowerCase().includes(q) ||
+                      s.email?.toLowerCase().includes(q) ||
+                      s.whatsapp?.toLowerCase().includes(q) ||
+                      s.transaction_ref?.toLowerCase().includes(q)
+                    )
+                  })
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="p-12 text-center text-xs text-slate-500 space-y-2">
+                      <Crown className="size-8 text-slate-300 mx-auto" />
+                      <p className="font-bold text-slate-700">Aucun abonnement trouvé</p>
+                      <p>Les demandes d'abonnement VIP Mobile Money et Stripe apparaîtront ici.</p>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                          <th className="p-4">Souscripteur</th>
+                          <th className="p-4">Formule &amp; Montant</th>
+                          <th className="p-4">Paiement &amp; Réf</th>
+                          <th className="p-4">Statut &amp; Validité</th>
+                          <th className="p-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filtered.map(sub => {
+                          const isPending = sub.status === "pending"
+                          const isActive = sub.status === "active"
+                          const isExpired = sub.status === "expired" || sub.status === "cancelled"
+
+                          return (
+                            <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
+                              {/* Souscripteur */}
+                              <td className="p-4 space-y-1">
+                                <div className="font-bold text-slate-800 text-xs">
+                                  {sub.full_name || sub.email?.split("@")[0]}
+                                </div>
+                                <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                                  <Mail className="size-3 text-slate-400" />
+                                  <span>{sub.email}</span>
+                                </div>
+                                {sub.whatsapp && (
+                                  <a
+                                    href={`https://wa.me/${sub.whatsapp.replace(/\D/g, "")}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold hover:underline"
+                                  >
+                                    <MessageCircle className="size-3 text-emerald-600" />
+                                    <span>{sub.whatsapp}</span>
+                                  </a>
+                                )}
+                              </td>
+
+                              {/* Formule & Montant */}
+                              <td className="p-4 space-y-1">
+                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
+                                  sub.plan === "1_year"
+                                    ? "bg-amber-100 text-amber-800 border-amber-300"
+                                    : sub.plan === "bootcamp_vip"
+                                    ? "bg-purple-100 text-purple-800 border-purple-300"
+                                    : "bg-blue-100 text-blue-800 border-blue-300"
+                                }`}>
+                                  {sub.plan === "1_year" ? "Pass 1 An (365j)" : sub.plan === "bootcamp_vip" ? "VIP Bootcamp" : "Pass 3 Mois (90j)"}
+                                </span>
+                                <div className="font-mono font-bold text-xs text-slate-800">
+                                  {sub.amount ? `${Number(sub.amount).toLocaleString("fr-FR")} FCFA` : (sub.plan === "1_year" ? "30 000 FCFA" : "10 000 FCFA")}
+                                </div>
+                              </td>
+
+                              {/* Paiement & Réf */}
+                              <td className="p-4 space-y-1">
+                                <div className="font-semibold text-slate-700 text-[11px]">
+                                  {sub.payment_method || "Mobile Money"}
+                                </div>
+                                <div className="font-mono text-[10px] text-slate-500 truncate max-w-[140px]" title={sub.transaction_ref}>
+                                  Réf: {sub.transaction_ref || "-"}
+                                </div>
+                                {sub.receipt_url && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setReceiptModalUrl(sub.receipt_url)}
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer bg-primary/10 px-2 py-0.5 rounded-md"
+                                  >
+                                    <ImageIcon className="size-3" />
+                                    <span>Voir le reçu</span>
+                                  </button>
+                                )}
+                              </td>
+
+                              {/* Statut & Validité */}
+                              <td className="p-4 space-y-1">
+                                {isActive ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase border border-emerald-300">
+                                    <CheckCircle2 className="size-3 text-emerald-600" />
+                                    <span>Actif</span>
+                                  </span>
+                                ) : isPending ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase border border-amber-300 animate-pulse">
+                                    <Clock className="size-3 text-amber-600" />
+                                    <span>En Attente</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-black uppercase border border-rose-300">
+                                    <XCircle className="size-3 text-rose-600" />
+                                    <span>Expiré</span>
+                                  </span>
+                                )}
+
+                                <div className="text-[11px] text-slate-500 font-medium">
+                                  {isActive ? (
+                                    <span className="text-emerald-700 font-bold">
+                                      {sub.days_remaining !== undefined ? `${sub.days_remaining} jours restants` : "Actif"}
+                                    </span>
+                                  ) : (
+                                    <span>Fin: {sub.expires_at ? new Date(sub.expires_at).toLocaleDateString("fr-FR") : "-"}</span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Actions */}
+                              <td className="p-4 text-right space-y-1">
+                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                  {isPending && (
+                                    <button
+                                      type="button"
+                                      disabled={processingId === sub.id}
+                                      onClick={() => handleValidateSubscription(sub.id, sub.email)}
+                                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[11px] shadow-xs flex items-center gap-1 transition-all cursor-pointer"
+                                      title="Valider immédiatement l'accès VIP et envoyer l'email de confirmation"
+                                    >
+                                      {processingId === sub.id ? <RefreshCw className="size-3 animate-spin" /> : <Check className="size-3 stroke-[3]" />}
+                                      <span>Valider le Paiement</span>
+                                    </button>
+                                  )}
+
+                                  {isActive && (
+                                    <button
+                                      type="button"
+                                      disabled={processingId === sub.id}
+                                      onClick={() => handleProlongSubscription(sub.id, 30)}
+                                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] transition-all cursor-pointer"
+                                      title="Prolonger l'abonnement de +30 jours gratuitement"
+                                    >
+                                      +30j
+                                    </button>
+                                  )}
+
+                                  {isActive && (
+                                    <button
+                                      type="button"
+                                      disabled={processingId === sub.id}
+                                      onClick={() => handleCancelSubscription(sub.id)}
+                                      className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 transition-all cursor-pointer"
+                                      title="Révoquer l'abonnement"
+                                    >
+                                      <Lock className="size-3.5" />
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    disabled={processingId === sub.id}
+                                    onClick={() => handleDeleteSubscription(sub.id)}
+                                    className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 transition-all cursor-pointer"
+                                    title="Supprimer cet enregistrement"
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              })()}
+            </div>
+
+          </div>
+        )}
+
+        {/* MODAL CRÉER UN ABONNEMENT MANUEL */}
+        {showManualSubModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                    <Crown className="size-4" />
+                  </div>
+                  <h4 className="font-heading text-base font-bold text-slate-800">
+                    Créer un Abonnement VIP Manuel
+                  </h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowManualSubModal(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveManualSub} className="space-y-3.5 text-xs">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Nom &amp; Prénom de l'abonné *</label>
+                  <input
+                    type="text"
+                    required
+                    value={manualSubForm.fullName}
+                    onChange={e => setManualSubForm({ ...manualSubForm, fullName: e.target.value })}
+                    placeholder="Ex: Jean Kouassi"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Email du compte Le Guide IA *</label>
+                  <input
+                    type="email"
+                    required
+                    value={manualSubForm.email}
+                    onChange={e => setManualSubForm({ ...manualSubForm, email: e.target.value })}
+                    placeholder="jean@example.com"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Numéro WhatsApp</label>
+                    <input
+                      type="text"
+                      value={manualSubForm.whatsapp}
+                      onChange={e => setManualSubForm({ ...manualSubForm, whatsapp: e.target.value })}
+                      placeholder="+225 07070707"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-bold text-slate-700">Formule d'Abonnement</label>
+                    <select
+                      value={manualSubForm.plan}
+                      onChange={e => setManualSubForm({ ...manualSubForm, plan: e.target.value as any })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                    >
+                      <option value="3_months">Pass 3 Mois (90 jours)</option>
+                      <option value="1_year">Pass 1 An (365 jours)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700">Durée personnalisée en jours (Optionnel)</label>
+                  <input
+                    type="number"
+                    value={manualSubForm.customDays}
+                    onChange={e => setManualSubForm({ ...manualSubForm, customDays: e.target.value })}
+                    placeholder="Laisser vide pour la durée normale du plan"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualSubModal(false)}
+                    className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingManualSub}
+                    className="px-5 py-2.5 rounded-xl bg-slate-950 text-white font-bold hover:bg-slate-800 transition-all flex items-center gap-1.5 shadow-md"
+                  >
+                    {savingManualSub ? <RefreshCw className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
+                    <span>Créer et Activer le Pass VIP</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL MODIFIER LES TARIFS DES ABONNEMENTS */}
+        {showPriceEditModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-xl bg-primary/20 text-slate-950 flex items-center justify-center font-bold">
+                    <Sparkles className="size-4 text-primary" />
+                  </div>
+                  <h4 className="font-heading text-base font-bold text-slate-800">
+                    Tarifs Publics des Abonnements
+                  </h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPriceEditModal(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSavePricing} className="space-y-4 text-xs">
+                <p className="text-slate-500 leading-relaxed text-[11px]">
+                  Ces tarifs sont appliqués en temps réel sur la page Masterclasses, la bibliothèque de Ressources et dans l'Espace Membre.
+                </p>
+
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700">Prix Formule 3 Mois (FCFA) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={priceEditForm.price3m}
+                    onChange={e => setPriceEditForm({ ...priceEditForm, price3m: e.target.value })}
+                    placeholder="10000"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-mono font-bold text-sm outline-none focus:border-primary"
+                  />
+                  <span className="text-[10px] text-slate-400">Tarif par défaut : 10 000 FCFA</span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-700">Prix Formule 1 An (FCFA) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={priceEditForm.price1y}
+                    onChange={e => setPriceEditForm({ ...priceEditForm, price1y: e.target.value })}
+                    placeholder="30000"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-mono font-bold text-sm outline-none focus:border-primary"
+                  />
+                  <span className="text-[10px] text-slate-400">Tarif par défaut : 30 000 FCFA</span>
+                </div>
+
+                <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowPriceEditModal(false)}
+                    className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingPriceEdit}
+                    className="px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-black hover:opacity-90 transition-all flex items-center gap-1.5 shadow-md"
+                  >
+                    {savingPriceEdit ? <RefreshCw className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+                    <span>Enregistrer les Nouveaux Tarifs</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL APERÇU DU REÇU / CAPTURE DE PAIEMENT */}
+        {receiptModalUrl && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-xl w-full p-4 space-y-3 shadow-2xl border border-slate-200 overflow-hidden">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2 px-2">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="size-4 text-primary" />
+                  <span className="font-bold text-xs text-slate-800">Preuve de virement Mobile Money</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReceiptModalUrl(null)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <div className="max-h-[70vh] overflow-auto rounded-2xl bg-slate-950 flex items-center justify-center p-2">
+                <img
+                  src={receiptModalUrl}
+                  alt="Preuve de paiement"
+                  className="max-h-[65vh] w-auto object-contain rounded-xl"
+                />
+              </div>
+
+              <div className="flex items-center justify-between px-2 pt-1 text-xs">
+                <a
+                  href={receiptModalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary font-bold hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="size-3" />
+                  <span>Ouvrir en plein écran</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setReceiptModalUrl(null)}
+                  className="px-4 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* TAB 5: INSCRIPTIONS & VALIDATION DES PAIEMENTS */}
         {activeTab === "payments" && (
           <div className="space-y-6 animate-fadeIn">
@@ -9273,7 +10114,7 @@ export default function SuperAdminDashboard() {
                           <button
                             type="button"
                             onClick={() => handleOpenEditVslVideo(v, vIdx)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-200 text-slate-200 text-xs font-semibold transition-all cursor-pointer"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-all cursor-pointer"
                           >
                             <Edit3 className="size-3 text-primary" />
                             <span>Modifier</span>
@@ -9281,7 +10122,7 @@ export default function SuperAdminDashboard() {
                           <button
                             type="button"
                             onClick={() => handleDeleteVslVideo(vIdx)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-semibold transition-all cursor-pointer"
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 text-xs font-semibold transition-all cursor-pointer"
                           >
                             <Trash2 className="size-3" />
                             <span>Supprimer</span>
@@ -9293,198 +10134,27 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
 
-              {/* Section 3: Hero Banner Main Content */}
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 border-b border-slate-200/80 pb-2">
-                  3. Hero Banner Principal (Titres, Dates, Tarifs & Affiche)
-                </h4>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Badge du Hero Banner</label>
-                    <input
-                      type="text"
-                      value={siteSettings.hero_badge}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_badge: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Titre Principal du Hero (H1)</label>
-                    <input
-                      type="text"
-                      value={siteSettings.hero_title}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_title: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
+              {/* Note d'information sur les Bootcamps et Masterclasses */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-800 font-bold">
+                  <Sparkles className="size-4 text-primary" />
+                  <span>Gestion Directe des Formations &amp; Masterclasses</span>
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">Sous-titre explicatif</label>
-                  <textarea
-                    rows={3}
-                    value={siteSettings.hero_subtitle}
-                    onChange={e => setSiteSettings({ ...siteSettings, hero_subtitle: e.target.value })}
-                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Dates des Directs GMT</label>
-                    <input
-                      type="text"
-                      value={siteSettings.hero_dates}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_dates: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Heure GMT</label>
-                    <input
-                      type="text"
-                      value={siteSettings.hero_time}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_time: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Format (Badge 3ème)</label>
-                    <input
-                      type="text"
-                      placeholder="ex: 🌍 100% En ligne"
-                      value={siteSettings.hero_format}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_format: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Nb Sessions (Badge 4ème)</label>
-                    <input
-                      type="text"
-                      placeholder="ex: 🎓 7 Sessions intensives"
-                      value={siteSettings.hero_sessions}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_sessions: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 pt-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Prix Promo Affiche (FCFA)</label>
-                    <input
-                      type="text"
-                      value={siteSettings.hero_promo_price}
-                      onChange={e => setSiteSettings({ ...siteSettings, hero_promo_price: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 pt-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Numéro WhatsApp Support</label>
-                    <input
-                      type="text"
-                      value={siteSettings.whatsapp_number}
-                      onChange={e => setSiteSettings({ ...siteSettings, whatsapp_number: e.target.value })}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none placeholder:text-slate-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <FileUploadField
-                      label="Affiche Officielle Hero (Upload ou URL)"
-                      value={siteSettings.hero_poster_url}
-                      onChange={url => setSiteSettings({ ...siteSettings, hero_poster_url: url })}
-                      accept="image/*"
-                      bucket="course-posters"
-                      folder="hero"
-                      placeholder="https://... ou téléversez l'affiche"
-                      preview="image"
-                      hint="Format recommandé : 3:4 · JPG ou PNG"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 pt-2">
-                  <FileUploadField
-                    label="📄 PDF Programme Bootcamp (Upload ou URL)"
-                    value={siteSettings.hero_programme_url}
-                    onChange={url => setSiteSettings({ ...siteSettings, hero_programme_url: url })}
-                    accept=".pdf,application/pdf"
-                    bucket="resources-files"
-                    folder="programmes"
-                    placeholder="https://... ou téléversez le PDF du programme"
-                    preview="none"
-                    hint="Ce PDF s'ouvre quand l'utilisateur clique sur « Télécharger le programme » sur la page d'accueil."
-                  />
-                </div>
+                <p className="text-slate-500 leading-relaxed">
+                  • <strong>Formations &amp; Bootcamps</strong> : Les tarifs promo, dates, affiches officielles et programmes PDF sont pilotés individuellement dans l'onglet <strong>« Formations &amp; Bootcamps »</strong>.
+                </p>
+                <p className="text-slate-500 leading-relaxed">
+                  • <strong>Masterclasses en Direct</strong> : La programmation des prochaines dates, liens Google Meet, diffusions YouTube et replays sont pilotés dans le menu <strong>« Masterclasses »</strong>.
+                </p>
               </div>
 
-              {/* Section 4: Masterclass Hebdomadaire Settings */}
-              <div className="space-y-4 pt-4 border-t border-slate-200">
-                <h4 className="text-xs font-black uppercase tracking-wider text-rose-500 border-b border-slate-200/80 pb-2 flex items-center gap-2">
-                  <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
-                  <span>4. Configuration de la Masterclass Gratuite du Dimanche (Page /masterclass)</span>
-                </h4>
-
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Titre de la Masterclass Hebdomadaire</label>
-                    <input
-                      type="text"
-                      value={siteSettings.masterclass_title || ""}
-                      onChange={e => setSiteSettings({ ...siteSettings, masterclass_title: e.target.value })}
-                      placeholder="Ex: Masterclass IA : Fondamentaux du Prompt Engineering & Automatisation"
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700">Description du Sujet & Programme</label>
-                    <textarea
-                      rows={3}
-                      value={siteSettings.masterclass_description || ""}
-                      onChange={e => setSiteSettings({ ...siteSettings, masterclass_description: e.target.value })}
-                      placeholder="Présentation de la session interactive du dimanche..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none resize-none"
-                    />
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">💬 Lien du Groupe WhatsApp des Apprenants</label>
-                      <input
-                        type="url"
-                        value={siteSettings.masterclass_whatsapp_group_url || ""}
-                        onChange={e => setSiteSettings({ ...siteSettings, masterclass_whatsapp_group_url: e.target.value })}
-                        placeholder="https://chat.whatsapp.com/..."
-                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700">📺 Lien YouTube Live / Chaîne YouTube</label>
-                      <input
-                        type="url"
-                        value={siteSettings.masterclass_youtube_url || ""}
-                        onChange={e => setSiteSettings({ ...siteSettings, masterclass_youtube_url: e.target.value })}
-                        placeholder="https://www.youtube.com/@leguideai"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 flex justify-end">
+              <div className="pt-2 flex justify-end">
                 <button
                   type="submit"
                   disabled={savingSettings}
-                  className="px-8 py-3 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity shadow-xl"
+                  className="px-8 py-3 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity shadow-xl cursor-pointer"
                 >
-                  {savingSettings ? "Enregistrement en cours..." : "💾 Enregistrer & Mettre à jour la Landing Page"}
+                  {savingSettings ? "Enregistrement en cours..." : "💾 Enregistrer les Paramètres"}
                 </button>
               </div>
             </form>

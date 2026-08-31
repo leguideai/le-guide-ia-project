@@ -49,11 +49,16 @@ import {
   Tv,
   ArrowRight,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Crown,
+  Lock,
+  CreditCard,
+  Receipt
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
+import { SubscriptionModal } from "@/components/subscription-modal"
 
-type TabType = "overview" | "calendar" | "courses" | "masterclasses" | "resources" | "certificates" | "invoices" | "profile"
+type TabType = "overview" | "courses" | "masterclasses" | "resources" | "subscription" | "certificates" | "invoices" | "profile"
 
 interface ExerciseDetails {
   type: 'devoir-a-rendre' | 'cas-pratique' | 'qcm' | 'challenge' | 'fichier-entrainement'
@@ -111,6 +116,13 @@ export default function DashboardPage() {
       if (saved !== null) {
         setSidebarCollapsed(saved === "true")
       }
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search)
+        const tabParam = params.get("tab")
+        if (tabParam && ["overview", "courses", "masterclasses", "resources", "subscription", "profile"].includes(tabParam)) {
+          setActiveTab(tabParam as TabType)
+        }
+      }
     } catch (_) {}
   }, [])
 
@@ -165,6 +177,10 @@ export default function DashboardPage() {
   const [masterclassSearchQuery, setMasterclassSearchQuery] = useState("")
   const [registeringMasterclass, setRegisteringMasterclass] = useState(false)
   const [masterclassRegisterSuccess, setMasterclassRegisterSuccess] = useState<string | null>(null)
+
+  // Abonnement VIP Replays & Prompts State
+  const [subscriptionData, setSubscriptionData] = useState<any>(null)
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false)
 
   // Exercise Submission Modal State
   const [submittingExercise, setSubmittingExercise] = useState<{
@@ -573,6 +589,34 @@ export default function DashboardPage() {
         console.warn("Could not load masterclass data in dashboard:", mcErr)
       }
 
+      // 11. Charger le statut d'abonnement VIP (Replays & Prompts)
+      try {
+        const subRes = await fetch(`/api/subscriptions?email=${encodeURIComponent(userEmailClean)}`)
+        const subData = await subRes.json()
+        setSubscriptionData(subData)
+
+        // Si l'abonnement VIP est actif, ajouter la facture VIP dans l'historique des factures de l'espace membre
+        if (subData?.isSubscribed && subData.status === "active" && subData.plan !== "bootcamp_vip") {
+          setUserInvoices((prev: any[]) => {
+            const hasSubInvoice = prev.some((inv: any) => inv.ref === subData.transactionRef || (inv.title && inv.title.includes("VIP")))
+            if (!hasSubInvoice) {
+              const subInvoice = {
+                id: `sub_inv_${subData.transactionRef || Date.now()}`,
+                ref: subData.transactionRef || `FACT-VIP-${Date.now().toString().slice(-6)}`,
+                title: `Abonnement VIP — ${subData.planLabel || "Pass 3 Mois"}`,
+                method: subData.paymentMethod || "Mobile Money",
+                amount: `${(subData.amount || 10000).toLocaleString("fr-FR")} FCFA`,
+                date: subData.startsAt ? new Date(subData.startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+              }
+              return [subInvoice, ...prev]
+            }
+            return prev
+          })
+        }
+      } catch (subErr) {
+        console.warn("Could not load subscription data in dashboard:", subErr)
+      }
+
       setLoading(false)
     }
 
@@ -614,6 +658,10 @@ export default function DashboardPage() {
   }
 
   const handleCopyPrompt = (id: string, text: string) => {
+    if (!subscriptionData?.isSubscribed) {
+      setIsSubscriptionModalOpen(true)
+      return
+    }
     navigator.clipboard.writeText(text).then(() => {
       setCopiedPromptId(id)
       setTimeout(() => setCopiedPromptId(null), 2500)
@@ -787,36 +835,62 @@ export default function DashboardPage() {
     { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
     { id: "courses", label: "Mes Formations", icon: BookOpen },
     { id: "masterclasses", label: "Masterclasses IA", icon: Radio, badge: masterclassSession.is_active ? "En Direct" : undefined },
-    { id: "calendar", label: "Planning & Directs", icon: Calendar },
-    { id: "resources", label: "Mes Ressources", icon: DownloadCloudIcon },
+    { id: "resources", label: "Mes Prompts", icon: DownloadCloudIcon },
+    { 
+      id: "subscription", 
+      label: "Paiements & Abonnements", 
+      icon: CreditCard
+    },
     // { id: "certificates", label: "Mes Certificats", icon: Award },
     // { id: "invoices", label: "Mes Factures", icon: FileText },
     { id: "profile", label: "Mon Profil", icon: User },
   ]
 
-  const allResources = dbResources.length > 0 ? dbResources.map((r: any) => ({
-    id: r.id,
-    bootcampId: "bootcamp-pro-2",
-    bootcampName: "Bootcamp IA Pro 2",
-    type: r.type === "Prompt" ? "prompt" : r.type === "Blueprint" ? "business-plan" : "exercise",
-    title: { fr: r.title, en: r.title },
-    desc: { fr: r.category || "Ressource certifiée Le Guide IA", en: r.category || "Ressource certifiée" },
-    content: { fr: r.prompt_text || "", en: r.prompt_text || "" },
-    fileUrl: r.file_url || undefined,
-    downloadUrl: r.file_url || undefined,
-    videoUrl: undefined,
-    exerciseType: undefined,
-    fileSize: "PDF / Fichier Supabase",
-    deadline: "Permanent",
-    tier: r.tier || ""
-  })) : []
+  const allResources = dbResources
+    .filter((r: any) => {
+      const rawType = (r.type || "Prompt").toLowerCase()
+      return !rawType.includes("vidéo") && !rawType.includes("video")
+    })
+    .map((r: any) => {
+      const rawType = (r.type || "Prompt").toLowerCase()
+      const itemType: 'prompt' | 'business-plan' | 'exercise' = 
+        rawType.includes("plan") || rawType.includes("document")
+          ? "business-plan"
+          : rawType.includes("exercice") || rawType.includes("exercise")
+          ? "exercise"
+          : "prompt"
+
+      return {
+        id: r.id,
+        bootcampId: r.bootcamp_id || r.course_slug || null,
+        bootcampName: r.bootcamp_name || null,
+        category: r.category || "Écosystème IA",
+        type: itemType,
+        title: { fr: r.title, en: r.title },
+        desc: { fr: r.description || r.category || "Ressource certifiée Le Guide IA", en: r.description || r.category || "Ressource certifiée" },
+        content: { fr: r.prompt_text || r.content || "", en: r.prompt_text || r.content || "" },
+        fileUrl: r.file_url || r.download_url || undefined,
+        downloadUrl: r.download_url || r.file_url || undefined,
+        videoUrl: undefined,
+        exerciseType: r.exercise_type || undefined,
+        fileSize: r.file_size || "PDF / Fichier Supabase",
+        deadline: r.deadline || "Permanent",
+        tier: r.tier || r.access_level || ""
+      }
+    })
+    .filter((r: any) => {
+      // If resource is specifically locked to a bootcamp cohort, only show if user has access to that bootcamp
+      if (r.bootcampId && r.bootcampId !== "all") {
+        return isAdmin || userEnrollments.includes(r.bootcampId)
+      }
+      return true
+    })
 
   const filteredResources = allResources.filter((r) => {
     const search = resourceSearch.toLowerCase()
     const matchesSearch = r.title.fr.toLowerCase().includes(search) || r.desc.fr.toLowerCase().includes(search)
-    const matchesBootcamp = selectedBootcampFilter === "all" || r.bootcampId === selectedBootcampFilter
     const matchesType = selectedResourceTypeFilter === "all" || r.type === selectedResourceTypeFilter
-    return matchesSearch && matchesBootcamp && matchesType
+    return matchesSearch && matchesType
   })
 
   // Map DB courses — keep dbId (uuid) separate, add isFree flag
@@ -1241,6 +1315,54 @@ export default function DashboardPage() {
                 </span>
               </div>
             </div>
+
+            {/* VIP Pass Banner in Overview (masqué automatiquement une fois abonné/payé) */}
+            {!subscriptionData?.isSubscribed && (
+              <div className="p-5 rounded-3xl bg-gradient-to-r from-[#0b0f19] to-[#1e1b4b] border border-slate-800 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-lg text-left">
+                <div className="flex items-start gap-4">
+                  <div className="size-12 rounded-2xl bg-gradient-to-br from-amber-400 to-primary text-slate-950 flex items-center justify-center font-bold shrink-0 shadow-md">
+                    <Crown className="size-6 fill-slate-950" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                        Pass VIP Replays &amp; Prompts
+                      </span>
+                      {subscriptionData?.status === "pending" ? (
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                          ⏳ En cours de validation
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full">
+                          Non Abonné
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-bold text-sm sm:text-base text-white">
+                      {subscriptionData?.status === "pending"
+                        ? "Paiement Mobile Money en cours de vérification"
+                        : "Accédez à tous les Replays Masterclasses & Prompts IA"}
+                    </h4>
+                    <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
+                      {subscriptionData?.status === "pending"
+                        ? "Votre déclaration de virement est reçue. Vos accès seront ouverts sous 2h à 4h."
+                        : "10 000 FCFA / 3 mois ou 30 000 FCFA / an. Inclus gratuitement pour les inscrits aux Bootcamps."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setIsSubscriptionModalOpen(true)}
+                    className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary via-primary to-amber-400 text-slate-950 font-black text-xs hover:opacity-95 transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Crown className="size-3.5 fill-slate-950" />
+                    <span>Prendre mon Pass VIP</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* 0. Notification Formation(s) en attente de validation administrative Mobile Money */}
             {pendingCourses.length > 0 && (
@@ -2007,7 +2129,13 @@ export default function DashboardPage() {
                         className="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow text-left"
                       >
                         <div 
-                          onClick={() => setActiveMasterclassReplayModal(replay)}
+                          onClick={() => {
+                            if (subscriptionData?.isSubscribed) {
+                              setActiveMasterclassReplayModal(replay)
+                            } else {
+                              setIsSubscriptionModalOpen(true)
+                            }
+                          }}
                           className="relative aspect-video bg-black overflow-hidden cursor-pointer group"
                         >
                           <img
@@ -2017,9 +2145,15 @@ export default function DashboardPage() {
                             onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
                           />
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
-                            <div className="size-11 rounded-full bg-primary text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
-                              <Play className="size-5 fill-slate-950" />
-                            </div>
+                            {subscriptionData?.isSubscribed ? (
+                              <div className="size-11 rounded-full bg-primary text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
+                                <Play className="size-5 fill-slate-950" />
+                              </div>
+                            ) : (
+                              <div className="size-11 rounded-full bg-slate-900/90 border border-amber-400 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Lock className="size-5 text-amber-400" />
+                              </div>
+                            )}
                           </div>
                           <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-mono font-bold">
                             {replay.duration || "1h 30min"}
@@ -2027,6 +2161,12 @@ export default function DashboardPage() {
                           <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-primary text-slate-950 text-[10px] font-black uppercase">
                             {replay.category || "Masterclass"}
                           </span>
+                          {!subscriptionData?.isSubscribed && (
+                            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-1">
+                              <Lock className="size-2.5" />
+                              <span>Pass VIP Requis</span>
+                            </span>
+                          )}
                         </div>
 
                         <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
@@ -2047,11 +2187,30 @@ export default function DashboardPage() {
 
                             <button
                               type="button"
-                              onClick={() => setActiveMasterclassReplayModal(replay)}
-                              className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-primary hover:text-slate-950 text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                              onClick={() => {
+                                if (subscriptionData?.isSubscribed) {
+                                  setActiveMasterclassReplayModal(replay)
+                                } else {
+                                  setIsSubscriptionModalOpen(true)
+                                }
+                              }}
+                              className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                subscriptionData?.isSubscribed
+                                  ? "bg-slate-900 hover:bg-primary hover:text-slate-950 text-white"
+                                  : "bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs"
+                              }`}
                             >
-                              <Play className="size-3.5 fill-current" />
-                              <span>Visionner le Replay</span>
+                              {subscriptionData?.isSubscribed ? (
+                                <>
+                                  <Play className="size-3.5 fill-current" />
+                                  <span>Visionner le Replay HD</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Lock className="size-3.5" />
+                                  <span>Débloquer avec le Pass VIP</span>
+                                </>
+                              )}
                             </button>
                           </div>
                         </div>
@@ -2104,13 +2263,13 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* TAB 3: RESOURCES (1-Click Copy, Downloads & Bonus Media) */}
+        {/* TAB 3: RESOURCES (1-Click Copy, Downloads & Bonus Media - Gated by Subscription) */}
         {activeTab === "resources" && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
               <div>
-                <h1 className="font-heading text-2xl font-bold text-slate-800">Bibliothèque de Ressources Apprenants</h1>
-                <p className="text-xs text-slate-500 mt-1">Accédez à tous vos prompts, business plans, exercices pratiques et vidéos bonus classés par Bootcamp.</p>
+                <h1 className="font-heading text-2xl font-bold text-slate-800">Bibliothèque des Prompts</h1>
+                <p className="text-xs text-slate-500 mt-1">Accédez à tous vos prompts, business plans, exercices pratiques.</p>
               </div>
 
               <div className="relative w-full max-w-xs">
@@ -2125,57 +2284,87 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* VIP Pricing & Activation Card if Not Subscribed */}
+            {!subscriptionData?.isSubscribed && (
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-6 text-center">
+                <div className="size-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto shadow-2xs border border-amber-400/20">
+                  <Crown className="size-7 text-amber-500" />
+                </div>
+                <div className="space-y-2 max-w-xl mx-auto">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-800 font-heading">
+                    Vous n'avez pas d'abonnement actif
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Souscrivez dès aujourd'hui pour débloquer l'intégralité des rediffusions de nos masterclasses exclusives et tous les prompts d'intelligence artificielle.
+                  </p>
+                </div>
+
+                {/* Choix des formules */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto pt-2 text-left">
+                  <div className="p-5 rounded-2xl border-2 border-primary/40 hover:border-primary transition-all bg-white shadow-xs flex flex-col justify-between space-y-4">
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase text-slate-500">Pass 3 Mois</span>
+                      <div className="text-2xl font-black text-slate-900">
+                        {subscriptionData?.pricing?.price3mDisplay || "10 000 FCFA"}
+                      </div>
+                      <p className="text-xs text-slate-500">Accès illimité pendant 90 jours</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSubscriptionModalOpen(true)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs transition-all cursor-pointer text-center shadow-xs"
+                    >
+                      Choisir le Pass 3 Mois
+                    </button>
+                  </div>
+
+                  <div className="p-5 rounded-2xl border-2 border-amber-400 bg-amber-50/30 shadow-xs flex flex-col justify-between space-y-4 relative">
+                    <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase shadow-xs">
+                      Économisez 10 000 F
+                    </span>
+                    <div className="space-y-1">
+                      <span className="text-xs font-black uppercase text-amber-700">Pass 1 An (Recommandé)</span>
+                      <div className="text-2xl font-black text-slate-900">
+                        {subscriptionData?.pricing?.price1yDisplay || "30 000 FCFA"}
+                      </div>
+                      <p className="text-xs text-slate-500">Accès illimité pendant 365 jours + Mises à jour</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSubscriptionModalOpen(true)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-primary via-primary to-amber-500 text-slate-950 font-black text-xs hover:opacity-95 transition-all shadow-md cursor-pointer text-center"
+                    >
+                      Choisir le Pass 1 An
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Filter Controls Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-2xl shadow-xs">
-              {/* Filter 1: Bootcamp Selection */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Rattachement par Bootcamp :</span>
-                <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-2xl shadow-xs">
+              <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+                {[
+                  { id: "all", label: "Toutes les ressources" },
+                  { id: "prompt", label: "Prompts Métiers" },
+                  { id: "business-plan", label: "Business Plans" },
+                  { id: "exercise", label: "Exercices & Fichiers" },
+                ].map((t) => (
                   <button
-                    onClick={() => setSelectedBootcampFilter("all")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      selectedBootcampFilter === "all" ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                    key={t.id}
+                    onClick={() => setSelectedResourceTypeFilter(t.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      selectedResourceTypeFilter === t.id ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
                     }`}
                   >
-                    Tous mes Bootcamps
+                    {t.label}
                   </button>
-                  {ENROLLED_BOOTCAMPS.map((b) => (
-                    <button
-                      key={b.id}
-                      onClick={() => setSelectedBootcampFilter(b.id)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        selectedBootcampFilter === b.id ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
-                      }`}
-                    >
-                      {b.title.split("—")[0]}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
 
-              {/* Filter 2: Type Selection */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Type de ressource :</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { id: "all", label: "Tous" },
-                    { id: "prompt", label: "Prompts" },
-                    { id: "business-plan", label: "Business Plans" },
-                    { id: "exercise", label: "Exercices & Fichiers" },
-                    { id: "bonus-video", label: "Vidéos Bonus" },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setSelectedResourceTypeFilter(t.id)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        selectedResourceTypeFilter === t.id ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <span className="text-xs text-slate-500 font-medium hidden sm:block">
+                {filteredResources.length} ressource{filteredResources.length > 1 ? "s" : ""} disponible{filteredResources.length > 1 ? "s" : ""}
+              </span>
             </div>
 
             {/* Resources Grid */}
@@ -2185,112 +2374,148 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
-                {filteredResources.map((item) => (
-                  <div key={item.id} className="rounded-3xl border border-slate-200/90 bg-white p-6 flex flex-col justify-between space-y-4 hover:border-primary/40 hover:shadow-md transition-all shadow-xs text-left">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className={`text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full border ${
-                          item.type === 'prompt'
-                            ? "bg-purple-50 text-purple-800 border-purple-200"
-                            : item.type === 'business-plan'
-                            ? "bg-blue-50 text-blue-800 border-blue-200"
-                            : item.type === 'exercise'
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                            : "bg-amber-50 text-amber-800 border-amber-200"
-                        }`}>
-                          {item.type === 'prompt' ? "Prompt Métier" : item.type === 'business-plan' ? "Business Plan" : item.type === 'exercise' ? "Exercice & Fichier" : "Vidéo Bonus"}
-                        </span>
+                {filteredResources.map((item) => {
+                  const isLocked = !subscriptionData?.isSubscribed
 
-                        {item.bootcampName && (
-                          <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
-                            {item.bootcampName}
+                  return (
+                    <div key={item.id} className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 flex flex-col justify-between space-y-4 hover:border-primary/40 hover:shadow-md transition-all shadow-xs text-left">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className={`text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full border ${
+                            item.type === 'prompt'
+                              ? "bg-purple-50 text-purple-800 border-purple-200"
+                              : item.type === 'business-plan'
+                              ? "bg-blue-50 text-blue-800 border-blue-200"
+                              : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          }`}>
+                            {item.type === 'prompt' ? "Prompt Métier" : item.type === 'business-plan' ? "Business Plan" : "Exercice & Fichier"}
                           </span>
-                        )}
+
+                          {item.category && (
+                            <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-heading text-base font-bold text-slate-800">{item.title.fr}</h4>
+                        <p className="text-xs text-slate-600 leading-relaxed">{item.desc.fr}</p>
                       </div>
-                      <h4 className="font-heading text-base font-bold text-slate-800">{item.title.fr}</h4>
-                      <p className="text-xs text-slate-600 leading-relaxed">{item.desc.fr}</p>
-                    </div>
 
-                    <div className="space-y-3 pt-2 border-t border-slate-100">
-                      {item.type === 'bonus-video' ? (
-                        <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xs">
-                          <iframe
-                            src={`${item.videoUrl}?autoplay=0`}
-                            title={item.title.fr}
-                            className="w-full h-full border-none"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        </div>
-                      ) : (
-                        <div className="rounded-xl bg-[#F4F6F8] border border-slate-200/90 p-3 max-h-36 overflow-y-auto text-[11px] font-mono text-slate-700 whitespace-pre-wrap scrollbar-thin select-all">
-                          {item.content.fr}
-                        </div>
-                      )}
+                      <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 bg-[#F4F6F8] p-3.5 text-left">
+                          {isLocked ? (
+                            <div className="relative max-h-36 overflow-hidden text-[11px] font-mono leading-relaxed select-none pointer-events-none">
+                              {/* Teaser Header Badge */}
+                              <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-700 mb-1">
+                                <Sparkles className="size-3 text-amber-500" />
+                                <span>Extrait en clair (Début du prompt) :</span>
+                              </div>
+                              
+                              {/* Crystal Clear Beginning Snippet */}
+                              <div className="text-slate-800 font-semibold opacity-100 pb-0.5 whitespace-pre-wrap">
+                                {item.content.fr.slice(0, 140)}...
+                              </div>
 
-                      {item.type === 'prompt' && (
-                        <button
-                          onClick={() => handleCopyPrompt(item.id, item.content.fr)}
-                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
-                        >
-                          {copiedPromptId === item.id ? <Check className="size-4 stroke-[3]" /> : <Copy className="size-4" />}
-                          <span>{copiedPromptId === item.id ? "Prompt Copié !" : "Copier le Prompt"}</span>
-                        </button>
-                      )}
+                              {/* Blurred Rest of Prompt (Uncopyable) */}
+                              <div className="blur-[6px] opacity-25 select-none pointer-events-none text-slate-500 mt-1 whitespace-pre-wrap">
+                                {item.content.fr.slice(140, 320) || "Texte intégral du prompt métier avec consignes, variables de contexte et structure d'exécution..."}
+                              </div>
 
-                      {item.type === 'business-plan' && (
-                        <a
-                          href={`https://wa.me/22675757273?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20membre%20et%20souhaite%20recevoir%20le%20modele%20de%20Business%20Plan%20complet%20pour%20:%20${encodeURIComponent(item.title.fr)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs shadow-xs transition-all"
-                        >
-                          <Download className="size-4" />
-                          <span>Télécharger le Business Plan (DOCX / PDF)</span>
-                        </a>
-                      )}
-
-                      {item.type === 'exercise' && (
-                        <div className="space-y-2">
-                          {item.deadline && (
-                            <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200 gap-2">
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="size-3.5 text-amber-700" />
-                                <span>Date limite de rendu : {item.deadline}</span>
-                              </span>
-                              <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                                {item.exerciseType === 'devoir-a-rendre' ? '📝 Devoir à rendre' : '💼 Cas Pratique'}
-                              </span>
+                              {/* Lock Gradient Overlay */}
+                              <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#F4F6F8] via-[#F4F6F8]/80 to-transparent flex items-end justify-center pb-0.5">
+                                <span className="text-[10px] font-bold text-amber-900 bg-amber-200/80 border border-amber-300 px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
+                                  <Lock className="size-3" />
+                                  <span>Suite du prompt &amp; variables réservées au Pass VIP</span>
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="max-h-36 overflow-y-auto text-[11px] font-mono text-slate-700 whitespace-pre-wrap scrollbar-thin select-all">
+                              {item.content.fr}
                             </div>
                           )}
-
-                          <div className="grid gap-2 sm:grid-cols-2">
-                            <a
-                              href={item.downloadUrl || "#"}
-                              download
-                              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#F4F6F8] hover:bg-slate-200 text-slate-800 font-bold py-2.5 text-xs border border-slate-200 shadow-2xs transition-all"
-                            >
-                              <Download className="size-3.5 text-primary" />
-                              <span>Télécharger Sujet ({item.fileSize || "PDF"})</span>
-                            </a>
-
-                            <button
-                              onClick={() => setSubmittingExercise({
-                                id: item.id,
-                                title: item.title.fr,
-                                deadline: item.deadline
-                              })}
-                              className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 text-xs shadow-2xs transition-all cursor-pointer"
-                            >
-                              <Upload className="size-3.5" />
-                              <span>{submittedExerciseIds.includes(item.id) ? "✓ Rendu Soumis" : "Soumettre sur la plateforme"}</span>
-                            </button>
-                          </div>
                         </div>
-                      )}
+
+                        {/* Action buttons (Unlocked vs Locked) - Responsive */}
+                        {isLocked ? (
+                          <button
+                            onClick={() => setIsSubscriptionModalOpen(true)}
+                            className="w-full flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold py-2.5 px-3 text-xs shadow-sm transition-all cursor-pointer text-center"
+                          >
+                            <div className="flex items-center gap-1.5 font-black">
+                              <Crown className="size-3.5 shrink-0" />
+                              <span>Débloquer Tous les Prompts &amp; Replays</span>
+                            </div>
+                            <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès 10 000 FCFA</span>
+                          </button>
+                        ) : (
+                          <>
+                            {item.type === 'prompt' && (
+                              <button
+                                onClick={() => handleCopyPrompt(item.id, item.content.fr)}
+                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
+                              >
+                                {copiedPromptId === item.id ? <Check className="size-4 stroke-[3]" /> : <Copy className="size-4" />}
+                                <span>{copiedPromptId === item.id ? "Prompt Copié !" : "Copier le Prompt"}</span>
+                              </button>
+                            )}
+
+                            {item.type === 'business-plan' && (
+                              <a
+                                href={`https://wa.me/22675757273?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20membre%20et%20souhaite%20recevoir%20le%20modele%20de%20Business%20Plan%20complet%20pour%20:%20${encodeURIComponent(item.title.fr)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs shadow-xs transition-all"
+                              >
+                                <Download className="size-4" />
+                                <span>Télécharger le Business Plan (DOCX / PDF)</span>
+                              </a>
+                            )}
+
+                            {item.type === 'exercise' && (
+                              <div className="space-y-2">
+                                {item.deadline && (
+                                  <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200 gap-2">
+                                    <span className="flex items-center gap-1.5">
+                                      <Clock className="size-3.5 text-amber-700" />
+                                      <span>Date limite de rendu : {item.deadline}</span>
+                                    </span>
+                                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                                      {item.exerciseType === 'devoir-a-rendre' ? '📝 Devoir à rendre' : '💼 Cas Pratique'}
+                                    </span>
+                                  </div>
+                                )}
+
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                  <a
+                                    href={item.downloadUrl || "#"}
+                                    download
+                                    className="flex items-center justify-center gap-1.5 rounded-xl bg-[#F4F6F8] hover:bg-slate-200 text-slate-800 font-bold py-2.5 text-xs border border-slate-200 shadow-2xs transition-all"
+                                  >
+                                    <Download className="size-3.5 text-primary" />
+                                    <span>Télécharger Sujet ({item.fileSize || "PDF"})</span>
+                                  </a>
+
+                                  <button
+                                    onClick={() => setSubmittingExercise({
+                                      id: item.id,
+                                      title: item.title.fr,
+                                      deadline: item.deadline
+                                    })}
+                                    className="flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 text-xs shadow-2xs transition-all cursor-pointer"
+                                  >
+                                    <Upload className="size-3.5" />
+                                    <span>{submittedExerciseIds.includes(item.id) ? "✓ Rendu Soumis" : "Soumettre sur la plateforme"}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -2383,6 +2608,252 @@ export default function DashboardPage() {
                 ))
               })()}
             </div>
+          </div>
+        )}
+
+        {/* TAB: PAIEMENTS & ABONNEMENTS (REPLAYS, PROMPTS & BOOTCAMPS) */}
+        {activeTab === "subscription" && (
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold uppercase border border-primary/20">
+                    Facturation &amp; Accès
+                  </span>
+                </div>
+                <h1 className="font-heading text-2xl font-bold text-slate-800 mt-1">
+                  Paiements, Abonnements &amp; Factures
+                </h1>
+                <p className="text-xs text-slate-500 mt-1">
+                  Consultez l'état de votre abonnement VIP, l'accès à vos Bootcamps et téléchargez vos reçus et factures d'achat.
+                </p>
+              </div>
+            </div>
+
+            {/* 1. CARTE DE STATUT PRINCIPALE */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+              
+              {subscriptionData?.isSubscribed ? (
+                <div className="space-y-6">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+                    <div className="flex items-start gap-4">
+                      <div className="size-16 rounded-2xl bg-gradient-to-br from-amber-400 to-primary text-slate-950 flex items-center justify-center font-bold shrink-0 shadow-lg">
+                        <Crown className="size-8 fill-slate-950" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                            <CheckCircle2 className="size-3 text-emerald-700" />
+                            <span>Abonnement Actif &amp; Validé</span>
+                          </span>
+                          {subscriptionData.hasBootcampAccess && (
+                            <span className="text-[10px] font-black uppercase tracking-wider text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-full border border-purple-300">
+                              🎉 Inclus avec votre Bootcamp
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-black text-slate-800">
+                          {subscriptionData.planLabel || "Pass VIP Replays & Prompts"}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Accès illimité à l'intégralité des replays masterclasses et à la bibliothèque complète de prompts IA.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Compteur de Jours Restants */}
+                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-950 text-white shrink-0 border border-slate-800 shadow-md">
+                      <div className="text-center px-2">
+                        <div className="font-mono text-3xl font-black text-amber-400">
+                          {subscriptionData.daysRemaining !== undefined ? subscriptionData.daysRemaining : 365}
+                        </div>
+                        <div className="text-[10px] font-extrabold uppercase text-slate-400">
+                          Jours Restants
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Grille de Détails Techniques */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200/90 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Date d'activation</span>
+                      <p className="font-bold text-xs text-slate-800">
+                        {subscriptionData.startsAt ? new Date(subscriptionData.startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "Aujourd'hui"}
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200/90 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Date d'expiration</span>
+                      <p className="font-bold text-xs text-emerald-800">
+                        {subscriptionData.expiresAt ? new Date(subscriptionData.expiresAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "Permanent"}
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200/90 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Moyen de paiement</span>
+                      <p className="font-bold text-xs text-slate-800">
+                        {subscriptionData.paymentMethod || "Mobile Money"}
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-[#F4F6F8] border border-slate-200/90 space-y-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Référence</span>
+                      <p className="font-mono font-bold text-xs text-slate-800 truncate">
+                        {subscriptionData.transactionRef || "VIP-BOOTCAMP"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : subscriptionData?.status === "pending" ? (
+                <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 space-y-4 text-left">
+                  <div className="flex items-start gap-4">
+                    <div className="size-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
+                      <Clock className="size-6 animate-pulse" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-200/60 text-amber-900 text-[10px] font-black uppercase">
+                        <span>⏳ En attente de validation</span>
+                      </div>
+                      <h3 className="text-base font-bold text-slate-800">
+                        Paiement Mobile Money en cours de vérification
+                      </h3>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Votre demande d'abonnement VIP pour <strong>{subscriptionData.planLabel || "Pass VIP"}</strong> a bien été enregistrée. Notre équipe vérifie votre virement sous 2h à 4h pour activer vos accès.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex flex-wrap gap-3">
+                    <a
+                      href="https://wa.me/22605050577?text=Bonjour%20Alfred%2C%20je%20viens%20de%20souscrire%20au%20Pass%20VIP%20et%20je%20souhaite%20acc%C3%A9l%C3%A9rer%20la%20validation."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-xl bg-[#22c55e] text-white font-bold text-xs flex items-center gap-1.5 hover:bg-[#16a34a] transition-all shadow-xs"
+                    >
+                      <MessageCircle className="size-3.5" />
+                      <span>Accélérer la validation sur WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-[#F4F6F8] border border-slate-200/90 text-left">
+                  <div className="flex items-center gap-3.5">
+                    <div className="size-11 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold shrink-0 border border-amber-400/20">
+                      <Crown className="size-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800">Aucun abonnement VIP actif</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Vous pouvez souscrire à tout moment depuis l'onglet <strong>« Mes Ressources »</strong> pour débloquer les replays et prompts.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSubscriptionModalOpen(true)}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-xs transition-all cursor-pointer whitespace-nowrap text-center"
+                  >
+                    Prendre mon Pass VIP →
+                  </button>
+                </div>
+              )}
+
+            </div>
+
+            {/* 2. HISTORIQUE COMPLET DES PAIEMENTS ET FACTURES (BOOTCAMPS + ABONNEMENTS) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-heading text-lg font-bold text-slate-800">
+                    Historique de Tous mes Paiements &amp; Factures
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Retrouvez l'ensemble de vos transactions et téléchargez vos reçus d'achat officiels.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200/90 bg-white overflow-hidden shadow-xs">
+                <div className="p-4 border-b border-slate-200 bg-[#F4F6F8] text-xs font-bold text-slate-600 grid grid-cols-4">
+                  <span>Description</span>
+                  <span>Date</span>
+                  <span>Montant</span>
+                  <span className="text-right">Action / Reçu</span>
+                </div>
+
+                {userInvoices.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500 space-y-1">
+                    <Receipt className="size-8 text-slate-300 mx-auto mb-2" />
+                    <p className="font-bold text-slate-700">Aucun paiement archivé pour le moment</p>
+                    <p>Vos factures d'inscription aux Bootcamps et reçus d'abonnements s'afficheront automatiquement ici dès validation.</p>
+                  </div>
+                ) : (
+                  userInvoices.map((inv: any) => (
+                    <div key={inv.id} className="p-4 grid grid-cols-4 text-xs items-center border-b border-slate-100 hover:bg-[#F4F6F8]/60 transition-colors">
+                      <div>
+                        <p className="font-bold text-slate-800">{inv.title}</p>
+                        <p className="text-[10px] text-slate-500">{inv.method}</p>
+                      </div>
+                      <span className="text-slate-600">{inv.date}</span>
+                      <span className="font-mono font-bold text-emerald-800">{inv.amount}</span>
+                      <div className="text-right flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedInvoice(inv)
+                            setIsInvoiceModalOpen(true)
+                          }}
+                          className="flex items-center gap-1 text-xs font-bold text-primary hover:underline cursor-pointer bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-xl transition-all"
+                        >
+                          <Download className="size-3.5" />
+                          <span>Facture (PDF)</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* 3. AVANTAGES INCLUS AVEC LE PASS VIP */}
+            <div className="space-y-4">
+              <h4 className="font-heading text-base font-bold text-slate-800">
+                Ce qui est débloqué avec votre abonnement VIP :
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2 shadow-2xs">
+                  <div className="size-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Play className="size-5" />
+                  </div>
+                  <h5 className="font-bold text-sm text-slate-800">Tous les Replays Masterclasses HD</h5>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Visionnez toutes les sessions passées animées par Alfred Dah en qualité haute définition avec chapitrage.
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2 shadow-2xs">
+                  <div className="size-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <Sparkles className="size-5" />
+                  </div>
+                  <h5 className="font-bold text-sm text-slate-800">Bibliothèque Complète de Prompts</h5>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Copiez en 1 clic plus de 100 prompts métiers optimisés pour ChatGPT, Claude 3.5, Gemini et Midjourney.
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2 shadow-2xs">
+                  <div className="size-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <FileText className="size-5" />
+                  </div>
+                  <h5 className="font-bold text-sm text-slate-800">Modèles de Business Plans</h5>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Téléchargez les structures prêtes à l'emploi de business plans et plans d'actions générés par IA.
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -2954,6 +3425,23 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Modal d'Abonnement VIP Replays & Prompts */}
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+        user={user}
+        sourceContext="dashboard"
+        onSuccess={() => {
+          setActiveTab("resources")
+          if (user?.email) {
+            fetch(`/api/subscriptions?email=${encodeURIComponent(user.email)}`)
+              .then(r => r.json())
+              .then(d => setSubscriptionData(d))
+              .catch(() => {})
+          }
+        }}
+      />
     </div>
   )
 }

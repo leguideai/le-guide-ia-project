@@ -62,47 +62,102 @@ export function Header() {
   const [announcementHref, setAnnouncementHref] = useState("/checkout/bootcamp-ia-pro")
 
   useEffect(() => {
-    async function loadSettings() {
+    async function loadAnnouncement() {
       try {
         const res = await fetch("/api/admin/settings")
         const data = await res.json()
-        let text = data?.settings?.announcement_text || ""
-        let cta = data?.settings?.announcement_cta || ""
+        const rawCustomText = data?.settings?.announcement_text || ""
+        const rawCustomCta = data?.settings?.announcement_cta || ""
 
-        // Check active course for dynamic price & expiration
+        // Fetch all active courses to find the closest upcoming bootcamp
         const { data: courses } = await supabase
           .from("courses")
-          .select("id, title, slug, price, original_price, offer_end_date, dates")
+          .select("id, title, slug, price, original_price, offer_end_date, dates, status, sequence_order, start_date")
           .order("sequence_order", { ascending: true })
-          .limit(1)
 
-        if (courses && courses.length > 0) {
-          const course = courses[0]
+        const activeCourses = (courses || []).filter(c => c.status !== "archived" && c.status !== "draft")
+        const now = Date.now()
+
+        // Prioritize the closest upcoming bootcamp with active promotion or upcoming cohort
+        activeCourses.sort((a, b) => {
+          const targetA = getOfferEndTimestamp(a.offer_end_date)
+          const targetB = getOfferEndTimestamp(b.offer_end_date)
+          const isPromoA = targetA ? targetA > now : false
+          const isPromoB = targetB ? targetB > now : false
+          if (isPromoA && !isPromoB) return -1
+          if (!isPromoA && isPromoB) return 1
+          return (a.sequence_order ?? 0) - (b.sequence_order ?? 0)
+        })
+
+        const course = activeCourses[0] || courses?.[0]
+
+        if (course) {
           const targetTime = getOfferEndTimestamp(course.offer_end_date)
-          const isExpired = targetTime ? targetTime < Date.now() : false
-          const currentPrice = isExpired ? (course.original_price || course.price) : course.price
-          const formattedPrice = currentPrice > 0 ? `${Number(currentPrice).toLocaleString("fr-FR")} FCFA` : ""
+          const isPromoActive = targetTime ? targetTime > now : false
+          const isExpired = targetTime ? targetTime <= now : false
 
-          if (!text) {
-            text = `${course.title} — Direct Live ${course.dates ? `du ${course.dates}` : ""}. Inscriptions ouvertes !`
-          }
+          // Exact price according to promo status & date
+          const currentPrice = isPromoActive 
+            ? (course.price || course.original_price) 
+            : (course.original_price || course.price)
+          const formattedPrice = currentPrice > 0 
+            ? `${Number(currentPrice).toLocaleString("fr-FR")} FCFA` 
+            : "99 000 FCFA"
 
-          if (cta) {
-            if (formattedPrice && cta.includes("FCFA")) {
-              cta = cta.replace(/\d[\d\s]*FCFA/i, formattedPrice)
+          let promoAlert = ""
+          if (isPromoActive && targetTime) {
+            const diffMs = targetTime - now
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+            if (diffHours <= 24) {
+              promoAlert = `🔥 Dernières 24h au tarif promo (${formattedPrice}) !`
+            } else if (diffDays <= 5) {
+              promoAlert = `🔥 Plus que ${diffDays} jours au tarif promo (${formattedPrice}) !`
+            } else {
+              promoAlert = `Offre Promo : ${formattedPrice} (Inscriptions ouvertes !)`
             }
+          } else if (isExpired) {
+            promoAlert = `Tarif Standard (${formattedPrice}) — Dernières places !`
           } else {
-            cta = formattedPrice ? `Réserver ma place (${formattedPrice}) →` : "Réserver ma place →"
+            promoAlert = "Inscriptions ouvertes !"
           }
 
-          setAnnouncementHref(`/checkout/${course.slug || course.id}${isExpired ? "?tier=standard" : ""}`)
-        }
+          // Build dynamic title & dates
+          const dateStr = course.dates ? `du ${course.dates}` : ""
+          const isLegacyDefault = !rawCustomText || rawCustomText.includes("BOOTCAMP IA PRO 2") || rawCustomText.includes("Bootcamp IA & Carrière — Direct Live du 31 Août")
+          
+          let finalText = ""
+          if (isLegacyDefault) {
+            finalText = `${course.title} — Direct Live ${dateStr}. ${promoAlert}`
+          } else {
+            finalText = rawCustomText
+              .replace(/{course}/gi, course.title)
+              .replace(/{dates}/gi, course.dates || "")
+              .replace(/{price}/gi, formattedPrice)
+              .replace(/{promo}/gi, promoAlert)
+          }
 
-        setAnnouncementText(text)
-        setAnnouncementCta(cta)
+          let finalCta = ""
+          if (!rawCustomCta || rawCustomCta.includes("99 000") || rawCustomCta.includes("149 000") || rawCustomCta.includes("FCFA")) {
+            finalCta = `Réserver ma place (${formattedPrice}) →`
+          } else {
+            finalCta = rawCustomCta
+          }
+
+          setAnnouncementText(finalText)
+          setAnnouncementCta(finalCta)
+          setAnnouncementHref(`/checkout/${course.slug || course.id}${isExpired ? "?tier=standard" : ""}`)
+        } else if (rawCustomText) {
+          setAnnouncementText(rawCustomText)
+          setAnnouncementCta(rawCustomCta || "En savoir plus →")
+        }
       } catch (e) {}
     }
-    loadSettings()
+
+    loadAnnouncement()
+    const interval = setInterval(loadAnnouncement, 60000) // Update every minute
+    return () => clearInterval(interval)
   }, [])
 
   const handleSearchSubmit = (e: React.FormEvent | React.KeyboardEvent) => {

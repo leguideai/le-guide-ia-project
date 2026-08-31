@@ -40,13 +40,13 @@ export function MasterclassTicker() {
   if (!session?.is_active) return null
 
   return (
-    <div className="w-full border-b border-border/80 bg-[#090d16]/90 backdrop-blur-sm z-30 relative">
-      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3 overflow-hidden">
+    <div className="w-full border-b border-border/80 bg-[#090d16]/95 backdrop-blur-sm z-30 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
         
         {/* Badge Fixe Gauche */}
         <Link 
           href="/masterclass"
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] font-black uppercase tracking-wider shrink-0 transition-colors shadow-xs ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-[10px] font-black uppercase tracking-wider shrink-0 transition-colors shadow-xs z-10 ${
             isRegistered ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-500 hover:bg-rose-600"
           }`}
         >
@@ -63,30 +63,35 @@ export function MasterclassTicker() {
           )}
         </Link>
 
-        {/* Texte Défilant Continu (Marquee) */}
-        <Link href="/masterclass" className="flex-1 overflow-hidden relative group">
-          <div className="flex items-center gap-10 whitespace-nowrap animate-ticker text-xs font-semibold text-slate-300 group-hover:text-white transition-colors">
-            <span className="inline-flex items-center gap-2">
-              <strong className="text-white font-heading">{session.title}</strong>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-primary font-bold">{session.dateDisplay || "En Direct Prochainement"}</span>
-              <span className="text-muted-foreground">•</span>
-              <span>Animé par {session.instructor || "Alfred Dah"}</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-emerald-400 font-bold">
-                {isRegistered ? "✓ Place réservée pour vous" : "100% Gratuit (Accès Libre)"}
+        {/* Texte Défilant Continu (Marquee avec Masque Dégradé) */}
+        <Link 
+          href="/masterclass" 
+          className="flex-1 overflow-hidden relative group [mask-image:linear-gradient(to_right,transparent,black_24px,black_calc(100%-24px),transparent)]"
+        >
+          <div className="flex items-center gap-12 whitespace-nowrap animate-ticker text-xs font-semibold text-slate-300 group-hover:text-white transition-colors py-0.5">
+            <span className="inline-flex items-center gap-2.5">
+              <span className="text-slate-400 font-normal">Thème :</span>
+              <strong className="text-white font-bold">{session.title}</strong>
+              <span className="text-slate-600 font-bold">•</span>
+              <span className="text-primary font-bold">{session.dateDisplay || "Prochainement en direct"}</span>
+              <span className="text-slate-600 font-bold">•</span>
+              <span className="text-slate-300">Animé par {session.instructor || "Alfred Dah"}</span>
+              <span className="text-slate-600 font-bold">•</span>
+              <span className="text-emerald-400 font-black">
+                {isRegistered ? "✓ Place confirmée pour vous" : "100% Gratuit (Accès Libre)"}
               </span>
             </span>
 
-            <span className="inline-flex items-center gap-2" aria-hidden="true">
-              <strong className="text-white font-heading">{session.title}</strong>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-primary font-bold">{session.dateDisplay || "En Direct Prochainement"}</span>
-              <span className="text-muted-foreground">•</span>
-              <span>Animé par {session.instructor || "Alfred Dah"}</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-emerald-400 font-bold">
-                {isRegistered ? "✓ Place réservée pour vous" : "100% Gratuit (Accès Libre)"}
+            <span className="inline-flex items-center gap-2.5" aria-hidden="true">
+              <span className="text-slate-400 font-normal">Thème :</span>
+              <strong className="text-white font-bold">{session.title}</strong>
+              <span className="text-slate-600 font-bold">•</span>
+              <span className="text-primary font-bold">{session.dateDisplay || "Prochainement en direct"}</span>
+              <span className="text-slate-600 font-bold">•</span>
+              <span className="text-slate-300">Animé par {session.instructor || "Alfred Dah"}</span>
+              <span className="text-slate-600 font-bold">•</span>
+              <span className="text-emerald-400 font-black">
+                {isRegistered ? "✓ Place confirmée pour vous" : "100% Gratuit (Accès Libre)"}
               </span>
             </span>
           </div>
@@ -95,7 +100,7 @@ export function MasterclassTicker() {
         {/* Lien Fixe Droite */}
         <Link
           href="/masterclass"
-          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors shrink-0"
+          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors shrink-0 z-10 bg-[#090d16] pl-2"
         >
           <span className="hidden sm:inline">
             {isRegistered ? "Accéder au direct" : "Réserver ma place"}

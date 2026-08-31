@@ -10,8 +10,9 @@ import {
   Play, Video, Calendar, Clock, CheckCircle2, 
   Sparkles, ArrowRight, Radio, ExternalLink, 
   LogIn, UserCheck, Search, Filter, ShieldCheck, X,
-  Tv, Award, Zap, Mail, MessageCircle, Lock
+  Tv, Award, Zap, Mail, MessageCircle, Lock, Crown
 } from "lucide-react"
+import { SubscriptionModal } from "@/components/subscription-modal"
 
 interface ReplayItem {
   id: string
@@ -33,6 +34,11 @@ export default function MasterclassHubPage() {
   const [isRegistered, setIsRegistered] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null)
+  
+  // Abonnement VIP Replays & Prompts
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   
   const [upcomingSession, setUpcomingSession] = useState<any>(null)
   const [allUpcomingSessions, setAllUpcomingSessions] = useState<any[]>([])
@@ -62,6 +68,7 @@ export default function MasterclassHubPage() {
         // Si l'utilisateur n'est pas connecté, pas d'inscription persistée ni de message résiduel
         if (!user) {
           setIsRegistered(false)
+          setIsSubscribed(false)
           setFeedbackMsg(null)
           if (typeof window !== "undefined") {
             localStorage.removeItem("masterclass_registered")
@@ -87,7 +94,7 @@ export default function MasterclassHubPage() {
           setAllUpcomingSessions([])
         }
 
-        // Seul un utilisateur connecté et inscrit en base est considéré comme inscrit
+        // Seul un utilisateur connecté et inscrit en base est considéré comme inscrit au direct
         if (user && data.isRegistered) {
           setIsRegistered(true)
         } else {
@@ -96,6 +103,18 @@ export default function MasterclassHubPage() {
 
         if (data.replays && Array.isArray(data.replays)) {
           setReplays(data.replays)
+        }
+
+        // Vérifier l'abonnement VIP / inscription Bootcamp
+        if (emailToCheck) {
+          try {
+            const subRes = await fetch(`/api/subscriptions?email=${encodeURIComponent(emailToCheck)}`)
+            const subData = await subRes.json()
+            if (subData.isSubscribed) {
+              setIsSubscribed(true)
+              setSubscriptionInfo(subData)
+            }
+          } catch (_) {}
         }
       } catch (err) {
         console.error("Masterclass page load error:", err)
@@ -741,19 +760,62 @@ export default function MasterclassHubPage() {
         </section>
       )}
 
-      {/* 4. Vidéothèque des Replays (YouTube) - Uniquement si des replays existent */}
+      {/* 4. Vidéothèque des Replays (YouTube) - Accessible aux abonnés VIP & Bootcamp */}
       {replays.length > 0 && (
         <section id="replays-section" className="pt-8 pb-20 max-w-7xl mx-auto px-4 border-t border-border">
           
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-8">
             <div className="space-y-2 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card text-xs text-primary font-bold">
                 <Play className="size-3 fill-primary" />
-                <span>REPLAYS VIDÉOS MASTERCLASSES</span>
+                <span>VIDÉOTHÈQUE DES REPLAYS MASTERCLASSES</span>
               </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white">
+                Rediffusions &amp; Formations Pratiques
+              </h2>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
-                Visionnez gratuitement toutes les masterclasses passées.
+                Visionnez tous les replays en illimité et pratiquez avec nos experts.
               </p>
+            </div>
+
+            {/* Bannière / Statut Abonnement VIP */}
+            <div className="p-4 rounded-2xl border bg-[#0b0f19] border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-xl">
+              <div className="space-y-1 text-left">
+                <div className="flex items-center gap-2">
+                  {isSubscribed ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
+                      <CheckCircle2 className="size-3" />
+                      <span>Accès VIP Actif</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase">
+                      <Crown className="size-3" />
+                      <span>Pass VIP Replays &amp; Prompts</span>
+                    </span>
+                  )}
+                  {subscriptionInfo?.daysRemaining > 0 && (
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      ({subscriptionInfo.daysRemaining} jours restants)
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-300">
+                  {isSubscribed 
+                    ? "Tous les replays HD et la bibliothèque de prompts sont débloqués sur votre compte." 
+                    : "10 000 FCFA / 3 mois ou 30 000 FCFA / an • Inclus gratuitement pour les inscrits aux Bootcamps."}
+                </p>
+              </div>
+
+              {!isSubscribed && (
+                <button
+                  type="button"
+                  onClick={() => setShowSubscriptionModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary via-primary to-amber-500 text-slate-950 font-black text-xs hover:opacity-95 transition-all shadow-md shrink-0 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Crown className="size-3.5 fill-slate-950" />
+                  <span>Prendre mon Pass VIP</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -783,7 +845,13 @@ export default function MasterclassHubPage() {
               >
                 {/* Miniature & Déclencheur Vidéo */}
                 <div 
-                  onClick={() => setActiveVideoModal(replay)}
+                  onClick={() => {
+                    if (isSubscribed) {
+                      setActiveVideoModal(replay)
+                    } else {
+                      setShowSubscriptionModal(true)
+                    }
+                  }}
                   className="relative aspect-video bg-black/80 overflow-hidden cursor-pointer group"
                 >
                   <img
@@ -792,10 +860,17 @@ export default function MasterclassHubPage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
                   />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
-                    <div className="size-12 rounded-full bg-primary/90 text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
-                      <Play className="size-5 fill-slate-950" />
-                    </div>
+                  
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                    {isSubscribed ? (
+                      <div className="size-12 rounded-full bg-primary/90 text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
+                        <Play className="size-5 fill-slate-950" />
+                      </div>
+                    ) : (
+                      <div className="size-12 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <Lock className="size-5 text-amber-400" />
+                      </div>
+                    )}
                   </div>
                   
                   <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-mono font-bold">
@@ -805,6 +880,13 @@ export default function MasterclassHubPage() {
                   <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-primary text-slate-950 text-[10px] font-extrabold uppercase">
                     {replay.category}
                   </span>
+
+                  {!isSubscribed && (
+                    <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-1 shadow-sm">
+                      <Lock className="size-2.5" />
+                      <span>Pass VIP Requis</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Contenu de la Carte */}
@@ -824,11 +906,30 @@ export default function MasterclassHubPage() {
                   </div>
 
                   <button
-                    onClick={() => setActiveVideoModal(replay)}
-                    className="w-full py-2.5 px-4 rounded-xl border border-border bg-[#090d16] hover:bg-primary hover:text-slate-950 hover:border-primary text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    onClick={() => {
+                      if (isSubscribed) {
+                        setActiveVideoModal(replay)
+                      } else {
+                        setShowSubscriptionModal(true)
+                      }
+                    }}
+                    className={`w-full py-2.5 px-4 rounded-xl border font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+                      isSubscribed
+                        ? "border-border bg-[#090d16] hover:bg-primary hover:text-slate-950 hover:border-primary text-white"
+                        : "border-amber-500/40 bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-300"
+                    }`}
                   >
-                    <Play className="size-3.5 fill-current" />
-                    <span>Visionner le Replay</span>
+                    {isSubscribed ? (
+                      <>
+                        <Play className="size-3.5 fill-current" />
+                        <span>Visionner le Replay HD</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="size-3.5" />
+                        <span>Débloquer avec le Pass VIP</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -879,6 +980,17 @@ export default function MasterclassHubPage() {
           </div>
         </div>
       )}
+
+      {/* Modal d'Abonnement VIP */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        user={currentUser}
+        sourceContext="masterclass_replay"
+        onSuccess={() => {
+          setIsSubscribed(true)
+        }}
+      />
 
       {/* 6. Footer Global */}
       <CtaFooter />

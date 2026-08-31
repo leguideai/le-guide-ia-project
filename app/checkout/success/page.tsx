@@ -10,8 +10,10 @@ function SuccessContent() {
   const method = searchParams.get("method") || ""
   const ref = searchParams.get("ref") || ""
   const sessionId = searchParams.get("session_id") || ""
+  const type = searchParams.get("type") || ""
 
   const isStripe = !!sessionId || method === "stripe" || ref.startsWith("LGI-STRIPE")
+  const isSubscription = type === "subscription" || ref.includes("STRIPE-SUB")
   const isMobileDirect = !isStripe
 
   const [verified, setVerified] = useState(false)
@@ -132,18 +134,21 @@ function SuccessContent() {
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-black uppercase text-emerald-400">
                   <CheckCircle2 className="size-3" />
-                  <span>Accès Débloqué</span>
+                  <span>{isSubscription ? "Pass VIP Activé" : "Accès Débloqué"}</span>
                 </div>
                 <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
-                  Félicitations &amp; Bienvenue !
+                  {isSubscription ? "Félicitations & Bienvenue VIP !" : "Félicitations & Bienvenue !"}
                 </h1>
                 <p className="text-xs md:text-sm text-emerald-400 font-semibold">
-                  Votre paiement par carte a été validé avec succès.
+                  Votre paiement par carte via Stripe a été validé avec succès.
                 </p>
               </div>
 
               <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
-                Votre inscription et l'accès à votre formation ont été activés avec succès. Un email officiel de confirmation vous a été envoyé.
+                {isSubscription 
+                  ? "Votre Pass VIP a été activé immédiatement. Vous disposez désormais d'un accès complet et illimité à tous les prompts métiers et aux replays des Masterclasses."
+                  : "Votre inscription et l'accès à votre formation ont été activés avec succès. Un email officiel de confirmation vous a été envoyé."
+                }
               </p>
 
               <div className="rounded-2xl bg-secondary/50 p-4 border border-border/60 text-left space-y-3">
@@ -154,26 +159,26 @@ function SuccessContent() {
                 <ul className="space-y-2 text-xs text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">1.</span>
-                    <span>Vérifiez votre boîte de réception email (et le dossier Spams si nécessaire).</span>
+                    <span>Vérifiez votre boîte de réception email pour votre reçu officiel d'abonnement.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">2.</span>
-                    <span>Connectez-vous à votre Espace Membre pour consulter le programme et les replays.</span>
+                    <span>Accédez instantanément à la bibliothèque de ressources et copiez tous les prompts souhaités.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary font-bold">3.</span>
-                    <span>Rejoignez le groupe WhatsApp privé via le lien dans votre tableau de bord.</span>
+                    <span>Retrouvez votre historique de facturation et reçus PDF dans votre espace membre.</span>
                   </li>
                 </ul>
               </div>
 
               <div className="pt-2 space-y-3">
                 <Link
-                  href="/dashboard"
+                  href={isSubscription ? "/dashboard?tab=resources" : "/dashboard"}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-xl transition-all cursor-pointer"
                 >
                   <LayoutDashboard className="size-4" />
-                  <span>Accéder à mon Espace Membre</span>
+                  <span>{isSubscription ? "Découvrir mes Ressources VIP" : "Accéder à mon Espace Membre"}</span>
                   <ArrowRight className="size-4" />
                 </Link>
               </div>

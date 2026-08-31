@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
-import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn } from "lucide-react"
+import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn, Crown } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { Header } from "@/components/header"
 import { TabbedCourses } from "@/components/tabbed-courses"
@@ -14,6 +14,7 @@ import { resourcesData, ResourceItem } from "@/lib/resources-data"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ResourceOptinModal } from "@/components/resource-optin-modal"
+import { SubscriptionModal } from "@/components/subscription-modal"
 import { supabase } from "@/lib/supabase"
 
 export default function RessourcesPage() {
@@ -23,8 +24,11 @@ export default function RessourcesPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'prompt' | 'business-plan'>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  // Auth unlock state
+  // Auth & Subscription unlock state
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [isUnlocked, setIsUnlocked] = useState(false)
+  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const [isOptinOpen, setIsOptinOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState<{
     type: 'copy' | 'download'
@@ -35,28 +39,50 @@ export default function RessourcesPage() {
   } | null>(null)
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const unlocked = localStorage.getItem("leguideia_resources_unlocked") === "true"
-      if (unlocked) {
-        setIsUnlocked(true)
+    async function checkAccess() {
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user || null
+      setCurrentUser(user)
+
+      if (!user?.email) {
+        setIsUnlocked(false)
+        return
       }
 
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
+      try {
+        const res = await fetch(`/api/subscriptions?email=${encodeURIComponent(user.email)}`)
+        const data = await res.json()
+        setSubscriptionInfo(data)
+        if (data.isSubscribed) {
           setIsUnlocked(true)
-          localStorage.setItem("leguideia_resources_unlocked", "true")
+        } else {
+          setIsUnlocked(false)
         }
-      })
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-          setIsUnlocked(true)
-          localStorage.setItem("leguideia_resources_unlocked", "true")
-        }
-      })
-
-      return () => subscription.unsubscribe()
+      } catch (_) {
+        setIsUnlocked(false)
+      }
     }
+
+    checkAccess()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.email) {
+        setCurrentUser(session.user)
+        fetch(`/api/subscriptions?email=${encodeURIComponent(session.user.email)}`)
+          .then(r => r.json())
+          .then(d => {
+            setSubscriptionInfo(d)
+            if (d.isSubscribed) setIsUnlocked(true)
+            else setIsUnlocked(false)
+          })
+          .catch(() => setIsUnlocked(false))
+      } else {
+        setCurrentUser(null)
+        setIsUnlocked(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   // Copy handler
@@ -68,9 +94,13 @@ export default function RessourcesPage() {
   }
 
   const handleAction = (item: ResourceItem, title: string, content: string) => {
-    if (!isUnlocked) {
-      // Redirige directement vers la page de connexion
+    if (!currentUser) {
       router.push("/login?redirect=/ressources")
+      return
+    }
+
+    if (!isUnlocked) {
+      setShowSubscriptionModal(true)
       return
     }
 
@@ -84,7 +114,6 @@ export default function RessourcesPage() {
 
   const handleOptinSuccess = () => {
     setIsUnlocked(true)
-    localStorage.setItem("leguideia_resources_unlocked", "true")
     if (pendingAction) {
       if (pendingAction.type === 'copy' && pendingAction.content) {
         executeCopy(pendingAction.id, pendingAction.content)
@@ -96,24 +125,45 @@ export default function RessourcesPage() {
   }
 
   const [dbResources, setDbResources] = useState<any[]>([])
+  const [loadingResources, setLoadingResources] = useState(true)
 
   useEffect(() => {
     async function loadResources() {
-      const { data } = await supabase.from("resources").select("*").order("created_at", { ascending: false })
-      if (data && data.length > 0) setDbResources(data)
+      try {
+        const { data, error } = await supabase.from("resources").select("*").order("created_at", { ascending: false })
+        if (!error && data) {
+          setDbResources(data)
+        }
+      } catch (err) {
+        console.warn("Could not load resources from Supabase:", err)
+      } finally {
+        setLoadingResources(false)
+      }
     }
     loadResources()
   }, [])
 
-  const currentResourcesMap: ResourceItem[] = dbResources.length > 0 ? dbResources.map((r: any) => ({
-    id: r.id,
-    type: r.type === "Prompt" ? "prompt" : "business-plan",
-    title: { fr: r.title, en: r.title },
-    desc: { fr: r.category || "Ressource certifiée Le Guide IA", en: r.category || "Ressource certifiée" },
-    content: { fr: r.prompt_text || "", en: r.prompt_text || "" },
-    fileUrl: r.file_url || undefined,
-    tier: r.tier || "Membre Premium"
-  })) : resourcesData
+  // Strict mapping directly from Supabase table 'resources'
+  const currentResourcesMap: ResourceItem[] = dbResources.map((r: any) => {
+    const rawType = (r.type || "Prompt").toLowerCase()
+    const itemType: 'prompt' | 'business-plan' | 'exercise' = 
+      rawType.includes("plan") || rawType.includes("document") 
+        ? "business-plan" 
+        : rawType.includes("exercice") || rawType.includes("exercise")
+        ? "exercise"
+        : "prompt"
+
+    return {
+      id: r.id,
+      type: itemType,
+      title: { fr: r.title, en: r.title },
+      desc: { fr: r.description || r.category || "Ressource certifiée Le Guide IA", en: r.description || r.category || "Ressource certifiée" },
+      content: { fr: r.prompt_text || r.content || "", en: r.prompt_text || r.content || "" },
+      fileUrl: r.file_url || r.download_url || undefined,
+      sector: r.category ? { fr: r.category, en: r.category } : undefined,
+      tier: r.tier || r.access_level || "VIP"
+    }
+  })
 
   // Filter & Search logic
   const filteredResources = currentResourcesMap.filter((item) => {
@@ -147,13 +197,43 @@ export default function RessourcesPage() {
               <Sparkles className="size-3.5 text-purple-400" />
               PROMPTS &amp; BUSINESS PLANS TÉLÉCHARGEABLES
             </span>
-            <h2 className="font-heading text-2xl md:text-4xl font-black text-foreground tracking-tight">
-              Bibliothèque de Prompts &amp; Modèles IA
-            </h2>
+            <h1 className="font-heading text-3xl md:text-4xl font-extrabold text-white">
+              Bibliothèque de Prompts &amp; Blueprints IA
+            </h1>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
-              Connectez-vous pour débloquer, copier et télécharger nos prompts métiers et modèles de projets d'entreprise.
+              Copiez et téléchargez nos prompts métiers et modèles de projets d'entreprise prêts à l'emploi.
             </p>
           </div>
+
+          {/* VIP All-Access Banner when not unlocked */}
+          {!isUnlocked && (
+            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-primary/15 border border-amber-400/50 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="size-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-black shadow-md">
+                  <Crown className="size-6 text-slate-950" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-heading font-black text-white">Pass VIP Unique — Accès Illimité à Tout le Catalogue</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40">1 Pass = 100% Débloqué</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Un seul abonnement débloque automatiquement <strong>l'ensemble de la bibliothèque de prompts (+100)</strong>, tous les business plans et tous les <strong>replays de masterclasses</strong>.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (!currentUser) router.push("/login?redirect=/ressources")
+                  else setShowSubscriptionModal(true)
+                }}
+                className="w-full md:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shrink-0 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer whitespace-nowrap"
+              >
+                <Crown className="size-4" />
+                <span>{currentUser ? "Activer mon Pass VIP Global →" : "Se Connecter & Débloquer →"}</span>
+              </button>
+            </div>
+          )}
 
           {/* Controls Bar */}
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-y border-border/40 py-4 bg-card/10 backdrop-blur-md rounded-2xl px-4">
@@ -290,13 +370,23 @@ export default function RessourcesPage() {
                         {!isUnlocked && (
                           <div
                             onClick={() => handleAction(item, title, content)}
-                            className="absolute inset-0 flex flex-col items-center justify-end pb-4 rounded-xl bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent text-center cursor-pointer transition-colors group"
+                            className="absolute inset-0 flex flex-col items-center justify-end pb-4 px-3 rounded-xl bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent text-center cursor-pointer transition-colors group"
                           >
-                            <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl shadow-xl border border-white/20 group-hover:scale-105 transition-transform">
-                              <LogIn className="size-4" />
-                              <span className="text-xs font-extrabold">
-                                Se connecter pour débloquer
-                              </span>
+                            <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black px-4 sm:px-6 py-3 rounded-xl shadow-xl border border-white/20 group-hover:scale-[1.02] transition-transform text-center">
+                              {!currentUser ? (
+                                <>
+                                  <LogIn className="size-4 shrink-0" />
+                                  <span className="text-xs font-black">Se connecter pour débloquer tout le catalogue</span>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-1.5 font-black">
+                                    <Crown className="size-4 shrink-0" />
+                                    <span className="text-xs font-black">Débloquer Tous les Prompts &amp; Replays</span>
+                                  </div>
+                                  <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès 10 000 FCFA</span>
+                                </>
+                              )}
                             </div>
                           </div>
                         )}
@@ -352,6 +442,17 @@ export default function RessourcesPage() {
 
         </div>
       </section>
+
+      {/* Modal d'Abonnement VIP */}
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        user={currentUser}
+        sourceContext="prompt_library"
+        onSuccess={() => {
+          setIsUnlocked(true)
+        }}
+      />
 
       {/* Opt-in Modal fallback */}
       <ResourceOptinModal

@@ -1298,6 +1298,326 @@ export async function sendMasterclassTargetedEmail(params: {
   }
 }
 
+// =========================================================================
+// 8. NOTIFICATIONS D'ABONNEMENT REPLAYS & PROMPTS VIP
+// =========================================================================
+
+export interface AdminNewSubscriptionParams {
+  fullName: string
+  email: string
+  whatsapp?: string
+  country?: string
+  planLabel: string
+  amount: number | string
+  paymentMethod: string
+  transactionRef: string
+  receiptUrl?: string
+  isAutoActivated?: boolean
+}
+
+export async function sendAdminNewSubscriptionNotification(params: AdminNewSubscriptionParams) {
+  try {
+    const resend = getResendClient()
+    if (!resend) {
+      console.warn('Skipping admin notification: RESEND_API_KEY is not set')
+      return { success: false, error: 'RESEND_API_KEY_MISSING' }
+    }
+
+    const {
+      fullName,
+      email,
+      whatsapp,
+      country,
+      planLabel,
+      amount = "10 000 FCFA",
+      paymentMethod = "Mobile Money Direct",
+      transactionRef = "Non spécifiée",
+      receiptUrl,
+      isAutoActivated = false
+    } = params
+
+    const adminEmails = [
+      process.env.ADMIN_NOTIFICATION_EMAIL,
+      process.env.ADMIN_EMAIL,
+      'alfred@leguideai.com',
+      'contact@leguideai.com'
+    ].filter(Boolean) as string[]
+
+    const targetAdmins = Array.from(new Set(adminEmails))
+    const cleanPhone = (whatsapp || '').replace(/[^0-9]/g, '')
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leguideai.com'
+    const adminUrl = `${siteUrl}/admin`
+    const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
+
+    const subject = isAutoActivated 
+      ? `💎 [Nouvel Abonné Activé] ${fullName} — ${planLabel}`
+      : `🔔 [Nouvel Abonnement à Valider] ${fullName} — ${planLabel}`
+
+    const textContent = `💎 NOUVEL ABONNEMENT REPLAYS & PROMPTS ${isAutoActivated ? 'ACTIVÉ' : 'À VALIDER'} !\n\nSouscripteur : ${fullName}\nEmail : ${email}\nWhatsApp : ${whatsapp || 'N/A'}\nPays : ${country || 'N/A'}\nFormule : ${planLabel}\nMontant : ${formattedAmount}\nMéthode : ${paymentMethod}\nRéférence : ${transactionRef}\nStatut : ${isAutoActivated ? 'Actif (Stripe/Auto)' : 'En attente de validation (Mobile Money)'}\nPreuve : ${receiptUrl || 'Aucune capture'}\n\nAccédez au portail admin pour gérer les abonnements : ${adminUrl}`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: targetAdmins,
+      replyTo: email,
+      subject,
+      text: textContent,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Notification Abonnement VIP</title>
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0f19; color: #e2e8f0; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; }
+            .header { background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 28px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 20px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: -0.5px; }
+            .header p { margin: 4px 0 0; font-size: 13px; color: #e0e7ff; }
+            .content { padding: 28px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+            .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; }
+            .badge-pending { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+            .badge-active { background-color: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+            .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; background-color: #1e293b; border-radius: 12px; overflow: hidden; }
+            .info-table td { padding: 12px 16px; border-bottom: 1px solid #334155; font-size: 13px; }
+            .info-table tr:last-child td { border-bottom: none; }
+            .label { color: #94a3b8; font-weight: 600; width: 40%; }
+            .value { color: #ffffff; font-weight: 700; }
+            .btn { display: inline-block; background: #2563eb; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 12px; text-align: center; font-size: 14px; margin: 20px 0 10px; }
+            .footer { background-color: #0b0f19; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>💎 Abonnement Replays &amp; Prompts</h1>
+              <p>${isAutoActivated ? 'Nouvelle souscription activée automatiquement' : 'Paiement Mobile Money en attente de vérification'}</p>
+            </div>
+            <div class="content">
+              <span class="badge ${isAutoActivated ? 'badge-active' : 'badge-pending'}">
+                ${isAutoActivated ? '✓ Accès Immédiatement Activé' : '⏳ Validation Requise'}
+              </span>
+              <p style="margin-top: 4px; font-size: 15px; color: #ffffff;">
+                Un participant vient de souscrire à l'abonnement <strong>${planLabel}</strong>.
+              </p>
+
+              <table class="info-table">
+                <tr>
+                  <td class="label">👤 Souscripteur</td>
+                  <td class="value">${fullName}</td>
+                </tr>
+                <tr>
+                  <td class="label">📧 Email</td>
+                  <td class="value"><a href="mailto:${email}" style="color: #60a5fa; text-decoration: none;">${email}</a></td>
+                </tr>
+                <tr>
+                  <td class="label">📱 WhatsApp</td>
+                  <td class="value">
+                    ${whatsapp ? `<a href="https://wa.me/${cleanPhone}" style="color: #34d399; text-decoration: none;">${whatsapp} 💬</a>` : 'Non renseigné'}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">🌍 Pays</td>
+                  <td class="value">${country || 'Non renseigné'}</td>
+                </tr>
+                <tr>
+                  <td class="label">🎯 Formule</td>
+                  <td class="value" style="color: #a78bfa;">${planLabel}</td>
+                </tr>
+                <tr>
+                  <td class="label">💰 Montant</td>
+                  <td class="value" style="color: #34d399; font-size: 15px;">${formattedAmount}</td>
+                </tr>
+                <tr>
+                  <td class="label">💳 Méthode</td>
+                  <td class="value">${paymentMethod}</td>
+                </tr>
+                <tr>
+                  <td class="label">🔢 Réf. Transaction</td>
+                  <td class="value" style="font-family: monospace; color: #fbbf24;">${transactionRef}</td>
+                </tr>
+                ${receiptUrl ? `
+                <tr>
+                  <td class="label">🧾 Reçu de Paiement</td>
+                  <td class="value">
+                    <a href="${receiptUrl}" target="_blank" style="color: #60a5fa; text-decoration: underline; font-weight: 700;">Voir la capture du reçu 🔍</a>
+                  </td>
+                </tr>` : ''}
+              </table>
+
+              <div style="text-align: center;">
+                <a href="${adminUrl}" class="btn">Accéder au Panneau d'Administration</a>
+              </div>
+            </div>
+            <div class="footer">
+              Système de Notification LE GUIDE IA • Alfred Dah
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending admin subscription notification:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendSubscriptionPendingEmail(name: string, email: string, planLabel: string, amount: number | string, paymentMethod: string) {
+  try {
+    const resend = getResendClient()
+    if (!resend) return { success: false, error: 'RESEND_API_KEY_MISSING' }
+
+    const firstName = name.split(' ')[0]
+    const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
+
+    const textContent = `Bonjour ${firstName},\n\nNous avons bien reçu votre demande de souscription à l'abonnement VIP LE GUIDE IA (${planLabel}).\nMontant : ${formattedAmount}\nMoyen de paiement : ${paymentMethod}\n\nVotre accès sera activé par notre équipe dès vérification de votre transaction (sous 2 à 4 heures max).\n\nDès validation, vous recevrez un email de confirmation et vos accès aux Replays Masterclasses et à la Bibliothèque de Prompts seront débloqués dans votre Espace Membre : https://leguideai.com/dashboard\n\nMerci pour votre confiance,\nL'équipe LE GUIDE IA & Alfred Dah`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject: `⏳ Votre demande d'abonnement ${planLabel} est en cours de validation — LE GUIDE IA`,
+      text: textContent,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0f19; color: #e2e8f0; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; }
+            .header { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; }
+            .content { padding: 28px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+            .box { background-color: #1e293b; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0; }
+            .footer { background-color: #0b0f19; padding: 20px; text-align: center; font-size: 11px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>LE GUIDE IA</h1>
+            </div>
+            <div class="content">
+              <p style="font-size: 16px; font-weight: 700; color: #ffffff;">Bonjour ${firstName} 👋,</p>
+              <p>Nous avons bien reçu votre demande de souscription pour le <strong>${planLabel}</strong>.</p>
+              
+              <div class="box">
+                <strong style="color: #fbbf24;">⏳ Statut : En cours de validation</strong><br>
+                💰 <strong>Montant :</strong> ${formattedAmount}<br>
+                💳 <strong>Moyen de paiement :</strong> ${paymentMethod}<br>
+                ⏱️ <strong>Délai moyen :</strong> Validation sous 2h à 4h par notre équipe
+              </div>
+
+              <p>Dès confirmation de votre transaction, vos accès complets aux <strong>Replays Masterclasses HD</strong> et à la <strong>Bibliothèque de Prompts IA</strong> seront instantanément débloqués sur votre compte.</p>
+              
+              <p>Vous pouvez consulter l'état de votre abonnement à tout moment dans votre Espace Membre :</p>
+              <p style="text-align: center; margin: 24px 0;">
+                <a href="https://leguideai.com/dashboard" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; display: inline-block;">Accéder à mon Espace Membre</a>
+              </p>
+
+              <p>Si vous avez la moindre question, écrivez-nous directement à <a href="mailto:alfred@leguideai.com" style="color: #60a5fa;">alfred@leguideai.com</a> ou sur WhatsApp.</p>
+              <p>À très bientôt,<br><strong>Alfred Dah & L'équipe LE GUIDE IA</strong></p>
+            </div>
+            <div class="footer">
+              © 2026 LE GUIDE IA — Tous droits réservés.
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending subscription pending email:', error)
+    return { success: false, error }
+  }
+}
+
+export async function sendSubscriptionActivatedEmail(name: string, email: string, planLabel: string, expiresAt: string, isRenewal: boolean = false) {
+  try {
+    const resend = getResendClient()
+    if (!resend) return { success: false, error: 'RESEND_API_KEY_MISSING' }
+
+    const firstName = name.split(' ')[0]
+    const formattedDate = new Date(expiresAt).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    })
+
+    const textContent = `Bonjour ${firstName},\n\n🎉 Félicitations ! Votre abonnement VIP LE GUIDE IA (${planLabel}) est désormais ACTIF.\nDate de validité : Jusqu'au ${formattedDate}\n\nCe qui est désormais débloqué sur votre compte :\n✓ Accès illimité à tous les Replays des Masterclasses en HD\n✓ Accès complet à la Bibliothèque de Prompts IA & Modèles Business Plans\n✓ Nouveautés et mises à jour continues\n\nAccédez à vos contenus dès maintenant : https://leguideai.com/dashboard\n\nExcellente formation,\nAlfred Dah & L'équipe LE GUIDE IA`
+
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject: `🎉 Votre abonnement VIP ${planLabel} est activé ! — LE GUIDE IA`,
+      text: textContent,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0f19; color: #e2e8f0; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; }
+            .header { background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; }
+            .content { padding: 28px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+            .box { background-color: #064e3b/30; border: 1px solid #059669; border-radius: 12px; padding: 18px; margin: 20px 0; }
+            .feature-list { list-style: none; padding: 0; margin: 16px 0; }
+            .feature-list li { padding: 6px 0; color: #e2e8f0; font-size: 13px; }
+            .btn { display: inline-block; background-color: #10b981; color: #022c22 !important; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 12px; text-align: center; }
+            .footer { background-color: #0b0f19; padding: 20px; text-align: center; font-size: 11px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>💎 ACCÈS VIP ACTIVÉ</h1>
+            </div>
+            <div class="content">
+              <p style="font-size: 16px; font-weight: 700; color: #ffffff;">Félicitations ${firstName} 🚀 !</p>
+              <p>Votre abonnement <strong>${planLabel}</strong> est désormais <strong>actif et validé</strong>.</p>
+              
+              <div class="box">
+                <strong style="color: #34d399; font-size: 15px;">✓ Vos privilèges VIP sont débloqués :</strong>
+                <ul class="feature-list">
+                  <li>📺 <strong>Replays Masterclasses HD :</strong> Visionnage illimité de toutes les sessions passées et futures</li>
+                  <li>⚡ <strong>Bibliothèque de Prompts IA :</strong> Copie et téléchargement de tous les prompts avancés & templates</li>
+                  <li>📅 <strong>Validité :</strong> Jusqu'au <strong style="color: #ffffff;">${formattedDate}</strong></li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="https://leguideai.com/dashboard" class="btn">Accéder à mes Contenus VIP</a>
+              </div>
+
+              <p>Si vous avez des questions ou besoin d'assistance, notre équipe reste à votre entière disposition.</p>
+              <p>À très bientôt,<br><strong>Alfred Dah & L'équipe LE GUIDE IA</strong></p>
+            </div>
+            <div class="footer">
+              © 2026 LE GUIDE IA — Tous droits réservés.
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending subscription activated email:', error)
+    return { success: false, error }
+  }
+}
+
+
 
 
 
