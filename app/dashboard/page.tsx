@@ -154,7 +154,7 @@ export default function DashboardPage() {
     dateDisplay: "",
     thumbnailUrl: "",
     meetUrl: "https://meet.google.com/qvt-gkyh-yuv",
-    youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
+    youtubeLiveUrl: "https://www.youtube.com/@leguideai",
     instructor: "Alfred Dah",
     duration: "1h 30min"
   })
@@ -1883,7 +1883,7 @@ export default function DashboardPage() {
                             </a>
 
                             <a
-                              href={masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"}
+                              href={masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@leguideai"}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"

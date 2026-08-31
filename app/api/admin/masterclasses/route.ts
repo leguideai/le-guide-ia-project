@@ -103,7 +103,7 @@ async function loadAllMasterclassSessions(): Promise<{ sessions: any[]; settings
       dateDisplay: dateDisplay,
       thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
       whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@leguideai",
       duration: "1h 30min",
       status: "upcoming",
       is_active: isActive,
@@ -150,7 +150,7 @@ async function syncPrimarySessionKeys(sessions: any[]) {
       { key: "masterclass_date_display", value: primary.dateDisplay || "" },
       { key: "masterclass_thumbnail_url", value: primary.thumbnailUrl || "" },
       { key: "masterclass_whatsapp_group_url", value: primary.whatsappGroupUrl || "" },
-      { key: "masterclass_youtube_url", value: primary.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA" },
+      { key: "masterclass_youtube_url", value: primary.youtubeLiveUrl || "https://www.youtube.com/@leguideai" },
       { key: "masterclass_instructor", value: primary.instructor || "Alfred Dah" },
       { key: "masterclass_is_active", value: primary.is_active !== false ? "true" : "false" }
     ]
@@ -272,7 +272,7 @@ export async function POST(req: Request) {
         dateDisplay: dateDisplay,
         thumbnailUrl: sessionData.thumbnailUrl || "",
         whatsappGroupUrl: sessionData.whatsappGroupUrl || "",
-        youtubeLiveUrl: sessionData.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA",
+        youtubeLiveUrl: sessionData.youtubeLiveUrl || "https://www.youtube.com/@leguideai",
         duration: sessionData.duration || "1h 30min",
         status: sessionData.status || "upcoming",
         is_active: sessionData.is_active !== false,

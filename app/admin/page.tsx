@@ -179,20 +179,7 @@ export default function SuperAdminDashboard() {
   const [unauthorized, setUnauthorized] = useState(false)
 
   // Masterclass states
-  const [masterclassSession, setMasterclassSession] = useState<any>({
-    id: "mc_default",
-    is_active: true,
-    title: "Masterclass IA : Fondamentaux & Cas Pratiques en Direct",
-    description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
-    scheduledAt: "",
-    dateDisplay: "",
-    thumbnailUrl: "",
-    whatsappGroupUrl: "",
-    youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
-    instructor: "Alfred Dah",
-    duration: "1h 30min",
-    status: "upcoming"
-  })
+  const [masterclassSession, setMasterclassSession] = useState<any>({})
   const [masterclassSessions, setMasterclassSessions] = useState<any[]>([])
   const [upcomingMasterclasses, setUpcomingMasterclasses] = useState<any[]>([])
   const [pastMasterclasses, setPastMasterclasses] = useState<any[]>([])
@@ -207,7 +194,7 @@ export default function SuperAdminDashboard() {
     dateDisplay: "",
     thumbnailUrl: "",
     whatsappGroupUrl: "",
-    youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
+    youtubeLiveUrl: "https://www.youtube.com/@leguideai",
     duration: "1h 30min",
     status: "upcoming",
     is_active: true
@@ -1239,20 +1226,7 @@ export default function SuperAdminDashboard() {
 
   function handleOpenAddMasterclass() {
     setEditingMasterclass(null)
-    setMasterclassForm({
-      id: "new",
-      title: "Masterclass IA : Cas Pratiques & Outils en Direct",
-      description: "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
-      instructor: "Alfred Dah",
-      scheduledAt: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16),
-      dateDisplay: "Dimanche Prochain à 19h00 (GMT)",
-      thumbnailUrl: "",
-      whatsappGroupUrl: "",
-      youtubeLiveUrl: "https://www.youtube.com/@LeGuideIA",
-      duration: "1h 30min",
-      status: "upcoming",
-      is_active: true
-    })
+    setMasterclassForm({})
     setShowMasterclassModal(true)
   }
 
@@ -1267,7 +1241,7 @@ export default function SuperAdminDashboard() {
       dateDisplay: s.dateDisplay || "",
       thumbnailUrl: s.thumbnailUrl || "",
       whatsappGroupUrl: s.whatsappGroupUrl || "",
-      youtubeLiveUrl: s.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA",
+      youtubeLiveUrl: s.youtubeLiveUrl || "https://www.youtube.com/@leguideai",
       duration: s.duration || "1h 30min",
       status: s.status || "upcoming",
       is_active: s.is_active !== false
@@ -1365,7 +1339,7 @@ export default function SuperAdminDashboard() {
     setReplayForm({
       title: s.title || "Replay Masterclass",
       description: s.description || "",
-      youtubeUrl: s.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA",
+      youtubeUrl: s.youtubeLiveUrl || "https://www.youtube.com/@leguideai",
       duration: s.duration || "1h 30min",
       category: "Prompting",
       instructor: s.instructor || "Alfred Dah",
@@ -6457,7 +6431,7 @@ export default function SuperAdminDashboard() {
                           )}
                         </div>
                         <p className="text-[10px] text-slate-500 truncate">
-                          {masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"}
+                          {masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@leguideai"}
                         </p>
                       </div>
                     </div>
@@ -7678,7 +7652,7 @@ export default function SuperAdminDashboard() {
                       type="url"
                       value={masterclassForm.youtubeLiveUrl}
                       onChange={e => setMasterclassForm({ ...masterclassForm, youtubeLiveUrl: e.target.value })}
-                      placeholder="https://www.youtube.com/@LeGuideIA ou lien direct"
+                      placeholder="https://www.youtube.com/@leguideai ou lien direct"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
                     />
                   </div>
@@ -9433,7 +9407,7 @@ export default function SuperAdminDashboard() {
                         type="url"
                         value={siteSettings.masterclass_youtube_url || ""}
                         onChange={e => setSiteSettings({ ...siteSettings, masterclass_youtube_url: e.target.value })}
-                        placeholder="https://www.youtube.com/@LeGuideIA"
+                        placeholder="https://www.youtube.com/@leguideai"
                         className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:border-primary outline-none"
                       />
                     </div>

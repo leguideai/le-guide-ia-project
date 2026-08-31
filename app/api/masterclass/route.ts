@@ -135,7 +135,7 @@ export async function GET(req: Request) {
           dateDisplay: dateDisplay,
           thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
           whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-          youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
+          youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@leguideai",
           duration: "1h 30min",
           price: "100% Gratuit (Accès Libre)"
         }
@@ -314,7 +314,7 @@ export async function POST(req: Request) {
       scheduledAt: settingsMap.masterclass_date || "",
       dateDisplay: settingsMap.masterclass_date_display || "",
       whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@LeGuideIA",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@leguideai",
       instructor: settingsMap.masterclass_instructor || "Alfred Dah"
     }
 

@@ -630,7 +630,7 @@ export async function sendMasterclassRegistrationEmail(
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "À venir")
     const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass"
-    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
+    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@leguideai"
 
     const textContent = `Bonjour ${firstName},\n\nVotre inscription à la Masterclass IA "${sessionTitle}" est bien confirmée !\n\nDétails de la session :\n- Date & Heure : ${dateFormatted}\n- Intervenant : ${instructor}\n- Format : Direct interactif 100% gratuit sur YouTube Live\n\n1. Rejoindre le Groupe WhatsApp des Apprenants : ${whatsappUrl}\n2. Lien du direct YouTube Live : ${youtubeUrl}\n\nÀ très bientôt,\nAlfred Dah & L'équipe LE GUIDE IA`
 
@@ -748,7 +748,7 @@ export async function sendMasterclassReminderEmail(
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
     const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass"
-    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
+    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@leguideai"
 
     let subject = `⏳ Rappel : Votre Masterclass IA en direct (${dateFormatted})`
     let badgeText = `⏳ RAPPEL SESSION MASTERCLASS`
@@ -1209,7 +1209,7 @@ export async function sendMasterclassTargetedEmail(params: {
     const sessionTitle = session.title || "Masterclass IA en Direct"
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
-    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@LeGuideIA"
+    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@leguideai"
     const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com"
 
     let badgeText = "📢 MESSAGE DE L'INSTRUCTEUR"
