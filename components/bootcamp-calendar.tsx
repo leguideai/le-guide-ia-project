@@ -554,7 +554,7 @@ export function BootcampCalendar({
                     </div>
                   ) : null}
 
-                  {selectedEvent.recordingUrl && (
+                  {Boolean(selectedEvent.recordingUrl && selectedEvent.recordingUrl.trim() && selectedEvent.recordingUrl !== "undefined" && selectedEvent.recordingUrl !== "null") && (
                     <a
                       href={selectedEvent.recordingUrl}
                       target="_blank"

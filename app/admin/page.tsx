@@ -90,6 +90,7 @@ interface ResourceItem {
 interface LiveSession {
   id?: string
   title: string
+  course_id?: string
   course_slug: string
   meet_url: string
   replay_url?: string
@@ -1935,12 +1936,30 @@ export default function SuperAdminDashboard() {
       })
       const data = await res.json()
       if (data.success) {
-        showNotice(data.message || "Session Live programmée !")
+        showNotice(data.message || "Session enregistrée avec succès !")
         setShowLiveModal(false)
+        if (data.session) {
+          setAllSessions(prev => {
+            const exists = prev.some(s => s.id === data.session.id)
+            if (exists) {
+              return prev.map(s => s.id === data.session.id ? { ...s, ...data.session } : s)
+            }
+            return [...prev, data.session]
+          })
+          setLives(prev => {
+            const exists = prev.some(l => l.id === data.session.id)
+            if (exists) {
+              return prev.map(l => l.id === data.session.id ? { ...l, ...data.session } : l)
+            }
+            return [...prev, data.session]
+          })
+        }
         fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de l'enregistrement de la session.")
       }
-    } catch (err) {
-      alert("Erreur d'enregistrement du live")
+    } catch (err: any) {
+      alert("Erreur d'enregistrement : " + (err?.message || "Erreur réseau"))
     } finally {
       setProcessingId(null)
     }
@@ -2838,7 +2857,7 @@ export default function SuperAdminDashboard() {
                 >
                   <div className="flex items-center gap-2.5">
                     <Calendar className="size-4 shrink-0" />
-                    <span>Calendrier & Directs</span>
+                    <span>Calendrier & Planning</span>
                   </div>
                   <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>
                 </button>
@@ -3141,14 +3160,14 @@ export default function SuperAdminDashboard() {
 
               <button
                 onClick={() => setActiveTab("lives")}
-                title={`Calendrier & Directs (${adminCalendarEvents.length})`}
+                title={`Calendrier & Planning (${adminCalendarEvents.length})`}
                 className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
                   activeTab === "lives" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
                   <Calendar className="size-4 shrink-0" />
-                  {!sidebarCollapsed && <span>Calendrier & Directs</span>}
+                  {!sidebarCollapsed && <span>Calendrier & Planning</span>}
                 </div>
                 {!sidebarCollapsed && <span className="text-[10px] opacity-75">({adminCalendarEvents.length})</span>}
               </button>
@@ -3401,7 +3420,7 @@ export default function SuperAdminDashboard() {
               {activeTab === "courses" && "Gestion des Bootcamps (Lives)"}
               {activeTab === "formations" && "Gestion des Formations Vidéos (À la demande)"}
               {activeTab === "resources" && "Bibliothèque de Prompts & Templates"}
-              {activeTab === "lives" && "Sessions Live & Replays"}
+              {activeTab === "lives" && "Calendrier & Planning des Sessions Bootcamps"}
               {activeTab === "masterclasses" && "Masterclasses — Sessions à Venir"}
               {activeTab === "masterclasses_past" && "Masterclasses — Sessions Passées & Historique"}
               {activeTab === "masterclass_participants" && "Masterclasses — Participants & Inscrits"}
@@ -3918,7 +3937,10 @@ export default function SuperAdminDashboard() {
 
             {/* Course Modal */}
             {showCourseModal && (
-              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+              <div 
+                onClick={(e) => { if (e.target === e.currentTarget) setShowCourseModal(false) }}
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+              >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-2xl w-full space-y-4 max-h-[90vh] overflow-y-auto">
                   <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Layers className="size-5 text-primary" />
@@ -4204,7 +4226,10 @@ export default function SuperAdminDashboard() {
 
             {/* ===== MODAL GESTION DES SESSIONS LIVE ===== */}
             {showSessionModal && selectedCourseForSessions && (
-              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+              <div 
+                onClick={(e) => { if (e.target === e.currentTarget) { setShowSessionModal(false); setSelectedCourseForSessions(null); setBootcampSessions([]); } }}
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+              >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-3xl w-full space-y-5 max-h-[90vh] overflow-y-auto">
                   <div className="flex items-center justify-between">
                     <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -4444,7 +4469,10 @@ export default function SuperAdminDashboard() {
 
             {/* ===== MODAL D'APERÇU ET DÉTAILS COMPLETS DU BOOTCAMP ===== */}
             {showDetailsModal && selectedCourseDetails && (
-              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+              <div 
+                onClick={(e) => { if (e.target === e.currentTarget) { setShowDetailsModal(false); setSelectedCourseDetails(null); } }}
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+              >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 md:p-8 max-w-4xl w-full space-y-6 max-h-[92vh] overflow-y-auto shadow-2xl relative">
                   
                   {/* Header Modal */}
@@ -5900,7 +5928,10 @@ export default function SuperAdminDashboard() {
 
             {/* Resource Modal */}
             {showResourceModal && (
-              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+              <div 
+                onClick={(e) => { if (e.target === e.currentTarget) setShowResourceModal(false) }}
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+              >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
                   <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
                     <Sparkles className="size-5 text-primary" />
@@ -6195,22 +6226,56 @@ export default function SuperAdminDashboard() {
 
             {/* Live Modal */}
             {showLiveModal && (
-              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+              <div 
+                onClick={(e) => { if (e.target === e.currentTarget) setShowLiveModal(false) }}
+                className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+              >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
-                  <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Video className="size-5 text-primary" />
-                    Programmer une Session Live Google Meet
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <Video className="size-5 text-primary" />
+                      Programmer un bootcamp / Session Live
+                    </h3>
+                    <button
+                      onClick={() => setShowLiveModal(false)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                    >
+                      <X className="size-5" />
+                    </button>
+                  </div>
 
-                  <form onSubmit={handleSaveLive} className="space-y-3 text-xs">
+                  <form onSubmit={handleSaveLive} className="space-y-3.5 text-xs">
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">Titre du Live</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Formation / Bootcamp associé</label>
+                      <select
+                        value={liveForm.course_slug || courses[0]?.slug || ""}
+                        onChange={e => {
+                          const sel = courses.find(c => c.slug === e.target.value || c.id === e.target.value)
+                          setLiveForm({
+                            ...liveForm,
+                            course_slug: sel?.slug || e.target.value,
+                            course_id: sel?.id || ""
+                          })
+                        }}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-semibold"
+                      >
+                        {courses.map(c => (
+                          <option key={c.id || c.slug} value={c.slug || c.id}>
+                            {c.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-slate-600 block mb-1 font-bold">Titre de la session / Bootcamp</label>
                       <input
                         type="text"
                         required
-                        value={liveForm.title}
+                        value={liveForm.title || ""}
                         onChange={e => setLiveForm({ ...liveForm, title: e.target.value })}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                        placeholder="Ex: 🚀 Session 1 : Fondamentaux & Prompts Avancés"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-medium"
                       />
                     </div>
 
@@ -6226,7 +6291,7 @@ export default function SuperAdminDashboard() {
                         className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
                       />
                       <p className="text-[10px] text-slate-400 mt-1">
-                        Laissez vide si le lien n'est pas encore défini. Vous pourrez l'ajouter ultérieurement.
+                        Laissez vide si le lien n'est pas encore défini.
                       </p>
                     </div>
 
@@ -6234,38 +6299,43 @@ export default function SuperAdminDashboard() {
                       <label className="text-slate-600 block mb-1 font-bold">Date & Heure du Direct (GMT)</label>
                       <input
                         type="datetime-local"
-                        value={liveForm.scheduled_at?.slice(0, 16)}
+                        required
+                        value={liveForm.scheduled_at ? liveForm.scheduled_at.slice(0, 16) : ""}
                         onChange={e => setLiveForm({ ...liveForm, scheduled_at: new Date(e.target.value).toISOString() })}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-medium"
                       />
                     </div>
 
                     <FileUploadField
-                      label="Replay Vidéo HD (Upload ou URL YouTube/Supabase)"
+                      label="Replay Vidéo HD (Optionnel - Laisser vide si direct à venir)"
                       value={liveForm.replay_url || ""}
                       onChange={url => setLiveForm({ ...liveForm, replay_url: url })}
                       accept="video/*,image/*,.mp4,.webm"
                       bucket="course-replays"
                       folder="replays"
-                      placeholder="https://youtube.com/... ou URL du replay HD"
+                      placeholder="https://youtube.com/... ou URL du replay HD (Optionnel)"
                       preview="none"
-                      hint="Collez le lien YouTube ou téléversez le fichier MP4 directement."
+                      hint="Optionnel. Si non fourni, le bouton de replay ne s'affichera pas dans les détails."
                     />
 
                     <div className="flex gap-2 pt-3 border-t border-slate-200">
                       <button
                         type="button"
                         onClick={() => setShowLiveModal(false)}
-                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold hover:bg-slate-200"
+                        className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-all cursor-pointer"
                       >
                         Annuler
                       </button>
                       <button
                         type="submit"
                         disabled={processingId === "save_live"}
-                        className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-bold hover:opacity-90"
+                        className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-bold hover:opacity-90 transition-all shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                       >
-                        Enregistrer
+                        {processingId === "save_live" ? (
+                          <span>Enregistrement en cours...</span>
+                        ) : (
+                          <span>Enregistrer la session</span>
+                        )}
                       </button>
                     </div>
                   </form>
@@ -8752,7 +8822,10 @@ export default function SuperAdminDashboard() {
 
             {/* Grading Modal */}
             {gradingSub && (
-              <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+              <div 
+                onClick={(e) => { if (e.target === e.currentTarget) setGradingSub(null) }}
+                className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+              >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
                   <h3 className="font-heading text-lg font-bold text-slate-800">Évaluation du Devoir</h3>
                   <p className="text-xs text-slate-500">Pour : <strong>{gradingSub.user_email}</strong></p>
@@ -9441,7 +9514,10 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL: AJOUTER / MODIFIER UNE VIDÉO VSL OU TÉMOIGNAGE */}
         {showVslModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white backdrop-blur-md animate-fadeIn">
+          <div 
+            onClick={(e) => { if (e.target === e.currentTarget) setShowVslModal(false) }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fadeIn"
+          >
             <div className="relative w-full max-w-xl rounded-3xl border border-slate-200/90 bg-white shadow-xs p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -9553,7 +9629,10 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL GESTION DES CATÉGORIES DE FORMATIONS */}
         {showCategoryModal && (
-          <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-4">
+          <div 
+            onClick={(e) => { if (e.target === e.currentTarget) { setShowCategoryModal(false); setEditingCategory(null); } }}
+            className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+          >
             <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-scaleUp">
               <div className="p-6 border-b border-slate-200 flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -9736,7 +9815,10 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL GESTION DES TÉMOIGNAGES */}
         {showTestimonialModal && (
-          <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div 
+            onClick={(e) => { if (e.target === e.currentTarget) setShowTestimonialModal(false) }}
+            className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+          >
             <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
               <div className="p-4 sm:p-6 border-b border-slate-200 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
@@ -9838,7 +9920,10 @@ export default function SuperAdminDashboard() {
 
         {/* MODAL ÉDITION INSCRIPTION & PAIEMENT */}
         {showPaymentModal && (
-          <div className="fixed inset-0 z-50 bg-white backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div 
+            onClick={(e) => { if (e.target === e.currentTarget) setShowPaymentModal(false) }}
+            className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+          >
             <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
               <div className="p-4 sm:p-6 border-b border-slate-200 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
