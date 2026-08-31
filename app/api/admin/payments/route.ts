@@ -92,7 +92,39 @@ export async function GET() {
       .order("created_at", { ascending: false })
 
     const finalPayments = (updatedPayments || payments || [])
-    return NextResponse.json({ success: true, payments: finalPayments })
+
+    // Exclure strictement les abonnements aux ressources/replays (gérés dans l'onglet Abonnements VIP)
+    const isSubscriptionPayment = (p: any) => {
+      const ref = (p.transaction_ref || "").toUpperCase()
+      const title = (p.course_title || "").toLowerCase()
+      const regSource = (p.registrations?.source || "").toLowerCase()
+      const regSlug = (p.registrations?.course_slug || "").toLowerCase()
+
+      if (
+        ref.includes("STRIPE-SUB") ||
+        ref.includes("SUB-") ||
+        ref.startsWith("SUB") ||
+        title.includes("abonnement") ||
+        title.includes("pass vip") ||
+        title.includes("ressource") ||
+        title.includes("replay") ||
+        regSource.includes("subscription") ||
+        regSlug.includes("subscription") ||
+        regSlug === "subscription-vip"
+      ) {
+        return true
+      }
+
+      // Si le montant correspond à un Pass Ressource (10k, 15k, 30k) et ne mentionne pas explicitement un bootcamp
+      if (!title.includes("bootcamp") && !title.includes("pro") && (p.amount === 10000 || p.amount === 15000 || p.amount === 30000)) {
+        return true
+      }
+
+      return false
+    }
+
+    const bootcampPayments = finalPayments.filter(p => !isSubscriptionPayment(p))
+    return NextResponse.json({ success: true, payments: bootcampPayments })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

@@ -232,7 +232,7 @@ sation                                                           & Paiement    &
 
 | Fonctionnalité | Prévu quand |
 |---------------|------------|
-| Bibliothèque Premium | Mois 3 |
+| Bibliothèque Prompts | Mois 3 |
 | Blog & Newsletter | Mois 4 |
 | Espace Entreprises (B2B) | Mois 5 |
 | Outils IA interactifs | Mois 6 |

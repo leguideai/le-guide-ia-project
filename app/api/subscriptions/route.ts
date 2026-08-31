@@ -312,40 +312,7 @@ export async function POST(req: Request) {
       console.warn("site_settings subscriptions mirror note:", setErr)
     }
 
-    // 3. Enregistrer également dans 'registrations' et 'payments' pour cohérence admin
-    try {
-      await supabaseServer.from("registrations").upsert({
-        full_name: fullName.trim(),
-        email: emailClean,
-        whatsapp: whatsapp || `wa_${emailClean}`,
-        country: country || "CI",
-        source: isStripe ? "subscription_stripe" : "subscription_vip",
-        course_slug: "subscription-vip",
-        status: "inscrit",
-        notes: JSON.stringify({
-          subscription_id: subId,
-          plan: plan,
-          plan_label: planLabel,
-          amount: selectedPrice,
-          payment_method: isStripe ? "stripe" : paymentMethod,
-          transaction_ref: newSub.transaction_ref,
-          receipt_url: receiptUrl || null,
-          expires_at: expiresAt
-        })
-      }, { onConflict: "email" })
-
-      await supabaseServer.from("payments").insert({
-        amount: selectedPrice,
-        currency: "XOF",
-        method: isStripe ? "stripe" : paymentMethod,
-        status: "pending",
-        transaction_ref: newSub.transaction_ref,
-        course_title: `Abonnement VIP — ${planLabel}`,
-        payment_method: isStripe ? "Carte Bancaire (Stripe)" : paymentMethod
-      })
-    } catch (regErr) {
-      console.warn("registrations sync note:", regErr)
-    }
+    // Subscriptions are stored directly in 'subscriptions' table and 'site_settings' mirror (managed exclusively in Abonnements VIP tab)
 
     // 4. Si Stripe : Générer la session Stripe Checkout officielle et retourner l'URL de redirection
     if (isStripe) {

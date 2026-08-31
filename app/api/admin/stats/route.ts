@@ -83,13 +83,37 @@ export async function GET() {
       }
     })
 
-    const pendingPaymentsCount = (payments || []).filter(p => {
+    const isSubscriptionPayment = (p: any) => {
+      const ref = String(p.transaction_ref || "").toUpperCase()
+      const title = String(p.course_title || "").toLowerCase()
+      return (
+        ref.includes("STRIPE-SUB") ||
+        ref.includes("SUB-") ||
+        ref.startsWith("SUB") ||
+        title.includes("abonnement") ||
+        title.includes("pass vip") ||
+        title.includes("ressource") ||
+        title.includes("replay") ||
+        (!title.includes("bootcamp") && !title.includes("pro") && (p.amount === 10000 || p.amount === 15000 || p.amount === 30000))
+      )
+    }
+
+    const bootcampPayments = (payments || []).filter(p => !isSubscriptionPayment(p))
+
+    const pendingPaymentsCount = bootcampPayments.filter(p => {
       const s = String(p.status || "").toLowerCase()
       return s === "pending_verification" || s === "pending" || s === "en_attente"
     }).length
 
-    const totalRegistrations = (registrations || []).length
-    const proRegistrations = paidRegistrations.length
+    const isSubscriptionRegistration = (r: any) => {
+      const src = String(r.source || "").toLowerCase()
+      const slug = String(r.course_slug || "").toLowerCase()
+      return src.includes("subscription") || slug.includes("subscription") || slug === "subscription-vip"
+    }
+
+    const bootcampRegistrations = (registrations || []).filter(r => !isSubscriptionRegistration(r))
+    const totalRegistrations = bootcampRegistrations.length
+    const proRegistrations = paidRegistrations.filter(r => !isSubscriptionRegistration(r)).length
     const totalStudents = (profiles || []).length
     const pendingSubmissions = (submissions || []).filter(s => s.status === "pending" || !s.status).length
     const b2bCount = (b2bRequests || []).length

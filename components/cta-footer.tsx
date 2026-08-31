@@ -149,7 +149,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
 
   const links = [
     { label: "Bootcamps IA", href: "/bootcamp" },
-    { label: "Bibliothèque Premium", href: "/ressources" },
+    { label: "Bibliothèque Prompts", href: "/ressources" },
     { label: "Entreprises (B2B)", href: "/entreprises" },
   ]
   const targetTimestamp = getOfferEndTimestamp(activeCourse?.offer_end_date)

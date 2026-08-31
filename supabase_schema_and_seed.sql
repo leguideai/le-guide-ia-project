@@ -341,7 +341,7 @@ VALUES
   '15 Septembre au 20 Décembre 2026',
   'Alfred Dah',
   'active',
-  '["15h de sessions orientées Business & Automation", "Inclus tout le programme Pro + Coaching 1h individuel", "Modèles de Business Plans & Workflows d Agents IA", "Accès Espace Membre & Bibliothèque Premium de Prompts", "Certificat IA Business vérifiable + Facture d entreprise", "Garantie satisfait ou remboursé (sous conditions)"]'::jsonb
+  '["15h de sessions orientées Business & Automation", "Inclus tout le programme Pro + Coaching 1h individuel", "Modèles de Business Plans & Workflows d Agents IA", "Accès Espace Membre & Bibliothèque Prompts de Prompts", "Certificat IA Business vérifiable + Facture d entreprise", "Garantie satisfait ou remboursé (sous conditions)"]'::jsonb
 ),
 (
   'initiation-free',

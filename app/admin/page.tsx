@@ -2888,7 +2888,38 @@ export default function SuperAdminDashboard() {
     )
   }
 
-  const filteredPayments = payments.filter(p => {
+  const isSubscriptionPayment = (p: any) => {
+    const ref = (p.transaction_ref || "").toUpperCase()
+    const title = (p.course_title || "").toLowerCase()
+    const regSource = (p.registrations?.source || "").toLowerCase()
+    const regSlug = (p.registrations?.course_slug || "").toLowerCase()
+
+    if (
+      ref.includes("STRIPE-SUB") ||
+      ref.includes("SUB-") ||
+      ref.startsWith("SUB") ||
+      title.includes("abonnement") ||
+      title.includes("pass vip") ||
+      title.includes("ressource") ||
+      title.includes("replay") ||
+      regSource.includes("subscription") ||
+      regSlug.includes("subscription") ||
+      regSlug === "subscription-vip"
+    ) {
+      return true
+    }
+
+    if (!title.includes("bootcamp") && !title.includes("pro") && (p.amount === 10000 || p.amount === 15000 || p.amount === 30000)) {
+      return true
+    }
+
+    return false
+  }
+
+  const bootcampPayments = payments.filter(p => !isSubscriptionPayment(p))
+  const bootcampPendingCount = bootcampPayments.filter(p => p.status === "pending_verification" || p.status === "pending" || p.status === "en_attente").length
+
+  const filteredPayments = bootcampPayments.filter(p => {
     const q = searchQuery.toLowerCase().trim()
     const matchesSearch = !q || 
       p.registrations?.full_name?.toLowerCase().includes(q) ||
@@ -3037,9 +3068,9 @@ export default function SuperAdminDashboard() {
                       <FileCheck className="size-3.5 shrink-0" />
                       <span>Inscriptions</span>
                     </div>
-                    {stats.pendingPaymentsCount > 0 && (
+                    {bootcampPendingCount > 0 && (
                       <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full">
-                        {stats.pendingPaymentsCount}
+                        {bootcampPendingCount}
                       </span>
                     )}
                   </button>
@@ -3366,7 +3397,7 @@ export default function SuperAdminDashboard() {
               {/* Inscriptions */}
               <button
                 onClick={() => setActiveTab("payments")}
-                title={`Inscriptions & Paiements ${stats.pendingPaymentsCount > 0 ? `(${stats.pendingPaymentsCount} en attente)` : ''}`}
+                title={`Inscriptions & Paiements ${bootcampPendingCount > 0 ? `(${bootcampPendingCount} en attente)` : ''}`}
                 className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between pl-7 pr-3.5 py-2"} rounded-xl text-xs font-medium transition-all cursor-pointer relative ${
                   activeTab === "payments" 
                     ? "bg-primary/15 text-slate-950 font-bold border-l-2 border-primary" 
@@ -3377,12 +3408,12 @@ export default function SuperAdminDashboard() {
                   <FileCheck className="size-3.5 shrink-0" />
                   {!sidebarCollapsed && <span>Inscriptions</span>}
                 </div>
-                {stats.pendingPaymentsCount > 0 && (
+                {bootcampPendingCount > 0 && (
                   sidebarCollapsed ? (
                     <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-amber-500 ring-2 ring-white" />
                   ) : (
                     <span className="bg-amber-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 rounded-full">
-                      {stats.pendingPaymentsCount}
+                      {bootcampPendingCount}
                     </span>
                   )
                 )}
@@ -9143,13 +9174,13 @@ export default function SuperAdminDashboard() {
               {/* Status Badges Counts */}
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-3 py-1 rounded-xl bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700">
-                  Total : <strong className="text-slate-900">{payments.length}</strong>
+                  Total : <strong className="text-slate-900">{bootcampPayments.length}</strong>
                 </span>
                 <span className="px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-[11px] font-bold text-amber-800">
-                  À vérifier : <strong className="text-amber-900">{payments.filter(p => p.status === "pending_verification" || p.status === "pending").length}</strong>
+                  À vérifier : <strong className="text-amber-900">{bootcampPayments.filter(p => p.status === "pending_verification" || p.status === "pending").length}</strong>
                 </span>
                 <span className="px-3 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800">
-                  Confirmés : <strong className="text-emerald-900">{payments.filter(p => p.status === "confirmed").length}</strong>
+                  Confirmés : <strong className="text-emerald-900">{bootcampPayments.filter(p => p.status === "confirmed").length}</strong>
                 </span>
               </div>
             </div>
@@ -9182,11 +9213,11 @@ export default function SuperAdminDashboard() {
                   onChange={e => setPaymentFilter(e.target.value)}
                   className="w-full sm:w-auto bg-white border border-slate-200/90 shadow-xs rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:border-primary outline-none cursor-pointer"
                 >
-                  <option value="all">Tous les Statuts ({payments.length})</option>
-                  <option value="pending_verification">À vérifier / Mobile Money ({payments.filter(p => p.status === "pending_verification" || p.status === "pending").length})</option>
-                  <option value="confirmed">Confirmés / Payés ({payments.filter(p => p.status === "confirmed").length})</option>
-                  <option value="pending">En attente ({payments.filter(p => p.status === "pending").length})</option>
-                  <option value="rejected">Rejetés / Échoués ({payments.filter(p => p.status === "rejected" || p.status === "failed").length})</option>
+                  <option value="all">Tous les Statuts ({bootcampPayments.length})</option>
+                  <option value="pending_verification">À vérifier / Mobile Money ({bootcampPayments.filter(p => p.status === "pending_verification" || p.status === "pending").length})</option>
+                  <option value="confirmed">Confirmés / Payés ({bootcampPayments.filter(p => p.status === "confirmed").length})</option>
+                  <option value="pending">En attente ({bootcampPayments.filter(p => p.status === "pending").length})</option>
+                  <option value="rejected">Rejetés / Échoués ({bootcampPayments.filter(p => p.status === "rejected" || p.status === "failed").length})</option>
                 </select>
               </div>
             </div>

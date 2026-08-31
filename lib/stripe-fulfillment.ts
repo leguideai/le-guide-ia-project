@@ -20,6 +20,109 @@ export async function fulfillStripeCheckout(session: any) {
       return { success: false, error: "Missing email" }
     }
 
+    const isSubscription = metadata.type === "subscription" || metadata.courseSlug === "subscription-vip" || metadata.plan
+
+    // === BRANCH 1: VIP SUBSCRIPTION FULFILLMENT ===
+    if (isSubscription) {
+      const plan = metadata.plan || (price >= 25000 ? "1_year" : "3_months")
+      const planLabel = metadata.planLabel || (plan === "1_year" ? "Pass Annuel (1 An)" : "Pass Trimestriel (3 Mois)")
+      const startsAt = new Date().toISOString()
+      const expiresAt = calculateSubscriptionExpiry(plan).toISOString()
+      const subId = metadata.subscriptionId || `sub_stripe_${Date.now()}`
+
+      // A. Mettre à jour dans 'subscriptions' table
+      try {
+        await supabaseServer.from("subscriptions").upsert({
+          id: subId,
+          email: email,
+          full_name: fullName,
+          whatsapp: whatsapp || null,
+          country: country || "CI",
+          plan: plan,
+          plan_label: planLabel,
+          amount: price,
+          currency: "XOF",
+          status: "active",
+          payment_method: "Stripe (Carte Bancaire)",
+          transaction_ref: refCommand,
+          starts_at: startsAt,
+          expires_at: expiresAt,
+          created_at: new Date().toISOString()
+        })
+      } catch (subDbErr) {
+        console.warn("subscriptions upsert note in stripe fulfillment:", subDbErr)
+      }
+
+      // B. Mettre à jour dans le miroir site_settings.subscriptions
+      try {
+        const { data: setRow } = await supabaseServer.from("site_settings").select("value").eq("key", "subscriptions").maybeSingle()
+        let existing = []
+        if (setRow?.value) {
+          try { existing = typeof setRow.value === "string" ? JSON.parse(setRow.value) : setRow.value } catch (_) {}
+        }
+        const updated = [{
+          id: subId,
+          email: email,
+          full_name: fullName,
+          whatsapp: whatsapp || null,
+          country: country || "CI",
+          plan: plan,
+          plan_label: planLabel,
+          amount: price,
+          currency: "XOF",
+          status: "active",
+          payment_method: "Stripe (Carte Bancaire)",
+          transaction_ref: refCommand,
+          starts_at: startsAt,
+          expires_at: expiresAt,
+          created_at: new Date().toISOString()
+        }, ...existing.filter((s: any) => s.email?.toLowerCase() !== email)]
+
+        await supabaseServer.from("site_settings").upsert({
+          key: "subscriptions",
+          value: JSON.stringify(updated),
+          updated_at: new Date().toISOString()
+        }, { onConflict: "key" })
+      } catch (mirrorErr) {
+        console.warn("mirror sync in stripe fulfillment:", mirrorErr)
+      }
+
+      // C. Ensure Profile
+      try {
+        const { data: existingProfile } = await supabaseServer
+          .from("profiles")
+          .select("id")
+          .ilike("email", email)
+          .maybeSingle()
+
+        if (existingProfile) {
+          await supabaseServer
+            .from("profiles")
+            .update({
+              full_name: fullName || undefined,
+              whatsapp: whatsapp || undefined,
+              country: country || undefined,
+              role: "student",
+              plan: "PRO",
+              status: "active",
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", existingProfile.id)
+        }
+      } catch (authErr) {
+        console.warn("Auth user ensure note:", authErr)
+      }
+
+      // D. Envoyer l'email d'activation VIP
+      try {
+        await sendSubscriptionActivatedEmail(fullName, email, planLabel, expiresAt)
+      } catch (_) {}
+
+      console.log(`[Stripe Fulfillment] Successfully activated VIP Subscription for ${email} (${planLabel})`)
+      return { success: true, email, courseTitle: `Abonnement VIP — ${planLabel}` }
+    }
+
+    // === BRANCH 2: BOOTCAMP FULFILLMENT ===
     // 1. Resolve Course Record
     const { data: course } = await supabaseServer
       .from("courses")
@@ -173,86 +276,14 @@ export async function fulfillStripeCheckout(session: any) {
       console.warn("Auth user ensure warning in Stripe fulfillment:", authErr)
     }
 
-    // 6. Send official instant confirmation email or VIP subscription email
-    const isSubscription = metadata.type === "subscription" || metadata.courseSlug === "subscription-vip" || metadata.plan
-
-    if (isSubscription) {
-      const plan = metadata.plan || (price >= 25000 ? "1_year" : "3_months")
-      const planLabel = metadata.planLabel || (plan === "1_year" ? "Pass Annuel (1 An)" : "Pass Trimestriel (3 Mois)")
-      const startsAt = new Date().toISOString()
-      const expiresAt = calculateSubscriptionExpiry(plan).toISOString()
-      const subId = metadata.subscriptionId || `sub_stripe_${Date.now()}`
-
-      // A. Mettre à jour dans 'subscriptions'
-      try {
-        await supabaseServer.from("subscriptions").upsert({
-          id: subId,
-          email: email,
-          full_name: fullName,
-          whatsapp: whatsapp || null,
-          country: country || "CI",
-          plan: plan,
-          plan_label: planLabel,
-          amount: price,
-          currency: "XOF",
-          status: "active",
-          payment_method: "Stripe (Carte Bancaire)",
-          transaction_ref: refCommand,
-          starts_at: startsAt,
-          expires_at: expiresAt,
-          created_at: new Date().toISOString()
-        })
-      } catch (subDbErr) {
-        console.warn("subscriptions upsert note in stripe fulfillment:", subDbErr)
-      }
-
-      // B. Mettre à jour dans le miroir site_settings.subscriptions
-      try {
-        const { data: setRow } = await supabaseServer.from("site_settings").select("value").eq("key", "subscriptions").maybeSingle()
-        let existing = []
-        if (setRow?.value) {
-          try { existing = typeof setRow.value === "string" ? JSON.parse(setRow.value) : setRow.value } catch (_) {}
-        }
-        const updated = [{
-          id: subId,
-          email: email,
-          full_name: fullName,
-          whatsapp: whatsapp || null,
-          country: country || "CI",
-          plan: plan,
-          plan_label: planLabel,
-          amount: price,
-          currency: "XOF",
-          status: "active",
-          payment_method: "Stripe (Carte Bancaire)",
-          transaction_ref: refCommand,
-          starts_at: startsAt,
-          expires_at: expiresAt,
-          created_at: new Date().toISOString()
-        }, ...existing.filter((s: any) => s.email?.toLowerCase() !== email)]
-
-        await supabaseServer.from("site_settings").upsert({
-          key: "subscriptions",
-          value: JSON.stringify(updated),
-          updated_at: new Date().toISOString()
-        }, { onConflict: "key" })
-      } catch (mirrorErr) {
-        console.warn("mirror sync in stripe fulfillment:", mirrorErr)
-      }
-
-      // C. Envoyer l'email d'activation VIP
-      try {
-        await sendSubscriptionActivatedEmail(fullName, email, planLabel, expiresAt)
-      } catch (_) {}
-    } else {
-      await sendStripeSuccessEmail({
-        fullName,
-        email,
-        courseTitle: resolvedCourseTitle,
-        amount: price,
-        transactionRef: refCommand,
-      })
-    }
+    // 6. Send official instant confirmation email
+    await sendStripeSuccessEmail({
+      fullName,
+      email,
+      courseTitle: resolvedCourseTitle,
+      amount: price,
+      transactionRef: refCommand,
+    })
 
     console.log(`[Stripe Fulfillment] Successfully fulfilled order and granted instant access to ${email} for course ${resolvedCourseSlug}`)
     return { success: true, email, courseTitle: resolvedCourseTitle }

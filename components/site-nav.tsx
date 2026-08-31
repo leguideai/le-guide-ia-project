@@ -18,7 +18,7 @@ export function SiteNav() {
 
   const links = [
     { label: "Bootcamps IA", href: "/bootcamp" },
-    { label: "Bibliothèque Premium", href: "/ressources" },
+    { label: "Bibliothèque Prompts", href: "/ressources" },
     { label: "Entreprises (B2B)", href: "/entreprises" },
   ]
 

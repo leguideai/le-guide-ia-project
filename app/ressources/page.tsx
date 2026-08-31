@@ -195,11 +195,8 @@ export default function RessourcesPage() {
           <div className="space-y-3 text-left">
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-3.5 py-1.5 rounded-full border border-purple-500/20">
               <Sparkles className="size-3.5 text-purple-400" />
-              PROMPTS &amp; BUSINESS PLANS TÉLÉCHARGEABLES
+              PROMPTS &amp; BUSINESS PLANS
             </span>
-            <h1 className="font-heading text-3xl md:text-4xl font-extrabold text-white">
-              Bibliothèque de Prompts &amp; Blueprints IA
-            </h1>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
               Copiez et téléchargez nos prompts métiers et modèles de projets d'entreprise prêts à l'emploi.
             </p>
