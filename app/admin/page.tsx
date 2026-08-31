@@ -6352,9 +6352,6 @@ export default function SuperAdminDashboard() {
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500 text-white shadow-xs">
                       Prochain Direct Diffusé sur le Site
                     </span>
-                    <span className="text-xs text-slate-600 font-semibold">
-                      (Visible en priorité sur /masterclass)
-                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -6862,14 +6859,7 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => setIsManualAddParticipantOpen(true)}
-                    className="px-3.5 py-2 rounded-xl bg-primary text-slate-950 hover:bg-primary/90 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <Plus className="size-3.5" />
-                    <span>Inscrire un apprenant</span>
-                  </button>
+                
 
                   <button
                     type="button"
