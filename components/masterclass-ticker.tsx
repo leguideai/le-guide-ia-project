@@ -66,7 +66,7 @@ export function MasterclassTicker() {
         {/* Texte Défilant Continu (Marquee avec Masque Dégradé) */}
         <Link 
           href="/masterclass" 
-          className="flex-1 overflow-hidden relative group [mask-image:linear-gradient(to_right,transparent,black_24px,black_calc(100%-24px),transparent)]"
+          className="flex-1 overflow-hidden relative group [mask-image:linear-gradient(to_right,transparent,black_8px,black_calc(100%-8px),transparent)] sm:[mask-image:linear-gradient(to_right,transparent,black_24px,black_calc(100%-24px),transparent)]"
         >
           <div className="flex items-center gap-12 whitespace-nowrap animate-ticker text-xs font-semibold text-slate-300 group-hover:text-white transition-colors py-0.5">
             <span className="inline-flex items-center gap-2.5">
@@ -100,7 +100,7 @@ export function MasterclassTicker() {
         {/* Lien Fixe Droite */}
         <Link
           href="/masterclass"
-          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors shrink-0 z-10 bg-[#090d16] pl-2"
+          className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors shrink-0 z-10 bg-[#090d16] pl-1 sm:pl-2"
         >
           <span className="hidden sm:inline">
             {isRegistered ? "Accéder au direct" : "Réserver ma place"}

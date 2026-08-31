@@ -223,8 +223,25 @@ export async function POST(req: Request) {
     const selectedPrice = plan === "1_year" ? pricing.price1y : pricing.price3m
     const planLabel = plan === "1_year" ? "Pass Annuel (1 An)" : "Pass Trimestriel (3 Mois)"
 
+    // Vérifier si l'utilisateur possède déjà un abonnement actif pour cumuler/prolonger sans perte de jours
+    let baseDate = new Date()
+    try {
+      const { data: activeRows } = await supabaseServer
+        .from("subscriptions")
+        .select("expires_at")
+        .ilike("email", emailClean)
+        .eq("status", "active")
+        .order("expires_at", { ascending: false })
+        .limit(1)
+
+      const activeExpiry = activeRows?.[0]?.expires_at
+      if (activeExpiry && new Date(activeExpiry).getTime() > Date.now()) {
+        baseDate = new Date(activeExpiry)
+      }
+    } catch (_) {}
+
     const startsAt = new Date().toISOString()
-    const expiresAt = calculateSubscriptionExpiry(plan).toISOString()
+    const expiresAt = calculateSubscriptionExpiry(plan, baseDate).toISOString()
     const subId = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
 
     const isStripe = paymentMethod.toLowerCase().includes("stripe")

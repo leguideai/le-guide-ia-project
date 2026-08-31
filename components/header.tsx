@@ -58,6 +58,14 @@ export function Header() {
   }
 
   const [announcementText, setAnnouncementText] = useState("")
+  const [courseTitle, setCourseTitle] = useState("Bootcamp IA")
+  const [courseDatesText, setCourseDatesText] = useState("")
+  const [isPromoActiveState, setIsPromoActiveState] = useState(false)
+  const [discountPercentState, setDiscountPercentState] = useState<number | null>(null)
+  const [originalPriceDisplay, setOriginalPriceDisplay] = useState("")
+  const [promoPriceDisplay, setPromoPriceDisplay] = useState("")
+  const [announcementMobileText, setAnnouncementMobileText] = useState("")
+  const [announcementMobilePrice, setAnnouncementMobilePrice] = useState("")
   const [announcementCta, setAnnouncementCta] = useState("")
   const [announcementHref, setAnnouncementHref] = useState("/checkout/bootcamp-ia-pro")
 
@@ -92,9 +100,15 @@ export function Header() {
         const course = activeCourses[0] || courses?.[0]
 
         if (course) {
+          setCourseTitle(course.title || "Bootcamp IA")
+
           const targetTime = getOfferEndTimestamp(course.offer_end_date)
           const isPromoActive = targetTime ? targetTime > now : false
           const isExpired = targetTime ? targetTime <= now : false
+
+          const origPrice = Number(course.original_price) || 0
+          const promoPrice = Number(course.price) || 0
+          const hasDiscount = origPrice > 0 && promoPrice > 0 && promoPrice < origPrice
 
           // Exact price according to promo status & date
           const currentPrice = isPromoActive 
@@ -103,6 +117,19 @@ export function Header() {
           const formattedPrice = currentPrice > 0 
             ? `${Number(currentPrice).toLocaleString("fr-FR")} FCFA` 
             : "99 000 FCFA"
+
+          if (isPromoActive && hasDiscount) {
+            setIsPromoActiveState(true)
+            const pct = Math.round(((origPrice - promoPrice) / origPrice) * 100)
+            setDiscountPercentState(pct)
+            setOriginalPriceDisplay(`${origPrice.toLocaleString("fr-FR")} FCFA`)
+            setPromoPriceDisplay(`${promoPrice.toLocaleString("fr-FR")} FCFA`)
+          } else {
+            setIsPromoActiveState(false)
+            setDiscountPercentState(null)
+            setOriginalPriceDisplay("")
+            setPromoPriceDisplay(formattedPrice)
+          }
 
           let promoAlert = ""
           if (isPromoActive && targetTime) {
@@ -125,6 +152,8 @@ export function Header() {
 
           // Build dynamic title & dates
           const dateStr = course.dates ? `du ${course.dates}` : ""
+          setCourseDatesText(dateStr)
+
           const isLegacyDefault = !rawCustomText || rawCustomText.includes("BOOTCAMP IA PRO 2") || rawCustomText.includes("Bootcamp IA & Carrière — Direct Live du 31 Août")
           
           let finalText = ""
@@ -140,16 +169,40 @@ export function Header() {
 
           let finalCta = ""
           if (!rawCustomCta || rawCustomCta.includes("99 000") || rawCustomCta.includes("149 000") || rawCustomCta.includes("FCFA")) {
-            finalCta = `Réserver ma place (${formattedPrice}) →`
+            finalCta = "Réserver ma place →"
           } else {
             finalCta = rawCustomCta
           }
+
+          // Formatage concis et ultra lisible de la date pour mobile
+          let mobileDateLabel = "Direct Live"
+          if (course.dates) {
+            let d = course.dates.replace(/2026/g, '').replace(/2027/g, '').trim()
+            d = d.replace(/Septembre/gi, 'Sept.').replace(/Octobre/gi, 'Oct.').replace(/Novembre/gi, 'Nov.').replace(/Décembre/gi, 'Déc.').replace(/Janvier/gi, 'Janv.').replace(/Février/gi, 'Févr.').replace(/Juillet/gi, 'Juil.')
+            const parts = d.split(/\s+au\s+/i)
+            if (parts.length === 2) {
+              const startDay = parts[0].trim().replace(/\D+/g, '')
+              const endPart = parts[1].trim()
+              if (startDay && endPart) {
+                mobileDateLabel = `${startDay} au ${endPart}`
+              } else {
+                mobileDateLabel = d
+              }
+            } else {
+              mobileDateLabel = d
+            }
+          }
+
+          setAnnouncementMobileText(mobileDateLabel.startsWith("du") ? mobileDateLabel : `du ${mobileDateLabel}`)
+          setAnnouncementMobilePrice(`${formattedPrice} →`)
 
           setAnnouncementText(finalText)
           setAnnouncementCta(finalCta)
           setAnnouncementHref(`/checkout/${course.slug || course.id}${isExpired ? "?tier=standard" : ""}`)
         } else if (rawCustomText) {
           setAnnouncementText(rawCustomText)
+          setAnnouncementMobileText("Direct Live")
+          setAnnouncementMobilePrice("Réserver →")
           setAnnouncementCta(rawCustomCta || "En savoir plus →")
         }
       } catch (e) {}
@@ -176,14 +229,59 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-slate-950/95 border-b border-border/80 backdrop-blur-xl">
       
-      {/* Top Announcement Bar */}
-      <div className="bg-gradient-to-r from-primary/90 via-blue-600 to-[#D4AF37] text-white text-[11px] font-extrabold py-1.5 px-4 text-center flex items-center justify-center gap-2">
-        <Sparkles className="size-3.5 animate-pulse text-[#F3E5AB]" />
-        <span>{announcementText}</span>
-        <Link href={announcementHref} className="underline font-black hover:opacity-90 ml-1">
-          {announcementCta}
-        </Link>
-      </div>
+      {/* Top Announcement Bar - 100% Responsive Mobile & Desktop */}
+      <Link 
+        href={announcementHref}
+        className="block bg-gradient-to-r from-primary via-blue-600 to-[#D4AF37] text-white text-[11px] font-extrabold py-2 px-3 text-center transition-all hover:opacity-95 shadow-xs group"
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-1.5 sm:gap-2 leading-tight flex-wrap sm:flex-nowrap">
+          <Sparkles className="size-3.5 shrink-0 animate-pulse text-[#F3E5AB] hidden xs:inline-block" />
+          
+          {/* Version Mobile : Date clairement visible + Effet Promo avec prix barré */}
+          <div className="inline sm:hidden text-[10.5px] xs:text-[11px] font-bold tracking-tight">
+            <span>🔥 {courseTitle} • </span>
+            <span className="text-[#F3E5AB] font-black underline decoration-amber-300/60 underline-offset-2">
+              {announcementMobileText}
+            </span>
+          </div>
+          
+          {/* Version Desktop : Texte complet avec effet promo barré et badge -% */}
+          <div className="hidden sm:inline-flex items-center gap-2">
+            <span>{courseTitle} — Direct Live {courseDatesText}.</span>
+            {isPromoActiveState && discountPercentState ? (
+              <span className="inline-flex items-center gap-1.5 bg-black/30 px-2.5 py-0.5 rounded-full border border-white/10">
+                <span className="bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded uppercase animate-pulse">
+                  -{discountPercentState}%
+                </span>
+                <span className="line-through text-slate-300/80 text-[10px]">
+                  {originalPriceDisplay}
+                </span>
+                <span className="text-[#F3E5AB] font-black text-xs">
+                  {promoPriceDisplay}
+                </span>
+              </span>
+            ) : (
+              <span>{announcementText}</span>
+            )}
+          </div>
+
+          {/* Badge CTA Mobile & Desktop */}
+          <span className="inline-flex items-center gap-1.5 font-black bg-slate-950/40 sm:bg-slate-950/30 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#F3E5AB]/30 shrink-0 text-[10px] sm:text-[11px] group-hover:bg-[#F3E5AB] group-hover:text-slate-950 transition-all text-[#F3E5AB]">
+            {/* Sur Mobile : prix barré + prix promo si actif */}
+            <span className="inline sm:hidden flex items-center gap-1">
+              {isPromoActiveState && originalPriceDisplay && (
+                <span className="line-through text-slate-300/80 text-[9px] font-normal">
+                  {originalPriceDisplay.replace(" FCFA", "")}
+                </span>
+              )}
+              <span>{announcementMobilePrice || "Réserver →"}</span>
+            </span>
+
+            {/* Sur Desktop */}
+            <span className="hidden sm:inline">{announcementCta}</span>
+          </span>
+        </div>
+      </Link>
 
       {/* Main Navbar */}
       <div className="mx-auto max-w-7xl px-4 md:px-8 h-16 flex items-center justify-between gap-4">

@@ -1617,9 +1617,94 @@ export async function sendSubscriptionActivatedEmail(name: string, email: string
   }
 }
 
+export async function sendSubscriptionExpiringSoonEmail(
+  name: string,
+  email: string,
+  planLabel: string,
+  expiresAt: string,
+  daysRemaining: number
+) {
+  try {
+    const resend = getResendClient()
+    if (!resend) return { success: false, error: 'RESEND_API_KEY_MISSING' }
 
+    const firstName = name.split(' ')[0]
+    const formattedDate = new Date(expiresAt).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    })
 
+    const urgencyText = daysRemaining <= 1 
+      ? "expire demain" 
+      : `arrive à échéance dans ${daysRemaining} jours`
 
+    const textContent = `Bonjour ${firstName},\n\n⏳ Votre abonnement VIP LE GUIDE IA (${planLabel}) ${urgencyText} (le ${formattedDate}).\n\nPour conserver vos accès ininterrompus à tous les Replays HD et à la bibliothèque de Prompts IA métier, vous pouvez renouveler votre Pass en 1 clic :\nhttps://leguideai.com/dashboard?tab=subscription\n\nExcellente continuation,\nAlfred Dah & L'équipe LE GUIDE IA`
 
+    const data = await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      replyTo: 'alfred@leguideai.com',
+      subject: `⏳ Votre Pass VIP expire dans ${daysRemaining}j — Renouvelez vos accès LE GUIDE IA`,
+      text: textContent,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #0b0f19; color: #e2e8f0; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; overflow: hidden; }
+            .header { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); padding: 32px 24px; text-align: center; }
+            .header h1 { margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; }
+            .content { padding: 28px 24px; line-height: 1.6; font-size: 14px; color: #cbd5e1; }
+            .box { background-color: #78350f/20; border: 1px solid #d97706; border-radius: 12px; padding: 18px; margin: 20px 0; }
+            .feature-list { list-style: none; padding: 0; margin: 16px 0; }
+            .feature-list li { padding: 6px 0; color: #e2e8f0; font-size: 13px; }
+            .btn { display: inline-block; background-color: #f59e0b; color: #451a03 !important; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 12px; text-align: center; }
+            .footer { background-color: #0b0f19; padding: 20px; text-align: center; font-size: 11px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>⏳ RENOUVELLEMENT DE VOTRE PASS VIP</h1>
+            </div>
+            <div class="content">
+              <p style="font-size: 16px; font-weight: 700; color: #ffffff;">Bonjour ${firstName} 👋,</p>
+              <p>Votre abonnement <strong>${planLabel}</strong> <strong>${urgencyText}</strong> (le <strong>${formattedDate}</strong>).</p>
+              
+              <div class="box">
+                <strong style="color: #fbbf24; font-size: 15px;">⚠️ Ne perdez pas vos accès exclusifs :</strong>
+                <ul class="feature-list">
+                  <li>📺 Visionnage illimité de tous les Replays Masterclasses HD</li>
+                  <li>⚡ Copie et utilisation de tous les Prompts Métiers avancés</li>
+                  <li>🚀 Mises à jour hebdomadaires des nouveaux outils et templates</li>
+                </ul>
+              </div>
 
+              <p>Pour éviter toute interruption de vos accès, vous pouvez prolonger votre Pass VIP dès aujourd'hui (vos jours restants sont automatiquement cumulés) :</p>
+
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="https://leguideai.com/dashboard?tab=subscription" class="btn">Renouveler mon Pass VIP en 1 Clic</a>
+              </div>
+
+              <p>Besoin d'assistance ? Répondez simplement à cet email ou contactez-nous directement sur WhatsApp.</p>
+              <p>À très bientôt,<br><strong>Alfred Dah & L'équipe LE GUIDE IA</strong></p>
+            </div>
+            <div class="footer">
+              © 2026 LE GUIDE IA — Tous droits réservés.
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    })
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error sending subscription expiring email:', error)
+    return { success: false, error }
+  }
+}
 
