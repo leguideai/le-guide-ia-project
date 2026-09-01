@@ -4605,12 +4605,15 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">Lien Google Meet (Direct Live)</label>
+                      <label className="text-slate-600 block mb-1 font-bold">
+                        Lien Google Meet (Direct Live) <span className="text-slate-400 font-normal">(Optionnel — peut être ajouté plus tard)</span>
+                      </label>
                       <input
                         type="text"
-                        value={courseForm.live_meet_url}
+                        placeholder="https://meet.google.com/... (optionnel)"
+                        value={courseForm.live_meet_url || ""}
                         onChange={e => setCourseForm({ ...courseForm, live_meet_url: e.target.value })}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
                       />
                     </div>
 
@@ -4793,6 +4796,7 @@ export default function SuperAdminDashboard() {
                                   if (!confirm("Supprimer cette session ?")) return
                                   await supabase.from("bootcamp_sessions").delete().eq("id", s.id!)
                                   setBootcampSessions(prev => prev.filter(x => x.id !== s.id))
+                                  setAllSessions(prev => prev.filter(x => x.id !== s.id))
                                 }}
                                 className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"
                               >
@@ -4845,11 +4849,13 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-600 block mb-1 font-bold">🎬 Lien Google Meet (Direct Live)</label>
-                        <input type="url" placeholder="https://meet.google.com/..."
+                        <label className="text-slate-600 block mb-1 font-bold">
+                          🎬 Lien Google Meet (Direct Live) <span className="text-slate-400 font-normal">(Optionnel — peut être ajouté plus tard)</span>
+                        </label>
+                        <input type="text" placeholder="https://meet.google.com/... (optionnel)"
                           value={sessionForm.meet_url || ""}
                           onChange={e => setSessionForm({ ...sessionForm, meet_url: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
                         />
                       </div>
                       <div className="sm:col-span-2">
@@ -4953,7 +4959,9 @@ export default function SuperAdminDashboard() {
                           if (sessionForm.id) {
                             const { error } = await supabase.from("bootcamp_sessions").update(payload).eq("id", sessionForm.id)
                             if (!error) {
-                              setBootcampSessions(prev => prev.map(s => s.id === sessionForm.id ? { ...s, ...payload } as BootcampSession : s))
+                              const updatedObj = { ...payload, id: sessionForm.id } as BootcampSession
+                              setBootcampSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
+                              setAllSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
                               showNotice("Session mise à jour !")
                             } else {
                               alert("Erreur de mise à jour: " + error.message)
@@ -4962,6 +4970,7 @@ export default function SuperAdminDashboard() {
                             const { data, error } = await supabase.from("bootcamp_sessions").insert([payload]).select().single()
                             if (!error && data) {
                               setBootcampSessions(prev => [...prev, data as BootcampSession])
+                              setAllSessions(prev => [...prev, data as BootcampSession])
                               setSessionForm({
                                 session_number: bootcampSessions.length + 2,
                                 title: "",
