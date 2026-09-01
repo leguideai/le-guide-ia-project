@@ -282,6 +282,9 @@ export async function fulfillStripeCheckout(session: any) {
       email,
       courseTitle: resolvedCourseTitle,
       amount: price,
+      originalPrice: metadata.originalPrice,
+      subscriptionCredit: metadata.subscriptionCredit || metadata.subscription_credit || metadata.subscription_deduction,
+      subscriptionPlan: metadata.subscriptionPlan || metadata.subscription_plan,
       transactionRef: refCommand,
     })
 

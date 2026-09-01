@@ -465,10 +465,13 @@ export default function DashboardPage() {
       if (!e) return false
       const eNorm = e.toLowerCase().replace(/[^a-z0-9]/g, "")
       if (!eNorm) return false
-      if (cSlugNorm && (cSlugNorm.includes(eNorm) || eNorm.includes(cSlugNorm))) return true
-      if (cTitleNorm && (cTitleNorm.includes(eNorm) || eNorm.includes(cTitleNorm))) return true
-      if (cSlugNorm.includes("business") && eNorm.includes("business")) return true
-      if (cSlugNorm.includes("carriere") && eNorm.includes("carriere")) return true
+      if (cSlugNorm && (cSlugNorm === eNorm || cSlugNorm.includes(eNorm) || eNorm.includes(cSlugNorm))) return true
+      if (cTitleNorm && (cTitleNorm === eNorm || cTitleNorm.includes(eNorm) || eNorm.includes(cTitleNorm))) return true
+      if (cSlugNorm.includes("test") && eNorm.includes("test")) return true
+      if (!cSlugNorm.includes("test") && !eNorm.includes("test")) {
+        if (cSlugNorm.includes("business") && eNorm.includes("business")) return true
+        if (cSlugNorm.includes("carriere") && eNorm.includes("carriere")) return true
+      }
       return false
     })
   }
@@ -580,9 +583,9 @@ export default function DashboardPage() {
         supabase.from("bootcamp_sessions").select("*").order("session_number", { ascending: true }),
         supabase.from("resources").select("*").order("created_at", { ascending: false }),
         supabase.from("live_sessions").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("payments").select("id, amount, currency, method, status, transaction_ref, created_at, registration_id, registrations(email, course_id, course_slug, courses(id, title, price))").eq("status", "confirmed"),
-        supabase.from("registrations").select("course_id, course_slug").eq("email", userEmailClean).in("status", ["paye", "confirmed", "active"]),
-        supabase.from("user_courses").select("course_slug").eq("user_email", userEmailClean).eq("status", "active"),
+        supabase.from("payments").select("id, amount, currency, method, status, transaction_ref, created_at, registration_id, course_id, course_title, registrations(id, email, full_name, course_id, course_slug, courses(id, title, price))"),
+        supabase.from("registrations").select("id, course_id, course_slug, status, created_at, notes").eq("email", userEmailClean),
+        supabase.from("user_courses").select("id, course_slug, status, created_at").eq("user_email", userEmailClean),
         fetch(`/api/user/enrollments?email=${encodeURIComponent(userEmailClean)}`).then(r => r.json()).catch(() => null),
         fetch(`/api/masterclass?email=${encodeURIComponent(userEmailClean)}`).then(r => r.json()).catch(() => null),
         fetch(`/api/subscriptions?email=${encodeURIComponent(userEmailClean)}`).then(r => r.json()).catch(() => null)
@@ -605,11 +608,15 @@ export default function DashboardPage() {
       if (liveData) setDbLiveSession(liveData)
 
       const pData = paymentsRes.status === "fulfilled" ? paymentsRes.value.data : null
-      const userPayments = pData?.filter((p: any) =>
+      const userPayments = (pData || []).filter((p: any) =>
         p.registrations?.email?.toLowerCase() === userEmailClean
-      ) || []
+      )
 
-      const invoices = userPayments.map((p: any) => ({
+      const confirmedPayments = userPayments.filter((p: any) =>
+        ["confirmed", "paye", "active"].includes(p.status)
+      )
+
+      const invoices = confirmedPayments.map((p: any) => ({
         id: p.id,
         ref: p.transaction_ref || `FACT-${new Date(p.created_at || Date.now()).getFullYear()}-${p.id.slice(0, 6)}`,
         title: (p.registrations?.courses as any)?.title ? `${(p.registrations?.courses as any)?.title} — Inscription Officielle` : "Inscription Officielle",
@@ -645,7 +652,27 @@ export default function DashboardPage() {
                 status: "pending_verification"
               }))
           }
-          setPendingCourses(pendings)
+
+          // Merge with any direct DB registrations or user_courses if API had delay
+          const directPendingRegs = (regData || [])
+            .filter((r: any) => ["en_attente", "pending", "pending_verification", "inscrit", "a_verifier"].includes(r.status) && !String(r.course_slug || "").toLowerCase().includes("masterclass"))
+            .map((r: any) => ({
+              course_slug: r.course_slug || r.course_id,
+              created_at: r.created_at || new Date().toISOString(),
+              status: "pending_verification"
+            }))
+          
+          const directPendingUcs = (ucData || [])
+            .filter((uc: any) => ["en_attente", "pending", "pending_verification", "a_verifier"].includes(uc.status) && !String(uc.course_slug || "").toLowerCase().includes("masterclass"))
+            .map((uc: any) => ({
+              course_slug: uc.course_slug,
+              created_at: uc.created_at || new Date().toISOString(),
+              status: "pending_verification"
+            }))
+
+          const combinedPendings = [...pendings, ...directPendingRegs, ...directPendingUcs]
+          const uniquePendings = Array.from(new Map(combinedPendings.map(p => [p.course_slug, p])).values())
+          setPendingCourses(uniquePendings)
         }
       } else {
         setIsAdmin(isUserAdmin)
@@ -653,24 +680,40 @@ export default function DashboardPage() {
           setUserEnrollments((cData || []).flatMap((c: any) => [c.id, c.slug]))
           setPendingCourses([])
         } else {
-          const fromPayments = userPayments.flatMap((p: any) => [
+          const fromPayments = confirmedPayments.flatMap((p: any) => [
             p.registrations?.course_id,
             p.registrations?.course_slug,
             p.registrations?.courses?.id,
             p.registrations?.courses?.slug
           ])
-          const fromRegs = (regData || []).flatMap((r: any) => [r.course_id, r.course_slug])
-          const fromUserCourses = (ucData || []).map((uc: any) => uc.course_slug)
+          const fromRegs = (regData || [])
+            .filter((r: any) => ["paye", "confirmed", "active"].includes(r.status))
+            .flatMap((r: any) => [r.course_id, r.course_slug])
+          const fromUserCourses = (ucData || [])
+            .filter((uc: any) => ["active", "confirmed", "completed"].includes(uc.status))
+            .map((uc: any) => uc.course_slug)
+
           setUserEnrollments(Array.from(new Set([...fromPayments, ...fromRegs, ...fromUserCourses])).filter(Boolean) as string[])
           
           const fallbackPendings = (regData || [])
-            .filter((r: any) => ["en_attente", "pending", "pending_verification", "inscrit"].includes(r.status) && !String(r.course_slug || "").toLowerCase().includes("masterclass"))
+            .filter((r: any) => ["en_attente", "pending", "pending_verification", "inscrit", "a_verifier"].includes(r.status) && !String(r.course_slug || "").toLowerCase().includes("masterclass"))
             .map((r: any) => ({
               course_slug: r.course_slug || r.course_id,
               created_at: r.created_at || new Date().toISOString(),
               status: "pending_verification"
             }))
-          setPendingCourses(fallbackPendings)
+          
+          const fallbackUcs = (ucData || [])
+            .filter((uc: any) => ["en_attente", "pending", "pending_verification", "a_verifier"].includes(uc.status) && !String(uc.course_slug || "").toLowerCase().includes("masterclass"))
+            .map((uc: any) => ({
+              course_slug: uc.course_slug,
+              created_at: uc.created_at || new Date().toISOString(),
+              status: "pending_verification"
+            }))
+
+          const combinedFallback = [...fallbackPendings, ...fallbackUcs]
+          const uniqueFallback = Array.from(new Map(combinedFallback.map(p => [p.course_slug, p])).values())
+          setPendingCourses(uniqueFallback)
         }
       }
 
@@ -1076,12 +1119,14 @@ export default function DashboardPage() {
 
       if (bId && (pSlug === bId || pSlugNorm === bIdNorm)) return true
       if (bSlug && (pSlug === bSlug || pSlugNorm === bSlugNorm)) return true
-      if (bSlugNorm && pSlugNorm && (bSlugNorm.includes(pSlugNorm) || pSlugNorm.includes(bSlugNorm))) return true
-      if (bTitleNorm && pSlugNorm && (bTitleNorm.includes(pSlugNorm) || pSlugNorm.includes(bTitleNorm))) return true
+      if (bSlugNorm && pSlugNorm && (bSlugNorm === pSlugNorm || bSlugNorm.includes(pSlugNorm) || pSlugNorm.includes(bSlugNorm))) return true
+      if (bTitleNorm && pSlugNorm && (bTitleNorm === pSlugNorm || bTitleNorm.includes(pSlugNorm) || pSlugNorm.includes(bTitleNorm))) return true
 
-      if (bSlugNorm.includes("carriere") && pSlugNorm.includes("carriere")) return true
-      if (bSlugNorm.includes("business") && pSlugNorm.includes("business")) return true
       if (bSlugNorm.includes("test") && pSlugNorm.includes("test")) return true
+      if (!bSlugNorm.includes("test") && !pSlugNorm.includes("test")) {
+        if (bSlugNorm.includes("carriere") && pSlugNorm.includes("carriere")) return true
+        if (bSlugNorm.includes("business") && pSlugNorm.includes("business")) return true
+      }
 
       return false
     })
@@ -1810,7 +1855,7 @@ export default function DashboardPage() {
                               <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{bootcamp.subtitle}</p>
                             </div>
                             <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed">
-                              ⏳ Votre virement Mobile Money est en cours de vérification. Vos vidéos et ressources seront débloquées sous moins de 24h ouvrées.
+                              ⏳ Votre requête est en cours de traitement. Vous recevrez un email de confirmation une fois validée.
                             </div>
                           </div>
 

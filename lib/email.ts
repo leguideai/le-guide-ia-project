@@ -309,6 +309,9 @@ export interface AdminNewEnrollmentParams {
   courseTitle: string
   courseSlug?: string
   amount?: number | string
+  originalPrice?: number | string
+  subscriptionCredit?: number | string
+  subscriptionPlan?: string
   paymentMethod?: string
   transactionRef?: string
   receiptUrl?: string | null
@@ -329,6 +332,9 @@ export async function sendAdminNewEnrollmentNotification(params: AdminNewEnrollm
       country,
       courseTitle,
       amount = "49 000 FCFA",
+      originalPrice,
+      subscriptionCredit,
+      subscriptionPlan,
       paymentMethod = "Mobile Money Direct",
       transactionRef = "Non spécifiée",
       receiptUrl
@@ -346,8 +352,11 @@ export async function sendAdminNewEnrollmentNotification(params: AdminNewEnrollm
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leguideai.com'
     const adminUrl = `${siteUrl}/admin`
     const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
+    const hasDeduction = subscriptionCredit && Number(subscriptionCredit) > 0
+    const formattedOriginal = originalPrice ? (typeof originalPrice === "number" ? `${originalPrice.toLocaleString('fr-FR')} FCFA` : String(originalPrice)) : null
+    const formattedDeduction = hasDeduction ? `${Number(subscriptionCredit).toLocaleString('fr-FR')} FCFA` : null
 
-    const textContent = `🚨 NOUVELLE INSCRIPTION BOOTCAMP À VALIDER !\n\nApprenant : ${fullName}\nEmail : ${email}\nWhatsApp : ${whatsapp || 'N/A'}\nPays : ${country || 'N/A'}\nFormation : ${courseTitle}\nMontant déclaré : ${formattedAmount}\nMéthode : ${paymentMethod}\nRéférence : ${transactionRef}\nPreuve : ${receiptUrl || 'Aucune capture'}\n\nAccédez au portail admin pour valider en 1 clic : ${adminUrl}`
+    const textContent = `🚨 NOUVELLE INSCRIPTION BOOTCAMP À VALIDER !\n\nApprenant : ${fullName}\nEmail : ${email}\nWhatsApp : ${whatsapp || 'N/A'}\nPays : ${country || 'N/A'}\nFormation : ${courseTitle}\n${hasDeduction ? `Tarif catalogue : ${formattedOriginal}\nDéduction Abonnement Cercle IA (${subscriptionPlan || 'Actif'}) : -${formattedDeduction}\nNet à vérifier : ${formattedAmount}` : `Montant déclaré : ${formattedAmount}`}\nMéthode : ${paymentMethod}\nRéférence : ${transactionRef}\nPreuve : ${receiptUrl || 'Aucune capture'}\n\nAccédez au portail admin pour valider en 1 clic : ${adminUrl}`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -408,9 +417,19 @@ export async function sendAdminNewEnrollmentNotification(params: AdminNewEnrollm
                   <td class="label">Pays</td>
                   <td class="value">${country || 'N/A'}</td>
                 </tr>
+                ${hasDeduction ? `
                 <tr>
-                  <td class="label">Montant</td>
-                  <td class="value" style="color: #4ade80;">${formattedAmount}</td>
+                  <td class="label">Tarif catalogue</td>
+                  <td class="value" style="color: #94a3b8; text-decoration: line-through;">${formattedOriginal}</td>
+                </tr>
+                <tr>
+                  <td class="label">Déduction Cercle IA</td>
+                  <td class="value" style="color: #4ade80;">-${formattedDeduction} (${subscriptionPlan || 'Abonnement Actif'})</td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td class="label">${hasDeduction ? 'Net payé à vérifier' : 'Montant'}</td>
+                  <td class="value" style="color: #4ade80; font-size: 15px;">${formattedAmount}</td>
                 </tr>
                 <tr>
                   <td class="label">Moyen de paiement</td>
@@ -421,6 +440,12 @@ export async function sendAdminNewEnrollmentNotification(params: AdminNewEnrollm
                   <td class="value" style="font-family: monospace;">${transactionRef}</td>
                 </tr>
               </table>
+
+              ${hasDeduction ? `
+                <div style="background-color: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; padding: 12px 16px; margin: 16px 0; font-size: 13px; color: #86efac;">
+                  🎁 <strong>Avantage Cercle IA appliqué :</strong> Cet apprenant a un abonnement actif (${subscriptionPlan || 'Cercle IA'}). La mensualité a été déduite à 100% du prix du Bootcamp.
+                </div>
+              ` : ''}
 
               ${receiptUrl ? `
                 <div class="receipt-box">
@@ -461,6 +486,9 @@ export interface StripeSuccessEmailParams {
   email: string
   courseTitle: string
   amount?: number | string
+  originalPrice?: number | string
+  subscriptionCredit?: number | string
+  subscriptionPlan?: string
   transactionRef?: string
   tempPassword?: string
   isNewAccount?: boolean
@@ -479,6 +507,9 @@ export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
       email,
       courseTitle,
       amount = "149 000 FCFA",
+      originalPrice,
+      subscriptionCredit,
+      subscriptionPlan,
       transactionRef = "LGI-STRIPE-OK",
       tempPassword,
       isNewAccount = false
@@ -486,12 +517,15 @@ export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
 
     const firstName = fullName ? fullName.split(' ')[0] : email.split('@')[0]
     const formattedAmount = typeof amount === "number" ? `${amount.toLocaleString("fr-FR")} FCFA` : String(amount)
+    const hasDeduction = subscriptionCredit && Number(subscriptionCredit) > 0
+    const formattedOriginal = originalPrice ? (typeof originalPrice === "number" ? `${originalPrice.toLocaleString('fr-FR')} FCFA` : String(originalPrice)) : null
+    const formattedDeduction = hasDeduction ? `${Number(subscriptionCredit).toLocaleString('fr-FR')} FCFA` : null
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideai.com"
     const loginUrl = `${siteUrl}/login`
     const dashboardUrl = `${siteUrl}/dashboard`
 
-    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre paiement par carte bancaire pour le ${courseTitle} a été validé avec succès.\nVos accès sont immédiatement débloqués.\n\nAccédez à votre espace apprenant : ${loginUrl}\n\nÀ très vite dans le Bootcamp,\nAlfred Dah & L'équipe LE GUIDE IA`
+    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre paiement par carte bancaire pour le ${courseTitle} a été validé avec succès.\n${hasDeduction ? `Tarif catalogue : ${formattedOriginal}\nDéduction Membre Cercle IA (${subscriptionPlan || 'Actif'}) : -${formattedDeduction} (100% Déduit)\nMontant net réglé : ${formattedAmount}\n` : `Montant réglé : ${formattedAmount}\n`}Vos accès sont immédiatement débloqués.\n\nAccédez à votre espace apprenant : ${loginUrl}\n\nÀ très vite dans le Bootcamp,\nAlfred Dah & L'équipe LE GUIDE IA`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -549,6 +583,14 @@ export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
                 </p>
               </div>
 
+              ${hasDeduction ? `
+                <div style="background-color: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.35); border-radius: 14px; padding: 16px 20px; margin: 20px 0;">
+                  <p style="margin: 0; font-size: 13px; color: #86efac; line-height: 1.5;">
+                    🎁 <strong>Avantage Cercle IA activé :</strong> En tant que membre actif (${subscriptionPlan || 'Pass Cercle IA'}), votre cotisation a été <strong>intégralement déduite (100%)</strong> du prix de votre Bootcamp !
+                  </p>
+                </div>
+              ` : ''}
+
               <!-- RÉCAPITULATIF RÈGLEMENT OFFICIEL -->
               <div class="card-box">
                 <span class="card-title" style="color: #38bdf8;">📋 Reçu de Paiement Sécurisé</span>
@@ -556,6 +598,16 @@ export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
                   <span class="info-label">Bootcamp :</span>
                   <span class="info-value">${courseTitle}</span>
                 </div>
+                ${hasDeduction ? `
+                <div class="info-row">
+                  <span class="info-label">Tarif catalogue :</span>
+                  <span class="info-value" style="color: #94a3b8; text-decoration: line-through;">${formattedOriginal}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Déduction Membre Cercle IA :</span>
+                  <span class="info-value" style="color: #34d399;">-${formattedDeduction} (${subscriptionPlan || 'Abonnement Actif'})</span>
+                </div>
+                ` : ''}
                 <div class="info-row">
                   <span class="info-label">Moyen de paiement :</span>
                   <span class="info-value">Carte Bancaire Internationale (Stripe)</span>
@@ -565,8 +617,8 @@ export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
                   <span class="info-value" style="font-family: monospace;">${transactionRef}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Montant réglé :</span>
-                  <span class="info-value" style="color: #10b981;">${formattedAmount}</span>
+                  <span class="info-label">${hasDeduction ? 'Montant net réglé :' : 'Montant réglé :'}</span>
+                  <span class="info-value" style="color: #10b981; font-size: 15px;">${formattedAmount}</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">Statut :</span>

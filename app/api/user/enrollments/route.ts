@@ -103,15 +103,23 @@ export async function GET(req: Request) {
       targetSet.add(lower)
       if (norm) targetSet.add(norm)
 
-      const matched = allCourses.find(c =>
+      // 1. Exact match first
+      let matched = allCourses.find(c =>
         c.id?.toLowerCase() === lower ||
         c.slug?.toLowerCase() === lower ||
         normalizeStr(c.slug) === norm ||
-        normalizeStr(c.title) === norm ||
-        (norm.includes("carriere") && normalizeStr(c.slug).includes("carriere")) ||
-        (norm.includes("business") && normalizeStr(c.slug).includes("business")) ||
-        (norm.includes("pro") && normalizeStr(c.slug).includes("pro"))
+        normalizeStr(c.title) === norm
       )
+
+      // 2. Fallback category matching only if no exact match
+      if (!matched) {
+        matched = allCourses.find(c =>
+          (norm.includes("test") && normalizeStr(c.slug).includes("test")) ||
+          (norm.includes("carriere") && normalizeStr(c.slug).includes("carriere") && !normalizeStr(c.slug).includes("test") && !norm.includes("test")) ||
+          (norm.includes("business") && normalizeStr(c.slug).includes("business")) ||
+          (norm.includes("pro") && normalizeStr(c.slug).includes("pro"))
+        )
+      }
 
       if (matched) {
         if (matched.id) targetSet.add(String(matched.id).toLowerCase())

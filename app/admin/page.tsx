@@ -9501,8 +9501,15 @@ export default function SuperAdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-slate-200/80">
                     {filteredPayments.map(p => {
-                      const cleanPhone = (p.registrations?.whatsapp || "").replace(/[^0-9]/g, "")
-                      const initials = (p.registrations?.full_name || "P").split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+                      // Contact info comes from linked registration (joined by API)
+                      const regFullName = p.registrations?.full_name || "Prospect Direct"
+                      const regEmail = p.registrations?.email || ""
+                      const regPhone = p.registrations?.whatsapp || ""
+                      const regCountry = p.registrations?.country || ""
+                      const regSource = p.registrations?.source || "checkout"
+
+                      const cleanPhone = regPhone.replace(/[^0-9]/g, "")
+                      const initials = regFullName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() || "P"
                       const receiptUrl = getPaymentReceiptUrl(p)
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
@@ -9513,9 +9520,9 @@ export default function SuperAdminDashboard() {
                                 {initials}
                               </div>
                               <div className="min-w-0">
-                                <div className="font-bold text-slate-800 truncate">{p.registrations?.full_name || "Prospect Direct"}</div>
-                                {p.registrations?.source && (
-                                  <div className="text-[10px] text-slate-500 truncate">{p.registrations.source}</div>
+                                <div className="font-bold text-slate-800 truncate">{regFullName}</div>
+                                {regSource && (
+                                  <div className="text-[10px] text-slate-500 truncate">{regSource}</div>
                                 )}
                               </div>
                             </div>
@@ -9525,7 +9532,7 @@ export default function SuperAdminDashboard() {
                           <td className="p-4 space-y-1">
                             <div className="text-slate-800 font-medium truncate flex items-center gap-1.5">
                               <Mail className="size-3 text-slate-400 shrink-0" />
-                              <span className="truncate">{p.registrations?.email || "N/A"}</span>
+                              <span className="truncate">{regEmail || "N/A"}</span>
                             </div>
                             <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
                               {cleanPhone ? (
@@ -9537,13 +9544,13 @@ export default function SuperAdminDashboard() {
                                   title="Contacter sur WhatsApp"
                                 >
                                   <MessageCircle className="size-3" />
-                                  <span>{p.registrations?.whatsapp}</span>
+                                  <span>{regPhone}</span>
                                 </a>
                               ) : (
-                                <span>{p.registrations?.whatsapp || "N/A"}</span>
+                                <span>{regPhone || "N/A"}</span>
                               )}
-                              {p.registrations?.country && (
-                                <span className="text-[10px] text-slate-500 font-mono">({p.registrations.country})</span>
+                              {regCountry && (
+                                <span className="text-[10px] text-slate-500 font-mono">({regCountry})</span>
                               )}
                             </div>
                           </td>

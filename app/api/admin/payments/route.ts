@@ -8,99 +8,56 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 export async function GET() {
   try {
-    const { data: payments, error: payErr } = await supabaseServer
+    const { data: rawPayments } = await supabaseServer
       .from("payments")
-      .select(`
-        *,
-        registrations (
-          *
-        )
-      `)
+      .select("*")
       .order("created_at", { ascending: false })
 
-    if (payErr) {
-      // Fallback query without relation if foreign key is different
-      const { data: rawPayments } = await supabaseServer
-        .from("payments")
-        .select("*")
-        .order("created_at", { ascending: false })
+    const { data: rawRegs } = await supabaseServer
+      .from("registrations")
+      .select("*")
+      .order("created_at", { ascending: false })
 
-      const { data: rawRegs } = await supabaseServer
-        .from("registrations")
-        .select("*")
+    const regMap = new Map((rawRegs || []).map(r => [r.id, r]))
+    const allRegs = rawRegs || []
 
-      const regMap = new Map((rawRegs || []).map(r => [r.id, r]))
-      const joined = (rawPayments || [])
-        .filter(p => !(p.method === "stripe" && p.status === "pending"))
-        .map(p => ({
-          ...p,
-          registrations: regMap.get(p.registration_id) || null
-        }))
+    const joinedPayments = (rawPayments || []).map(p => {
+      let reg = p.registration_id ? regMap.get(p.registration_id) : null
 
-      return NextResponse.json({ success: true, payments: joined })
-    }
-
-    // Auto-heal any unlinked payments with existing registrations
-    try {
-      const { data: unlinkedPays } = await supabaseServer
-        .from("payments")
-        .select("id, transaction_ref, course_title, method, status, amount")
-        .is("registration_id", null)
-
-      if (unlinkedPays && unlinkedPays.length > 0) {
-        const { data: allRegs } = await supabaseServer
-          .from("registrations")
-          .select("id, email, full_name, course_slug, notes, created_at")
-          .order("created_at", { ascending: false })
-
-        if (allRegs && allRegs.length > 0) {
-          for (const un of unlinkedPays) {
-            let matchedReg = allRegs.find(r => {
-              if (!un.transaction_ref) return false
-              if (r.notes && typeof r.notes === "string" && r.notes.includes(un.transaction_ref)) return true
-              return false
-            })
-
-            if (!matchedReg && allRegs.length > 0) {
-              matchedReg = allRegs[0]
-            }
-
-            if (matchedReg) {
-              await supabaseServer
-                .from("payments")
-                .update({ registration_id: matchedReg.id })
-                .eq("id", un.id)
-
-              if (un.status === "confirmed" && matchedReg.email) {
-                const slugToActivate = matchedReg.course_slug || "bootcamp-business-exec"
-                await supabaseServer.from("user_courses").upsert({
-                  user_email: matchedReg.email.toLowerCase().trim(),
-                  course_slug: slugToActivate,
-                  status: "active",
-                  payment_method: un.method || "mobile_money",
-                  updated_at: new Date().toISOString()
-                }, { onConflict: "user_email,course_slug" })
-              }
-            }
-          }
-        }
+      // If not linked directly, search by transaction ref in registration notes
+      if (!reg && p.transaction_ref) {
+        reg = allRegs.find(r => {
+          if (r.notes && typeof r.notes === "string" && r.notes.includes(p.transaction_ref)) return true
+          return false
+        }) || null
       }
-    } catch (healErr) {
-      console.warn("Auto-heal warning:", healErr)
-    }
 
-    // Re-fetch payments after healing
-    const { data: updatedPayments } = await supabaseServer
-      .from("payments")
-      .select(`
-        *,
-        registrations (
-          *
-        )
-      `)
-      .order("created_at", { ascending: false })
+      // If still not linked, search registration by course_title or email extracted from registration notes
+      if (!reg) {
+        // Try to find a registration that matches by email in notes JSON
+        reg = allRegs.find(r => {
+          if (!r.notes || typeof r.notes !== "string") return false
+          try {
+            const rn = JSON.parse(r.notes)
+            // Check if the registration notes reference this payment's transaction_ref
+            if (rn.transaction_ref === p.transaction_ref) return true
+          } catch (e) {}
+          return false
+        }) || null
+      }
 
-    const finalPayments = (updatedPayments || payments || [])
+      // Auto-heal in background if matched
+      if (reg?.id && !p.registration_id) {
+        try {
+          supabaseServer.from("payments").update({ registration_id: reg.id }).eq("id", p.id)
+        } catch (e) {}
+      }
+
+      return {
+        ...p,
+        registrations: reg
+      }
+    })
 
     // Exclure strictement les abonnements aux ressources/replays (gérés dans l'onglet Abonnements VIP)
     const isSubscriptionPayment = (p: any) => {
@@ -132,7 +89,10 @@ export async function GET() {
       return false
     }
 
-    const bootcampPayments = finalPayments.filter(p => !isSubscriptionPayment(p))
+    const bootcampPayments = joinedPayments
+      .filter(p => !(p.method === "stripe" && p.status === "pending"))
+      .filter(p => !isSubscriptionPayment(p))
+
     return NextResponse.json({ success: true, payments: bootcampPayments })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -370,6 +330,20 @@ export async function POST(req: Request) {
       if (resend) {
         try {
           const fromEmail = process.env.RESEND_FROM_EMAIL || "Le Guide IA <alfred@leguideai.com>"
+          let payNotes: any = null
+          if (updatedPayment.notes) {
+            try { payNotes = typeof updatedPayment.notes === "string" ? JSON.parse(updatedPayment.notes) : updatedPayment.notes } catch (e) {}
+          }
+          let regNotes: any = null
+          if (reg?.notes) {
+            try { regNotes = typeof reg.notes === "string" ? JSON.parse(reg.notes) : reg.notes } catch (e) {}
+          }
+
+          const subDeduction = Number(payNotes?.subscription_deduction || payNotes?.subscriptionCredit || regNotes?.subscription_deduction || regNotes?.subscriptionCredit || 0)
+          const subPlan = payNotes?.subscription_plan || payNotes?.subscriptionPlan || regNotes?.subscription_plan || regNotes?.subscriptionPlan || "Pass Cercle IA"
+          const origPrice = Number(payNotes?.original_price || payNotes?.originalPrice || regNotes?.original_price || (subDeduction > 0 ? Number(updatedPayment.amount) + subDeduction : 0))
+          const hasDeduction = subDeduction > 0
+
           await resend.emails.send({
             from: fromEmail,
             to: [studentEmail],
@@ -390,6 +364,21 @@ export async function POST(req: Request) {
                     ✅ Vos accès complets à vos formations et ressources sont maintenant 100% ACTIFS !
                   </p>
                 </div>
+
+                ${hasDeduction ? `
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 14px; color: #334155;">Récapitulatif de votre règlement :</h4>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #475569; line-height: 1.8;">
+                      <li><strong>Formation :</strong> ${updatedPayment.course_title || resolvedSlug || "Bootcamp IA"}</li>
+                      <li><strong>Tarif catalogue :</strong> <span style="text-decoration: line-through; color: #64748b;">${origPrice.toLocaleString('fr-FR')} FCFA</span></li>
+                      <li><strong>Déduction Membre Cercle IA (${subPlan}) :</strong> <span style="color: #16a34a; font-weight: bold;">-${subDeduction.toLocaleString('fr-FR')} FCFA (100% Déduit)</span></li>
+                      <li><strong>Montant net réglé :</strong> <strong style="color: #15803d; font-size: 14px;">${updatedPayment.amount ? updatedPayment.amount.toLocaleString('fr-FR') : "49 000"} FCFA</strong></li>
+                    </ul>
+                    <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 12px; color: #15803d;">
+                      🎁 <strong>Avantage Cercle IA appliqué :</strong> Votre mensualité d'abonnement a été déduite à 100% du prix de votre Bootcamp !
+                    </div>
+                  </div>
+                ` : ''}
 
                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
                   <p style="margin: 0; font-size: 13px; color: #334155;">

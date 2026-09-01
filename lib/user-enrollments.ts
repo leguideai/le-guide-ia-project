@@ -46,9 +46,13 @@ export function checkIsCourseMatched(targetSet: Set<string>, course: any, allDbC
       if (slugClean.includes(itemNorm) || itemNorm.includes(slugClean)) {
         return true
       }
-      if (slugClean.includes("carriere") && itemNorm.includes("carriere")) return true
-      if (slugClean.includes("business") && itemNorm.includes("business")) return true
-      if (slugClean.includes("pro") && itemNorm.includes("pro")) return true
+      if (slugClean.includes("test") || itemNorm.includes("test")) {
+        if (slugClean.includes("test") && itemNorm.includes("test")) return true
+      } else {
+        if (slugClean.includes("carriere") && itemNorm.includes("carriere")) return true
+        if (slugClean.includes("business") && itemNorm.includes("business")) return true
+        if (slugClean.includes("pro") && itemNorm.includes("pro")) return true
+      }
     }
   }
 
@@ -65,7 +69,7 @@ export function checkIsCourseMatched(targetSet: Set<string>, course: any, allDbC
       if (dbCId && (dbCId === cId || dbCId === cDbId)) return true
       if (dbCSlug && dbCSlug === cSlug) return true
       if (dbCTitleNorm && dbCTitleNorm === cTitleNorm) return true
-      if (cSlug && dbCSlug && (cSlug.includes(dbCSlug) || dbCSlug.includes(cSlug))) return true
+      if (cSlug && dbCSlug && (cSlug === dbCSlug || cSlug.includes(dbCSlug) || dbCSlug.includes(cSlug))) return true
     }
   }
 
@@ -97,8 +101,13 @@ export function useUserEnrollments() {
     try {
       const { data: authData } = await supabase.auth.getUser()
       const currentUser = authData?.user
+      const storedEmail = typeof window !== "undefined"
+        ? (localStorage.getItem("user_email") || localStorage.getItem("member_email") || localStorage.getItem("le_guide_ia_email"))
+        : null
 
-      if (!currentUser) {
+      const email = (currentUser?.email || storedEmail || "").toLowerCase().trim()
+
+      if (!currentUser && !storedEmail) {
         setUser(null)
         setIsLoggedIn(false)
         setIsAdmin(false)
@@ -109,10 +118,13 @@ export function useUserEnrollments() {
         return
       }
 
-      const email = currentUser.email?.toLowerCase().trim() || ""
-
-      setUser(currentUser)
-      setIsLoggedIn(true)
+      if (currentUser) {
+        setUser(currentUser)
+        setIsLoggedIn(true)
+      } else if (storedEmail) {
+        setUser({ email: storedEmail, isStoredOnly: true })
+        setIsLoggedIn(true)
+      }
 
       // Fetch dynamic courses for cross-referencing
       const { data: cData } = await supabase.from("courses").select("*")
