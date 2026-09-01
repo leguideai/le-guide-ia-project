@@ -630,9 +630,9 @@ export async function sendMasterclassRegistrationEmail(
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "À venir")
     const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass"
-    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@leguideai"
+    const youtubeUrl = session.youtubeLiveUrl || "https://meet.google.com"
 
-    const textContent = `Bonjour ${firstName},\n\nVotre inscription à la Masterclass IA "${sessionTitle}" est bien confirmée !\n\nDétails de la session :\n- Date & Heure : ${dateFormatted}\n- Intervenant : ${instructor}\n- Format : Direct interactif 100% gratuit sur YouTube Live\n\n1. Rejoindre le Groupe WhatsApp des Apprenants : ${whatsappUrl}\n2. Lien du direct YouTube Live : ${youtubeUrl}\n\nÀ très bientôt,\nAlfred Dah & L'équipe LE GUIDE IA`
+    const textContent = `Bonjour ${firstName},\n\nVotre inscription à la Masterclass IA "${sessionTitle}" est bien confirmée !\n\nDétails de la session :\n- Date & Heure : ${dateFormatted}\n- Intervenant : ${instructor}\n- Format : Direct interactif 100% gratuit sur Google Meet\n\n1. Rejoindre le Groupe WhatsApp des Apprenants : ${whatsappUrl}\n2. Lien du direct Google Meet : ${youtubeUrl}\n\nÀ très bientôt,\nAlfred Dah & L'équipe LE GUIDE IA`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -657,7 +657,7 @@ export async function sendMasterclassRegistrationEmail(
             .badge { display: inline-block; background-color: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
             .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin: 20px 0; }
             .btn-wa { display: inline-block; background-color: #16a34a; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 14px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35); }
-            .btn-yt { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+            .btn-meet { display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 14px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); }
             .footer { background-color: #090d16; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
           </style>
         </head>
@@ -678,7 +678,7 @@ export async function sendMasterclassRegistrationEmail(
                 <strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px;">📋 Récapitulatif de la session :</strong>
                 📅 <strong>Date & Heure :</strong> ${dateFormatted}<br>
                 👨‍🏫 <strong>Intervenant :</strong> ${instructor}<br>
-                ⚡ <strong>Format :</strong> Direct 100% sur YouTube Live & Q&A en direct<br>
+                ⚡ <strong>Format :</strong> Direct 100% sur Google Meet & Q&A interactif<br>
                 🎟️ <strong>Tarif :</strong> 100% Gratuit
               </div>
 
@@ -692,13 +692,13 @@ export async function sendMasterclassRegistrationEmail(
                 <a href="${whatsappUrl}" class="btn-wa" target="_blank">👉 Intégrer le Groupe WhatsApp</a>
               </div>
 
-              <p style="margin-bottom: 8px; text-align: center; font-weight: 700; color: #ffffff;">Lien du Direct YouTube :</p>
+              <p style="margin-bottom: 8px; text-align: center; font-weight: 700; color: #ffffff;">Lien du Direct Google Meet :</p>
               <div style="text-align: center; margin: 10px 0 20px;">
-                <a href="${youtubeUrl}" class="btn-yt" target="_blank">📺 Suivre sur YouTube Live</a>
+                <a href="${youtubeUrl}" class="btn-meet" target="_blank">🎥 Rejoindre sur Google Meet</a>
               </div>
 
               <div style="background-color: #1e293b; border-radius: 10px; padding: 14px; font-size: 12px; color: #94a3b8; border-left: 3px solid #16a34a;">
-                💡 <strong>Conseil :</strong> Rejoignez le groupe WhatsApp dès maintenant pour ne pas manquer le coup d'envoi du direct sur YouTube.
+                💡 <strong>Conseil :</strong> Rejoignez le groupe WhatsApp dès maintenant pour ne pas manquer le coup d'envoi du direct.
               </div>
 
               <p style="margin-top: 24px;">
@@ -726,7 +726,7 @@ export async function sendMasterclassReminderEmail(
   name: string,
   email: string,
   session: {
-    title: string
+    title?: string
     scheduledAt?: string
     dateDisplay?: string
     whatsappGroupUrl?: string
@@ -748,23 +748,23 @@ export async function sendMasterclassReminderEmail(
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
     const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass"
-    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@leguideai"
+    const youtubeUrl = session.youtubeLiveUrl || "https://meet.google.com"
 
     let subject = `⏳ Rappel : Votre Masterclass IA en direct (${dateFormatted})`
     let badgeText = `⏳ RAPPEL SESSION MASTERCLASS`
     let mainHeading = `Votre Masterclass IA approche !`
-    let introText = `Nous vous rappelons que votre session interactive <strong>"${sessionTitle}"</strong> aura lieu <strong>${dateFormatted}</strong> sur YouTube Live.`
+    let introText = `Nous vous rappelons que votre session interactive <strong>"${sessionTitle}"</strong> aura lieu <strong>${dateFormatted}</strong> sur Google Meet.`
 
     if (reminderType === 'j_minus_2') {
       subject = `⏳ Dans 48h : Masterclass IA en Direct avec ${instructor}`
       badgeText = `⏳ RAPPEL : J-2 AVANT LE DIRECT`
       mainHeading = `Votre Masterclass en direct dans 48 heures !`
-      introText = `Plus que 2 jours avant notre rendez-vous <strong>"${sessionTitle}"</strong> prévu <strong>${dateFormatted}</strong> sur YouTube Live.`
+      introText = `Plus que 2 jours avant notre rendez-vous <strong>"${sessionTitle}"</strong> prévu <strong>${dateFormatted}</strong> sur Google Meet.`
     } else if (reminderType === 'h_minus_1') {
       subject = `🔴 EN DIRECT DANS 1 HEURE : Masterclass IA avec ${instructor}`
       badgeText = `🔴 DIRECT DANS 60 MINUTES`
       mainHeading = `La Masterclass démarre dans 1 heure !`
-      introText = `Préparez-vous ! La session interactive <strong>"${sessionTitle}"</strong> commence dans quelques instants sur YouTube Live.`
+      introText = `Préparez-vous ! La session interactive <strong>"${sessionTitle}"</strong> commence dans quelques instants sur Google Meet.`
     }
 
     const htmlContent = `
@@ -783,7 +783,7 @@ export async function sendMasterclassReminderEmail(
           .badge { display: inline-block; background-color: ${reminderType === 'h_minus_1' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)'}; border: 1px solid ${reminderType === 'h_minus_1' ? '#ef4444' : '#10b981'}; color: ${reminderType === 'h_minus_1' ? '#f87171' : '#34d399'}; font-weight: 800; font-size: 11px; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px; }
           .card-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin: 20px 0; }
           .btn-wa { display: inline-block; background-color: #16a34a; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
-          .btn-yt { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; }
+          .btn-meet { display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 10px; margin: 6px 4px; text-align: center; font-size: 13px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); }
           .footer { background-color: #090d16; padding: 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b; }
         </style>
       </head>
@@ -805,17 +805,17 @@ export async function sendMasterclassReminderEmail(
               📅 <strong>Date :</strong> ${dateFormatted}<br>
               👨‍🏫 <strong>Formateur :</strong> ${instructor}<br>
               🎯 <strong>Thème :</strong> ${sessionTitle}<br>
-              💻 <strong>Plateforme :</strong> YouTube Live (Diffusion en direct)
+              💻 <strong>Plateforme :</strong> Google Meet (Session en direct)
             </div>
 
             <p style="text-align: center; margin-bottom: 8px; font-weight: bold;">Accédez au direct et au groupe des apprenants :</p>
             <div style="text-align: center; margin: 16px 0 24px;">
-              <a href="${youtubeUrl}" class="btn-yt" target="_blank">📺 Suivre sur YouTube Live</a>
+              <a href="${youtubeUrl}" class="btn-meet" target="_blank">🎥 Rejoindre sur Google Meet</a>
               <a href="${whatsappUrl}" class="btn-wa" target="_blank">💬 Groupe WhatsApp Masterclass</a>
             </div>
 
             <p style="font-size: 13px; color: #94a3b8;">
-              N'hésitez pas à poser vos questions en direct dans le chat YouTube ou dans le groupe WhatsApp.
+              N'hésitez pas à poser vos questions en direct dans Google Meet ou dans le groupe WhatsApp.
             </p>
 
             <p style="margin-top: 24px;">
@@ -831,7 +831,7 @@ export async function sendMasterclassReminderEmail(
       </html>
     `
 
-    const textContent = `Bonjour ${firstName},\n\n${mainHeading}\n\n${introText}\n\nDate : ${dateFormatted}\nLien YouTube Live : ${youtubeUrl}\nGroupe WhatsApp des Apprenants : ${whatsappUrl}\n\nÀ très vite,\n${instructor}`
+    const textContent = `Bonjour ${firstName},\n\n${mainHeading}\n\n${introText}\n\nDate : ${dateFormatted}\nLien Google Meet : ${youtubeUrl}\nGroupe WhatsApp des Apprenants : ${whatsappUrl}\n\nÀ très vite,\n${instructor}`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -875,7 +875,7 @@ export async function sendMasterclassPlatformInvitationEmail(
     const sessionTitle = session.title || "Masterclass IA Interactive en Direct"
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
-    const description = session.description || "Rejoignez-nous pour une session exclusive de formation pratique en direct sur YouTube Live avec démonstrations et cas réels."
+    const description = session.description || "Rejoignez-nous pour une session exclusive de formation pratique en direct sur Google Meet avec démonstrations et cas réels."
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideai.com"
     const registerUrl = `${siteUrl}/masterclass`
 
@@ -924,7 +924,7 @@ export async function sendMasterclassPlatformInvitationEmail(
                 📅 <strong>Date & Heure :</strong> ${dateFormatted}<br>
                 👨‍🏫 <strong>Intervenant :</strong> ${instructor}<br>
                 🎟️ <strong>Tarif :</strong> 100% Gratuit (Accès Libre)<br>
-                💻 <strong>Plateforme :</strong> YouTube Live & Groupe WhatsApp des Apprenants
+                💻 <strong>Plateforme :</strong> Google Meet & Groupe WhatsApp des Apprenants
               </div>
             </div>
 
@@ -934,7 +934,7 @@ export async function sendMasterclassPlatformInvitationEmail(
             <a href="${registerUrl}" class="cta-button">👉 Réserver ma place à la Masterclass</a>
 
             <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 20px;">
-              Dès votre inscription, vous recevrez l'accès au direct YouTube Live et le lien pour rejoindre la communauté d'apprenants sur WhatsApp.
+              Dès votre inscription, vous recevrez le lien direct Google Meet et le lien pour rejoindre la communauté d'apprenants sur WhatsApp.
             </p>
 
             <p style="margin-top: 28px;">
@@ -1209,7 +1209,7 @@ export async function sendMasterclassTargetedEmail(params: {
     const sessionTitle = session.title || "Masterclass IA en Direct"
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "")
-    const youtubeUrl = session.youtubeLiveUrl || "https://www.youtube.com/@leguideai"
+    const youtubeUrl = session.youtubeLiveUrl || "https://meet.google.com"
     const whatsappUrl = session.whatsappGroupUrl || "https://chat.whatsapp.com"
 
     let badgeText = "📢 MESSAGE DE L'INSTRUCTEUR"
@@ -1238,7 +1238,7 @@ export async function sendMasterclassTargetedEmail(params: {
           .content { padding: 30px 24px; line-height: 1.65; font-size: 14px; color: #cbd5e1; }
           .msg-box { background-color: #1f2937; border: 1px solid #374151; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 18px; margin: 20px 0; color: #f9fafb; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
           .info-card { background-color: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 18px; margin: 20px 0; font-size: 13px; }
-          .btn-yt { display: inline-block; background-color: #dc2626; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 12px 22px; border-radius: 10px; font-size: 13px; margin: 6px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+          .btn-meet { display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 12px 22px; border-radius: 10px; font-size: 13px; margin: 6px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
           .btn-wa { display: inline-block; background-color: #16a34a; color: #ffffff !important; font-weight: 800; text-decoration: none; padding: 12px 22px; border-radius: 10px; font-size: 13px; margin: 6px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); }
           .footer { background-color: #0b0f19; padding: 20px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #1f2937; }
         </style>
@@ -1258,11 +1258,11 @@ export async function sendMasterclassTargetedEmail(params: {
               <strong style="color: #60a5fa; font-size: 14px; display: block; margin-bottom: 8px;">🎯 Masterclass : ${sessionTitle}</strong>
               ${dateFormatted ? `📅 <strong>Date :</strong> ${dateFormatted}<br>` : ''}
               👨‍🏫 <strong>Formateur :</strong> ${instructor}<br>
-              💻 <strong>Diffusion :</strong> YouTube Live
+              💻 <strong>Diffusion :</strong> Google Meet (Direct)
             </div>
 
             <div style="text-align: center; margin: 24px 0 16px;">
-              ${youtubeUrl ? `<a href="${youtubeUrl}" class="btn-yt" target="_blank">📺 Accéder à YouTube Live</a>` : ''}
+              ${youtubeUrl ? `<a href="${youtubeUrl}" class="btn-meet" target="_blank">🎥 Accéder à Google Meet</a>` : ''}
               ${whatsappUrl ? `<a href="${whatsappUrl}" class="btn-wa" target="_blank">💬 Groupe WhatsApp des Apprenants</a>` : ''}
             </div>
 
@@ -1280,7 +1280,7 @@ export async function sendMasterclassTargetedEmail(params: {
       </html>
     `
 
-    const textContent = `Bonjour ${firstName},\n\nConcernant la Masterclass : ${sessionTitle}\n\n${customMessage}\n\nLien YouTube Live : ${youtubeUrl}\nGroupe WhatsApp : ${whatsappUrl}\n\nBien cordialement,\n${instructor}`
+    const textContent = `Bonjour ${firstName},\n\nConcernant la Masterclass : ${sessionTitle}\n\n${customMessage}\n\nLien Google Meet : ${youtubeUrl}\nGroupe WhatsApp : ${whatsappUrl}\n\nBien cordialement,\n${instructor}`
 
     const data = await resend.emails.send({
       from: fromEmail,

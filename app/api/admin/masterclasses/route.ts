@@ -97,13 +97,13 @@ async function loadAllMasterclassSessions(): Promise<{ sessions: any[]; settings
     const initialSession = {
       id: "mc_default",
       title: settingsMap.masterclass_title || "Masterclass IA : Fondamentaux & Cas Pratiques en Direct",
-      description: settingsMap.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur YouTube Live. Démonstrations d'outils, cas pratiques et questions-réponses.",
+      description: settingsMap.masterclass_description || "Rejoignez Alfred Dah pour une session interactive de 1h30 en direct sur Google Meet. Démonstrations d'outils, cas pratiques et questions-réponses.",
       instructor: settingsMap.masterclass_instructor || "Alfred Dah",
       scheduledAt: scheduledAt,
       dateDisplay: dateDisplay,
       thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
       whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@leguideai",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://meet.google.com",
       duration: "1h 30min",
       status: "upcoming",
       is_active: isActive,
@@ -150,7 +150,7 @@ async function syncPrimarySessionKeys(sessions: any[]) {
       { key: "masterclass_date_display", value: primary.dateDisplay || "" },
       { key: "masterclass_thumbnail_url", value: primary.thumbnailUrl || "" },
       { key: "masterclass_whatsapp_group_url", value: primary.whatsappGroupUrl || "" },
-      { key: "masterclass_youtube_url", value: primary.youtubeLiveUrl || "https://www.youtube.com/@leguideai" },
+      { key: "masterclass_youtube_url", value: primary.youtubeLiveUrl || "https://meet.google.com" },
       { key: "masterclass_instructor", value: primary.instructor || "Alfred Dah" },
       { key: "masterclass_is_active", value: primary.is_active !== false ? "true" : "false" }
     ]
@@ -207,9 +207,36 @@ export async function GET() {
       .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,course_slug.eq.masterclass-live,source.eq.masterclass_dimanche")
       .order("created_at", { ascending: false })
 
+    // Récupérer les profils correspondants pour enrichir avec pays, profession/secteur et numéro WhatsApp officiel
+    const participantEmails = (rawParticipants || []).map(p => p.email?.toLowerCase().trim()).filter(Boolean)
+    const profileMap = new Map<string, any>()
+
+    if (participantEmails.length > 0) {
+      try {
+        const { data: matchedProfiles } = await supabaseServer
+          .from("profiles")
+          .select("email, full_name, whatsapp, country, city, sector")
+          .in("email", participantEmails)
+
+        if (matchedProfiles && matchedProfiles.length > 0) {
+          matchedProfiles.forEach(pr => {
+            if (pr.email) profileMap.set(pr.email.toLowerCase().trim(), pr)
+          })
+        }
+      } catch (profErr) {
+        console.warn("Could not fetch profiles for masterclass participants:", profErr)
+      }
+    }
+
+    const sessionMap = new Map<string, any>()
+    sessions.forEach(s => { if (s.id) sessionMap.set(s.id, s) })
+    replays.forEach(r => { if (r.id) sessionMap.set(r.id, r) })
+
+    const activeThemeTitle = closestUpcomingSession?.title || settingsMap.masterclass_title || "Masterclass IA"
+
     const participants = (rawParticipants || []).map(p => {
       let masterclassId = "mc_default"
-      let masterclassTitle = closestUpcomingSession?.title || "Masterclass IA Interactive"
+      let masterclassTitle = activeThemeTitle
       let parsedNotes: any = {}
 
       if (p.notes) {
@@ -224,9 +251,42 @@ export async function GET() {
         }
       }
 
+      const matchedSession = sessionMap.get(masterclassId)
+
+      const isGenericPlaceholder = !parsedNotes.masterclass_title || 
+        parsedNotes.masterclass_title === "Masterclass IA en Direct" ||
+        parsedNotes.masterclass_title === "Masterclass IA Interactive" ||
+        parsedNotes.masterclass_title === "Masterclass IA" ||
+        parsedNotes.masterclass_title === "Masterclass" ||
+        parsedNotes.masterclass_title === "Session Direct Actuelle"
+
+      if (matchedSession?.title) {
+        masterclassTitle = matchedSession.title
+      } else if (isGenericPlaceholder && activeThemeTitle) {
+        masterclassTitle = activeThemeTitle
+      }
+
+      const emailNorm = p.email?.toLowerCase().trim()
+      const prof = emailNorm ? profileMap.get(emailNorm) : null
+
+      const resolvedWhatsApp = (p.whatsapp && !p.whatsapp.startsWith("wa_") && !p.whatsapp.includes("@"))
+        ? p.whatsapp
+        : (prof?.whatsapp || parsedNotes.whatsapp || parsedNotes.phone || "")
+
+      const resolvedCountry = prof?.country || p.country || parsedNotes.country || parsedNotes.country_name || "CI"
+      const resolvedSector = prof?.sector || parsedNotes.sector || parsedNotes.profession || parsedNotes.job || ""
+      const resolvedCity = prof?.city || parsedNotes.city || ""
+      const resolvedFullName = (p.full_name && p.full_name !== "Participant Masterclass" && !p.full_name.includes("@"))
+        ? p.full_name
+        : (prof?.full_name || parsedNotes.full_name || p.email?.split("@")[0] || "Apprenant")
+
       return {
         ...p,
-        whatsapp: (p.whatsapp && !p.whatsapp.startsWith("wa_") && !p.whatsapp.includes("@")) ? p.whatsapp : "",
+        full_name: resolvedFullName,
+        whatsapp: resolvedWhatsApp,
+        country: resolvedCountry,
+        sector: resolvedSector,
+        city: resolvedCity,
         masterclass_id: masterclassId,
         masterclass_title: masterclassTitle,
         parsed_notes: parsedNotes
@@ -272,7 +332,7 @@ export async function POST(req: Request) {
         dateDisplay: dateDisplay,
         thumbnailUrl: sessionData.thumbnailUrl || "",
         whatsappGroupUrl: sessionData.whatsappGroupUrl || "",
-        youtubeLiveUrl: sessionData.youtubeLiveUrl || "https://www.youtube.com/@leguideai",
+        youtubeLiveUrl: sessionData.youtubeLiveUrl || "https://meet.google.com",
         duration: sessionData.duration || "1h 30min",
         status: sessionData.status || "upcoming",
         is_active: sessionData.is_active !== false,

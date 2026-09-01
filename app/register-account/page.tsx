@@ -194,7 +194,11 @@ export default function RegisterAccountPage() {
       }
       setLoading(false)
     } else {
-      setSuccess(true)
+      if (data?.session) {
+        router.push("/dashboard")
+      } else {
+        setSuccess(true)
+      }
       setLoading(false)
     }
   }

@@ -223,14 +223,33 @@ export const countries: Country[] = [
   { name: "Zimbabwe", code: "ZW", dial: "+263" },
 ]
 
-// Emoji flag generator from 2-letter ISO code
-export function getCountryFlag(countryCode: string): string {
-  if (!countryCode || countryCode.length !== 2) return "🌐"
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((char) => 127397 + char.charCodeAt(0))
-  return String.fromCodePoint(...codePoints)
+// Emoji flag generator from 2-letter ISO code or country name
+export function getCountryFlag(countryCodeOrName: string): string {
+  if (!countryCodeOrName) return "🌐"
+  const clean = countryCodeOrName.trim()
+  if (clean.length === 2) {
+    const codePoints = clean
+      .toUpperCase()
+      .split("")
+      .map((char) => 127397 + char.charCodeAt(0))
+    return String.fromCodePoint(...codePoints)
+  }
+  const found = countries.find(c => c.name.toLowerCase() === clean.toLowerCase())
+  if (found) {
+    const codePoints = found.code
+      .toUpperCase()
+      .split("")
+      .map((char) => 127397 + char.charCodeAt(0))
+    return String.fromCodePoint(...codePoints)
+  }
+  return "🌐"
+}
+
+export function getCountryName(countryCodeOrName: string): string {
+  if (!countryCodeOrName) return "—"
+  const clean = countryCodeOrName.trim()
+  const found = countries.find(c => c.code.toLowerCase() === clean.toLowerCase() || c.name.toLowerCase() === clean.toLowerCase())
+  return found ? found.name : clean
 }
 
 export interface CountryPhoneRule {

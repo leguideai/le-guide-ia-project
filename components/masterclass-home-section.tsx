@@ -128,7 +128,7 @@ export function MasterclassHomeSection() {
                 </div>
                 <div className="flex items-center gap-1.5 font-medium text-slate-200">
                   <Video className="size-4 text-primary" />
-                  <span>YouTube Live & Groupe WhatsApp</span>
+                  <span>Google Meet Live & Groupe WhatsApp</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium text-slate-200">
                   <Play className="size-4 text-primary" />

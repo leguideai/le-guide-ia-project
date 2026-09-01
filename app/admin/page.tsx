@@ -15,8 +15,10 @@ import {
   Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star,
   Image as ImageIcon, Bold, Italic, Underline, List, ListOrdered, Heading2, Heading3,
   Link2, Minus, MousePointerClick, AlertCircle, Code, AlignLeft, Send, Radio,
-  ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Crown, Check, Save, Copy
+  ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Crown, Check, Save, Copy, Loader2,
+  Briefcase, Globe
 } from "lucide-react"
+import { getCountryFlag, getCountryName } from "@/lib/countries"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { AnalyticsChart } from "@/components/analytics-chart"
 
@@ -230,7 +232,7 @@ export default function SuperAdminDashboard() {
     dateDisplay: "",
     thumbnailUrl: "",
     whatsappGroupUrl: "",
-    youtubeLiveUrl: "https://www.youtube.com/@leguideai",
+    youtubeLiveUrl: "https://meet.google.com",
     duration: "1h 30min",
     status: "upcoming",
     is_active: true
@@ -1241,12 +1243,13 @@ export default function SuperAdminDashboard() {
       alert("Aucun participant inscrit à exporter pour cette sélection.")
       return
     }
-    const headers = ["Nom Complet", "Email", "WhatsApp", "Pays", "Masterclass", "Date Inscription", "Statut"]
+    const headers = ["Nom Complet", "Email", "WhatsApp", "Pays", "Profession / Secteur", "Masterclass", "Date Inscription", "Statut"]
     const rows = listToExport.map(p => [
       `"${(p.full_name || "").replace(/"/g, '""')}"`,
       `"${(p.email || "").replace(/"/g, '""')}"`,
       `"${(p.whatsapp || "").replace(/"/g, '""')}"`,
-      `"${(p.country || "CI").replace(/"/g, '""')}"`,
+      `"${(getCountryName(p.country) || p.country || "Côte d'Ivoire").replace(/"/g, '""')}"`,
+      `"${(p.sector || "Non spécifié").replace(/"/g, '""')}"`,
       `"${(p.masterclass_title || masterclassSession.title || "Masterclass IA").replace(/"/g, '""')}"`,
       `"${new Date(p.created_at).toLocaleString("fr-FR")}"`,
       `"${p.status || "inscrit"}"`
@@ -1298,7 +1301,7 @@ export default function SuperAdminDashboard() {
       dateDisplay: s.dateDisplay || "",
       thumbnailUrl: s.thumbnailUrl || "",
       whatsappGroupUrl: s.whatsappGroupUrl || "",
-      youtubeLiveUrl: s.youtubeLiveUrl || "https://www.youtube.com/@leguideai",
+      youtubeLiveUrl: s.youtubeLiveUrl || "https://meet.google.com",
       duration: s.duration || "1h 30min",
       status: s.status || "upcoming",
       is_active: s.is_active !== false
@@ -2111,6 +2114,46 @@ export default function SuperAdminDashboard() {
       }
     } catch (err) {
       alert("Erreur lors de la mise à jour du rôle")
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  // Handle Delete User (Super Admin only)
+  async function handleDeleteUser(userToDelete: any) {
+    if (!userToDelete?.id) return
+
+    if (userToDelete.id === currentUser?.id || userToDelete.email === currentUser?.email) {
+      alert("Action impossible : Vous ne pouvez pas supprimer votre propre compte actuellement connecté.")
+      return
+    }
+
+    const userName = userToDelete.full_name || userToDelete.email
+    const confirmed = confirm(
+      `⚠️ ACTION IRRÉVERSIBLE (SUPER ADMIN) :\n\nÊtes-vous sûr de vouloir supprimer définitivement le compte de ${userName} (${userToDelete.email}) ?\n\nCette opération supprimera son compte d'authentification, son profil, ses inscriptions et ses devoirs associés.`
+    )
+    if (!confirmed) return
+
+    setProcessingId(userToDelete.id)
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete_user",
+          userId: userToDelete.id,
+          userEmail: userToDelete.email
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showNotice(data.message || `Compte de ${userName} supprimé avec succès.`)
+        setUsers(prev => prev.filter(u => u.id !== userToDelete.id))
+      } else {
+        alert(data.error || "Erreur lors de la suppression du compte.")
+      }
+    } catch (err: any) {
+      alert("Erreur : " + (err?.message || "Impossible de supprimer l'utilisateur."))
     } finally {
       setProcessingId(null)
     }
@@ -4443,7 +4486,7 @@ export default function SuperAdminDashboard() {
                           <label className="text-slate-600 font-bold">Slug URL (Identifiant unique)</label>
                           <button
                             type="button"
-                            onClick={() => setCourseForm(prev => ({ ...prev, slug: generateCourseSlug(prev.title) }))}
+                            onClick={() => setCourseForm(prev => ({ ...prev, slug: generateCourseSlug(prev.title || "") }))}
                             className="text-[10px] text-primary hover:underline font-bold"
                           >
                             Générer depuis le titre
@@ -6971,22 +7014,22 @@ export default function SuperAdminDashboard() {
                         </p>
                       </div>
 
-                      <div className="p-3 rounded-xl bg-white border border-rose-200 space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-rose-800">
+                      <div className="p-3 rounded-xl bg-white border border-blue-200 space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-blue-800">
                           <span className="flex items-center gap-1.5">
-                            <Radio className="size-3.5 text-rose-600" />
-                            YouTube Live
+                            <Video className="size-3.5 text-blue-600" />
+                            Google Meet (Direct Live)
                           </span>
                           {masterclassSession.youtubeLiveUrl ? (
-                            <a href={masterclassSession.youtubeLiveUrl} target="_blank" rel="noopener noreferrer" className="text-rose-700 hover:underline flex items-center gap-1 text-[10px]">
-                              Ouvrir <ExternalLink className="size-2.5" />
+                            <a href={masterclassSession.youtubeLiveUrl} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline flex items-center gap-1 text-[10px]">
+                              Tester <ExternalLink className="size-2.5" />
                             </a>
                           ) : (
                             <span className="text-[10px] text-amber-600">Non renseigné</span>
                           )}
                         </div>
                         <p className="text-[10px] text-slate-500 truncate">
-                          {masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@leguideai"}
+                          {masterclassSession.youtubeLiveUrl || "https://meet.google.com"}
                         </p>
                       </div>
                     </div>
@@ -7525,6 +7568,7 @@ export default function SuperAdminDashboard() {
                       <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Adresse Email</th>
                       <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">WhatsApp</th>
                       <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Pays</th>
+                      <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Profession / Secteur</th>
                       <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Masterclass Ciblée</th>
                       <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">Date Inscription</th>
                       <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px] text-center whitespace-nowrap">Statut</th>
@@ -7538,8 +7582,38 @@ export default function SuperAdminDashboard() {
                         <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                           <td className="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">{p.full_name || "—"}</td>
                           <td className="py-3 px-4 font-mono text-primary font-semibold whitespace-nowrap">{p.email}</td>
-                          <td className="py-3 px-4 font-mono whitespace-nowrap">{p.whatsapp || "—"}</td>
-                          <td className="py-3 px-4 whitespace-nowrap">{p.country || "CI"}</td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {p.whatsapp && !p.whatsapp.startsWith("wa_") ? (
+                              <a
+                                href={`https://wa.me/${p.whatsapp.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-colors"
+                                title="Ouvrir la conversation WhatsApp"
+                              >
+                                <MessageCircle className="size-3 text-emerald-600 shrink-0" />
+                                <span>{p.whatsapp}</span>
+                              </a>
+                            ) : (
+                              <span className="text-slate-400 font-mono text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-800">
+                              <span className="text-base leading-none">{getCountryFlag(p.country)}</span>
+                              <span>{getCountryName(p.country)}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {p.sector && p.sector !== "—" ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                                <Briefcase className="size-3 text-slate-500 shrink-0" />
+                                <span className="truncate max-w-[180px]" title={p.sector}>{p.sector}</span>
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 italic text-[11px]">Non spécifié</span>
+                            )}
+                          </td>
                           <td className="py-3 px-4">
                             {isLiveSession ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500/10 text-amber-900 border border-amber-300 max-w-[260px] truncate" title={p.masterclass_title || masterclassSession.title}>
@@ -7577,7 +7651,7 @@ export default function SuperAdminDashboard() {
 
                     {filteredMasterclassParticipants.length === 0 && (
                       <tr>
-                        <td colSpan={8} className="py-10 text-center text-slate-400">
+                        <td colSpan={9} className="py-10 text-center text-slate-400">
                           {selectedMasterclassFilter !== "all" 
                             ? `Aucun apprenant inscrit pour cette Masterclass spécifique.` 
                             : `Aucun inscrit pour le moment. Cliquez sur « Inscrire un apprenant » pour ajouter une inscription.`}
@@ -7803,7 +7877,7 @@ export default function SuperAdminDashboard() {
                             }`}
                           >
                             <div className="text-[11px] font-black text-emerald-700">⏰ Rappel Direct</div>
-                            <div className="text-[10px] text-slate-500 font-normal mt-0.5">Date + Liens YouTube & WhatsApp</div>
+                            <div className="text-[10px] text-slate-500 font-normal mt-0.5">Date + Liens Google Meet & WhatsApp</div>
                           </button>
 
                           <button
@@ -7874,7 +7948,7 @@ export default function SuperAdminDashboard() {
                           <li>Prénom personnalisé de l'apprenant</li>
                           <li>Titre de la session : <strong>{masterclassSession.title}</strong></li>
                           {masterclassSession.dateDisplay && <li>Date : <strong>{masterclassSession.dateDisplay}</strong></li>}
-                          <li>Bouton d'accès direct <strong>YouTube Live</strong></li>
+                          <li>Bouton d'accès direct <strong>Google Meet</strong></li>
                           <li>Bouton d'accès au <strong>Groupe WhatsApp des Apprenants</strong></li>
                           <li>Signature officielle <strong>Alfred Dah &amp; LE GUIDE IA</strong></li>
                         </ul>
@@ -7997,7 +8071,7 @@ export default function SuperAdminDashboard() {
                 className="px-4 py-2 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 flex items-center gap-2 shadow-sm cursor-pointer"
               >
                 <Plus className="size-4" />
-                <span>Ajouter un Replay YouTube</span>
+                <span>Ajouter un Replay Vidéo</span>
               </button>
             </div>
 
@@ -8195,12 +8269,12 @@ export default function SuperAdminDashboard() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="font-bold text-slate-700">📺 Lien YouTube Live / Stream</label>
+                    <label className="font-bold text-slate-700">🎥 Lien Google Meet (Direct Live) *</label>
                     <input
                       type="url"
                       value={masterclassForm.youtubeLiveUrl}
                       onChange={e => setMasterclassForm({ ...masterclassForm, youtubeLiveUrl: e.target.value })}
-                      placeholder="https://www.youtube.com/@leguideai ou lien direct"
+                      placeholder="https://meet.google.com/xxx-yyyy-zzz"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary"
                     />
                   </div>
@@ -9757,7 +9831,8 @@ export default function SuperAdminDashboard() {
                       <th className="p-4">Email</th>
                       <th className="p-4">Rôle Actuel RBAC</th>
                       <th className="p-4">Date d'inscription</th>
-                      <th className="p-4 text-right">Changer Rôle</th>
+                      <th className="p-4 text-center">Changer Rôle</th>
+                      <th className="p-4 text-right">Action Super Admin</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200/80">
@@ -9775,7 +9850,7 @@ export default function SuperAdminDashboard() {
                           </span>
                         </td>
                         <td className="p-4 text-slate-500 font-medium">{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
-                        <td className="p-4 text-right">
+                        <td className="p-4 text-center">
                           <div className="inline-flex items-center rounded-xl p-1 bg-[#F4F6F8] border border-slate-200/80 gap-1">
                             <button
                               onClick={() => handleRoleChange(u.id, "student")}
@@ -9811,6 +9886,28 @@ export default function SuperAdminDashboard() {
                               Super Admin
                             </button>
                           </div>
+                        </td>
+                        <td className="p-4 text-right">
+                          {u.id === currentUser?.id || u.email === currentUser?.email ? (
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                              Votre compte
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={processingId === u.id}
+                              onClick={() => handleDeleteUser(u)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+                              title={`Supprimer définitivement le compte de ${u.full_name || u.email}`}
+                            >
+                              {processingId === u.id ? (
+                                <Loader2 className="size-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="size-3.5" />
+                              )}
+                              <span>Supprimer</span>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

@@ -274,15 +274,15 @@ export default function MasterclassHubPage() {
             </a>
           </div>
 
-          {/* BOUTON YOUTUBE LIVE */}
+          {/* BOUTON GOOGLE MEET LIVE */}
           <a
-            href={upcomingSession?.youtubeLiveUrl || ""}
+            href={upcomingSession?.youtubeLiveUrl || "https://meet.google.com"}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-blue-600/30 cursor-pointer"
           >
-            <Play className="size-4 fill-current" />
-            <span>Suivre la Session sur YouTube Live</span>
+            <Video className="size-4" />
+            <span>Rejoindre la Session sur Google Meet</span>
             <ExternalLink className="size-3.5 opacity-80" />
           </a>
 
@@ -314,7 +314,7 @@ export default function MasterclassHubPage() {
             )}
           </button>
           <p className="text-[11px] text-muted-foreground text-center">
-            🔒 Inscription 100% gratuite • Débloque le lien YouTube Live et l'accès au groupe WhatsApp des apprenants.
+            🔒 Inscription 100% gratuite • Débloque le lien direct Google Meet et l'accès au groupe WhatsApp des apprenants.
           </p>
         </div>
       ) : (
@@ -467,7 +467,7 @@ export default function MasterclassHubPage() {
                 <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
                   <Video className="size-4 text-primary mx-auto" />
                   <span className="block text-[10px] text-muted-foreground font-bold uppercase">Plateforme</span>
-                  <p className="text-[11px] text-white font-bold">YouTube Live</p>
+                  <p className="text-[11px] text-white font-bold">Google Meet (Direct)</p>
                 </div>
                 <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
                   <ShieldCheck className="size-4 text-emerald-400 mx-auto" />
@@ -532,7 +532,7 @@ export default function MasterclassHubPage() {
                     <Video className="size-4" />
                     <span className="font-bold text-xs">Plateforme</span>
                   </div>
-                  <p className="text-xs text-white font-semibold">YouTube Live (En Direct)</p>
+                  <p className="text-xs text-white font-semibold">Google Meet (En Direct)</p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-border bg-card/80 space-y-1">

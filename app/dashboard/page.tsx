@@ -53,7 +53,9 @@ import {
   Crown,
   Lock,
   CreditCard,
-  Receipt
+  Receipt,
+  GraduationCap,
+  UserCheck
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { SubscriptionModal } from "@/components/subscription-modal"
@@ -239,6 +241,19 @@ export default function DashboardPage() {
   const [city, setCity] = useState("")
   const [profileError, setProfileError] = useState<string | null>(null)
 
+  // Forced Profile Modal Dropdowns
+  const [isForcedPhoneCountryOpen, setIsForcedPhoneCountryOpen] = useState(false)
+  const [forcedPhoneCountrySearch, setForcedPhoneCountrySearch] = useState("")
+  const forcedPhoneCountryRef = useRef<HTMLDivElement>(null)
+
+  const [isForcedResidenceCountryOpen, setIsForcedResidenceCountryOpen] = useState(false)
+  const [forcedResidenceCountrySearch, setForcedResidenceCountrySearch] = useState("")
+  const forcedResidenceCountryRef = useRef<HTMLDivElement>(null)
+
+  const [isForcedSectorOpen, setIsForcedSectorOpen] = useState(false)
+  const [forcedSectorSearch, setForcedSectorSearch] = useState("")
+  const forcedSectorRef = useRef<HTMLDivElement>(null)
+
   // Close all profile dropdowns on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -250,6 +265,15 @@ export default function DashboardPage() {
       }
       if (sectorDropdownRef.current && !sectorDropdownRef.current.contains(event.target as Node)) {
         setIsSectorDropdownOpen(false)
+      }
+      if (forcedPhoneCountryRef.current && !forcedPhoneCountryRef.current.contains(event.target as Node)) {
+        setIsForcedPhoneCountryOpen(false)
+      }
+      if (forcedResidenceCountryRef.current && !forcedResidenceCountryRef.current.contains(event.target as Node)) {
+        setIsForcedResidenceCountryOpen(false)
+      }
+      if (forcedSectorRef.current && !forcedSectorRef.current.contains(event.target as Node)) {
+        setIsForcedSectorOpen(false)
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -290,6 +314,49 @@ export default function DashboardPage() {
     return countries.find(c => c.name.toLowerCase() === country.toLowerCase() || c.code.toLowerCase() === country.toLowerCase()) || null
   }, [country])
 
+  // Filtered Lists for Forced Modal
+  const filteredForcedPhoneCountries = useMemo(() => {
+    const search = forcedPhoneCountrySearch.toLowerCase().trim()
+    if (!search) {
+      const priorityList = countries.filter(c => PRIORITY_COUNTRY_CODES.includes(c.code))
+      const otherList = countries.filter(c => !PRIORITY_COUNTRY_CODES.includes(c.code))
+      return [...priorityList, ...otherList]
+    }
+    return countries.filter(
+      c => c.name.toLowerCase().includes(search) || 
+           c.dial.includes(search) || 
+           c.code.toLowerCase().includes(search)
+    )
+  }, [forcedPhoneCountrySearch])
+
+  const filteredForcedResidenceCountries = useMemo(() => {
+    const search = forcedResidenceCountrySearch.toLowerCase().trim()
+    if (!search) {
+      const priorityList = countries.filter(c => PRIORITY_COUNTRY_CODES.includes(c.code))
+      const otherList = countries.filter(c => !PRIORITY_COUNTRY_CODES.includes(c.code))
+      return [...priorityList, ...otherList]
+    }
+    return countries.filter(
+      c => c.name.toLowerCase().includes(search) || 
+           c.code.toLowerCase().includes(search)
+    )
+  }, [forcedResidenceCountrySearch])
+
+  const filteredForcedSectorsByCategory = useMemo(() => {
+    const search = forcedSectorSearch.toLowerCase().trim()
+    if (!search) return SECTOR_CATEGORIES
+
+    return SECTOR_CATEGORIES.map(group => {
+      const filteredOptions = group.options.filter(opt => 
+        opt.toLowerCase().includes(search) || group.category.toLowerCase().includes(search)
+      )
+      return {
+        ...group,
+        options: filteredOptions
+      }
+    }).filter(group => group.options.length > 0)
+  }, [forcedSectorSearch])
+
   // Filtered Sectors by Category
   const filteredSectorsByCategory = useMemo(() => {
     const search = sectorSearch.toLowerCase().trim()
@@ -325,6 +392,22 @@ export default function DashboardPage() {
     const formatted = formatPhoneNumber(val, profileCountry.code)
     setProfilePhone(formatted)
   }
+
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isProfileSavedInDb, setIsProfileSavedInDb] = useState(false)
+
+  const profileCompletionStats = useMemo(() => {
+    const checks = [
+      { id: "name", label: "Nom complet officiel", ok: Boolean(fullName && fullName.trim().length >= 2) },
+      { id: "phone", label: "Numéro WhatsApp", ok: Boolean(rawProfilePhoneDigits && rawProfilePhoneDigits.length >= 6 && isProfilePhoneValid) },
+      { id: "country", label: "Pays de résidence", ok: Boolean(country && country.trim().length > 0) },
+      { id: "city", label: "Ville", ok: Boolean(city && city.trim().length > 0) },
+      { id: "sector", label: "Secteur / Métier", ok: Boolean(sector && sector.trim().length > 0) }
+    ]
+    const completedCount = checks.filter(c => c.ok).length
+    const percentage = Math.round((completedCount / checks.length) * 100)
+    return { checks, completedCount, total: checks.length, percentage }
+  }, [fullName, rawProfilePhoneDigits, isProfilePhoneValid, country, city, sector])
 
   // Dynamic Live Countdown Timer State per Session
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
@@ -364,7 +447,7 @@ export default function DashboardPage() {
   const [pendingCourses, setPendingCourses] = useState<any[]>([])
   const [userInvoices, setUserInvoices] = useState<any[]>([])
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
+
   // A course is accessible if: it's free (price===0) OR its DB uuid / slug is in userEnrollments OR user is admin
   const canAccess = (course: BootcampCourse & { dbId?: string; slug?: string; isFree?: boolean; id?: string }) => {
     if (course.isFree || isAdmin) return true
@@ -439,6 +522,16 @@ export default function DashboardPage() {
           }
         }
       }
+
+      const isDbComplete = Boolean(
+        profData &&
+        profData.full_name && profData.full_name.trim().length >= 2 &&
+        profData.whatsapp && profData.whatsapp.trim().length >= 6 &&
+        profData.country && profData.country.trim().length > 0 &&
+        profData.city && profData.city.trim().length > 0 &&
+        profData.sector && profData.sector.trim().length > 0
+      )
+      setIsProfileSavedInDb(isDbComplete)
 
       setFullName(initialFullName)
       setCountry(initialCountryName)
@@ -565,25 +658,21 @@ export default function DashboardPage() {
         console.warn("Could not sync with /api/user/enrollments:", apiErr)
       }
 
-      // 10. Synchroniser les données Masterclasses & Replays
+      // 10. Synchroniser les données Masterclasses & Replays (Supabase = Source de vérité unique)
       try {
-        const isLocallyReg = typeof window !== "undefined" && (
-          localStorage.getItem("masterclass_registered") === "true" ||
-          localStorage.getItem("masterclass_registered_email") === userEmailClean
-        )
-        if (isLocallyReg) {
-          setIsMasterclassRegistered(true)
-        }
-
         const mcRes = await fetch(`/api/masterclass?email=${encodeURIComponent(userEmailClean)}`)
         const mcData = await mcRes.json()
         if (mcData?.upcomingSession) setMasterclassSession(mcData.upcomingSession)
         if (mcData?.replays && Array.isArray(mcData.replays)) setMasterclassReplays(mcData.replays)
-        if (mcData?.isRegistered || isLocallyReg) {
+        
+        // Synchronisation stricte avec la base de données
+        if (mcData?.isRegistered) {
           setIsMasterclassRegistered(true)
+        } else {
+          setIsMasterclassRegistered(false)
           if (typeof window !== "undefined") {
-            localStorage.setItem("masterclass_registered", "true")
-            localStorage.setItem("masterclass_registered_email", userEmailClean)
+            localStorage.removeItem("masterclass_registered")
+            localStorage.removeItem("masterclass_registered_email")
           }
         }
       } catch (mcErr) {
@@ -637,16 +726,14 @@ export default function DashboardPage() {
           email: user.email,
           fullName: profile?.full_name || fullName || user.email.split("@")[0],
           country: profile?.country || country || "CI",
-          whatsapp: profile?.whatsapp || user?.user_metadata?.whatsapp || ""
+          whatsapp: profile?.whatsapp || user?.user_metadata?.whatsapp || "",
+          masterclassId: masterclassSession?.id || "mc_default",
+          masterclassTitle: masterclassSession?.title || "Masterclass IA Interactive"
         })
       })
       const data = await res.json()
       if (data.success) {
         setIsMasterclassRegistered(true)
-        if (typeof window !== "undefined") {
-          localStorage.setItem("masterclass_registered", "true")
-          localStorage.setItem("masterclass_registered_email", user.email)
-        }
         setMasterclassRegisterSuccess("🎉 Votre place en direct est confirmée ! Vos liens d'accès vous ont été envoyés par email.")
       } else {
         alert(data.error || "Erreur lors de la réservation.")
@@ -706,7 +793,12 @@ export default function DashboardPage() {
     if (!user?.id) return
     setProfileError(null)
 
-    if (rawProfilePhoneDigits.length > 0 && !isProfilePhoneValid) {
+    if (!fullName || fullName.trim().length < 2) {
+      setProfileError("Veuillez renseigner votre nom complet officiel.")
+      return
+    }
+
+    if (!rawProfilePhoneDigits || rawProfilePhoneDigits.length < 6 || !isProfilePhoneValid) {
       const expectedText = currentProfilePhoneRule 
         ? currentProfilePhoneRule.formatExample 
         : "entre 6 et 14 chiffres"
@@ -714,13 +806,25 @@ export default function DashboardPage() {
       return
     }
 
+    if (!country || !country.trim()) {
+      setProfileError("Veuillez sélectionner votre pays de résidence.")
+      return
+    }
+
+    if (!city || !city.trim()) {
+      setProfileError("Veuillez indiquer votre ville de résidence.")
+      return
+    }
+
+    if (!sector || !sector.trim()) {
+      setProfileError("Veuillez sélectionner votre secteur d'activité ou métier.")
+      return
+    }
+
     setSavingProfile(true)
     setSaveSuccess(false)
 
-    const fullWhatsApp = rawProfilePhoneDigits.length > 0 
-      ? `${profileCountry.dial}${rawProfilePhoneDigits}` 
-      : ""
-
+    const fullWhatsApp = `${profileCountry.dial}${rawProfilePhoneDigits}`
     const countryToSave = country || profileCountry.name
 
     try {
@@ -751,6 +855,15 @@ export default function DashboardPage() {
       if (profErr) {
         setProfileError(profErr.message)
       } else {
+        setProfile((prev: any) => ({
+          ...prev,
+          full_name: fullName.trim(),
+          whatsapp: fullWhatsApp,
+          country: countryToSave,
+          city: city.trim(),
+          sector: sector.trim(),
+        }))
+        setIsProfileSavedInDb(true)
         setSaveSuccess(true)
         setCountry(countryToSave)
         setTimeout(() => setSaveSuccess(false), 4000)
@@ -1689,9 +1802,9 @@ export default function DashboardPage() {
                     )}
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                      {selectedBootcamp.live_meet_url && selectedBootcamp.live_meet_url.trim() && selectedBootcamp.live_meet_url !== "https://meet.google.com" && (
+                      {(selectedBootcamp as any).live_meet_url && (selectedBootcamp as any).live_meet_url.trim() && (selectedBootcamp as any).live_meet_url !== "https://meet.google.com" && (
                         <a
-                          href={selectedBootcamp.live_meet_url}
+                          href={(selectedBootcamp as any).live_meet_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all cursor-pointer"
@@ -2064,13 +2177,13 @@ export default function DashboardPage() {
                             </a>
 
                             <a
-                              href={masterclassSession.youtubeLiveUrl || "https://www.youtube.com/@leguideai"}
+                              href={masterclassSession.youtubeLiveUrl || "https://meet.google.com"}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+                              className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer"
                             >
-                              <Play className="size-4 fill-current" />
-                              <span>Suivre sur YouTube Live</span>
+                              <Video className="size-4" />
+                              <span>Rejoindre sur Google Meet</span>
                               <ExternalLink className="size-3.5 opacity-80" />
                             </a>
                           </div>
@@ -3202,7 +3315,13 @@ export default function DashboardPage() {
                                   <button
                                     key={opt}
                                     type="button"
-                                    onClick={() => {
+                                    onMouseDown={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
                                       setSector(opt)
                                       setIsSectorDropdownOpen(false)
                                       setSectorSearch("")
@@ -3501,6 +3620,374 @@ export default function DashboardPage() {
           }
         }}
       />
+
+      {/* MODAL OBLIGATOIRE DE FINALISATION DU PROFIL (Non-Admins uniquement) */}
+      {!loading && user && !isAdmin && profile?.role !== "admin" && profile?.role !== "super_admin" && !isProfileSavedInDb && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden w-full max-w-xl my-auto animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
+              <div className="absolute -top-12 -right-12 size-36 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10 space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary text-[11px] font-bold uppercase tracking-wider">
+                  <Sparkles className="size-3.5" />
+                  <span>Étape Obligatoire • Finalisation du Profil</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold font-heading text-white flex items-center gap-2">
+                  <span>Complétez votre profil apprenant</span>
+                  <span className="text-2xl">🎓</span>
+                </h2>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Ces informations sont indispensables pour délivrer vos <strong>certificats officiels</strong>, vous intégrer à votre <strong>groupe WhatsApp de formation</strong> et adapter vos contenus.
+                </p>
+
+                {/* Progress Bar */}
+                <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300">
+                    <span>Progression du profil</span>
+                    <span className="text-primary font-bold">{profileCompletionStats.percentage}% ({profileCompletionStats.completedCount}/{profileCompletionStats.total} complétés)</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-300 rounded-full"
+                      style={{ width: `${profileCompletionStats.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveProfile} className="p-5 sm:p-6 space-y-4">
+              {profileError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 flex items-start gap-2.5 text-xs text-rose-800 animate-in fade-in duration-150">
+                  <AlertCircle className="size-4 shrink-0 mt-0.5 text-rose-600" />
+                  <span>{profileError}</span>
+                </div>
+              )}
+
+              {/* 1. Nom complet */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>1. Nom et Prénoms officiels *</span>
+                  <span className="text-[10px] text-slate-500 font-normal">Inscrit sur vos certificats</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Ex: Jean-Marc Kouassi"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
+                />
+              </div>
+
+              {/* 2. Numéro WhatsApp */}
+              <div className="space-y-1" ref={forcedPhoneCountryRef}>
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>2. Numéro WhatsApp actif *</span>
+                  <span className="text-[10px] text-slate-500 font-normal">{profileCountry.name} ({profileCountry.dial})</span>
+                </label>
+                <div className="relative flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setIsForcedPhoneCountryOpen(!isForcedPhoneCountryOpen)}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-xs font-semibold text-slate-800 hover:bg-slate-200 transition-all cursor-pointer shrink-0 z-10"
+                    title={`Changer d'indicatif (${profileCountry.name})`}
+                  >
+                    <span className="text-base leading-none">{getCountryFlag(profileCountry.code)}</span>
+                    <span className="font-mono text-slate-700">{profileCountry.dial}</span>
+                    <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isForcedPhoneCountryOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  <input
+                    type="tel"
+                    required
+                    value={profilePhone}
+                    onChange={(e) => handleProfilePhoneChange(e.target.value)}
+                    placeholder={currentProfilePhoneRule?.placeholder || "70 12 34 56"}
+                    className={`w-full rounded-r-xl border bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all shadow-2xs ${
+                      rawProfilePhoneDigits.length > 0 && isProfilePhoneValid
+                        ? "border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        : rawProfilePhoneDigits.length > 0 && !isProfilePhoneValid
+                        ? "border-amber-500 focus:ring-1 focus:ring-amber-500"
+                        : "border-slate-200 focus:ring-1 focus:ring-primary"
+                    }`}
+                  />
+
+                  {/* Dropdown Indicatifs */}
+                  {isForcedPhoneCountryOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-full max-h-56 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[120] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                      <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
+                        <div className="relative">
+                          <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                          <input
+                            type="text"
+                            value={forcedPhoneCountrySearch}
+                            onChange={(e) => setForcedPhoneCountrySearch(e.target.value)}
+                            placeholder="Rechercher un pays ou indicatif..."
+                            className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div className="overflow-y-auto divide-y divide-slate-100 text-left">
+                        {filteredForcedPhoneCountries.map((c) => {
+                          const isSelected = c.code === profileCountry.code
+                          return (
+                            <button
+                              key={`fpc-${c.code}-${c.dial}`}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                              }}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setProfileCountry(c)
+                                setIsForcedPhoneCountryOpen(false)
+                                setForcedPhoneCountrySearch("")
+                                if (profilePhone) {
+                                  setProfilePhone(formatPhoneNumber(profilePhone, c.code))
+                                }
+                              }}
+                              className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
+                                isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2 truncate">
+                                <span className="text-base">{getCountryFlag(c.code)}</span>
+                                <span className="truncate">{c.name}</span>
+                              </span>
+                              <span className="font-mono text-slate-500 font-semibold ml-2 shrink-0">{c.dial}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] pt-0.5">
+                  {rawProfilePhoneDigits.length > 0 ? (
+                    isProfilePhoneValid ? (
+                      <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                        <Check className="size-3" /> Numéro valide pour {profileCountry.name}
+                      </span>
+                    ) : (
+                      <span className="text-amber-700 flex items-center gap-1 font-semibold">
+                        <AlertCircle className="size-3" /> {currentProfilePhoneRule ? `Format : ${currentProfilePhoneRule.formatExample}` : "Numéro incomplet"}
+                      </span>
+                    )
+                  ) : (
+                    <span className="text-slate-500">Nécessaire pour vous inviter au groupe WhatsApp d'entraide</span>
+                  )}
+                </div>
+              </div>
+
+              {/* 3 & 4. Pays et Ville */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {/* Pays de résidence */}
+                <div className="space-y-1" ref={forcedResidenceCountryRef}>
+                  <label className="text-xs font-bold text-slate-700">3. Pays de résidence *</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsForcedResidenceCountryOpen(!isForcedResidenceCountryOpen)}
+                      className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        {selectedResidenceCountryObj ? (
+                          <>
+                            <span className="text-base leading-none">{getCountryFlag(selectedResidenceCountryObj.code)}</span>
+                            <span className="font-semibold text-slate-800">{selectedResidenceCountryObj.name}</span>
+                          </>
+                        ) : country ? (
+                          <span className="font-semibold text-slate-800">{country}</span>
+                        ) : (
+                          <span className="text-slate-400">Choisir un pays...</span>
+                        )}
+                      </span>
+                      <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isForcedResidenceCountryOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {isForcedResidenceCountryOpen && (
+                      <div className="absolute top-full left-0 mt-1 w-full max-h-56 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[120] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                        <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
+                          <div className="relative">
+                            <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                            <input
+                              type="text"
+                              value={forcedResidenceCountrySearch}
+                              onChange={(e) => setForcedResidenceCountrySearch(e.target.value)}
+                              placeholder="Rechercher un pays..."
+                              className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
+                              autoFocus
+                            />
+                          </div>
+                        </div>
+                        <div className="overflow-y-auto divide-y divide-slate-100 text-left">
+                          {filteredForcedResidenceCountries.map((c) => {
+                            const isSelected = country.toLowerCase() === c.name.toLowerCase() || country.toLowerCase() === c.code.toLowerCase()
+                            return (
+                              <button
+                                key={`frc-${c.code}`}
+                                type="button"
+                                onMouseDown={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                }}
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  setCountry(c.name)
+                                  setIsForcedResidenceCountryOpen(false)
+                                  setForcedResidenceCountrySearch("")
+                                }}
+                                className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
+                                  isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
+                                }`}
+                              >
+                                <span className="flex items-center gap-2 truncate">
+                                  <span className="text-base">{getCountryFlag(c.code)}</span>
+                                  <span className="truncate">{c.name}</span>
+                                </span>
+                                {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Ville */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700">4. Ville de résidence *</label>
+                  <input
+                    type="text"
+                    required
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Ouagadougou, Abidjan..."
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* 5. Secteur / Profession (Ouvre vers le haut pour ne jamais chevaucher le bouton de validation) */}
+              <div className="space-y-1" ref={forcedSectorRef}>
+                <label className="text-xs font-bold text-slate-700">5. Secteur d'activité / Profession *</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsForcedSectorOpen(!isForcedSectorOpen)}
+                    className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
+                  >
+                    <span className="truncate font-semibold text-slate-800">
+                      {sector || <span className="text-slate-400 font-normal">Sélectionnez votre domaine d'activité...</span>}
+                    </span>
+                    <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isForcedSectorOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {isForcedSectorOpen && (
+                    <div className="absolute bottom-full left-0 mb-1.5 w-full max-h-60 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[120] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                      <div className="p-2 border-b border-slate-100 sticky top-0 bg-white z-10">
+                        <div className="relative">
+                          <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                          <input
+                            type="text"
+                            value={forcedSectorSearch}
+                            onChange={(e) => setForcedSectorSearch(e.target.value)}
+                            placeholder="Rechercher un métier ou domaine..."
+                            className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+
+                      <div className="overflow-y-auto divide-y divide-slate-100 text-left">
+                        {filteredForcedSectorsByCategory.map((group) => (
+                          <div key={`fsc-${group.category}`} className="py-1">
+                            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-primary bg-slate-100 sticky top-0">
+                              {group.category}
+                            </div>
+                            <div className="divide-y divide-slate-100">
+                              {group.options.map((opt) => {
+                                const isSelected = sector === opt
+                                return (
+                                  <button
+                                    key={`fso-${opt}`}
+                                    type="button"
+                                    onMouseDown={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                    }}
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      e.stopPropagation()
+                                      setSector(opt)
+                                      setIsForcedSectorOpen(false)
+                                      setForcedSectorSearch("")
+                                    }}
+                                    className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
+                                      isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
+                                    }`}
+                                  >
+                                    <span className="truncate">{opt}</span>
+                                    {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2 space-y-3">
+                <button
+                  type="submit"
+                  disabled={savingProfile || profileCompletionStats.completedCount < profileCompletionStats.total}
+                  className="w-full py-3.5 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingProfile ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      <span>Enregistrement du profil...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="size-4" />
+                      <span>Valider et Débloquer mon Espace Membre 🚀</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                  <span className="flex items-center gap-1">
+                    <ShieldCheck className="size-3.5 text-emerald-600" />
+                    <span>Données protégées &amp; conformes RGPD</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-slate-500 hover:text-slate-800 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <LogOut className="size-3" />
+                    <span>Se déconnecter</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

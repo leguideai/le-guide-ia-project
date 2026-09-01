@@ -135,7 +135,7 @@ export async function GET(req: Request) {
           dateDisplay: dateDisplay,
           thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
           whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-          youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@leguideai",
+          youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://meet.google.com",
           duration: "1h 30min",
           price: "100% Gratuit (Accès Libre)"
         }
@@ -205,19 +205,13 @@ export async function POST(req: Request) {
     const email = (body.email || "").toLowerCase().trim()
     const fullName = body.fullName || body.name || ""
     const whatsapp = body.whatsapp || ""
-    const country = body.country || "CI"
-
-    const cleanWhatsApp = (whatsapp && whatsapp.trim()) ? whatsapp.trim() : `wa_${email}`
-    const cleanFullName = (fullName && fullName.trim() && fullName !== "Participant Masterclass") 
-      ? fullName.trim() 
-      : email.split("@")[0]
+    const country = body.country || ""
+    const masterclassId = body.masterclassId || body.masterclass_id || "current_live"
+    const masterclassTitle = body.masterclassTitle || body.masterclass_title || "Masterclass IA en Direct"
 
     if (!email) {
       return NextResponse.json({ error: "Adresse email requise." }, { status: 400 })
     }
-
-    const masterclassId = body.masterclassId || body.masterclass_id || "current_live"
-    const masterclassTitle = body.masterclassTitle || body.masterclass_title || "Masterclass IA en Direct"
 
     // 1. Vérifier si déjà inscrit spécifiquement à cette Masterclass
     const { data: userRegistrations } = await supabaseServer
@@ -243,11 +237,33 @@ export async function POST(req: Request) {
       })
     }
 
+    // Fetch profile if available to enrich registration data
+    let userProf: any = null
+    try {
+      const { data: pData } = await supabaseServer
+        .from("profiles")
+        .select("full_name, whatsapp, country, city, sector")
+        .eq("email", email)
+        .maybeSingle()
+      userProf = pData
+    } catch (_) {}
+
+    const cleanWhatsApp = (whatsapp && whatsapp.trim()) 
+      ? whatsapp.trim() 
+      : (userProf?.whatsapp || `wa_${email}`)
+
+    const cleanFullName = (fullName && fullName.trim() && fullName !== "Participant Masterclass") 
+      ? fullName.trim() 
+      : (userProf?.full_name || email.split("@")[0])
+
+    const cleanCountry = country || userProf?.country || "CI"
+    const cleanSector = body.profession || body.sector || userProf?.sector || ""
+
     const regPayload: any = {
       full_name: cleanFullName,
       email: email,
       whatsapp: cleanWhatsApp,
-      country: country || "CI",
+      country: cleanCountry,
       source: "masterclass_dimanche",
       course_slug: "masterclass-ia",
       status: "inscrit",
@@ -255,6 +271,10 @@ export async function POST(req: Request) {
         source: "masterclass_dimanche",
         masterclass_id: masterclassId,
         masterclass_title: masterclassTitle,
+        profession: cleanSector,
+        sector: cleanSector,
+        country: cleanCountry,
+        city: userProf?.city || body.city || "",
         registered_at: new Date().toISOString()
       })
     }
@@ -314,7 +334,7 @@ export async function POST(req: Request) {
       scheduledAt: settingsMap.masterclass_date || "",
       dateDisplay: settingsMap.masterclass_date_display || "",
       whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@leguideai",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://meet.google.com",
       instructor: settingsMap.masterclass_instructor || "Alfred Dah"
     }
 

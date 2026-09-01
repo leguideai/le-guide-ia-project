@@ -42,6 +42,65 @@ export async function POST(req: Request) {
     const courseTitleOverride = body.course_title || body.courseTitle
     const amountPaidOverride = body.amount_paid || body.amountPaid || body.amount
 
+    if (action === "delete_user") {
+      if (!userId) {
+        return NextResponse.json({ error: "userId requis." }, { status: 400 })
+      }
+
+      const emailClean = userEmail?.toLowerCase()?.trim()
+
+      // 1. Delete from profiles
+      try {
+        await supabaseServer.from("profiles").delete().eq("id", userId)
+        if (emailClean) {
+          await supabaseServer.from("profiles").delete().eq("email", emailClean)
+        }
+      } catch (err: any) {
+        console.warn("Profiles deletion error:", err?.message)
+      }
+
+      // 2. Delete registrations for this user/email
+      if (emailClean) {
+        try {
+          await supabaseServer.from("registrations").delete().eq("email", emailClean)
+        } catch (err: any) {
+          console.warn("Registrations deletion error:", err?.message)
+        }
+      }
+
+      // 3. Delete from certificates / submissions / subscriptions if applicable
+      try {
+        if (userId) {
+          await supabaseServer.from("certificates").delete().eq("user_id", userId)
+          await supabaseServer.from("exercise_submissions").delete().eq("student_id", userId)
+          await supabaseServer.from("user_subscriptions").delete().eq("user_id", userId)
+          await supabaseServer.from("user_courses").delete().eq("user_id", userId)
+        }
+        if (emailClean) {
+          await supabaseServer.from("certificates").delete().eq("email", emailClean)
+          await supabaseServer.from("exercise_submissions").delete().eq("student_email", emailClean)
+          await supabaseServer.from("user_subscriptions").delete().eq("email", emailClean)
+        }
+      } catch (err: any) {
+        console.warn("Associated tables deletion error:", err?.message)
+      }
+
+      // 4. Delete from Supabase Auth (auth.users)
+      try {
+        const { error: authErr } = await supabaseServer.auth.admin.deleteUser(userId)
+        if (authErr) {
+          console.warn("Supabase auth deleteUser warning:", authErr.message)
+        }
+      } catch (authEx) {
+        console.warn("Auth user deletion exception:", authEx)
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Compte utilisateur et données associées supprimés définitivement."
+      })
+    }
+
     if (action === "update_role") {
       if (!userId || !role) {
         return NextResponse.json({ error: "userId et role requis." }, { status: 400 })

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       dateDisplay: settingsMap.masterclass_date_display || "",
       thumbnailUrl: settingsMap.masterclass_thumbnail_url || "",
       whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://www.youtube.com/@leguideai",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://meet.google.com",
       instructor: settingsMap.masterclass_instructor || "Alfred Dah"
     }
 
