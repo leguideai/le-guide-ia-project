@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { 
   X, Check, Copy, Upload, ArrowRight, ShieldCheck, 
   Lock, Sparkles, CheckCircle2, AlertCircle, CreditCard, 
-  Smartphone, Tv, Zap, ExternalLink, Loader2
+  Smartphone, Tv, Zap, ExternalLink, Loader2, Mail, Users, 
+  MessageCircle, ArrowRightCircle, Radio, Clock, Play
 } from "lucide-react"
 import { 
   countries, Country, getCountryFlag, PHONE_RULES, 
@@ -15,7 +16,8 @@ import {
   SubscriptionPlan, 
   DEFAULT_SUBSCRIPTION_PRICING, 
   SubscriptionPricing,
-  formatPriceFCFA 
+  formatPriceFCFA,
+  CERCLE_IA_BENEFITS
 } from "@/lib/subscriptions"
 
 interface SubscriptionModalProps {
@@ -88,6 +90,7 @@ export function SubscriptionModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successData, setSuccessData] = useState<any>(null)
+  const [existingSubscription, setExistingSubscription] = useState<any>(null)
 
   // Hydrater les données utilisateur si connecté
   useEffect(() => {
@@ -100,17 +103,24 @@ export function SubscriptionModal({
     }
   }, [user])
 
-  // Charger les prix dynamiques depuis l'API
+  // Charger les prix dynamiques et le statut actuel depuis l'API
   useEffect(() => {
     if (isOpen) {
-      fetch("/api/subscriptions")
+      const emailToCheck = user?.email || email
+      const url = emailToCheck ? `/api/subscriptions?email=${encodeURIComponent(emailToCheck)}` : "/api/subscriptions"
+      fetch(url)
         .then(res => res.json())
         .then(data => {
           if (data.pricing) setPricing(data.pricing)
+          if (data.status === "pending" || data.status === "pending_verification") {
+            setExistingSubscription(data)
+          } else {
+            setExistingSubscription(null)
+          }
         })
         .catch(() => {})
     }
-  }, [isOpen])
+  }, [isOpen, user?.email])
 
   if (!isOpen) return null
 
@@ -270,6 +280,33 @@ export function SubscriptionModal({
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
+
+              {/* Pending Subscription Alert if already submitted */}
+              {existingSubscription && (
+                <div className="p-4 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-3 text-left animate-fadeIn">
+                  <AlertCircle className="size-5 shrink-0 text-amber-400 mt-0.5" />
+                  <div className="space-y-1">
+                    <strong className="text-amber-200 text-sm block">⏳ Demande d'abonnement en cours de vérification</strong>
+                    <p className="text-xs text-amber-300/90 leading-relaxed">
+                      Votre paiement pour la formule <strong>{existingSubscription.planLabel || "Pass VIP"}</strong> (Réf: <code className="font-mono text-white bg-black/40 px-1.5 py-0.5 rounded">{existingSubscription.transactionRef || "Reçu transmis"}</code>) a déjà été enregistré et est en cours de validation par notre équipe sous 2h à 4h.
+                    </p>
+                    <p className="text-[11px] text-amber-400 font-semibold pt-1">
+                      Vos accès seront automatiquement activés. Vous n'avez pas besoin d'effectuer un second paiement.
+                    </p>
+                    <div className="pt-1.5">
+                      <a
+                        href={`https://wa.me/22675757273?text=${encodeURIComponent(`Bonjour Le Guide IA, je souhaite vérifier mon abonnement VIP (${existingSubscription.planLabel || "Pass VIP"}, Réf: ${existingSubscription.transactionRef || ""}) pour mon compte ${email || user?.email || ""}.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-bold text-amber-200 hover:text-white underline underline-offset-2 text-xs"
+                      >
+                        <span>Demander une activation urgente via WhatsApp</span>
+                        <ExternalLink className="size-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* 1. Sélecteur de Formule */}
               <div className="space-y-2.5">
@@ -327,28 +364,76 @@ export function SubscriptionModal({
                 </div>
               </div>
 
-              {/* Ce qui est inclus */}
-              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1.5 text-[11px] text-slate-300">
-                <div className="font-bold text-white flex items-center gap-1.5 text-xs text-primary">
-                  <ShieldCheck className="size-4 text-primary" />
-                  <span>Avantages VIP inclus avec votre pass :</span>
+              {/* Ce qui est inclus : Les 6 Avantages Officiels du Cercle IA */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-[#101726] border border-slate-800 space-y-3 text-left">
+                <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                  <div className="font-bold text-white flex items-center gap-2 text-xs">
+                    <div className="size-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                      <Sparkles className="size-3.5" />
+                    </div>
+                    <span className="text-white font-extrabold">Les Avantages Exclusifs du Cercle IA :</span>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                    Max 30 Places
+                  </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
-                  <div className="flex items-center gap-1.5">
-                    <Check className="size-3.5 text-emerald-400 shrink-0" />
-                    <span>Tous les Replays Masterclasses HD</span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-white text-xs">
+                        <Mail className="size-3.5 text-primary shrink-0" />
+                        <span>Veille IA Hebdo</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Chaque Lundi</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">Sélection stratégique des actus et outils IA concrets.</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="size-3.5 text-emerald-400 shrink-0" />
-                    <span>Bibliothèque complète de Prompts IA</span>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-white text-xs">
+                        <Sparkles className="size-3.5 text-purple-400 shrink-0" />
+                        <span>Prompts &amp; Plans</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded">Chaque Mois</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">Bibliothèque de prompts métiers enrichie mensuellement.</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="size-3.5 text-emerald-400 shrink-0" />
-                    <span>Modèles de Business Plans complets</span>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-white text-xs">
+                        <Play className="size-3.5 text-emerald-400 shrink-0" />
+                        <span>Replays Privés HD</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-emerald-300 bg-emerald-500/10 px-1.5 py-0.5 rounded">100% Illimité</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">Toutes les rediffusions des masterclasses du dimanche.</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="size-3.5 text-emerald-400 shrink-0" />
-                    <span>Support direct &amp; Mises à jour</span>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-white text-xs">
+                        <Radio className="size-3.5 text-rose-400 shrink-0" />
+                        <span>Prolongation Live</span>
+                      </div>
+                      <span className="text-[9px] font-bold text-rose-300 bg-rose-500/10 px-1.5 py-0.5 rounded">1x / Mois (1h)</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-tight">Dernier dimanche (16h30-17h30) : coaching direct avec Alfred Dah.</p>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-slate-950/60 border border-white/5 space-y-1 sm:col-span-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-300 text-xs">
+                        <ArrowRightCircle className="size-3.5 text-amber-400 shrink-0" />
+                        <span>100% Déductible du Bootcamp</span>
+                      </div>
+                      <span className="text-[9px] font-black text-amber-400 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">Garantie 6 Mois</span>
+                    </div>
+                    <p className="text-[10px] text-slate-300 leading-relaxed">
+                      Si vous rejoignez un Bootcamp dans les 6 mois, vos <strong>{selectedPlan === "1_year" ? pricing.price1yDisplay : pricing.price3mDisplay}</strong> sont intégralement déduits du montant du Bootcamp. L'abonnement ne vous coûte donc rien !
+                    </p>
                   </div>
                 </div>
               </div>

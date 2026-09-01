@@ -84,7 +84,7 @@ export async function POST(req: Request) {
       country: country || "CI",
       source: "checkout_mobile_direct",
       course_slug: courseSlug,
-      status: "inscrit",
+      status: "en_attente",
       notes: JSON.stringify(regNotesObj)
     }
     if (courseId) regPayload.course_id = courseId

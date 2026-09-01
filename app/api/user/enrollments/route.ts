@@ -127,6 +127,7 @@ export async function GET(req: Request) {
       .ilike("email", userEmail)
 
     const regIdToSlug = new Map<string, string>()
+    const userRegIdSet = new Set<string>()
 
     if (userRegs && userRegs.length > 0) {
       userRegs.forEach(r => {
@@ -140,9 +141,10 @@ export async function GET(req: Request) {
 
         if (slugOrId) {
           regIdToSlug.set(r.id, slugOrId)
+          userRegIdSet.add(r.id)
           if (["paye", "confirmed", "active"].includes(r.status)) {
             addCourseIdentifiers(confirmedSet, slugOrId)
-          } else if (["en_attente", "pending", "pending_verification"].includes(r.status) && !isMasterclass(slugOrId) && r.source !== "masterclass_dimanche") {
+          } else if (["en_attente", "pending", "pending_verification", "inscrit", "attente", "a_verifier"].includes(r.status) && !isMasterclass(slugOrId) && r.source !== "masterclass_dimanche") {
             addCourseIdentifiers(pendingSet, slugOrId)
             pendingDetails.push({
               course_slug: slugOrId,
@@ -155,20 +157,21 @@ export async function GET(req: Request) {
       })
     }
 
-    // 5. Fetch payments
+    // 5. Fetch payments linked to user registrations
     const { data: allPays } = await supabaseServer
       .from("payments")
       .select("id, amount, currency, method, status, transaction_ref, created_at, registration_id, course_id, course_title")
 
     if (allPays && allPays.length > 0) {
       allPays.forEach((p: any) => {
+        const isLinkedToUser = (p.registration_id && userRegIdSet.has(p.registration_id))
         const matchingSlug = p.registration_id ? regIdToSlug.get(p.registration_id) : null
         const targetIdentifier = matchingSlug || p.course_title || (p.course_id ? String(p.course_id) : "")
 
-        if (p.registration_id && regIdToSlug.has(p.registration_id)) {
+        if (isLinkedToUser && targetIdentifier) {
           if (["confirmed", "paye", "active"].includes(p.status)) {
             addCourseIdentifiers(confirmedSet, targetIdentifier)
-          } else if (["pending", "en_attente", "pending_verification"].includes(p.status) && !isMasterclass(targetIdentifier)) {
+          } else if (["pending", "en_attente", "pending_verification", "a_verifier"].includes(p.status) && !isMasterclass(targetIdentifier)) {
             addCourseIdentifiers(pendingSet, targetIdentifier)
             pendingDetails.push({
               course_slug: targetIdentifier,
@@ -194,7 +197,7 @@ export async function GET(req: Request) {
         const identifier = uc.course_slug || (uc.course_id ? String(uc.course_id) : "")
         if (["active", "confirmed", "completed"].includes(uc.status)) {
           addCourseIdentifiers(confirmedSet, identifier)
-        } else if (["pending", "en_attente", "pending_verification"].includes(uc.status) && !isMasterclass(identifier)) {
+        } else if (["pending", "en_attente", "pending_verification", "a_verifier"].includes(uc.status) && !isMasterclass(identifier)) {
           addCourseIdentifiers(pendingSet, identifier)
           pendingDetails.push({
             course_slug: identifier,

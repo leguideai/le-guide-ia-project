@@ -40,38 +40,47 @@ export async function GET() {
       return NextResponse.json({ success: true, payments: joined })
     }
 
-    // Auto-heal any unlinked confirmed stripe payments with existing registration
+    // Auto-heal any unlinked payments with existing registrations
     try {
-      const { data: unlinkedStripe } = await supabaseServer
+      const { data: unlinkedPays } = await supabaseServer
         .from("payments")
-        .select("id, transaction_ref, course_title")
-        .eq("method", "stripe")
+        .select("id, transaction_ref, course_title, method, status, amount")
         .is("registration_id", null)
 
-      if (unlinkedStripe && unlinkedStripe.length > 0) {
-        const { data: targetReg } = await supabaseServer
+      if (unlinkedPays && unlinkedPays.length > 0) {
+        const { data: allRegs } = await supabaseServer
           .from("registrations")
-          .select("id, email, full_name, course_slug")
+          .select("id, email, full_name, course_slug, notes, created_at")
           .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
 
-        if (targetReg) {
-          for (const un of unlinkedStripe) {
-            await supabaseServer
-              .from("payments")
-              .update({ registration_id: targetReg.id })
-              .eq("id", un.id)
+        if (allRegs && allRegs.length > 0) {
+          for (const un of unlinkedPays) {
+            let matchedReg = allRegs.find(r => {
+              if (!un.transaction_ref) return false
+              if (r.notes && typeof r.notes === "string" && r.notes.includes(un.transaction_ref)) return true
+              return false
+            })
 
-            if (targetReg.email) {
-              const slugToActivate = targetReg.course_slug || "bootcamp-business-exec"
-              await supabaseServer.from("user_courses").upsert({
-                user_email: targetReg.email.toLowerCase().trim(),
-                course_slug: slugToActivate,
-                status: "active",
-                payment_method: "stripe",
-                updated_at: new Date().toISOString()
-              }, { onConflict: "user_email,course_slug" })
+            if (!matchedReg && allRegs.length > 0) {
+              matchedReg = allRegs[0]
+            }
+
+            if (matchedReg) {
+              await supabaseServer
+                .from("payments")
+                .update({ registration_id: matchedReg.id })
+                .eq("id", un.id)
+
+              if (un.status === "confirmed" && matchedReg.email) {
+                const slugToActivate = matchedReg.course_slug || "bootcamp-business-exec"
+                await supabaseServer.from("user_courses").upsert({
+                  user_email: matchedReg.email.toLowerCase().trim(),
+                  course_slug: slugToActivate,
+                  status: "active",
+                  payment_method: un.method || "mobile_money",
+                  updated_at: new Date().toISOString()
+                }, { onConflict: "user_email,course_slug" })
+              }
             }
           }
         }

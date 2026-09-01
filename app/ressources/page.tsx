@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
-import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn, Crown } from "lucide-react"
+import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn, Crown, Clock } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { Header } from "@/components/header"
 import { TabbedCourses } from "@/components/tabbed-courses"
@@ -180,6 +180,14 @@ export default function RessourcesPage() {
     return matchesFilter && matchesSearch
   })
 
+  const isSubPending = Boolean(
+    !isUnlocked && (
+      subscriptionInfo?.status === "pending" ||
+      subscriptionInfo?.status === "pending_verification" ||
+      subscriptionInfo?.status === "en_attente"
+    )
+  )
+
   return (
     <main className="relative min-h-screen text-foreground overflow-x-hidden bg-background">
       <GridBackground />
@@ -204,18 +212,30 @@ export default function RessourcesPage() {
 
           {/* VIP All-Access Banner when not unlocked */}
           {!isUnlocked && (
-            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-primary/15 border border-amber-400/50 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+            <div className={`p-5 sm:p-6 rounded-3xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm ${
+              isSubPending
+                ? "bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-primary/10 border-amber-400/60"
+                : "bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-primary/15 border-amber-400/50"
+            }`}>
               <div className="flex items-start sm:items-center gap-3.5">
                 <div className="size-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-black shadow-md">
-                  <Crown className="size-6 text-slate-950" />
+                  {isSubPending ? <Clock className="size-6 text-slate-950 animate-pulse" /> : <Crown className="size-6 text-slate-950" />}
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-heading font-black text-white">Pass VIP Unique — Accès Illimité à Tout le Catalogue</h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40">1 Pass = 100% Débloqué</span>
+                    <h3 className="text-sm sm:text-base font-heading font-black text-white">
+                      {isSubPending
+                        ? `Validation de votre Abonnement VIP en cours (${subscriptionInfo?.planLabel || "Pass VIP"})`
+                        : "Pass VIP Unique — Accès Illimité à Tout le Catalogue"}
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                      {isSubPending ? "⏳ Vérification sous 2h à 4h" : "1 Pass = 100% Débloqué"}
+                    </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
-                    Un seul abonnement débloque automatiquement <strong>l'ensemble de la bibliothèque de prompts (+100)</strong>, tous les business plans et tous les <strong>replays de masterclasses</strong>.
+                    {isSubPending
+                      ? `Votre justificatif de paiement (Réf: ${subscriptionInfo?.transactionRef || "Reçu soumis"}) a été reçu. Vos accès à l'ensemble des prompts (+100) et replays s'activeront dès confirmation.`
+                      : "Un seul abonnement débloque automatiquement l'ensemble de la bibliothèque de prompts (+100), tous les business plans et tous les replays de masterclasses."}
                   </p>
                 </div>
               </div>
@@ -224,10 +244,14 @@ export default function RessourcesPage() {
                   if (!currentUser) router.push("/login?redirect=/ressources")
                   else setShowSubscriptionModal(true)
                 }}
-                className="w-full md:w-auto px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shrink-0 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer whitespace-nowrap"
+                className={`w-full md:w-auto px-6 py-3 rounded-xl font-black text-xs shrink-0 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer whitespace-nowrap ${
+                  isSubPending
+                    ? "bg-amber-500/30 text-amber-200 border border-amber-400/60 hover:bg-amber-500/40"
+                    : "bg-amber-500 hover:bg-amber-400 text-slate-950"
+                }`}
               >
-                <Crown className="size-4" />
-                <span>{currentUser ? "Activer mon Pass VIP Global →" : "Se Connecter & Débloquer →"}</span>
+                {isSubPending ? <Clock className="size-4" /> : <Crown className="size-4" />}
+                <span>{isSubPending ? "Voir l'état de validation →" : currentUser ? "Activer mon Pass VIP Global →" : "Se Connecter & Débloquer →"}</span>
               </button>
             </div>
           )}
@@ -395,6 +419,14 @@ export default function RessourcesPage() {
                                 <>
                                   <LogIn className="size-4 shrink-0" />
                                   <span className="text-xs font-black">Se connecter pour débloquer tout le catalogue</span>
+                                </>
+                              ) : isSubPending ? (
+                                <>
+                                  <div className="flex items-center gap-1.5 font-black">
+                                    <Clock className="size-4 shrink-0 animate-pulse" />
+                                    <span className="text-xs font-black">Abonnement VIP en cours de validation (2h-4h)</span>
+                                  </div>
+                                  <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Réf: {subscriptionInfo?.transactionRef || "Soumis"}</span>
                                 </>
                               ) : (
                                 <>

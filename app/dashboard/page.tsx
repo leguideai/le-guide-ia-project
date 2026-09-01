@@ -48,6 +48,8 @@ import {
   Radio,
   Tv,
   ArrowRight,
+  ArrowRightCircle,
+  Users,
   PanelLeftClose,
   PanelLeftOpen,
   Crown,
@@ -630,13 +632,19 @@ export default function DashboardPage() {
           setPendingCourses([])
         } else {
           setUserEnrollments(enrollData.confirmed || [])
-          const pendings = (enrollData.pending || [])
-            .filter((slug: string) => slug && !slug.toLowerCase().includes("masterclass"))
-            .map((slug: string) => ({
-              course_slug: slug,
-              created_at: new Date().toISOString(),
-              status: "pending_verification"
-            }))
+          let pendings: any[] = []
+          if (Array.isArray(enrollData.pendingDetails) && enrollData.pendingDetails.length > 0) {
+            pendings = enrollData.pendingDetails.filter((p: any) => p?.course_slug && !String(p.course_slug).toLowerCase().includes("masterclass"))
+          }
+          if (pendings.length === 0 && Array.isArray(enrollData.pending)) {
+            pendings = enrollData.pending
+              .filter((slug: string) => slug && !slug.toLowerCase().includes("masterclass"))
+              .map((slug: string) => ({
+                course_slug: slug,
+                created_at: new Date().toISOString(),
+                status: "pending_verification"
+              }))
+          }
           setPendingCourses(pendings)
         }
       } else {
@@ -654,6 +662,15 @@ export default function DashboardPage() {
           const fromRegs = (regData || []).flatMap((r: any) => [r.course_id, r.course_slug])
           const fromUserCourses = (ucData || []).map((uc: any) => uc.course_slug)
           setUserEnrollments(Array.from(new Set([...fromPayments, ...fromRegs, ...fromUserCourses])).filter(Boolean) as string[])
+          
+          const fallbackPendings = (regData || [])
+            .filter((r: any) => ["en_attente", "pending", "pending_verification", "inscrit"].includes(r.status) && !String(r.course_slug || "").toLowerCase().includes("masterclass"))
+            .map((r: any) => ({
+              course_slug: r.course_slug || r.course_id,
+              created_at: r.created_at || new Date().toISOString(),
+              status: "pending_verification"
+            }))
+          setPendingCourses(fallbackPendings)
         }
       }
 
@@ -1046,18 +1063,26 @@ export default function DashboardPage() {
   // Separate enrolled (accessible) vs pending (awaiting admin verification) vs locked (not yet registered)
   const isPendingCourse = (b: any) => {
     if (canAccess(b)) return false
-    const bSlugNorm = (b.slug || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+    const bSlug = String(b.slug || "").toLowerCase().trim()
+    const bSlugNorm = bSlug.replace(/[^a-z0-9]/g, "")
     const bTitleNorm = (b.title || "").toLowerCase().replace(/[^a-z0-9]/g, "")
-    const bId = String(b.dbId || b.id || "")
+    const bId = String(b.dbId || b.id || "").toLowerCase().trim()
+    const bIdNorm = bId.replace(/[^a-z0-9]/g, "")
 
     return pendingCourses.some((pc: any) => {
-      const pSlug = String(pc.course_slug || "").toLowerCase()
+      const pSlug = String(pc.course_slug || pc.slug || pc.id || "").toLowerCase().trim()
       const pSlugNorm = pSlug.replace(/[^a-z0-9]/g, "")
-      if (!pSlug) return false
-      if (bId && (pSlug === bId || pSlugNorm === bId)) return true
-      if (b.slug && (pSlug === b.slug || pSlugNorm === bSlugNorm)) return true
+      if (!pSlugNorm) return false
+
+      if (bId && (pSlug === bId || pSlugNorm === bIdNorm)) return true
+      if (bSlug && (pSlug === bSlug || pSlugNorm === bSlugNorm)) return true
       if (bSlugNorm && pSlugNorm && (bSlugNorm.includes(pSlugNorm) || pSlugNorm.includes(bSlugNorm))) return true
       if (bTitleNorm && pSlugNorm && (bTitleNorm.includes(pSlugNorm) || pSlugNorm.includes(bTitleNorm))) return true
+
+      if (bSlugNorm.includes("carriere") && pSlugNorm.includes("carriere")) return true
+      if (bSlugNorm.includes("business") && pSlugNorm.includes("business")) return true
+      if (bSlugNorm.includes("test") && pSlugNorm.includes("test")) return true
+
       return false
     })
   }
@@ -1065,6 +1090,15 @@ export default function DashboardPage() {
   const enrolledBootcamps = displayedBootcamps.filter((b: any) => canAccess(b))
   const pendingBootcamps = displayedBootcamps.filter((b: any) => isPendingCourse(b))
   const lockedBootcamps = displayedBootcamps.filter((b: any) => !canAccess(b) && !isPendingCourse(b))
+
+  const isSubPending = Boolean(
+    !subscriptionData?.isSubscribed && (
+      subscriptionData?.status === "pending" ||
+      subscriptionData?.status === "pending_verification" ||
+      subscriptionData?.status === "en_attente" ||
+      subscriptionData?.status === "pending_approval"
+    )
+  )
 
   if (loading) {
     return (
@@ -1524,9 +1558,10 @@ export default function DashboardPage() {
                       <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-400/30">
                         Pass VIP Replays &amp; Prompts
                       </span>
-                      {subscriptionData?.status === "pending" ? (
-                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                          ⏳ En cours de validation
+                      {isSubPending ? (
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+                          <Clock className="size-3 animate-pulse" />
+                          <span>⏳ En cours de validation</span>
                         </span>
                       ) : (
                         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full">
@@ -1535,14 +1570,14 @@ export default function DashboardPage() {
                       )}
                     </div>
                     <h4 className="font-bold text-sm sm:text-base text-white">
-                      {subscriptionData?.status === "pending"
-                        ? "Paiement Mobile Money en cours de vérification"
+                      {isSubPending
+                        ? `Paiement en cours de vérification (${subscriptionData?.planLabel || "Pass VIP"})`
                         : "Accédez à tous les Replays Masterclasses & Prompts IA"}
                     </h4>
                     <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
-                      {subscriptionData?.status === "pending"
-                        ? "Votre déclaration de virement est reçue. Vos accès seront ouverts sous 2h à 4h."
-                        : "10 000 FCFA / 3 mois ou 30 000 FCFA / an. Inclus gratuitement pour les inscrits aux Bootcamps."}
+                      {isSubPending
+                        ? `Votre virement (Réf: ${subscriptionData?.transactionRef || "Reçu soumis"}) a été reçu. Notre équipe administrative valide vos accès sous 2h à 4h.`
+                        : "10 000 FCFA / 3 mois ou 30 000 FCFA / an.Deductible des frais d'inscription au prochain bootcamp."}
                     </p>
                   </div>
                 </div>
@@ -1551,10 +1586,14 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => setIsSubscriptionModalOpen(true)}
-                    className="w-full md:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary via-primary to-amber-400 text-slate-950 font-black text-xs hover:opacity-95 transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                    className={`w-full md:w-auto px-5 py-2.5 rounded-xl font-black text-xs transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 ${
+                      isSubPending
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30"
+                        : "bg-gradient-to-r from-primary via-primary to-amber-400 text-slate-950 hover:opacity-95"
+                    }`}
                   >
-                    <Crown className="size-3.5 fill-slate-950" />
-                    <span>Prendre mon Pass VIP</span>
+                    {isSubPending ? <Clock className="size-3.5" /> : <Crown className="size-3.5 fill-slate-950" />}
+                    <span>{isSubPending ? "Voir l'état de validation" : "Prendre mon Pass VIP"}</span>
                   </button>
                 </div>
               </div>
@@ -2403,6 +2442,10 @@ export default function DashboardPage() {
                               <div className="size-11 rounded-full bg-primary text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
                                 <Play className="size-5 fill-slate-950" />
                               </div>
+                            ) : isSubPending ? (
+                              <div className="size-11 rounded-full bg-slate-950/90 border border-amber-400 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                                <Clock className="size-5 text-amber-400 animate-pulse" />
+                              </div>
                             ) : (
                               <div className="size-11 rounded-full bg-slate-900/90 border border-amber-400 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                                 <Lock className="size-5 text-amber-400" />
@@ -2415,7 +2458,12 @@ export default function DashboardPage() {
                           <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-primary text-slate-950 text-[10px] font-black uppercase">
                             {replay.category || "Masterclass"}
                           </span>
-                          {!subscriptionData?.isSubscribed && (
+                          {isSubPending ? (
+                            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-1 shadow-xs">
+                              <Clock className="size-2.5" />
+                              <span>⏳ Validation en cours</span>
+                            </span>
+                          ) : !subscriptionData?.isSubscribed && (
                             <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-1">
                               <Lock className="size-2.5" />
                               <span>Pass VIP Requis</span>
@@ -2451,6 +2499,8 @@ export default function DashboardPage() {
                               className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                                 subscriptionData?.isSubscribed
                                   ? "bg-slate-900 hover:bg-primary hover:text-slate-950 text-white"
+                                  : isSubPending
+                                  ? "bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300"
                                   : "bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs"
                               }`}
                             >
@@ -2458,6 +2508,11 @@ export default function DashboardPage() {
                                 <>
                                   <Play className="size-3.5 fill-current" />
                                   <span>Visionner le Replay HD</span>
+                                </>
+                              ) : isSubPending ? (
+                                <>
+                                  <Clock className="size-3.5" />
+                                  <span>⏳ En cours de validation (2h-4h)</span>
                                 </>
                               ) : (
                                 <>
@@ -2539,18 +2594,45 @@ export default function DashboardPage() {
             </div>
 
             {/* VIP Pricing & Activation Card if Not Subscribed */}
-            {!subscriptionData?.isSubscribed && (
+            {isSubPending ? (
+              <div className="rounded-3xl border border-amber-300 bg-amber-50/80 p-6 sm:p-8 shadow-xs space-y-4 text-left animate-fadeIn">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="size-14 rounded-2xl bg-amber-500/20 text-amber-800 border border-amber-300/80 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+                      <Clock className="size-7 text-amber-700 animate-pulse" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                          ⏳ Abonnement en cours de validation
+                        </span>
+                        <span className="text-xs font-mono font-bold text-amber-800 bg-white/70 px-2 py-0.5 rounded-md border border-amber-200">
+                          Réf : {subscriptionData?.transactionRef || "Reçu soumis"}
+                        </span>
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900">
+                        Votre souscription à la formule {subscriptionData?.planLabel || "Pass VIP"} est enregistrée
+                      </h3>
+                      <p className="text-xs text-slate-600 leading-relaxed max-w-2xl">
+                        Notre équipe vérifie actuellement votre justificatif de paiement. Tous les prompts et outils avancés seront automatiquement débloqués sur votre espace sous 2h à 4h.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSubscriptionModalOpen(true)}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition-all shadow-xs shrink-0 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Clock className="size-4" />
+                    <span>Détails du Paiement</span>
+                  </button>
+                </div>
+              </div>
+            ) : !subscriptionData?.isSubscribed && (
               <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-6 text-center">
                 <div className="size-14 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto shadow-2xs border border-amber-400/20">
                   <Crown className="size-7 text-amber-500" />
-                </div>
-                <div className="space-y-2 max-w-xl mx-auto">
-                  <h3 className="text-xl sm:text-2xl font-black text-slate-800 font-heading">
-                    Vous n'avez pas d'abonnement actif
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Souscrivez dès aujourd'hui pour débloquer l'intégralité des rediffusions de nos masterclasses exclusives et tous les prompts d'intelligence artificielle.
-                  </p>
                 </div>
 
                 {/* Choix des formules */}
@@ -2592,6 +2674,64 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 </div>
+
+                                <div className="space-y-2 max-w-xl mx-auto">
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Un pass unique qui débloque tous les outils, la veille stratégique hebdomadaire, les prompts métiers, les replays privés et la prolongation mensuelle en direct.
+                  </p>
+                </div>
+
+                {/* 6 Avantages officiels du Cercle IA */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-w-3xl mx-auto pt-1 text-left">
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <Mail className="size-4 text-primary shrink-0" />
+                      <span>Veille IA Hebdo</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">Envoyée chaque lundi avec les meilleurs outils &amp; cas d'usage.</p>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <Sparkles className="size-4 text-purple-600 shrink-0" />
+                      <span>Prompts &amp; Plans</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">Nouvelle série de prompts métiers ajoutée chaque mois.</p>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <Play className="size-4 text-emerald-600 shrink-0" />
+                      <span>Replays Masterclasses</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">Accès privé et illimité à toutes les rediffusions HD.</p>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <Radio className="size-4 text-rose-600 shrink-0" />
+                      <span>Prolongation Live</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">Dernier dimanche (16h30-17h30) : échange direct avec Alfred Dah.</p>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-xs text-slate-800">
+                      <Users className="size-4 text-blue-600 shrink-0" />
+                      <span>Groupe Fermé</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500">Communauté exclusive d'entraide.</p>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-amber-50 border border-amber-300 space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-xs text-amber-900">
+                      <ArrowRightCircle className="size-4 text-amber-600 shrink-0" />
+                      <span>100% Déductible Bootcamp</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 font-semibold">Montant déduit à 100% si vous rejoignez un Bootcamp.</p>
+                  </div>
+                </div>
+                
               </div>
             )}
 
@@ -2959,7 +3099,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-              ) : subscriptionData?.status === "pending" ? (
+              ) : isSubPending ? (
                 <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 space-y-4 text-left">
                   <div className="flex items-start gap-4">
                     <div className="size-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold shrink-0">
@@ -2973,14 +3113,14 @@ export default function DashboardPage() {
                         Paiement Mobile Money en cours de vérification
                       </h3>
                       <p className="text-xs text-slate-600 leading-relaxed">
-                        Votre demande d'abonnement VIP pour <strong>{subscriptionData.planLabel || "Pass VIP"}</strong> a bien été enregistrée. Notre équipe vérifie votre virement sous 2h à 4h pour activer vos accès.
+                        Votre demande d'abonnement VIP pour <strong>{subscriptionData?.planLabel || "Pass VIP"}</strong> a bien été enregistrée (Réf: <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-amber-200">{subscriptionData?.transactionRef || "Reçu transmis"}</code>). Notre équipe vérifie votre virement sous 2h à 4h pour activer vos accès.
                       </p>
                     </div>
                   </div>
 
                   <div className="pt-2 flex flex-wrap gap-3">
                     <a
-                      href="https://wa.me/22605050577?text=Bonjour%20Alfred%2C%20je%20viens%20de%20souscrire%20au%20Pass%20VIP%20et%20je%20souhaite%20acc%C3%A9l%C3%A9rer%20la%20validation."
+                      href={`https://wa.me/22675757273?text=${encodeURIComponent(`Bonjour Le Guide IA, je viens de souscrire au Pass VIP (${subscriptionData?.planLabel || ""}, Réf: ${subscriptionData?.transactionRef || ""}) et je souhaite vérifier ma validation.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 rounded-xl bg-[#22c55e] text-white font-bold text-xs flex items-center gap-1.5 hover:bg-[#16a34a] transition-all shadow-xs"
@@ -3015,7 +3155,8 @@ export default function DashboardPage() {
 
             </div>
 
-            {/* 2. HISTORIQUE COMPLET DES PAIEMENTS ET FACTURES (BOOTCAMPS + ABONNEMENTS) */}
+
+            {/* 3. HISTORIQUE COMPLET DES PAIEMENTS ET FACTURES (BOOTCAMPS + ABONNEMENTS) */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -3069,44 +3210,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* 3. AVANTAGES INCLUS AVEC LE PASS VIP */}
-            <div className="space-y-4">
-              <h4 className="font-heading text-base font-bold text-slate-800">
-                Ce qui est débloqué avec votre abonnement VIP :
-              </h4>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2 shadow-2xs">
-                  <div className="size-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <Play className="size-5" />
-                  </div>
-                  <h5 className="font-bold text-sm text-slate-800">Tous les Replays Masterclasses HD</h5>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Visionnez toutes les sessions passées animées par Alfred Dah en qualité haute définition avec chapitrage.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2 shadow-2xs">
-                  <div className="size-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <Sparkles className="size-5" />
-                  </div>
-                  <h5 className="font-bold text-sm text-slate-800">Bibliothèque Complète de Prompts</h5>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Copiez en 1 clic plus de 100 prompts métiers optimisés pour ChatGPT, Claude 3.5, Gemini et Midjourney.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2 shadow-2xs">
-                  <div className="size-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <FileText className="size-5" />
-                  </div>
-                  <h5 className="font-bold text-sm text-slate-800">Modèles de Business Plans</h5>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Téléchargez les structures prêtes à l'emploi de business plans et plans d'actions générés par IA.
-                  </p>
-                </div>
-              </div>
-            </div>
 
           </div>
         )}

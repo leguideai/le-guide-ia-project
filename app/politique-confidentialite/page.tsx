@@ -30,7 +30,7 @@ export default function PolitiqueConfidentialitePage() {
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">3. Finalités</h2>
             <ul className="space-y-1 list-disc list-inside">
-              <li>Gestion des inscriptions au Bootcamp PRO 2</li>
+              <li>Gestion des inscriptions des Bootcamps AI & Carrière et Business</li>
               <li>Confirmation et suivi du paiement</li>
               <li>Accès au groupe WhatsApp et ressources</li>
               <li>Communication formation et suivi</li>
@@ -55,7 +55,7 @@ export default function PolitiqueConfidentialitePage() {
         </div>
         <div className="mt-12 pt-8 border-t border-border/40 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <Link href="/mentions-legales" className="hover:text-primary transition-colors">Mentions légales</Link>
-          <Link href="/conditions-generales" className="hover:text-primary transition-colors">CGV</Link>
+          {/* <Link href="/conditions-generales" className="hover:text-primary transition-colors">CGV</Link> */}
           <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
         </div>
       </div>

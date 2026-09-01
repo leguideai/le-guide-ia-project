@@ -53,6 +53,7 @@ function CheckoutContent({ params }: PageProps) {
 
   const [courseData, setCourseData] = useState<any>(null)
   const [userSubscription, setUserSubscription] = useState<any>(null)
+  const [pendingSubscription, setPendingSubscription] = useState<any>(null)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe" | "paytech">("mobile_direct")
   const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov" | "mtn">("wave")
   const [transactionRef, setTransactionRef] = useState("")
@@ -279,6 +280,7 @@ function CheckoutContent({ params }: PageProps) {
     const cleanEmail = email?.trim().toLowerCase()
     if (!cleanEmail || !cleanEmail.includes("@")) {
       setUserSubscription(null)
+      setPendingSubscription(null)
       return
     }
     let isCancelled = false
@@ -289,12 +291,20 @@ function CheckoutContent({ params }: PageProps) {
         if (!isCancelled) {
           if (data?.isSubscribed && data.status === "active" && data.plan !== "bootcamp_vip" && Number(data.amount) > 0) {
             setUserSubscription(data)
+            setPendingSubscription(null)
+          } else if (data?.status === "pending" || data?.status === "pending_verification") {
+            setPendingSubscription(data)
+            setUserSubscription(null)
           } else {
             setUserSubscription(null)
+            setPendingSubscription(null)
           }
         }
       } catch (e) {
-        if (!isCancelled) setUserSubscription(null)
+        if (!isCancelled) {
+          setUserSubscription(null)
+          setPendingSubscription(null)
+        }
       }
     }
     checkSubscription()
@@ -958,6 +968,25 @@ function CheckoutContent({ params }: PageProps) {
                     </div>
                     <p className="text-emerald-300/90 leading-relaxed text-xs">
                       En tant que membre VIP abonné (<strong>{userSubscription.planLabel || "Pass VIP"}</strong>), le montant de votre abonnement en cours de <strong>{subscriptionCredit.toLocaleString("fr-FR")} FCFA</strong> est automatiquement déduit du prix du Bootcamp.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {pendingSubscription && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3 text-amber-300">
+                  <div className="size-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <Clock className="size-4 animate-pulse" />
+                  </div>
+                  <div className="space-y-1 text-xs text-left">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-bold text-amber-200 text-sm">Abonnement VIP en cours de validation</h4>
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase tracking-wider border border-amber-500/30">
+                        Vérification sous 2h-4h
+                      </span>
+                    </div>
+                    <p className="text-amber-300/90 leading-relaxed text-xs">
+                      Une demande d'abonnement <strong>{pendingSubscription.planLabel || "Pass VIP"}</strong> (Réf: <code className="font-mono bg-black/40 px-1.5 py-0.5 rounded">{pendingSubscription.transactionRef || "Reçu soumis"}</code>) a été enregistrée avec cet email. Dès validation de votre virement par l'équipe, votre avantage sera immédiatement crédité.
                     </p>
                   </div>
                 </div>

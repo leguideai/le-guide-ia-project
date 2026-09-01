@@ -110,9 +110,11 @@ export default function MasterclassHubPage() {
           try {
             const subRes = await fetch(`/api/subscriptions?email=${encodeURIComponent(emailToCheck)}`)
             const subData = await subRes.json()
-            if (subData.isSubscribed) {
-              setIsSubscribed(true)
+            if (subData) {
               setSubscriptionInfo(subData)
+              if (subData.isSubscribed) {
+                setIsSubscribed(true)
+              }
             }
           } catch (_) {}
         }
@@ -820,44 +822,67 @@ export default function MasterclassHubPage() {
             </div>
 
             {/* Bannière / Statut Abonnement VIP */}
-            <div className="p-4 rounded-2xl border bg-[#0b0f19] border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-xl">
-              <div className="space-y-1 text-left">
-                <div className="flex items-center gap-2">
-                  {isSubscribed ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
-                      <CheckCircle2 className="size-3" />
-                      <span>Accès VIP Actif</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase">
-                      <Crown className="size-3" />
-                      <span>Pass VIP Replays &amp; Prompts</span>
-                    </span>
-                  )}
-                  {subscriptionInfo?.daysRemaining > 0 && (
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      ({subscriptionInfo.daysRemaining} jours restants)
-                    </span>
+            {(() => {
+              const isSubPending = Boolean(
+                !isSubscribed && (
+                  subscriptionInfo?.status === "pending" ||
+                  subscriptionInfo?.status === "pending_verification" ||
+                  subscriptionInfo?.status === "en_attente"
+                )
+              )
+
+              return (
+                <div className="p-4 rounded-2xl border bg-[#0b0f19] border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-xl">
+                  <div className="space-y-1 text-left">
+                    <div className="flex items-center gap-2">
+                      {isSubscribed ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
+                          <CheckCircle2 className="size-3" />
+                          <span>Accès VIP Actif</span>
+                        </span>
+                      ) : isSubPending ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase">
+                          <Clock className="size-3 animate-pulse" />
+                          <span>⏳ Validation VIP en cours</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase">
+                          <Crown className="size-3" />
+                          <span>Pass VIP Replays &amp; Prompts</span>
+                        </span>
+                      )}
+                      {subscriptionInfo?.daysRemaining > 0 && (
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          ({subscriptionInfo.daysRemaining} jours restants)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-300">
+                      {isSubscribed 
+                        ? "Tous les replays HD et la bibliothèque de prompts sont débloqués sur votre compte." 
+                        : isSubPending
+                        ? `Votre déclaration de paiement (${subscriptionInfo?.planLabel || "Pass VIP"}, Réf: ${subscriptionInfo?.transactionRef || "Reçu transmis"}) est en cours de validation sous 2h à 4h.`
+                        : "10 000 FCFA / 3 mois ou 30 000 FCFA / an •Deductible des frais d'inscription au prochain bootcamp."}
+                    </p>
+                  </div>
+
+                  {!isSubscribed && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSubscriptionModal(true)}
+                      className={`px-4 py-2.5 rounded-xl font-black text-xs transition-all shadow-md shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                        isSubPending
+                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30"
+                          : "bg-gradient-to-r from-primary via-primary to-amber-500 text-slate-950 hover:opacity-95"
+                      }`}
+                    >
+                      {isSubPending ? <Clock className="size-3.5" /> : <Crown className="size-3.5 fill-slate-950" />}
+                      <span>{isSubPending ? "Voir l'état de validation" : "Prendre mon Pass VIP"}</span>
+                    </button>
                   )}
                 </div>
-                <p className="text-xs text-slate-300">
-                  {isSubscribed 
-                    ? "Tous les replays HD et la bibliothèque de prompts sont débloqués sur votre compte." 
-                    : "10 000 FCFA / 3 mois ou 30 000 FCFA / an • Inclus gratuitement pour les inscrits aux Bootcamps."}
-                </p>
-              </div>
-
-              {!isSubscribed && (
-                <button
-                  type="button"
-                  onClick={() => setShowSubscriptionModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary via-primary to-amber-500 text-slate-950 font-black text-xs hover:opacity-95 transition-all shadow-md shrink-0 cursor-pointer flex items-center gap-1.5"
-                >
-                  <Crown className="size-3.5 fill-slate-950" />
-                  <span>Prendre mon Pass VIP</span>
-                </button>
-              )}
-            </div>
+              )
+            })()}
           </div>
 
           {/* Filtres par Catégorie */}
@@ -879,74 +904,22 @@ export default function MasterclassHubPage() {
 
           {/* Grille des Replays */}
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 pt-6">
-            {filteredReplays.map((replay) => (
-              <div
-                key={replay.id}
-                className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between group hover:border-primary/50 transition-all text-left shadow-lg"
-              >
-                {/* Miniature & Déclencheur Vidéo */}
-                <div 
-                  onClick={() => {
-                    if (isSubscribed) {
-                      setActiveVideoModal(replay)
-                    } else {
-                      setShowSubscriptionModal(true)
-                    }
-                  }}
-                  className="relative aspect-video bg-black/80 overflow-hidden cursor-pointer group"
+            {filteredReplays.map((replay) => {
+              const isSubPending = Boolean(
+                !isSubscribed && (
+                  subscriptionInfo?.status === "pending" ||
+                  subscriptionInfo?.status === "pending_verification" ||
+                  subscriptionInfo?.status === "en_attente"
+                )
+              )
+
+              return (
+                <div
+                  key={replay.id}
+                  className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between group hover:border-primary/50 transition-all text-left shadow-lg"
                 >
-                  <img
-                    src={`https://img.youtube.com/vi/${replay.youtubeId}/hqdefault.jpg`}
-                    alt={replay.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
-                  />
-                  
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                    {isSubscribed ? (
-                      <div className="size-12 rounded-full bg-primary/90 text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
-                        <Play className="size-5 fill-slate-950" />
-                      </div>
-                    ) : (
-                      <div className="size-12 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Lock className="size-5 text-amber-400" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-mono font-bold">
-                    {replay.duration}
-                  </span>
-
-                  <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-primary text-slate-950 text-[10px] font-extrabold uppercase">
-                    {replay.category}
-                  </span>
-
-                  {!isSubscribed && (
-                    <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-1 shadow-sm">
-                      <Lock className="size-2.5" />
-                      <span>Pass VIP Requis</span>
-                    </span>
-                  )}
-                </div>
-
-                {/* Contenu de la Carte */}
-                <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <h3 className="font-heading font-bold text-base text-white group-hover:text-primary transition-colors line-clamp-2">
-                      {replay.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                      {replay.description}
-                    </p>
-                  </div>
-
-                  <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="font-medium text-slate-300">{replay.instructor}</span>
-                    <span>{replay.date}</span>
-                  </div>
-
-                  <button
+                  {/* Miniature & Déclencheur Vidéo */}
+                  <div 
                     onClick={() => {
                       if (isSubscribed) {
                         setActiveVideoModal(replay)
@@ -954,27 +927,105 @@ export default function MasterclassHubPage() {
                         setShowSubscriptionModal(true)
                       }
                     }}
-                    className={`w-full py-2.5 px-4 rounded-xl border font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
-                      isSubscribed
-                        ? "border-border bg-[#090d16] hover:bg-primary hover:text-slate-950 hover:border-primary text-white"
-                        : "border-amber-500/40 bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-300"
-                    }`}
+                    className="relative aspect-video bg-black/80 overflow-hidden cursor-pointer group"
                   >
-                    {isSubscribed ? (
-                      <>
-                        <Play className="size-3.5 fill-current" />
-                        <span>Visionner le Replay HD</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="size-3.5" />
-                        <span>Débloquer avec le Pass VIP</span>
-                      </>
+                    <img
+                      src={`https://img.youtube.com/vi/${replay.youtubeId}/hqdefault.jpg`}
+                      alt={replay.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
+                    />
+                    
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                      {isSubscribed ? (
+                        <div className="size-12 rounded-full bg-primary/90 text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="size-5 fill-slate-950" />
+                        </div>
+                      ) : isSubPending ? (
+                        <div className="size-12 rounded-full bg-slate-950/90 border border-amber-400 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <Clock className="size-5 text-amber-400 animate-pulse" />
+                        </div>
+                      ) : (
+                        <div className="size-12 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <Lock className="size-5 text-amber-400" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-mono font-bold">
+                      {replay.duration}
+                    </span>
+
+                    <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-primary text-slate-950 text-[10px] font-extrabold uppercase">
+                      {replay.category}
+                    </span>
+
+                    {isSubPending ? (
+                      <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-1 shadow-sm">
+                        <Clock className="size-2.5" />
+                        <span>⏳ Validation en cours</span>
+                      </span>
+                    ) : !isSubscribed && (
+                      <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase flex items-center gap-1 shadow-sm">
+                        <Lock className="size-2.5" />
+                        <span>Pass VIP Requis</span>
+                      </span>
                     )}
-                  </button>
+                  </div>
+
+                  {/* Contenu de la Carte */}
+                  <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <h3 className="font-heading font-bold text-base text-white group-hover:text-primary transition-colors line-clamp-2">
+                        {replay.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                        {replay.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="font-medium text-slate-300">{replay.instructor}</span>
+                      <span>{replay.date}</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (isSubscribed) {
+                          setActiveVideoModal(replay)
+                        } else {
+                          setShowSubscriptionModal(true)
+                        }
+                      }}
+                      className={`w-full py-2.5 px-4 rounded-xl border font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+                        isSubscribed
+                          ? "border-border bg-[#090d16] hover:bg-primary hover:text-slate-950 hover:border-primary text-white"
+                          : isSubPending
+                          ? "border-amber-500/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300"
+                          : "border-amber-500/40 bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-300"
+                      }`}
+                    >
+                      {isSubscribed ? (
+                        <>
+                          <Play className="size-3.5 fill-current" />
+                          <span>Visionner le Replay HD</span>
+                        </>
+                      ) : isSubPending ? (
+                        <>
+                          <Clock className="size-3.5" />
+                          <span>⏳ En cours de validation (2h-4h)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="size-3.5" />
+                          <span>Débloquer avec le Pass VIP</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
         </section>

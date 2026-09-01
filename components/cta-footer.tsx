@@ -441,11 +441,11 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   Politique de confidentialité
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <a href="/conditions-generales" className="text-muted-foreground transition-colors hover:text-white text-[11px]">
                   Conditions générales de vente
                 </a>
-              </li>
+              </li> */}
             </ul>
           </div>
         </div>
