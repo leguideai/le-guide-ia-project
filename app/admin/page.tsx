@@ -2216,11 +2216,13 @@ export default function SuperAdminDashboard() {
       const data = await res.json()
       if (data.success) {
         showNotice(status === "confirmed" ? "Paiement confirmé ! Accès débloqué & Email d'accès délivré." : "Paiement rejeté.")
-        setPayments(payments.map(p => p.id === paymentId ? { ...p, status } : p))
+        setPayments(prev => prev.map(p => p.id === paymentId ? { ...p, status } : p))
         fetchAllData()
+      } else {
+        alert(data.error || data.message || "Erreur de mise à jour du paiement")
       }
-    } catch (err) {
-      alert("Erreur de mise à jour du paiement")
+    } catch (err: any) {
+      alert("Erreur de mise à jour du paiement : " + (err?.message || "Erreur réseau"))
     } finally {
       setProcessingId(null)
     }
@@ -2318,7 +2320,7 @@ export default function SuperAdminDashboard() {
     return null
   }
 
-  // Get list of enrolled learners for a specific bootcamp course
+  // Get list of enrolled learners for a specific bootcamp course (Strict Matching by ID, Slug or Title)
   function getCourseLearners(c: BootcampCourse): PaymentRecord[] {
     const cId = String(c.id || "").toLowerCase().trim()
     const cSlug = String(c.slug || "").toLowerCase().trim()
@@ -2327,34 +2329,26 @@ export default function SuperAdminDashboard() {
     return payments.filter(p => {
       const payCourseId = String(p.course_id || "").toLowerCase().trim()
       const payCourseTitle = String(p.course_title || "").toLowerCase().trim()
-      const regSlug = String((p.registrations as any)?.course_slug || "").toLowerCase().trim()
+      const regSlug = String((p.registrations as any)?.course_slug || (p as any).course_slug || "").toLowerCase().trim()
       const regId = String((p.registrations as any)?.course_id || "").toLowerCase().trim()
-      const regNotes = String((p.registrations as any)?.notes || "").toLowerCase().trim()
-      const notesStr = String(p.notes || "").toLowerCase().trim()
 
-      // Direct matches
-      if (cId && (payCourseId === cId || regId === cId || notesStr.includes(cId) || regNotes.includes(cId))) return true
-      if (cSlug && (regSlug === cSlug || payCourseTitle.includes(cSlug) || notesStr.includes(cSlug) || regNotes.includes(cSlug))) return true
-      if (cTitle && (payCourseTitle.includes(cTitle) || regNotes.includes(cTitle) || notesStr.includes(cTitle))) return true
+      // 1. Strict exact match on course ID
+      if (cId && (payCourseId === cId || regId === cId)) return true
 
-      // Fuzzy category matching (Carrière / Pro)
-      if (cTitle.includes("carriere") || cSlug.includes("carriere") || cSlug.includes("pro")) {
-        if (
-          regSlug.includes("carriere") || regSlug.includes("pro") ||
-          payCourseTitle.includes("carriere") || payCourseTitle.includes("pro") ||
-          notesStr.includes("carriere") || notesStr.includes("pro") ||
-          regNotes.includes("carriere") || regNotes.includes("pro")
-        ) return true
-      }
+      // 2. Strict exact match on course slug
+      if (cSlug && (regSlug === cSlug || payCourseTitle === cSlug)) return true
 
-      // Fuzzy category matching (Business / Exec)
-      if (cTitle.includes("business") || cSlug.includes("business") || cSlug.includes("exec")) {
-        if (
-          regSlug.includes("business") || regSlug.includes("exec") ||
-          payCourseTitle.includes("business") || payCourseTitle.includes("exec") ||
-          notesStr.includes("business") || notesStr.includes("exec") ||
-          regNotes.includes("business") || regNotes.includes("exec")
-        ) return true
+      // 3. Strict match on full title
+      if (cTitle && payCourseTitle && payCourseTitle === cTitle) return true
+
+      // 4. Match via notes metadata if contains exact course_id or course_slug
+      const regNotes = (p.registrations as any)?.notes
+      if (regNotes) {
+        try {
+          const parsed = typeof regNotes === "string" ? JSON.parse(regNotes) : regNotes
+          if (cId && parsed?.course_id && String(parsed.course_id).toLowerCase().trim() === cId) return true
+          if (cSlug && parsed?.course_slug && String(parsed.course_slug).toLowerCase().trim() === cSlug) return true
+        } catch (e) {}
       }
 
       return false
@@ -5533,11 +5527,11 @@ export default function SuperAdminDashboard() {
                                           type="button"
                                           onClick={() => handlePaymentStatus(p.id, "confirmed")}
                                           disabled={processingId === p.id}
-                                          className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer flex items-center gap-1"
+                                          className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer flex items-center gap-1"
                                           title="Valider le paiement et activer les accès au Bootcamp"
                                         >
-                                          <CheckCircle2 className="size-3" />
-                                          <span>Valider</span>
+                                          {processingId === p.id ? <Loader2 className="size-3 animate-spin" /> : <CheckCircle2 className="size-3" />}
+                                          <span>{processingId === p.id ? "Validation..." : "Valider"}</span>
                                         </button>
                                       )}
 
@@ -9616,21 +9610,22 @@ export default function SuperAdminDashboard() {
                                 <button
                                   onClick={() => handlePaymentStatus(p.id, "confirmed")}
                                   disabled={processingId === p.id}
-                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
+                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-[11px] transition-colors shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
                                   title="Valider le paiement et débloquer les accès"
                                 >
-                                  <CheckCircle2 className="size-3.5" />
-                                  <span>Valider</span>
+                                  {processingId === p.id ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
+                                  <span>{processingId === p.id ? "Validation..." : "Valider"}</span>
                                 </button>
                               )}
                               {(p.status === "pending_verification" || p.status === "pending") && (
                                 <button
                                   onClick={() => handlePaymentStatus(p.id, "rejected")}
                                   disabled={processingId === p.id}
-                                  className="px-2 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] hover:bg-rose-100 transition-colors cursor-pointer shrink-0"
+                                  className="px-2 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 disabled:opacity-50 font-bold text-[11px] hover:bg-rose-100 transition-colors cursor-pointer shrink-0 flex items-center gap-1"
                                   title="Rejeter ce paiement"
                                 >
-                                  Rejeter
+                                  {processingId === p.id ? <Loader2 className="size-3 animate-spin" /> : null}
+                                  <span>{processingId === p.id ? "Rejet..." : "Rejeter"}</span>
                                 </button>
                               )}
                               <button
@@ -9775,18 +9770,19 @@ export default function SuperAdminDashboard() {
                           <button
                             onClick={() => handlePaymentStatus(p.id, "confirmed")}
                             disabled={processingId === p.id}
-                            className="flex-1 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                            className="flex-1 py-2 rounded-xl bg-emerald-500 disabled:opacity-50 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors shadow-md cursor-pointer flex items-center justify-center gap-1.5"
                           >
-                            <CheckCircle2 className="size-3.5" />
-                            <span>Valider &amp; Débloquer</span>
+                            {processingId === p.id ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle2 className="size-3.5" />}
+                            <span>{processingId === p.id ? "Validation..." : "Valider & Débloquer"}</span>
                           </button>
                           {(p.status === "pending_verification" || p.status === "pending") && (
                             <button
                               onClick={() => handlePaymentStatus(p.id, "rejected")}
                               disabled={processingId === p.id}
-                              className="px-3 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 font-bold text-xs hover:bg-red-500/20 transition-colors cursor-pointer"
+                              className="px-3 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/30 disabled:opacity-50 font-bold text-xs hover:bg-red-500/20 transition-colors cursor-pointer flex items-center justify-center gap-1"
                             >
-                              Rejeter
+                              {processingId === p.id ? <Loader2 className="size-3 animate-spin" /> : null}
+                              <span>{processingId === p.id ? "Rejet..." : "Rejeter"}</span>
                             </button>
                           )}
                         </div>

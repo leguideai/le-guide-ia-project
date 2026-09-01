@@ -230,30 +230,72 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "paymentId et status requis." }, { status: 400 })
     }
 
-    // Action 2: Update payment status (validation / confirmation)
-    const { data: updatedPayment, error: payErr } = await supabaseServer
+    // Map frontend action status to database allowed values
+    let dbStatus = status
+    if (status === "rejected") dbStatus = "failed"
+
+    // Action 2: Update payment status (validation / confirmation / rejection)
+    let { data: updatedPayment, error: payErr } = await supabaseServer
       .from("payments")
-      .update({ status })
+      .update({
+        status: dbStatus,
+        confirmed_at: status === "confirmed" ? new Date().toISOString() : null
+      })
       .eq("id", paymentId)
-      .select(`
-        *,
-        registrations (
-          id,
-          full_name,
-          email,
-          whatsapp,
-          country
-        )
-      `)
-      .single()
+      .select("*")
+      .maybeSingle()
+
+    // If 'failed' also violates constraint, fallback to 'cancelled' or delete
+    if (payErr && status === "rejected") {
+      const { data: retryPay, error: retryErr } = await supabaseServer
+        .from("payments")
+        .update({ status: "cancelled" })
+        .eq("id", paymentId)
+        .select("*")
+        .maybeSingle()
+
+      if (!retryErr && retryPay) {
+        updatedPayment = retryPay
+        payErr = null
+      }
+    }
 
     if (payErr || !updatedPayment) {
       return NextResponse.json({ error: payErr?.message || "Paiement non trouvé" }, { status: 500 })
     }
 
-    const reg = updatedPayment.registrations
+    // Safely lookup associated registration
+    let reg: any = null
+    if (updatedPayment.registration_id) {
+      const { data: regData } = await supabaseServer
+        .from("registrations")
+        .select("*")
+        .eq("id", updatedPayment.registration_id)
+        .maybeSingle()
+      reg = regData
+    }
+
+    if (!reg && updatedPayment.transaction_ref) {
+      const { data: allRegs } = await supabaseServer
+        .from("registrations")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+      reg = (allRegs || []).find(r => r.notes && typeof r.notes === "string" && r.notes.includes(updatedPayment.transaction_ref)) || null
+    }
+
     const studentEmail = reg?.email?.toLowerCase().trim()
     const studentName = reg?.full_name || "Cher Apprenant"
+
+    // If rejected, mark registration as cancelled
+    if (status === "rejected" && updatedPayment.registration_id) {
+      try {
+        await supabaseServer
+          .from("registrations")
+          .update({ status: "annule" })
+          .eq("id", updatedPayment.registration_id)
+      } catch (_) {}
+    }
 
     // 2. If confirmed, activate registration and user_courses
     if (status === "confirmed" && studentEmail) {
@@ -549,7 +591,7 @@ export async function DELETE(req: Request) {
       }
     }
 
-    // 4. Delete registration if registrationId is provided
+    // 4. Delete registration if registrationId is provided or exact email + courseSlug match
     if (targetRegId) {
       await supabaseServer
         .from("registrations")
@@ -560,27 +602,17 @@ export async function DELETE(req: Request) {
         .from("registrations")
         .delete()
         .ilike("email", targetEmail)
-        .or(`course_slug.eq.${targetSlug},course_slug.is.null`)
+        .eq("course_slug", targetSlug)
     }
 
-    // 5. Delete and revoke user_courses
+    // 5. Delete and revoke ONLY the specific user_courses for this exact course
     if (targetEmail) {
       if (targetSlug) {
-        const slugsToDelete = [targetSlug]
-        if (targetSlug.includes("carriere") || targetSlug.includes("pro")) {
-          slugsToDelete.push("bootcamp-pro-2", "bootcamp-ia-pro", "bootcamp-ia-carriere")
-        }
-        if (targetSlug.includes("business") || targetSlug.includes("exec")) {
-          slugsToDelete.push("bootcamp-business-exec", "bootcamp-ia-business")
-        }
-
-        for (const s of slugsToDelete) {
-          await supabaseServer
-            .from("user_courses")
-            .delete()
-            .ilike("user_email", targetEmail)
-            .eq("course_slug", s)
-        }
+        await supabaseServer
+          .from("user_courses")
+          .delete()
+          .ilike("user_email", targetEmail)
+          .eq("course_slug", targetSlug)
       } else {
         await supabaseServer
           .from("user_courses")
