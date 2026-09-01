@@ -280,6 +280,8 @@ export default function SuperAdminDashboard() {
   // Data states
   const [stats, setStats] = useState({
     totalRevenue: 0,
+    bootcampRevenue: 0,
+    subscriptionRevenue: 0,
     totalRegistrations: 0,
     proRegistrations: 0,
     totalStudents: 0,
@@ -3764,9 +3766,17 @@ export default function SuperAdminDashboard() {
                   </div>
                 </div>
                 <div className="font-heading text-2xl sm:text-3xl font-black text-slate-800">
-                  {stats.totalRevenue.toLocaleString()} <span className="text-xs sm:text-sm font-bold text-emerald-700">FCFA</span>
+                  {stats.totalRevenue.toLocaleString("fr-FR")} <span className="text-xs sm:text-sm font-bold text-emerald-700">FCFA</span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-1.5 sm:mt-2">Paiements validés PayTech & Mobile Money</p>
+                <div className="flex items-center gap-2 mt-1.5 sm:mt-2 text-[11px] text-slate-500 font-medium flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-slate-700 font-bold">
+                    Bootcamps : <span className="text-emerald-700">{(stats.bootcampRevenue || 0).toLocaleString("fr-FR")} F</span>
+                  </span>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 text-slate-700 font-bold">
+                    Abonnements : <span className="text-amber-700">{(stats.subscriptionRevenue || 0).toLocaleString("fr-FR")} F</span>
+                  </span>
+                </div>
               </div>
 
               <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs backdrop-blur-xl relative overflow-hidden group">
