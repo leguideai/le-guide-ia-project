@@ -183,25 +183,52 @@ function CheckoutContent({ params }: PageProps) {
   useEffect(() => {
     async function fetchCourse() {
       try {
+        const courseIdParam = searchParams.get("id") || searchParams.get("courseId")
         let found: any = null
-        const { data, error } = await supabase
-          .from("courses")
-          .select("*")
-          .or(`slug.eq.${courseSlug},id.eq.${courseSlug}`)
-          .maybeSingle()
 
-        if (data) {
-          found = data
-        } else {
+        // 1. If explicit ID provided in query params, fetch by ID first
+        if (courseIdParam) {
+          const { data: byId } = await supabase
+            .from("courses")
+            .select("*")
+            .eq("id", courseIdParam)
+            .maybeSingle()
+          if (byId) found = byId
+        }
+
+        // 2. Fetch from Supabase by exact ID or Slug
+        if (!found) {
+          const { data } = await supabase
+            .from("courses")
+            .select("*")
+            .or(`slug.eq.${courseSlug},id.eq.${courseSlug}`)
+            .order("updated_at", { ascending: false })
+
+          if (data && data.length > 0) {
+            found = (courseIdParam ? data.find((c: any) => c.id === courseIdParam) : null) ||
+                    data.find((c: any) => c.id === courseSlug) ||
+                    data.find((c: any) => c.slug === courseSlug) ||
+                    data[0]
+          }
+        }
+
+        // 3. Fallback: Query /api/admin/courses API
+        if (!found) {
           const res = await fetch("/api/admin/courses")
           const apiData = await res.json()
           if (apiData?.courses && apiData.courses.length > 0) {
-            found = apiData.courses.find((c: any) => 
-              c.slug === courseSlug || 
-              c.id === courseSlug ||
-              (courseSlug.includes("business") && c.slug?.includes("business")) ||
-              (!courseSlug.includes("business") && !c.slug?.includes("business"))
-            )
+            if (courseIdParam) {
+              found = apiData.courses.find((c: any) => c.id === courseIdParam)
+            }
+            if (!found) {
+              found = apiData.courses.find((c: any) => c.id === courseSlug || c.slug === courseSlug)
+            }
+            if (!found) {
+              found = apiData.courses.find((c: any) => 
+                (courseSlug.includes("business") && c.slug?.includes("business")) ||
+                (!courseSlug.includes("business") && !c.slug?.includes("business"))
+              )
+            }
           }
         }
 
@@ -213,7 +240,7 @@ function CheckoutContent({ params }: PageProps) {
       }
     }
     fetchCourse()
-  }, [courseSlug])
+  }, [courseSlug, searchParams])
 
   // Helper to extract clean numeric value from DB field (e.g. 99000, "99 000 FCFA", "149000", etc.)
   function parseDbPrice(val: any): number | null {

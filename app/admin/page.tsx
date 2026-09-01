@@ -15,7 +15,7 @@ import {
   Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star,
   Image as ImageIcon, Bold, Italic, Underline, List, ListOrdered, Heading2, Heading3,
   Link2, Minus, MousePointerClick, AlertCircle, Code, AlignLeft, Send, Radio,
-  ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Crown, Check, Save
+  ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen, Crown, Check, Save, Copy
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { AnalyticsChart } from "@/components/analytics-chart"
@@ -1777,6 +1777,80 @@ export default function SuperAdminDashboard() {
     } catch (e) {
       console.error("Reorder error:", e)
     }
+  }
+
+  // Helper to generate clean URL slug
+  function generateCourseSlug(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+  }
+
+  // 1-Click Apply Official Bootcamp Template (IA & Carrière vs IA & Business)
+  function applyBootcampTemplate(type: "carriere" | "business") {
+    const isBusiness = type === "business"
+    const nextOrder = courses.length + 1
+    const baseSlug = isBusiness ? "bootcamp-ia-business" : "bootcamp-ia-carriere"
+
+    // Check if slug already exists
+    let finalSlug = baseSlug
+    if (courses.some(c => c.slug === finalSlug)) {
+      finalSlug = `${baseSlug}-session-${nextOrder}`
+    }
+
+    setCourseForm({
+      id: undefined,
+      title: isBusiness ? "Bootcamp IA & Business" : "Bootcamp IA & Carrière",
+      slug: finalSlug,
+      subtitle: isBusiness
+        ? "Pour entrepreneurs, fondateurs et dirigeants souhaitant structurer leur modèle économique, automatiser leur entreprise, prospecter plus vite et scaler avec l'IA."
+        : "Le Bootcamp IA & Carrière est conçu pour les professionnels, cadres et consultants qui exercent au sein d'une organisation et veulent transformer l'IA en levier concret dans leur travail quotidien et leur trajectoire de carrière.",
+      price: isBusiness ? "149 000 FCFA" : "99 000 FCFA",
+      original_price: isBusiness ? "199 000 FCFA" : "149 000 FCFA",
+      badge: isBusiness ? "Exécutif VIP" : "Intensif",
+      category: "Bootcamp",
+      status: "published",
+      thumbnail: isBusiness ? "/images/bootcamp_business_thumb.jpg" : "/images/bootcamp_pro_thumb.jpg",
+      poster: isBusiness ? "/images/bootcamp_business_poster.jpg" : "/images/bootcamp_pro_poster.jpg",
+      pdf_url: isBusiness
+        ? "https://voxqivzzskbttytyklnn.supabase.co/storage/v1/object/public/resources-files/programmes/1786799298400_Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf"
+        : "https://voxqivzzskbttytyklnn.supabase.co/storage/v1/object/public/resources-files/programmes/1786475706651_Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf",
+      dates: isBusiness ? "Du 28 Septembre au 3 Octobre 2026" : "Du 21 au 26 Septembre 2026",
+      format: isBusiness ? "100% En Ligne (Direct Live + Masterclass Dirigeants)" : "100% En Ligne (Direct Live + Replays)",
+      session_count: 6,
+      sequence_order: nextOrder,
+      instructor: "Alfred Dah",
+      offer_badge_text: isBusiness ? "Offre Exclusive VIP" : "Offre Spéciale Fondateur",
+      live_meet_url: isBusiness ? "https://meet.google.com/xyz-bootcamp-business" : "https://meet.google.com/xyz-bootcamp-carriere"
+    })
+    showNotice(`Modèle « ${isBusiness ? "Bootcamp IA & Business" : "Bootcamp IA & Carrière"} » chargé !`)
+  }
+
+  // 1-Click Duplicate Existing Bootcamp
+  function handleDuplicateCourse(sourceCourse: BootcampCourse) {
+    const isBusiness = 
+      Number(sourceCourse.price) >= 140000 || 
+      String(sourceCourse.slug || "").toLowerCase().includes("business") || 
+      String(sourceCourse.title || "").toLowerCase().includes("business")
+
+    const nextOrder = courses.length + 1
+    const baseSlug = isBusiness ? "bootcamp-ia-business" : "bootcamp-ia-carriere"
+    const sessionSuffix = `session-${nextOrder}`
+
+    setCourseForm({
+      ...sourceCourse,
+      id: undefined,
+      title: `${sourceCourse.title} (Session ${nextOrder})`,
+      slug: `${baseSlug}-${sessionSuffix}`,
+      sequence_order: nextOrder,
+      badge: sourceCourse.badge || (isBusiness ? "Exécutif VIP" : "Intensif"),
+      status: "published"
+    })
+    setShowCourseModal(true)
+    showNotice(`Bootcamp « ${sourceCourse.title} » dupliqué. Ajustez les dates puis enregistrez.`)
   }
 
   // ================= FORMATIONS VIDÉOS (À LA DEMANDE) =================
@@ -4136,114 +4210,151 @@ export default function SuperAdminDashboard() {
 
             {/* Courses List */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {courses.map((c, idx) => (
-                <div key={c.id || c.slug} className="p-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-4 relative group hover:border-slate-300 hover:shadow-md transition-all">
-                  <div className="space-y-3 cursor-pointer" onClick={() => openCourseDetails(c)}>
-                    <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
-                      <img src={c.thumbnail || c.poster || "/images/bootcamp_pro_thumb.jpg"} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
-                        <span className="bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 shadow-xs px-2 py-0.5 rounded-md text-[10px] font-black">
-                          #{c.sequence_order || idx + 1}
-                        </span>
-                        {c.badge && (
-                          <span className="bg-primary text-slate-950 px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-xs">
-                            {c.badge}
+              {courses.map((c, idx) => {
+                const isCurBusiness = 
+                  Number(c.price) >= 140000 || 
+                  String(c.slug || "").toLowerCase().includes("business") || 
+                  String(c.title || "").toLowerCase().includes("business")
+
+                return (
+                  <div key={c.id || c.slug} className={`p-5 rounded-3xl border ${isCurBusiness ? "border-amber-200/90 hover:border-amber-400" : "border-blue-200/90 hover:border-blue-400"} bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-4 relative group hover:shadow-md transition-all`}>
+                    <div className="space-y-3 cursor-pointer" onClick={() => openCourseDetails(c)}>
+                      <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                        <img src={c.thumbnail || c.poster || (isCurBusiness ? "/images/bootcamp_business_thumb.jpg" : "/images/bootcamp_pro_thumb.jpg")} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10 flex-wrap">
+                          <span className="bg-white/95 backdrop-blur-xs text-slate-800 border border-slate-200 shadow-xs px-2 py-0.5 rounded-md text-[10px] font-black">
+                            #{c.sequence_order || idx + 1}
                           </span>
+                          {isCurBusiness ? (
+                            <span className="bg-amber-500 text-slate-950 px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-xs flex items-center gap-1">
+                              💼 Business
+                            </span>
+                          ) : (
+                            <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-[9px] font-black uppercase shadow-xs flex items-center gap-1">
+                              🚀 Carrière
+                            </span>
+                          )}
+                          {c.badge && (
+                            <span className="bg-slate-900 text-white px-2 py-0.5 rounded-md text-[9px] font-bold uppercase shadow-xs">
+                              {c.badge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+                          <span className="bg-white text-slate-900 font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-lg border border-white/40 flex items-center gap-1.5 scale-95 group-hover:scale-100 transition-transform">
+                            <Eye className="size-3.5 text-primary" /> Voir les Détails
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-bold text-slate-800 text-base leading-snug group-hover:text-primary transition-colors">{c.title}</h3>
+                        </div>
+                        <p className="text-xs text-slate-500 line-clamp-2">{c.subtitle}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs font-mono pt-2 border-t border-slate-200">
+                        <span className="font-extrabold text-emerald-700">{c.price}</span>
+                        <span className="text-slate-400 line-through text-[10px]">{c.original_price}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-slate-200">
+                      {/* Primary Button: View & Manage Learners for this Bootcamp */}
+                      <button
+                        onClick={() => {
+                          setSelectedCourseForLearners(c)
+                          setShowLearnersModal(true)
+                          setLearnersSearch("")
+                          setLearnersStatusFilter("all")
+                        }}
+                        className={`w-full py-2.5 px-3 rounded-xl ${isCurBusiness ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"} text-white font-black text-xs flex items-center justify-between shadow-xs transition-all cursor-pointer group/btn`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Users className="size-4 text-white/80" />
+                          <span>Gérer les Apprenants</span>
+                        </div>
+                        <span className="bg-white/20 text-white text-[11px] font-black px-2 py-0.5 rounded-full">
+                          {getCourseLearners(c).length} inscrit{getCourseLearners(c).length > 1 ? "s" : ""}
+                        </span>
+                      </button>
+
+                      {/* Primary Actions Grid: Modifier, Dupliquer, Sessions */}
+                      <div className="grid grid-cols-3 gap-1.5 pt-1">
+                        <button
+                          onClick={() => { setCourseForm(c); setShowCourseModal(true) }}
+                          className="py-2 px-1 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                          title="Modifier les informations"
+                        >
+                          <Edit3 className="size-3 shrink-0" />
+                          <span className="truncate">Modifier</span>
+                        </button>
+                        <button
+                          onClick={() => handleDuplicateCourse(c)}
+                          className="py-2 px-1 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                          title="Dupliquer ce Bootcamp (Nouvelle Session)"
+                        >
+                          <Copy className="size-3 text-blue-600 shrink-0" />
+                          <span className="truncate">Dupliquer</span>
+                        </button>
+                        {(c.id || c.slug) && (
+                          <button
+                            onClick={() => openCourseSessions(c)}
+                            className="py-2 px-1 rounded-xl bg-primary/10 text-primary border border-primary/20 text-xs font-bold hover:bg-primary hover:text-primary-foreground flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                            title="Gérer les Sessions Live"
+                          >
+                            <Calendar className="size-3 shrink-0" />
+                            <span className="truncate">Sessions</span>
+                          </button>
                         )}
                       </div>
-                      <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
-                        <span className="bg-white text-slate-900 font-extrabold text-xs px-3.5 py-2 rounded-xl shadow-lg border border-white/40 flex items-center gap-1.5 scale-95 group-hover:scale-100 transition-transform">
-                          <Eye className="size-3.5 text-primary" /> Voir les Détails
-                        </span>
+
+                      {/* Secondary Toolbar: Reorder, Preview & Delete */}
+                      <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                        <div className="flex items-center gap-1 bg-slate-100 border border-slate-200 rounded-xl p-0.5">
+                          <button
+                            onClick={() => handleMoveCourse(c, "up")}
+                            disabled={idx === 0}
+                            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                            title="Déplacer vers le haut"
+                          >
+                            <ArrowUp className="size-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleMoveCourse(c, "down")}
+                            disabled={idx === courses.length - 1}
+                            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer"
+                            title="Déplacer vers le bas"
+                          >
+                            <ArrowDown className="size-3.5" />
+                          </button>
+                          <div className="h-4 w-[1px] bg-slate-200 mx-0.5" />
+                          <button
+                            onClick={() => openCourseDetails(c)}
+                            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1"
+                            title="Voir les détails complets"
+                          >
+                            <Eye className="size-3.5 text-primary" />
+                            <span className="text-[10px] font-bold hidden xs:inline">Aperçu</span>
+                          </button>
+                        </div>
+
+                        {c.id && (
+                          <button
+                            onClick={() => handleDeleteCourse(c.id!)}
+                            className="py-1.5 px-2.5 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="size-3.5 shrink-0" />
+                            <span className="text-[10px] font-bold">Supprimer</span>
+                          </button>
+                        )}
                       </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <h3 className="font-bold text-slate-800 text-base leading-snug group-hover:text-primary transition-colors">{c.title}</h3>
-                      <p className="text-xs text-slate-500 line-clamp-2">{c.subtitle}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs font-mono pt-2 border-t border-slate-200">
-                      <span className="font-extrabold text-emerald-700">{c.price}</span>
-                      <span className="text-slate-400 line-through text-[10px]">{c.original_price}</span>
                     </div>
                   </div>
-
-                  <div className="space-y-2 pt-2 border-t border-slate-200">
-                    {/* Primary Button: View & Manage Learners for this Bootcamp */}
-                    <button
-                      onClick={() => {
-                        setSelectedCourseForLearners(c)
-                        setShowLearnersModal(true)
-                        setLearnersSearch("")
-                        setLearnersStatusFilter("all")
-                      }}
-                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center justify-between shadow-xs transition-all cursor-pointer group/btn"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Users className="size-4 text-emerald-200" />
-                        <span>Gérer les Apprenants</span>
-                      </div>
-                      <span className="bg-white/20 text-white text-[11px] font-black px-2 py-0.5 rounded-full">
-                        {getCourseLearners(c).length} inscrit{getCourseLearners(c).length > 1 ? "s" : ""}
-                      </span>
-                    </button>
-
-                    {/* Secondary Actions */}
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-0.5 bg-slate-100 border border-slate-200 rounded-xl p-0.5">
-                        <button
-                          onClick={() => handleMoveCourse(c, "up")}
-                          disabled={idx === 0}
-                          className="p-1 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
-                          title="Déplacer vers le haut"
-                        >
-                          <ArrowUp className="size-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleMoveCourse(c, "down")}
-                          disabled={idx === courses.length - 1}
-                          className="p-1 rounded-lg hover:bg-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:hover:bg-transparent"
-                          title="Déplacer vers le bas"
-                        >
-                          <ArrowDown className="size-3.5" />
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => openCourseDetails(c)}
-                        className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1"
-                        title="Voir les détails"
-                      >
-                        <Eye className="size-3.5 text-primary" />
-                      </button>
-                      <button
-                        onClick={() => { setCourseForm(c); setShowCourseModal(true) }}
-                        className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold flex items-center justify-center gap-1"
-                      >
-                        <Edit3 className="size-3" /> Modifier
-                      </button>
-                      {(c.id || c.slug) && (
-                        <button
-                          onClick={() => openCourseSessions(c)}
-                          className="flex-1 py-2 rounded-xl bg-primary/10 text-primary border border-primary/20 text-xs font-bold hover:bg-primary hover:text-primary-foreground flex items-center justify-center gap-1 transition-all"
-                          title="Gérer les Sessions Live"
-                        >
-                          <Calendar className="size-3" /> Sessions
-                        </button>
-                      )}
-                      {c.id && (
-                        <button
-                          onClick={() => handleDeleteCourse(c.id!)}
-                          className="p-2 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Course Modal */}
@@ -4253,10 +4364,60 @@ export default function SuperAdminDashboard() {
                 className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
               >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-2xl w-full space-y-4 max-h-[90vh] overflow-y-auto">
-                  <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Layers className="size-5 text-primary" />
-                    {courseForm.id ? "Editer la Formation" : "Créer une Nouvelle Formation"}
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <Layers className="size-5 text-primary" />
+                      {courseForm.id ? "Éditer la Formation" : "Créer un Nouveau Bootcamp"}
+                    </h3>
+                    <button 
+                      onClick={() => setShowCourseModal(false)}
+                      className="size-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+
+                  {/* ⚡ Sélecteur Rapide de Modèles / Templates (IA & Carrière vs IA & Business) */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                        <Sparkles className="size-3.5 text-primary" /> Pré-remplir avec un Modèle Officiel (1 Clic)
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">Champs 100% modifiables</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => applyBootcampTemplate("carriere")}
+                        className="p-3 rounded-2xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-900 text-left transition-all flex items-center justify-between group cursor-pointer shadow-xs"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-xs flex items-center gap-1.5">
+                            <span>🚀 Bootcamp IA & Carrière</span>
+                            <span className="text-[10px] font-black bg-blue-600 text-white px-1.5 py-0.2 rounded">99 000 F</span>
+                          </div>
+                          <p className="text-[10px] text-blue-700/80 truncate mt-0.5">Cadres, professionnels & salariés</p>
+                        </div>
+                        <ArrowRight className="size-4 text-blue-500 group-hover:translate-x-1 transition-transform shrink-0" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => applyBootcampTemplate("business")}
+                        className="p-3 rounded-2xl border border-amber-300 bg-amber-50/70 hover:bg-amber-100 text-amber-950 text-left transition-all flex items-center justify-between group cursor-pointer shadow-xs"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-xs flex items-center gap-1.5">
+                            <span>💼 Bootcamp IA & Business</span>
+                            <span className="text-[10px] font-black bg-amber-600 text-white px-1.5 py-0.2 rounded">149 000 F</span>
+                          </div>
+                          <p className="text-[10px] text-amber-800/80 truncate mt-0.5">Entrepreneurs, dirigeants & VIP</p>
+                        </div>
+                        <ArrowRight className="size-4 text-amber-600 group-hover:translate-x-1 transition-transform shrink-0" />
+                      </button>
+                    </div>
+                  </div>
 
                   <form onSubmit={handleSaveCourse} className="space-y-4 text-xs">
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -4266,18 +4427,34 @@ export default function SuperAdminDashboard() {
                           type="text"
                           required
                           value={courseForm.title}
-                          onChange={e => setCourseForm({ ...courseForm, title: e.target.value })}
+                          onChange={e => {
+                            const val = e.target.value
+                            setCourseForm(prev => ({
+                              ...prev,
+                              title: val,
+                              slug: !prev.id ? generateCourseSlug(val) : prev.slug
+                            }))
+                          }}
                           className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">Slug URL (ex: bootcamp-ia-pro-3)</label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-slate-600 font-bold">Slug URL (Identifiant unique)</label>
+                          <button
+                            type="button"
+                            onClick={() => setCourseForm(prev => ({ ...prev, slug: generateCourseSlug(prev.title) }))}
+                            className="text-[10px] text-primary hover:underline font-bold"
+                          >
+                            Générer depuis le titre
+                          </button>
+                        </div>
                         <input
                           type="text"
                           required
                           value={courseForm.slug}
-                          onChange={e => setCourseForm({ ...courseForm, slug: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono"
+                          onChange={e => setCourseForm({ ...courseForm, slug: generateCourseSlug(e.target.value) })}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
                         />
                       </div>
                     </div>

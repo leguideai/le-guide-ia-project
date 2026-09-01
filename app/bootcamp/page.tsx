@@ -312,7 +312,7 @@ function BootcampContent() {
                     </Link>
                   ) : isCourseOpenForPublic(active) ? (
                     <Link
-                      href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}${isOfferExpired ? "?tier=standard" : ""}`}
+                      href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}?id=${active?.id || ""}${isOfferExpired ? "&tier=standard" : ""}`}
                       className={`w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm transition-all hover:scale-[1.01] active:scale-95 cursor-pointer ${theme.btn}`}
                     >
                       <span>Réserver ma place ({displayPrice > 0 ? `${Number(displayPrice).toLocaleString("fr-FR")} FCFA` : "Tarif Standard"})</span>

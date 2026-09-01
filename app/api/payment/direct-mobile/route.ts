@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     // 3. Enregistrement du paiement avec statut 'pending'
     const paymentPayload: any = {
       registration_id: registrationId,
-      amount: price || 49000,
+      amount: price !== undefined && price !== null && !isNaN(Number(price)) ? Number(price) : 49000,
       currency: "XOF",
       method: `mobile_direct_${mobileOperator || "wave"}`,
       status: "pending",

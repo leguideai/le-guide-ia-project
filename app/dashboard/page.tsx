@@ -330,6 +330,7 @@ export default function DashboardPage() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
 
   useEffect(() => {
+    if (!selectedLesson) return
     const rawTarget = selectedLesson?.scheduledAt || selectedLesson?.targetDate || "2026-08-31T19:00:00Z"
     const targetTimestamp = new Date(rawTarget).getTime()
 
@@ -833,7 +834,7 @@ export default function DashboardPage() {
 
   const navItems: { id: string; label: string; icon: any; badge?: string }[] = [
     { id: "overview", label: "Vue d'ensemble", icon: LayoutDashboard },
-    { id: "courses", label: "Mes Formations", icon: BookOpen },
+    { id: "courses", label: "Bootcamps AI", icon: BookOpen },
     { id: "masterclasses", label: "Masterclasses IA", icon: Radio, badge: masterclassSession.is_active ? "En Direct" : undefined },
     { id: "resources", label: "Mes Prompts", icon: DownloadCloudIcon },
     { 
@@ -1487,7 +1488,7 @@ export default function DashboardPage() {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
                   <div>
-                    <h1 className="font-heading text-2xl font-bold text-slate-800">Mes Formations &amp; Bootcamps Inscrits</h1>
+                    <h1 className="font-heading text-2xl font-bold text-slate-800">Bootcamps AI Inscrits</h1>
                     <p className="text-xs text-slate-500 mt-1">Sélectionnez une formation pour accéder au lien, supports PDF et exercices pratiques.</p>
                   </div>
                 </div>
@@ -1495,7 +1496,7 @@ export default function DashboardPage() {
                 {/* ─── Formations accessibles ─── */}
                 {enrolledBootcamps.length > 0 && (
                   <div className="space-y-4">
-                    <h2 className="font-heading text-base font-bold text-slate-800">Mes formations actives</h2>
+                    <h2 className="font-heading text-base font-bold text-slate-800">Bootcamps actives</h2>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                       {enrolledBootcamps.map((bootcamp: any) => (
                         <div
@@ -1527,7 +1528,12 @@ export default function DashboardPage() {
                           </div>
                           <div className="p-5 pt-0">
                             <button
-                              onClick={() => { setSelectedBootcamp(bootcamp); setSelectedLesson(bootcamp.lessons[0]) }}
+                              onClick={() => { 
+                                setSelectedBootcamp(bootcamp)
+                                if (bootcamp.lessons && bootcamp.lessons.length > 0) {
+                                  setSelectedLesson(bootcamp.lessons[0])
+                                }
+                              }}
                               className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
                             >
                               <PlayCircle className="size-4" />
@@ -1598,7 +1604,7 @@ export default function DashboardPage() {
                 {lockedBootcamps.length > 0 && (
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-3">
-                      <h2 className="font-heading text-base font-bold text-slate-800">Autres formations disponibles</h2>
+                      <h2 className="font-heading text-base font-bold text-slate-800">Autres bootcamps disponibles</h2>
                       <span className="text-[10px] font-semibold text-slate-600 bg-white border border-slate-200 px-2.5 py-1 rounded-full shadow-2xs">Non inscrit</span>
                     </div>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -1647,7 +1653,7 @@ export default function DashboardPage() {
                     className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline cursor-pointer"
                   >
                     <ChevronRight className="size-4 rotate-180" />
-                    <span>← Retour à toutes mes formations</span>
+                    <span>← Retour à tous mes Bootcamps</span>
                   </button>
 
                   <div className="flex items-center gap-2">
@@ -1657,245 +1663,298 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Main Course Player Frame */}
-                <div className="grid gap-6 lg:grid-cols-3">
-                  {/* Left: Active Video Player or Upcoming Session Countdown */}
-                  <div className="lg:col-span-2 space-y-4">
-                    <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
-                      {selectedBootcamp.status === "upcoming" || selectedLesson.isUpcoming ? (
-                        /* Upcoming Session Countdown Frame (No video iframe) */
-                        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-amber-500/20">
-                          <div className="size-14 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-sm">
-                            <Clock className="size-7 animate-pulse" />
-                          </div>
-                          <div className="space-y-1.5 max-w-md">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                              SESSION LIVE À VENIR
-                            </span>
-                            <h3 className="font-heading text-lg md:text-xl font-bold text-white">
-                              {selectedLesson.title}
-                            </h3>
-                            <p className="text-xs text-slate-300 leading-relaxed">
-                              Cette session aura lieu en direct sur Google Meet ({
-                                selectedLesson.scheduledAt
-                                  ? new Date(selectedLesson.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " à " + new Date(selectedLesson.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
-                                  : selectedLesson.scheduledDate || selectedBootcamp.dates
-                              }). Le replay HD sera accessible immédiatement après la session.
-                            </p>
-                          </div>
-
-                          {/* Live Ticking Countdown Timer */}
-                          <div className="flex items-center gap-2 pt-2">
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                              <span className="font-heading text-base font-black text-amber-400 font-mono leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Jours</span>
-                            </div>
-                            <span className="text-amber-400 font-bold text-sm">:</span>
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                              <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Heures</span>
-                            </div>
-                            <span className="text-amber-400 font-bold text-sm">:</span>
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                              <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Min</span>
-                            </div>
-                            <span className="text-amber-400 font-bold text-sm">:</span>
-                            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                              <span className="font-heading text-base font-black text-amber-400 font-mono leading-none animate-pulse">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                              <span className="text-[9px] font-bold text-amber-400/80 uppercase mt-0.5">Sec</span>
-                            </div>
-                          </div>
-
-                          {selectedLesson.meetUrl && selectedLesson.meetUrl.trim() && selectedLesson.meetUrl !== "https://meet.google.com" ? (
-                            <a
-                              href={selectedLesson.meetUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all mt-2 cursor-pointer"
-                            >
-                              <Video className="size-4" />
-                              <span>Rejoindre la Session Live sur Google Meet</span>
-                            </a>
-                          ) : (
-                            <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center">
-                              <Video className="size-4 text-amber-400 shrink-0" />
-                              <span>Lien Google Meet disponible avant le début de la session</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* Completed/Replay Video Player (iframe) */
-                        <iframe
-                          src={`${selectedLesson.videoUrl}?autoplay=0`}
-                          title={selectedLesson.title}
-                          className="w-full h-full border-none"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      )}
+                {/* Check if Bootcamp has sessions configured */}
+                {!selectedBootcamp.lessons || selectedBootcamp.lessons.length === 0 ? (
+                  <div className="rounded-3xl border border-slate-200/90 bg-white p-8 md:p-12 text-center space-y-6 shadow-xs max-w-3xl mx-auto">
+                    <div className="size-16 rounded-3xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center mx-auto shadow-xs">
+                      <Calendar className="size-8 animate-pulse" />
+                    </div>
+                    <div className="space-y-2 max-w-md mx-auto">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 bg-amber-100 px-3 py-1 rounded-full border border-amber-300">
+                        Formation confirmée & active
+                      </span>
+                      <h3 className="font-heading text-xl font-bold text-slate-800">
+                        Sessions en cours de programmation
+                      </h3>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Vous êtes bien inscrit(e) au <strong>{selectedBootcamp.title}</strong>. L'équipe pédagogique configure actuellement les modules en direct, les horaires et les supports de formation.
+                      </p>
                     </div>
 
-                    <div className="rounded-3xl border border-slate-200/90 bg-white p-6 space-y-4 shadow-xs">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20 uppercase">
-                              Module {selectedLesson.num}
-                            </span>
-                            {selectedLesson.scheduledDate && (
-                              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                <Calendar className="size-3" />
-                                <span>{selectedLesson.scheduledDate}</span>
-                              </span>
+                    {selectedBootcamp.dates && (
+                      <div className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 bg-slate-100 px-4 py-2.5 rounded-2xl border border-slate-200">
+                        <Clock className="size-4 text-primary" />
+                        <span>Période annoncée : <strong>{selectedBootcamp.dates}</strong></span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                      {selectedBootcamp.live_meet_url && selectedBootcamp.live_meet_url.trim() && selectedBootcamp.live_meet_url !== "https://meet.google.com" && (
+                        <a
+                          href={selectedBootcamp.live_meet_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all cursor-pointer"
+                        >
+                          <Video className="size-4" />
+                          <span>Rejoindre la Session Google Meet</span>
+                        </a>
+                      )}
+                      <button
+                        onClick={() => setSelectedBootcamp(null)}
+                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-2.5 text-xs transition-all cursor-pointer"
+                      >
+                        <span>← Revenir à l'accueil</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Main Course Player Frame */
+                  (() => {
+                    const activeLesson = selectedLesson || selectedBootcamp.lessons[0]
+
+                    return (
+                      <div className="grid gap-6 lg:grid-cols-3">
+                        {/* Left: Active Video Player or Upcoming Session Countdown */}
+                        <div className="lg:col-span-2 space-y-4">
+                          <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
+                            {selectedBootcamp.status === "upcoming" || activeLesson?.isUpcoming ? (
+                              /* Upcoming Session Countdown Frame (No video iframe) */
+                              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-amber-500/20">
+                                <div className="size-14 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-sm">
+                                  <Clock className="size-7 animate-pulse" />
+                                </div>
+                                <div className="space-y-1.5 max-w-md">
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                                    SESSION LIVE À VENIR
+                                  </span>
+                                  <h3 className="font-heading text-lg md:text-xl font-bold text-white">
+                                    {activeLesson?.title}
+                                  </h3>
+                                  <p className="text-xs text-slate-300 leading-relaxed">
+                                    Cette session aura lieu en direct sur Google Meet ({
+                                      activeLesson?.scheduledAt
+                                        ? new Date(activeLesson.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " à " + new Date(activeLesson.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+                                        : activeLesson?.scheduledDate || selectedBootcamp.dates
+                                    }). Le replay HD sera accessible immédiatement après la session.
+                                  </p>
+                                </div>
+
+                                {/* Live Ticking Countdown Timer */}
+                                <div className="flex items-center gap-2 pt-2">
+                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
+                                    <span className="font-heading text-base font-black text-amber-400 font-mono leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Jours</span>
+                                  </div>
+                                  <span className="text-amber-400 font-bold text-sm">:</span>
+                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
+                                    <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Heures</span>
+                                  </div>
+                                  <span className="text-amber-400 font-bold text-sm">:</span>
+                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
+                                    <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Min</span>
+                                  </div>
+                                  <span className="text-amber-400 font-bold text-sm">:</span>
+                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
+                                    <span className="font-heading text-base font-black text-amber-400 font-mono leading-none animate-pulse">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                                    <span className="text-[9px] font-bold text-amber-400/80 uppercase mt-0.5">Sec</span>
+                                  </div>
+                                </div>
+
+                                {activeLesson?.meetUrl && activeLesson.meetUrl.trim() && activeLesson.meetUrl !== "https://meet.google.com" ? (
+                                  <a
+                                    href={activeLesson.meetUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all mt-2 cursor-pointer"
+                                  >
+                                    <Video className="size-4" />
+                                    <span>Rejoindre la Session Live sur Google Meet</span>
+                                  </a>
+                                ) : (
+                                  <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center">
+                                    <Video className="size-4 text-amber-400 shrink-0" />
+                                    <span>Lien Google Meet disponible avant le début de la session</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              /* Completed/Replay Video Player (iframe) */
+                              <iframe
+                                src={`${activeLesson?.videoUrl || ""}?autoplay=0`}
+                                title={activeLesson?.title || "Session"}
+                                className="w-full h-full border-none"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
                             )}
                           </div>
-                          <h2 className="font-heading text-lg font-bold text-slate-800">
-                            {selectedLesson.title}
-                          </h2>
-                        </div>
 
-                        <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border ${
-                          selectedLesson.isLive
-                            ? "bg-red-50 text-red-700 border-red-200 animate-pulse"
-                            : selectedLesson.isUpcoming
-                            ? "bg-amber-50 text-amber-800 border-amber-200"
-                            : "bg-emerald-50 text-emerald-800 border-emerald-200"
-                        }`}>
-                          {selectedLesson.isLive ? "🟢 En Direct Maintenant" : selectedLesson.isUpcoming ? "🕒 Session à venir" : "🎬 Replay Disponible"}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        {selectedLesson.description}
-                      </p>
-
-                      {/* PDF Attachment (Available ONLY for past/completed sessions) */}
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                        {selectedLesson.pdfName ? (
-                          selectedLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? (
-                            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                              <FileText className="size-4 text-slate-400" />
-                              <span>Support PDF du cours : <strong className="text-amber-700 font-semibold">🔒 Disponible immédiatement après la session live</strong></span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
-                                <FileText className="size-4 text-purple-600" />
-                                <span>Support PDF du cours : {selectedLesson.pdfName}</span>
-                              </div>
-                              <a
-                                href={selectedLesson.pdfUrl || "#"}
-                                download
-                                className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline cursor-pointer shrink-0"
-                              >
-                                <Download className="size-3.5" />
-                                <span>Télécharger (PDF)</span>
-                              </a>
-                            </div>
-                          )
-                        ) : (
-                          <span className="text-xs text-slate-500">Aucun support PDF attaché pour ce module.</span>
-                        )}
-                      </div>
-
-                      {/* Exercise & Homework Submission Section */}
-                      {selectedLesson.exercise && (
-                        <div className="rounded-2xl border border-amber-200/90 bg-amber-50/70 p-4 space-y-3 mt-3 text-left">
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
-                                {selectedLesson.exercise.type === 'devoir-a-rendre' ? '📝 Devoir à rendre' : selectedLesson.exercise.type === 'cas-pratique' ? '💼 Cas Pratique Métier' : '⚡ Challenge Prompt'}
-                              </span>
-                              <h4 className="text-xs font-bold text-slate-800">{selectedLesson.exercise.title}</h4>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-900">
-                              <Clock className="size-3.5" />
-                              <span>Date limite : {selectedLesson.exercise.deadline}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-                            <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border shrink-0 ${
-                              submittedExerciseIds.includes(selectedLesson.exercise.title) || selectedLesson.exercise.status === 'submitted'
-                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                : "bg-rose-50 text-rose-800 border-rose-200"
-                            }`}>
-                              {submittedExerciseIds.includes(selectedLesson.exercise.title) || selectedLesson.exercise.status === 'submitted' ? "✓ Travail Soumis sur la plateforme" : "⏳ En attente de rendu"}
-                            </span>
-
-                            <button
-                              onClick={() => setSubmittingExercise({
-                                id: selectedLesson.exercise!.title,
-                                title: selectedLesson.exercise!.title,
-                                deadline: selectedLesson.exercise!.deadline
-                              })}
-                              className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 text-xs shadow-2xs transition-all cursor-pointer"
-                            >
-                              <Upload className="size-3.5" />
-                              <span>{submittedExerciseIds.includes(selectedLesson.exercise.title) ? "Modifier mon rendu" : "Soumettre ma réponse sur la plateforme"}</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right: Modules & Lessons Playlist for selectedBootcamp */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between pb-1">
-                      <h3 className="font-heading text-sm font-bold text-slate-800">Sommaire de la formation</h3>
-                      <span className="text-xs font-semibold text-slate-500">{selectedBootcamp.lessons.length} sessions</span>
-                    </div>
-
-                    <div className="space-y-2 max-h-[640px] lg:max-h-[680px] overflow-y-auto scrollbar-thin pr-1.5 pb-6">
-                      {selectedBootcamp.lessons.map((lesson) => {
-                        const isSelected = selectedLesson.id === lesson.id
-
-                        return (
-                          <div
-                            key={lesson.id}
-                            onClick={() => setSelectedLesson(lesson)}
-                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                              isSelected
-                                ? "bg-primary/10 border-primary shadow-xs"
-                                : "bg-white border-slate-200/90 hover:bg-[#F4F6F8] shadow-2xs"
-                            }`}
-                          >
-                            <div className={`size-7 rounded-xl border flex items-center justify-center font-mono text-xs font-bold shrink-0 mt-0.5 ${
-                              isSelected
-                                ? "bg-primary text-white border-primary"
-                                : "bg-[#F4F6F8] border-slate-200 text-primary"
-                            }`}>
-                              {lesson.num}
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <h4 className={`text-xs font-bold leading-snug line-clamp-2 ${isSelected ? "text-primary" : "text-slate-800"}`}>
-                                {lesson.title}
-                              </h4>
-                              <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1 flex-wrap">
-                                <Clock className="size-3" />
-                                <span>{lesson.duration}</span>
-                                <span>·</span>
-                                <span className={lesson.isLive ? "text-red-600 font-bold animate-pulse" : lesson.isUpcoming ? "text-amber-700 font-bold" : "text-emerald-700 font-bold"}>
-                                  {lesson.isLive ? "En Direct" : lesson.isUpcoming ? "À venir" : "Replay HD"}
-                                </span>
-                              </div>
-                              {lesson.scheduledDate && (
-                                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-800 mt-1">
-                                  <Calendar className="size-3 shrink-0 text-emerald-600" />
-                                  <span className="truncate">{lesson.scheduledDate}</span>
+                          <div className="rounded-3xl border border-slate-200/90 bg-white p-6 space-y-4 shadow-xs">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20 uppercase">
+                                    Module {activeLesson?.num || 1}
+                                  </span>
+                                  {activeLesson?.scheduledDate && (
+                                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                      <Calendar className="size-3" />
+                                      <span>{activeLesson.scheduledDate}</span>
+                                    </span>
+                                  )}
                                 </div>
+                                <h2 className="font-heading text-lg font-bold text-slate-800">
+                                  {activeLesson?.title}
+                                </h2>
+                              </div>
+
+                              <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border ${
+                                activeLesson?.isLive
+                                  ? "bg-red-50 text-red-700 border-red-200 animate-pulse"
+                                  : activeLesson?.isUpcoming
+                                  ? "bg-amber-50 text-amber-800 border-amber-200"
+                                  : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              }`}>
+                                {activeLesson?.isLive ? "🟢 En Direct Maintenant" : activeLesson?.isUpcoming ? "🕒 Session à venir" : "🎬 Replay Disponible"}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-slate-600 leading-relaxed">
+                              {activeLesson?.description}
+                            </p>
+
+                            {/* PDF Attachment (Available ONLY for past/completed sessions) */}
+                            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                              {activeLesson?.pdfName ? (
+                                activeLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? (
+                                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                                    <FileText className="size-4 text-slate-400" />
+                                    <span>Support PDF du cours : <strong className="text-amber-700 font-semibold">🔒 Disponible immédiatement après la session live</strong></span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-between w-full">
+                                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+                                      <FileText className="size-4 text-purple-600" />
+                                      <span>Support PDF du cours : {activeLesson.pdfName}</span>
+                                    </div>
+                                    <a
+                                      href={activeLesson.pdfUrl || "#"}
+                                      download
+                                      className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline cursor-pointer shrink-0"
+                                    >
+                                      <Download className="size-3.5" />
+                                      <span>Télécharger (PDF)</span>
+                                    </a>
+                                  </div>
+                                )
+                              ) : (
+                                <span className="text-xs text-slate-500">Aucun support PDF attaché pour ce module.</span>
                               )}
                             </div>
+
+                            {/* Exercise & Homework Submission Section */}
+                            {activeLesson?.exercise && (
+                              <div className="rounded-2xl border border-amber-200/90 bg-amber-50/70 p-4 space-y-3 mt-3 text-left">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
+                                      {activeLesson.exercise.type === 'devoir-a-rendre' ? '📝 Devoir à rendre' : activeLesson.exercise.type === 'cas-pratique' ? '💼 Cas Pratique Métier' : '⚡ Challenge Prompt'}
+                                    </span>
+                                    <h4 className="text-xs font-bold text-slate-800">{activeLesson.exercise.title}</h4>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-900">
+                                    <Clock className="size-3.5" />
+                                    <span>Date limite : {activeLesson.exercise.deadline}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                                  <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border shrink-0 ${
+                                    submittedExerciseIds.includes(activeLesson.exercise.title) || activeLesson.exercise.status === 'submitted'
+                                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                      : "bg-rose-50 text-rose-800 border-rose-200"
+                                  }`}>
+                                    {submittedExerciseIds.includes(activeLesson.exercise.title) || activeLesson.exercise.status === 'submitted' ? "✓ Travail Soumis sur la plateforme" : "⏳ En attente de rendu"}
+                                  </span>
+
+                                  <button
+                                    onClick={() => setSubmittingExercise({
+                                      id: activeLesson.exercise!.title,
+                                      title: activeLesson.exercise!.title,
+                                      deadline: activeLesson.exercise!.deadline
+                                    })}
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 text-xs shadow-2xs transition-all cursor-pointer"
+                                  >
+                                    <Upload className="size-3.5" />
+                                    <span>{submittedExerciseIds.includes(activeLesson.exercise.title) ? "Modifier mon rendu" : "Soumettre ma réponse sur la plateforme"}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
+                        </div>
+
+                        {/* Right: Modules & Lessons Playlist for selectedBootcamp */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between pb-1">
+                            <h3 className="font-heading text-sm font-bold text-slate-800">Sommaire de la formation</h3>
+                            <span className="text-xs font-semibold text-slate-500">{selectedBootcamp.lessons.length} sessions</span>
+                          </div>
+
+                          <div className="space-y-2 max-h-[640px] lg:max-h-[680px] overflow-y-auto scrollbar-thin pr-1.5 pb-6">
+                            {selectedBootcamp.lessons.map((lesson) => {
+                              const isSelected = activeLesson?.id === lesson.id
+
+                              return (
+                                <div
+                                  key={lesson.id}
+                                  onClick={() => setSelectedLesson(lesson)}
+                                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+                                    isSelected
+                                      ? "bg-primary/10 border-primary shadow-xs"
+                                      : "bg-white border-slate-200/90 hover:bg-[#F4F6F8] shadow-2xs"
+                                  }`}
+                                >
+                                  <div className={`size-7 rounded-xl border flex items-center justify-center font-mono text-xs font-bold shrink-0 mt-0.5 ${
+                                    isSelected
+                                      ? "bg-primary text-white border-primary"
+                                      : "bg-[#F4F6F8] border-slate-200 text-primary"
+                                  }`}>
+                                    {lesson.num}
+                                  </div>
+
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className={`text-xs font-bold leading-snug line-clamp-2 ${isSelected ? "text-primary" : "text-slate-800"}`}>
+                                      {lesson.title}
+                                    </h4>
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1 flex-wrap">
+                                      <Clock className="size-3" />
+                                      <span>{lesson.duration}</span>
+                                      <span>·</span>
+                                      <span className={lesson.isLive ? "text-red-600 font-bold animate-pulse" : lesson.isUpcoming ? "text-amber-700 font-bold" : "text-emerald-700 font-bold"}>
+                                        {lesson.isLive ? "En Direct" : lesson.isUpcoming ? "À venir" : "Replay HD"}
+                                      </span>
+                                    </div>
+                                    {lesson.scheduledDate && (
+                                      <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-800 mt-1">
+                                        <Calendar className="size-3 shrink-0 text-emerald-600" />
+                                        <span className="truncate">{lesson.scheduledDate}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()
+                )}
               </div>
             )}
           </div>
