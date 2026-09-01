@@ -370,8 +370,49 @@ export default function MasterclassHubPage() {
       {/* 1. Header Global du Site */}
       <Header />
 
-      {/* 2. SI MASTERCLASS EN DIRECT ACTIVE & À VENIR */}
-      {hasActiveLive && upcomingSession ? (
+      {/* 2. SI CHARGEMENT EN COURS : SKELETON LOADER ÉLÉGANT */}
+      {authChecking ? (
+        <section className="relative pt-6 sm:pt-10 pb-14 px-4 max-w-7xl mx-auto overflow-hidden animate-pulse">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            {/* Colonne gauche Skeleton */}
+            <div className="lg:col-span-7 space-y-6 text-left">
+              <div className="h-6 w-44 bg-white/10 rounded-full" />
+              <div className="space-y-2.5">
+                <div className="h-9 sm:h-11 w-full bg-white/10 rounded-2xl" />
+                <div className="h-9 sm:h-11 w-4/5 bg-white/10 rounded-2xl" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-white/5 rounded-lg" />
+                <div className="h-4 w-3/4 bg-white/5 rounded-lg" />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="h-20 bg-white/5 rounded-2xl border border-white/5" />
+                <div className="h-20 bg-white/5 rounded-2xl border border-white/5" />
+                <div className="h-20 bg-white/5 rounded-2xl border border-white/5 col-span-2 sm:col-span-1" />
+              </div>
+              <div className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-3">
+                <div className="h-4 w-1/3 bg-white/10 rounded" />
+                <div className="h-12 w-full bg-white/15 rounded-xl" />
+              </div>
+            </div>
+
+            {/* Colonne droite Skeleton */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="w-full aspect-[4/3] rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <div className="size-12 rounded-full bg-white/10 flex items-center justify-center">
+                  <Radio className="size-6 text-white/20 animate-pulse" />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
+                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
+                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
+                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : hasActiveLive && upcomingSession ? (
         <section className="relative pt-6 sm:pt-10 pb-14 px-4 max-w-7xl mx-auto overflow-hidden">
           
           {/* ========================================================================= */}

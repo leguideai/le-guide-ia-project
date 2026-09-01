@@ -13,6 +13,9 @@ export async function POST(req: Request) {
       courseTitle, 
       courseId,
       price, 
+      originalPrice,
+      subscriptionCredit,
+      subscriptionPlan,
       fullName, 
       email, 
       whatsapp, 
@@ -61,6 +64,19 @@ export async function POST(req: Request) {
       .eq("email", emailClean)
       .maybeSingle()
 
+    const regNotesObj: any = {
+      course_slug: courseSlug,
+      course_title: courseTitle,
+      transaction_ref: rawRef,
+      receipt_url: receiptUrl || undefined,
+      payment_method: `mobile_direct_${mobileOperator || "wave"}`,
+      original_price: originalPrice || price,
+      subscription_deduction: subscriptionCredit || 0,
+      subscription_plan: subscriptionPlan || undefined,
+      final_price_paid: price,
+      submitted_at: new Date().toISOString()
+    }
+
     const regPayload: any = {
       full_name: fullName,
       email: emailClean,
@@ -69,7 +85,7 @@ export async function POST(req: Request) {
       source: "checkout_mobile_direct",
       course_slug: courseSlug,
       status: "inscrit",
-      notes: receiptUrl ? JSON.stringify({ receipt_url: receiptUrl, course_slug: courseSlug, course_title: courseTitle, transaction_ref: rawRef }) : (courseTitle || courseSlug)
+      notes: JSON.stringify(regNotesObj)
     }
     if (courseId) regPayload.course_id = courseId
 

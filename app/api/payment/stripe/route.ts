@@ -3,9 +3,20 @@ import { supabaseServer } from "@/lib/supabase-server"
 
 export async function POST(req: Request) {
   try {
-    const { courseSlug, courseTitle, price, fullName, email, whatsapp, country } = await req.json()
+    const { 
+      courseSlug, 
+      courseTitle, 
+      price, 
+      originalPrice,
+      subscriptionCredit,
+      subscriptionPlan,
+      fullName, 
+      email, 
+      whatsapp, 
+      country 
+    } = await req.json()
 
-    if (!email || !fullName || !courseSlug || !price) {
+    if (!email || !fullName || !courseSlug || price === undefined || price === null) {
       return NextResponse.json({ message: "Champs obligatoires manquants." }, { status: 400 })
     }
 
@@ -45,6 +56,10 @@ export async function POST(req: Request) {
         course_title: resolvedCourseTitle,
         payment_method: "stripe",
         transaction_ref: refCommand,
+        original_price: originalPrice || price,
+        subscription_deduction: subscriptionCredit || 0,
+        subscription_plan: subscriptionPlan || undefined,
+        final_price_paid: Number(price) || 0,
         initiated_at: new Date().toISOString()
       })
     }

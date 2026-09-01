@@ -13,7 +13,7 @@ import {
 import { 
   ArrowLeft, ArrowRight, ShieldCheck, Lock, CreditCard, Smartphone, 
   CheckCircle2, AlertCircle, GraduationCap, UserCheck, Copy, Check, 
-  Upload, Image as ImageIcon, X, ChevronDown, Search, Sparkles, Clock, Tag
+  Upload, Image as ImageIcon, X, ChevronDown, Search, Sparkles, Clock, Tag, Crown
 } from "lucide-react"
 
 interface PageProps {
@@ -52,6 +52,7 @@ function CheckoutContent({ params }: PageProps) {
   const { isEnrolledInCourse } = useUserEnrollments()
 
   const [courseData, setCourseData] = useState<any>(null)
+  const [userSubscription, setUserSubscription] = useState<any>(null)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe" | "paytech">("mobile_direct")
   const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov" | "mtn">("wave")
   const [transactionRef, setTransactionRef] = useState("")
@@ -273,10 +274,46 @@ function CheckoutContent({ params }: PageProps) {
   const courseTitle = courseData?.title || (courseSlug ? courseSlug.replace(/-/g, " ") : "Bootcamp IA")
   const isEnrolled = isEnrolledInCourse(courseData || { id: courseSlug, slug: courseSlug, title: courseTitle })
 
-  // Final dynamic price to charge
-  const price = isStandardTier ? rawStandardPrice : rawOfferPrice
-  const discountAmount = Math.max(0, rawStandardPrice - price)
+  // Check active standalone VIP subscription for automatic deduction on Bootcamp price
+  useEffect(() => {
+    const cleanEmail = email?.trim().toLowerCase()
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      setUserSubscription(null)
+      return
+    }
+    let isCancelled = false
+    async function checkSubscription() {
+      try {
+        const res = await fetch(`/api/subscriptions?email=${encodeURIComponent(cleanEmail)}`)
+        const data = await res.json()
+        if (!isCancelled) {
+          if (data?.isSubscribed && data.status === "active" && data.plan !== "bootcamp_vip" && Number(data.amount) > 0) {
+            setUserSubscription(data)
+          } else {
+            setUserSubscription(null)
+          }
+        }
+      } catch (e) {
+        if (!isCancelled) setUserSubscription(null)
+      }
+    }
+    checkSubscription()
+    return () => { isCancelled = true }
+  }, [email])
+
+  // Base Bootcamp price before VIP subscription credit
+  const baseBootcampPrice = isStandardTier ? rawStandardPrice : rawOfferPrice
+  const discountAmount = Math.max(0, rawStandardPrice - baseBootcampPrice)
   const discountPercent = (rawStandardPrice > 0 && discountAmount > 0) ? Math.round((discountAmount / rawStandardPrice) * 100) : 0
+
+  // Déduction automatique de l'abonnement VIP en cours si applicable (10 000 FCFA ou 30 000 FCFA)
+  const subscriptionCredit = (userSubscription && userSubscription.status === "active" && userSubscription.plan !== "bootcamp_vip" && Number(userSubscription.amount) > 0) 
+    ? Number(userSubscription.amount) 
+    : 0
+  const hasSubscriptionCredit = subscriptionCredit > 0
+
+  // Final price to pay after subscription deduction
+  const price = Math.max(0, baseBootcampPrice - subscriptionCredit)
 
   const currency = courseData?.currency || "FCFA"
   const coursePriceFcfa = `${price.toLocaleString("fr-FR")} ${currency}`
@@ -426,6 +463,9 @@ function CheckoutContent({ params }: PageProps) {
           courseSlug, 
           courseTitle, 
           price, 
+          originalPrice: baseBootcampPrice,
+          subscriptionCredit: hasSubscriptionCredit ? subscriptionCredit : 0,
+          subscriptionPlan: userSubscription?.planLabel || null,
           email, 
           fullName, 
           whatsapp: fullWhatsapp, 
@@ -498,6 +538,9 @@ function CheckoutContent({ params }: PageProps) {
           courseTitle, 
           courseId: courseData?.id,
           price, 
+          originalPrice: baseBootcampPrice,
+          subscriptionCredit: hasSubscriptionCredit ? subscriptionCredit : 0,
+          subscriptionPlan: userSubscription?.planLabel || null,
           email, 
           fullName, 
           whatsapp: fullWhatsapp, 
@@ -900,6 +943,26 @@ function CheckoutContent({ params }: PageProps) {
                 </div>
               </div>
 
+              {/* VIP Subscription Deduction Banner */}
+              {hasSubscriptionCredit && (
+                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 flex items-start gap-3.5 shadow-md shadow-emerald-500/5 animate-in fade-in duration-300">
+                  <div className="size-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Crown className="size-5 text-amber-400" />
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-bold text-emerald-400 text-sm">Avantage Membre VIP Appliqué !</h4>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-300 font-extrabold text-[10px] uppercase tracking-wider border border-emerald-500/30">
+                        -{subscriptionCredit.toLocaleString("fr-FR")} FCFA Déduit
+                      </span>
+                    </div>
+                    <p className="text-emerald-300/90 leading-relaxed text-xs">
+                      En tant que membre VIP abonné (<strong>{userSubscription.planLabel || "Pass VIP"}</strong>), le montant de votre abonnement en cours de <strong>{subscriptionCredit.toLocaleString("fr-FR")} FCFA</strong> est automatiquement déduit du prix du Bootcamp.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Payment Method Selector */}
               <div className="space-y-2 pt-2">
                 <label className="text-xs font-bold text-foreground/80">Mode de paiement</label>
@@ -1162,13 +1225,33 @@ function CheckoutContent({ params }: PageProps) {
                 <span className="font-semibold text-foreground text-right max-w-[65%]">{courseSchedule}</span>
               </div>
 
-              {/* Ligne Tarif Standard */}
+              {/* Ligne Tarif Bootcamp */}
               <div className="flex justify-between py-1">
-                <span className="text-muted-foreground">Tarif Standard</span>
-                <span className={`font-mono ${!isStandardTier ? "line-through text-muted-foreground/70" : "font-bold text-foreground"}`}>
-                  {rawStandardPrice.toLocaleString("fr-FR")} FCFA
-                </span>
+                <span className="text-muted-foreground">{!isStandardTier ? "Tarif Promo Bootcamp" : "Tarif Standard"}</span>
+                <div className="text-right">
+                  {!isStandardTier && rawStandardPrice > baseBootcampPrice && (
+                    <span className="font-mono text-[11px] line-through text-muted-foreground/70 mr-2">
+                      {rawStandardPrice.toLocaleString("fr-FR")} FCFA
+                    </span>
+                  )}
+                  <span className="font-mono font-bold text-foreground">
+                    {baseBootcampPrice.toLocaleString("fr-FR")} FCFA
+                  </span>
+                </div>
               </div>
+
+              {/* Ligne Déduction Abonnement VIP */}
+              {hasSubscriptionCredit && (
+                <div className="flex justify-between py-1.5 px-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 items-center">
+                  <span className="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
+                    <Crown className="size-3.5 text-amber-400 shrink-0" />
+                    <span>Déduction VIP ({userSubscription.planLabel || "Pass VIP"})</span>
+                  </span>
+                  <span className="font-mono font-black text-emerald-400 text-xs">
+                    -{subscriptionCredit.toLocaleString("fr-FR")} FCFA
+                  </span>
+                </div>
+              )}
 
               {/* Notification contextuelle sur l'offre */}
               {!isStandardTier && formattedOfferEndDate && (
@@ -1186,7 +1269,7 @@ function CheckoutContent({ params }: PageProps) {
               {/* Total à régler */}
               <div className="flex justify-between py-2 border-t border-border/80 pt-3.5 items-baseline">
                 <div>
-                  <span className="font-bold text-foreground block text-sm">Total à régler</span>
+                  <span className="font-bold text-foreground block text-sm">{hasSubscriptionCredit ? "Total Net à régler" : "Total à régler"}</span>
                   <span className="text-[10px] text-muted-foreground">TVA et accès complets inclus</span>
                 </div>
                 <div className="text-right">
