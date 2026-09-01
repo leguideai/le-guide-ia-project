@@ -96,9 +96,18 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     }
   }, [selectedCourseId])
 
+  const isBootcampCourse = (c: any) => {
+    if (!c) return false
+    const slug = String(c.slug || "").toLowerCase()
+    const title = String(c.title || "").toLowerCase()
+    if (slug.includes("masterclass") || title.includes("masterclass")) return false
+    if (Number(c.price) === 0 && !slug.includes("bootcamp")) return false
+    return isCourseOpenForPublic(c)
+  }
+
   const allCourses = (courses && courses.length > 0) ? courses : dbCourses
-  const publicCourses = allCourses.filter(isCourseOpenForPublic)
-  const displayCourses = publicCourses.length > 0 ? publicCourses : allCourses
+  const bootcampCourses = allCourses.filter(isBootcampCourse)
+  const displayCourses = bootcampCourses.length > 0 ? bootcampCourses : allCourses.filter(isCourseOpenForPublic)
 
   const activeCourse = propActiveCourse || displayCourses.find(c => 
     c.id === activeId || 
@@ -110,7 +119,7 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     (activeId && String(c.slug || "").toLowerCase().includes(String(activeId).toLowerCase()))
   ) || displayCourses[0]
 
-  // Dynamic Live Countdown Engine based on activeCourse.offer_end_date (with full last day exhausted)
+  // Dynamic Live Countdown Engine based on activeCourse?.offer_end_date (with full last day exhausted)
   useEffect(() => {
     const targetTime = getOfferEndTimestamp(activeCourse?.offer_end_date)
     if (!targetTime) {
@@ -142,6 +151,23 @@ export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCou
     const interval = setInterval(calculateCountdown, 1000)
     return () => clearInterval(interval)
   }, [activeCourse?.offer_end_date])
+
+  if (displayCourses.length === 0) {
+    return (
+      <section className="py-16 bg-background relative overflow-hidden border-t border-border/50 animate-pulse" id="tarifs">
+        <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
+          <div className="space-y-3">
+            <div className="h-6 w-48 bg-white/10 rounded-full" />
+            <div className="h-9 w-80 bg-white/10 rounded-xl" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 max-w-5xl mx-auto">
+            <div className="h-96 rounded-3xl border border-white/10 bg-card/40" />
+            <div className="h-96 rounded-3xl border border-white/10 bg-card/40" />
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   function formatPrice(val: any, currency = "FCFA") {
     if (val === undefined || val === null || val === "") return ""

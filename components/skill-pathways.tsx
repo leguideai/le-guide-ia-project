@@ -128,6 +128,7 @@ function formatPriceStr(val: any): string {
 
 export function SkillPathways() {
   const [dbCourses, setDbCourses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadCourses() {
@@ -136,6 +137,7 @@ export function SkillPathways() {
         const data = await res.json()
         if (data?.courses && data.courses.length > 0) {
           setDbCourses(data.courses)
+          setLoading(false)
           return
         }
       } catch (e) {}
@@ -148,9 +150,12 @@ export function SkillPathways() {
         }
         if (data && data.length > 0) {
           setDbCourses(data)
+          setLoading(false)
           return
         }
-      } catch (e) {}
+      } catch (e) {} finally {
+        setLoading(false)
+      }
     }
     loadCourses()
   }, [])
@@ -255,7 +260,43 @@ export function SkillPathways() {
 
         {/* Full-width Responsive Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full">
-          {pathways.map((item, idx) => {
+          {loading ? (
+            /* Skeleton Loading for Bootcamps */
+            [1, 2].map((i) => (
+              <div
+                key={i}
+                className="relative rounded-3xl border border-border/80 bg-card/50 overflow-hidden flex flex-col backdrop-blur-xl animate-pulse"
+              >
+                {/* Image Placeholder */}
+                <div className="relative w-full aspect-video bg-slate-900 flex items-center justify-center">
+                  <div className="size-12 rounded-2xl bg-white/10 flex items-center justify-center">
+                    <GraduationCap className="size-6 text-white/20" />
+                  </div>
+                  <div className="absolute top-3.5 left-3.5 h-6 w-36 rounded-xl bg-white/10" />
+                </div>
+
+                {/* Body Placeholder */}
+                <div className="p-4 sm:p-6 flex flex-col gap-5 flex-1 justify-between">
+                  <div className="space-y-4">
+                    <div className="space-y-2.5">
+                      <div className="h-6 w-3/4 bg-white/10 rounded-lg" />
+                      <div className="h-4 w-full bg-white/5 rounded" />
+                    </div>
+
+                    {/* Price box */}
+                    <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+                      <div className="h-6 w-36 bg-white/10 rounded-lg" />
+                      <div className="h-4 w-48 bg-white/5 rounded" />
+                    </div>
+                  </div>
+
+                  {/* Button */}
+                  <div className="h-12 w-full bg-white/15 rounded-xl mt-4" />
+                </div>
+              </div>
+            ))
+          ) : (
+            pathways.map((item, idx) => {
             const Icon = item.icon
             const accent = getAccent(item.accentColor)
             return (
@@ -368,7 +409,7 @@ export function SkillPathways() {
                 </div>
               </motion.div>
             )
-          })}
+          }))}
         </div>
 
       </div>

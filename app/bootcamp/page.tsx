@@ -19,6 +19,16 @@ function BootcampContent() {
   const { isEnrolledInCourse, isPendingInCourse } = useUserEnrollments()
   const [selectedCourseId, setSelectedCourseId] = useState<string>("")
   const [dbCourses, setDbCourses] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const isBootcampCourse = (c: any) => {
+    if (!c) return false
+    const slug = String(c.slug || "").toLowerCase()
+    const title = String(c.title || "").toLowerCase()
+    if (slug.includes("masterclass") || title.includes("masterclass")) return false
+    if (Number(c.price) === 0 && !slug.includes("bootcamp")) return false
+    return isCourseOpenForPublic(c)
+  }
 
   useEffect(() => {
     async function loadCourses() {
@@ -29,18 +39,21 @@ function BootcampContent() {
           data = res.data
         }
         if (data && data.length > 0) {
-          setDbCourses(data)
+          const bootcampsOnly = data.filter(isBootcampCourse)
+          const validCourses = bootcampsOnly.length > 0 ? bootcampsOnly : data
+          setDbCourses(validCourses)
           const urlParams = new URLSearchParams(window.location.search)
           const paramCourse = urlParams.get("course")
           if (paramCourse) {
-            const found = data.find(c => c.slug === paramCourse || c.id === paramCourse)
+            const found = validCourses.find(c => c.slug === paramCourse || c.id === paramCourse)
             if (found) {
               setSelectedCourseId(found.id)
+              setLoading(false)
               return
             }
           }
-          const publicOnly = data.filter(isCourseOpenForPublic)
-          setSelectedCourseId((publicOnly[0] || data[0]).id)
+          if (validCourses[0]) setSelectedCourseId(validCourses[0].id)
+          setLoading(false)
           return
         }
       } catch (e) {}
@@ -49,20 +62,25 @@ function BootcampContent() {
         const res = await fetch("/api/admin/courses")
         const data = await res.json()
         if (data?.courses && data.courses.length > 0) {
-          setDbCourses(data.courses)
+          const bootcampsOnly = data.courses.filter(isBootcampCourse)
+          const validCourses = bootcampsOnly.length > 0 ? bootcampsOnly : data.courses
+          setDbCourses(validCourses)
           const urlParams = new URLSearchParams(window.location.search)
           const paramCourse = urlParams.get("course")
           if (paramCourse) {
-            const found = data.courses.find((c: any) => c.slug === paramCourse || c.id === paramCourse)
+            const found = validCourses.find((c: any) => c.slug === paramCourse || c.id === paramCourse)
             if (found) {
               setSelectedCourseId(found.id)
+              setLoading(false)
               return
             }
           }
-          const publicOnly = data.courses.filter(isCourseOpenForPublic)
-          setSelectedCourseId((publicOnly[0] || data.courses[0]).id)
+          if (validCourses[0]) setSelectedCourseId(validCourses[0].id)
+          setLoading(false)
         }
-      } catch (e) {}
+      } catch (e) {} finally {
+        setLoading(false)
+      }
     }
     loadCourses()
   }, [])
@@ -167,45 +185,80 @@ function BootcampContent() {
           </div>
 
           {/* Dynamic Formula Selector Tabs from Supabase */}
-          <div className="flex items-center justify-start gap-2 border-b border-border/70 pb-3 overflow-x-auto no-scrollbar">
-            {dbCourses.filter(isCourseOpenForPublic).map((c) => {
-              const isCurActive = active?.id === c.id
-              const isCurBusiness = isBusinessCourse(c)
-              const cTarget = getOfferEndTimestamp(c.offer_end_date)
-              const cExpired = cTarget ? cTarget < Date.now() : false
-              const cDisplayPrice = cExpired ? (c.original_price || c.price) : c.price
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedCourseId(c.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
-                    isCurActive
-                      ? isCurBusiness
-                        ? "bg-[#D4AF37] text-slate-950 border-[#F3E5AB] shadow-lg shadow-[#D4AF37]/30 scale-[1.02] font-black"
-                        : "bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-500/30 scale-[1.02] font-bold"
-                      : "bg-card/40 border-border/60 text-muted-foreground hover:bg-card/80 hover:text-foreground font-semibold"
-                  }`}
-                >
-                  {isCurBusiness ? <UserCheck className="size-4" /> : <GraduationCap className="size-4" />}
-                  <span>{c.title} ({cDisplayPrice > 0 ? `${Number(cDisplayPrice).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "GRATUIT"})</span>
-                </button>
-              )
-            })}
-          </div>
+          {loading ? (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 border-b border-border/70 pb-3">
+                <div className="h-10 w-48 bg-white/10 rounded-xl animate-pulse" />
+                <div className="h-10 w-48 bg-white/10 rounded-xl animate-pulse" />
+              </div>
 
-          {/* Dynamic Active Formula Showcase Card with Official 3:4 Poster Image */}
-          {active && (
-            <motion.div
-              key={active.id || selectedCourseId}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className={`rounded-3xl backdrop-blur-2xl p-6 md:p-10 relative z-10 ${theme.border}`}
-            >
-              <div className="grid gap-8 lg:grid-cols-12 items-stretch">
-                
-                {/* Left Column: Details & Program Features (Order 2 on mobile, Order 1 on desktop) */}
-                <div className="order-2 lg:order-1 lg:col-span-7 flex flex-col justify-between space-y-6">
+              <div className="rounded-3xl border border-white/10 bg-card/60 backdrop-blur-2xl p-6 md:p-10 animate-pulse">
+                <div className="grid gap-8 lg:grid-cols-12 items-stretch">
+                  <div className="order-2 lg:order-1 lg:col-span-7 flex flex-col justify-between space-y-6">
+                    <div className="space-y-4">
+                      <div className="h-7 w-40 bg-white/10 rounded-xl" />
+                      <div className="space-y-2">
+                        <div className="h-10 w-full bg-white/10 rounded-2xl" />
+                        <div className="h-6 w-3/4 bg-white/5 rounded-xl" />
+                      </div>
+                      <div className="h-24 bg-white/5 rounded-2xl border border-white/5" />
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div className="h-16 bg-white/5 rounded-2xl" />
+                        <div className="h-16 bg-white/5 rounded-2xl" />
+                        <div className="h-16 bg-white/5 rounded-2xl col-span-2 sm:col-span-1" />
+                      </div>
+                    </div>
+                    <div className="h-12 w-full bg-white/15 rounded-2xl mt-4" />
+                  </div>
+                  <div className="order-1 lg:order-2 lg:col-span-5 flex items-center justify-center">
+                    <div className="w-full max-w-[340px] aspect-[3/4] rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                      <GraduationCap className="size-12 text-white/20 animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-start gap-2 border-b border-border/70 pb-3 overflow-x-auto no-scrollbar">
+                {dbCourses.map((c) => {
+                  const isCurActive = active?.id === c.id
+                  const isCurBusiness = isBusinessCourse(c)
+                  const cTarget = getOfferEndTimestamp(c.offer_end_date)
+                  const cExpired = cTarget ? cTarget < Date.now() : false
+                  const cDisplayPrice = cExpired ? (c.original_price || c.price) : c.price
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => setSelectedCourseId(c.id)}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
+                        isCurActive
+                          ? isCurBusiness
+                            ? "bg-[#D4AF37] text-slate-950 border-[#F3E5AB] shadow-lg shadow-[#D4AF37]/30 scale-[1.02] font-black"
+                            : "bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-500/30 scale-[1.02] font-bold"
+                          : "bg-card/40 border-border/60 text-muted-foreground hover:bg-card/80 hover:text-foreground font-semibold"
+                      }`}
+                    >
+                      {isCurBusiness ? <UserCheck className="size-4" /> : <GraduationCap className="size-4" />}
+                      <span>{c.title} ({cDisplayPrice > 0 ? `${Number(cDisplayPrice).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : `${Number(c.price || 0).toLocaleString("fr-FR")} FCFA`})</span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Dynamic Active Formula Showcase Card with Official 3:4 Poster Image */}
+              {active && (
+                <motion.div
+                  key={active.id || selectedCourseId}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className={`rounded-3xl backdrop-blur-2xl p-6 md:p-10 relative z-10 ${theme.border}`}
+                >
+                  <div className="grid gap-8 lg:grid-cols-12 items-stretch">
+                    
+                    {/* Left Column: Details & Program Features (Order 2 on mobile, Order 1 on desktop) */}
+                    <div className="order-2 lg:order-1 lg:col-span-7 flex flex-col justify-between space-y-6">
                   
                   {/* Header Row */}
                   <div className="space-y-4">
@@ -357,6 +410,8 @@ function BootcampContent() {
             </div>
           </motion.div>
         )}
+        </>
+      )}
 
         </div>
       </section>

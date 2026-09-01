@@ -13,27 +13,6 @@ export interface HeroVslVideo {
   is_active?: boolean
 }
 
-const DEFAULT_VIDEOS: HeroVslVideo[] = [
-  {
-    id: "vsl-official-presentation",
-    title: "Présentation Complète du Bootcamp PRO IA par Alfred Dah",
-    video_url: "https://www.youtube.com/embed/0DjfVGtWtDA?rel=0&modestbranding=1",
-    badge: "Vidéo Officielle",
-    author_name: "Alfred Dah",
-    author_role: "Fondateur & Expert IA",
-    is_active: true
-  },
-  {
-    id: "vsl-testimonial-1",
-    title: "Comment l'IA a transformé mon quotidien professionnel et ma productivité",
-    video_url: "https://www.youtube.com/embed/L_LUpnjgPso?rel=0&modestbranding=1",
-    badge: "Témoignage Apprenant",
-    author_name: "Diplômé Bootcamp Promo 1",
-    author_role: "Consultant Stratégie & Finance",
-    is_active: true
-  }
-]
-
 export function formatVideoEmbedUrl(url: string): string {
   if (!url) return ""
   const trimmed = url.trim()
@@ -54,7 +33,7 @@ export function formatVideoEmbedUrl(url: string): string {
 }
 
 export function VslHeroVideo() {
-  const [videoList, setVideoList] = useState<HeroVslVideo[]>(DEFAULT_VIDEOS)
+  const [videoList, setVideoList] = useState<HeroVslVideo[]>([])
   const [currentIndex, setCurrentIndex] = useState<number>(0)
 
   useEffect(() => {
@@ -117,8 +96,8 @@ export function VslHeroVideo() {
     loadSettings()
   }, [])
 
-  const currentVideo = videoList[currentIndex] || DEFAULT_VIDEOS[0]
-  const currentUrl = formatVideoEmbedUrl(currentVideo.video_url)
+  const currentVideo = videoList[currentIndex] || null
+  const currentUrl = formatVideoEmbedUrl(currentVideo?.video_url)
 
   const isDirectVideo = currentUrl && (
     currentUrl.match(/\.(mp4|webm|ogg|mov)(\?|$)/i) ||
