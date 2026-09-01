@@ -65,67 +65,27 @@ export async function GET() {
       )
     }
 
-    // A. CALCULATE REVENUE FROM VALIDATED BOOTCAMP PAYMENTS (payments table)
-    const confirmedPayments = (payments || []).filter(p => {
+    // A. CALCULATE REVENUE FROM CONFIRMED BOOTCAMP PAYMENTS (payments table ONLY)
+    const confirmedBootcampPayments = (payments || []).filter(p => {
       const s = String(p.status || "").toLowerCase().trim()
-      return s === "confirmed" || s === "success" || s === "paye" || s === "completed" || s === "valide" || s === "validé" || s === "active"
-    })
-
-    confirmedPayments.forEach(p => {
-      const ref = String(p.transaction_ref || "").toUpperCase().trim()
       const isSub = isSubscriptionPayment(p)
+      const isConfirmed = s === "confirmed" || s === "success" || s === "paye" || s === "completed" || s === "valide" || s === "validé"
+      return !isSub && isConfirmed
+    })
 
-      if (isSub) {
-        if (ref && !processedTransactionRefs.has(ref)) {
-          processedTransactionRefs.add(ref)
-          const amt = Number(p.amount) || (String(p.course_title || "").toLowerCase().includes("1 an") ? 30000 : 10000)
-          subscriptionRevenue += amt
-        }
-      } else {
-        if (p.registration_id) processedRegistrationIds.add(p.registration_id)
-        if (ref) processedTransactionRefs.add(ref)
-        
-        let amt = Number(p.amount)
-        if (!amt || isNaN(amt) || amt <= 0) {
-          amt = (p.course_id && coursePriceMap.get(p.course_id)) || (p.course_title && coursePriceMap.get(p.course_title.toLowerCase().trim())) || 99000
-        }
-        bootcampRevenue += amt
+    confirmedBootcampPayments.forEach(p => {
+      const ref = String(p.transaction_ref || "").toUpperCase().trim()
+      if (p.registration_id) processedRegistrationIds.add(p.registration_id)
+      if (ref) processedTransactionRefs.add(ref)
+      
+      let amt = Number(p.amount)
+      if (!amt || isNaN(amt) || amt <= 0) {
+        amt = (p.course_id && coursePriceMap.get(p.course_id)) || (p.course_title && coursePriceMap.get(p.course_title.toLowerCase().trim())) || 99000
       }
+      bootcampRevenue += amt
     })
 
-    // B. CALCULATE REVENUE FROM PAID BOOTCAMP REGISTRATIONS (not already added via payments)
-    const isSubscriptionRegistration = (r: any) => {
-      const src = String(r.source || "").toLowerCase().trim()
-      const slug = String(r.course_slug || "").toLowerCase().trim()
-      return src.includes("subscription") || slug.includes("subscription") || slug === "subscription-vip"
-    }
-
-    const paidRegistrations = (registrations || []).filter(r => {
-      const s = String(r.status || "").toLowerCase().trim()
-      const src = String(r.source || "").toLowerCase().trim()
-      return !isSubscriptionRegistration(r) && (s === "paye" || s === "paid" || s === "confirmed" || s === "valide" || s === "validé" || s === "active" || src === "admin_manual_enroll")
-    })
-
-    paidRegistrations.forEach(r => {
-      if (!processedRegistrationIds.has(r.id)) {
-        processedRegistrationIds.add(r.id)
-        let notesRef = ""
-        try {
-          if (typeof r.notes === "string" && r.notes.startsWith("{")) {
-            const parsed = JSON.parse(r.notes)
-            notesRef = (parsed.ref || parsed.transaction_ref || "").toUpperCase().trim()
-          }
-        } catch (_) {}
-
-        if (!notesRef || !processedTransactionRefs.has(notesRef)) {
-          if (notesRef) processedTransactionRefs.add(notesRef)
-          const amt = (r.course_id && coursePriceMap.get(r.course_id)) || (r.course_slug && coursePriceMap.get(r.course_slug)) || 99000
-          bootcampRevenue += amt
-        }
-      }
-    })
-
-    // C. CALCULATE REVENUE FROM VALIDATED VIP SUBSCRIPTIONS (subscriptions table & site_settings mirror)
+    // B. CALCULATE REVENUE FROM CONFIRMED VIP SUBSCRIPTIONS (subscriptions table & site_settings mirror)
     const mirrorSubs: any[] = []
     try {
       if (settingsData?.value) {
@@ -150,6 +110,7 @@ export async function GET() {
       }
     })
 
+    // Strictly confirmed / active subscriptions only
     const allValidatedSubs = Array.from(allSubsMap.values()).filter((s: any) => {
       const st = String(s.status || "").toLowerCase().trim()
       return st === "active" || st === "confirmed" || st === "paye" || st === "valide" || st === "validé"
@@ -168,7 +129,24 @@ export async function GET() {
       }
     })
 
-    // Total Combined Revenue
+    // Also include any confirmed subscription payment in payments table that was not in subscriptions
+    const confirmedSubPayments = (payments || []).filter(p => {
+      const s = String(p.status || "").toLowerCase().trim()
+      const isSub = isSubscriptionPayment(p)
+      const isConfirmed = s === "confirmed" || s === "success" || s === "paye" || s === "completed" || s === "valide" || s === "validé"
+      return isSub && isConfirmed
+    })
+
+    confirmedSubPayments.forEach(p => {
+      const ref = String(p.transaction_ref || "").toUpperCase().trim()
+      if (ref && !processedTransactionRefs.has(ref)) {
+        processedTransactionRefs.add(ref)
+        const amt = Number(p.amount) || (String(p.course_title || "").toLowerCase().includes("1 an") ? 30000 : 10000)
+        subscriptionRevenue += amt
+      }
+    })
+
+    // Total Combined Revenue (Strictly Confirmed Bootcamps + Confirmed Subscriptions)
     const totalRevenue = bootcampRevenue + subscriptionRevenue
 
     // Bootcamp-only pending payments count
@@ -178,9 +156,15 @@ export async function GET() {
       return s === "pending_verification" || s === "pending" || s === "en_attente"
     }).length
 
+    const isSubscriptionRegistration = (r: any) => {
+      const src = String(r.source || "").toLowerCase().trim()
+      const slug = String(r.course_slug || "").toLowerCase().trim()
+      return src.includes("subscription") || slug.includes("subscription") || slug === "subscription-vip"
+    }
+
     const bootcampRegistrations = (registrations || []).filter(r => !isSubscriptionRegistration(r))
     const totalRegistrations = bootcampRegistrations.length
-    const proRegistrations = paidRegistrations.length
+    const proRegistrations = confirmedBootcampPayments.length
     const totalStudents = (profiles || []).length
     const pendingSubmissions = (submissions || []).filter(s => s.status === "pending" || !s.status).length
     const b2bCount = (b2bRequests || []).length
