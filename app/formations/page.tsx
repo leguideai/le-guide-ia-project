@@ -378,7 +378,37 @@ function FormationsContent() {
       {/* 4. Formations List : Disposition Aérée Haute Conversion */}
       <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto space-y-16 md:space-y-24 text-left">
         
-        {displayedFormations.map((f, idx) => {
+        {loading ? (
+          [1, 2].map((i) => (
+            <div
+              key={i}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pb-16 md:pb-24 border-b border-slate-800/80 animate-pulse"
+            >
+              <div className="space-y-6 lg:col-span-7">
+                <div className="flex items-center gap-3">
+                  <div className="h-6 w-28 bg-white/10 rounded-full" />
+                  <div className="h-6 w-20 bg-white/5 rounded-full" />
+                  <div className="h-6 w-20 bg-white/5 rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-9 w-full bg-white/10 rounded-2xl" />
+                  <div className="h-6 w-2/3 bg-white/5 rounded-xl" />
+                </div>
+                <div className="h-16 w-full bg-white/5 rounded-xl" />
+                <div className="space-y-2">
+                  <div className="h-4 w-32 bg-white/10 rounded" />
+                  <div className="h-5 w-3/4 bg-white/5 rounded" />
+                  <div className="h-5 w-2/3 bg-white/5 rounded" />
+                </div>
+                <div className="h-20 bg-white/5 rounded-2xl border border-white/5" />
+              </div>
+              <div className="lg:col-span-5 flex items-center justify-center">
+                <div className="w-full max-w-[380px] aspect-[4/3] rounded-3xl bg-white/5 border border-white/10" />
+              </div>
+            </div>
+          ))
+        ) : (
+          displayedFormations.map((f, idx) => {
           const isEnrolled = userEnrollments.includes(f.slug)
           const isReverse = idx % 2 !== 0
 
@@ -557,7 +587,7 @@ function FormationsContent() {
 
             </motion.div>
           )
-        })}
+        }))}
 
       </section>
 

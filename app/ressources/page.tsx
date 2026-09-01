@@ -291,11 +291,32 @@ export default function RessourcesPage() {
           </div>
 
           {/* Grid of Prompts & Business Plan cards */}
-          <motion.div 
-            layout
-            className="grid gap-8 md:grid-cols-2 pt-2"
-          >
-            <AnimatePresence mode="popLayout">
+          {loadingResources ? (
+            <div className="grid gap-8 md:grid-cols-2 pt-2 animate-pulse">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex flex-col justify-between rounded-3xl border border-white/10 bg-card/30 p-6 md:p-8 space-y-5 text-left"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="h-5 w-24 bg-white/10 rounded-full" />
+                      <div className="h-5 w-28 bg-white/5 rounded-full" />
+                    </div>
+                    <div className="h-6 w-3/4 bg-white/10 rounded-lg" />
+                    <div className="h-4 w-full bg-white/5 rounded" />
+                    <div className="h-28 bg-white/5 rounded-2xl border border-white/5" />
+                  </div>
+                  <div className="h-11 w-full bg-white/10 rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <motion.div 
+              layout
+              className="grid gap-8 md:grid-cols-2 pt-2"
+            >
+              <AnimatePresence mode="popLayout">
               {filteredResources.map((item) => {
                 const title = item.title[language] || item.title.fr
                 const desc = item.desc[language] || item.desc.fr
@@ -427,10 +448,11 @@ export default function RessourcesPage() {
                   </motion.div>
                 )
               })}
-            </AnimatePresence>
-          </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          )}
 
-          {filteredResources.length === 0 && (
+          {!loadingResources && filteredResources.length === 0 && (
             <div className="text-center py-20">
               <BookOpen className="size-12 text-muted-foreground/30 mx-auto mb-4" />
               <p className="text-muted-foreground text-sm font-semibold">Aucune ressource ne correspond à votre recherche.</p>

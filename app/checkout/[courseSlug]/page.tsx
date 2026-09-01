@@ -1305,13 +1305,63 @@ function CheckoutContent({ params }: PageProps) {
 )
 }
 
+function CheckoutSkeleton() {
+  return (
+    <main className="min-h-screen bg-[#090d16] text-white selection:bg-primary selection:text-slate-950 font-sans pb-20">
+      <Header />
+      <div className="max-w-6xl mx-auto px-4 pt-8 pb-16 animate-pulse">
+        {/* Breadcrumb skeleton */}
+        <div className="h-5 w-48 bg-white/10 rounded-lg mb-8" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Form skeleton */}
+          <div className="lg:col-span-7 space-y-6">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 space-y-6">
+              <div className="h-7 w-48 bg-white/10 rounded-xl" />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="h-4 w-28 bg-white/10 rounded" />
+                  <div className="h-12 w-full bg-white/10 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-28 bg-white/10 rounded" />
+                  <div className="h-12 w-full bg-white/10 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-28 bg-white/10 rounded" />
+                  <div className="h-12 w-full bg-white/10 rounded-xl" />
+                </div>
+              </div>
+              <div className="h-14 w-full bg-white/15 rounded-2xl mt-6" />
+            </div>
+          </div>
+
+          {/* Right Column: Order Summary skeleton */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 space-y-6">
+              <div className="h-6 w-40 bg-white/10 rounded-xl" />
+              <div className="w-full aspect-[4/3] rounded-2xl bg-white/5 border border-white/5" />
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <div className="flex justify-between">
+                  <div className="h-4 w-24 bg-white/10 rounded" />
+                  <div className="h-4 w-20 bg-white/10 rounded" />
+                </div>
+                <div className="flex justify-between">
+                  <div className="h-6 w-20 bg-white/10 rounded" />
+                  <div className="h-6 w-28 bg-white/10 rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  )
+}
+
 export default function CheckoutPage(props: PageProps) {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center text-primary font-bold text-sm">
-        Chargement de la commande...
-      </div>
-    }>
+    <Suspense fallback={<CheckoutSkeleton />}>
       <CheckoutContent {...props} />
     </Suspense>
   )

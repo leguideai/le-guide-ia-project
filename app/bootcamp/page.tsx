@@ -436,13 +436,42 @@ function BootcampContent() {
   )
 }
 
+function BootcampPageSkeleton() {
+  return (
+    <main className="relative min-h-screen bg-[#090d16] text-white selection:bg-primary selection:text-slate-950 font-sans overflow-x-hidden">
+      <Header />
+      <section className="py-14 bg-slate-950/80 border-b border-border/60">
+        <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8 animate-pulse">
+          <div className="space-y-3">
+            <div className="h-6 w-48 bg-white/10 rounded-full" />
+            <div className="h-9 w-96 bg-white/10 rounded-2xl" />
+          </div>
+          <div className="flex items-center gap-2 border-b border-border/70 pb-3">
+            <div className="h-10 w-48 bg-white/10 rounded-xl" />
+            <div className="h-10 w-48 bg-white/10 rounded-xl" />
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-card/60 p-6 md:p-10">
+            <div className="grid gap-8 lg:grid-cols-12 items-stretch">
+              <div className="lg:col-span-7 space-y-6">
+                <div className="h-7 w-40 bg-white/10 rounded-xl" />
+                <div className="h-10 w-full bg-white/10 rounded-2xl" />
+                <div className="h-24 bg-white/5 rounded-2xl" />
+                <div className="h-12 w-full bg-white/15 rounded-2xl mt-4" />
+              </div>
+              <div className="lg:col-span-5 flex items-center justify-center">
+                <div className="w-full max-w-[340px] aspect-[3/4] rounded-2xl bg-white/5 border border-white/10" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}
+
 export default function BootcampPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center text-primary font-bold text-sm">
-        Chargement des bootcamps...
-      </div>
-    }>
+    <Suspense fallback={<BootcampPageSkeleton />}>
       <BootcampContent />
     </Suspense>
   )
