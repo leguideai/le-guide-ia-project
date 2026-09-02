@@ -152,8 +152,8 @@ export async function GET(req: Request) {
 
       if (userPayments && userPayments.length > 0) {
         userPayments.forEach((p: any) => {
-          const matchingSlug = p.registration_id ? regIdToSlug.get(p.registration_id) : null
-          const targetIdentifier = matchingSlug || p.course_title || (p.course_id ? String(p.course_id) : "")
+          // Prioritize specific course title/id attached to this exact payment record
+          const targetIdentifier = p.course_title || (p.course_id ? String(p.course_id) : "") || (p.registration_id ? regIdToSlug.get(p.registration_id) : "")
 
           if (targetIdentifier) {
             if (["confirmed", "paye", "active"].includes(p.status)) {
@@ -162,6 +162,7 @@ export async function GET(req: Request) {
               addCourseIdentifiers(pendingSet, targetIdentifier)
               pendingDetails.push({
                 course_slug: targetIdentifier,
+                course_title: p.course_title,
                 created_at: p.created_at,
                 status: p.status,
                 payment_method: p.method,

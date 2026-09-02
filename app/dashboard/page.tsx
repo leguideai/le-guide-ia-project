@@ -687,7 +687,7 @@ export default function DashboardPage() {
               }))
           }
 
-          // Merge with any direct DB registrations or user_courses if API had delay
+          // Merge with any direct DB registrations, user_courses, or payments if API had delay
           const directPendingRegs = (regData || [])
             .filter((r: any) => ["en_attente", "pending", "pending_verification", "inscrit", "a_verifier"].includes(r.status) && !String(r.course_slug || "").toLowerCase().includes("masterclass"))
             .map((r: any) => ({
@@ -704,7 +704,19 @@ export default function DashboardPage() {
               status: "pending_verification"
             }))
 
-          const combinedPendings = [...pendings, ...directPendingRegs, ...directPendingUcs]
+          const directPendingPayments = (pData || [])
+            .filter((p: any) => 
+              p.registrations?.email?.toLowerCase() === userEmailClean &&
+              ["pending", "pending_verification", "en_attente", "a_verifier"].includes(p.status) &&
+              !String(p.course_title || "").toLowerCase().includes("masterclass")
+            )
+            .map((p: any) => ({
+              course_slug: p.course_title || p.course_id || (p.registrations as any)?.course_slug,
+              created_at: p.created_at || new Date().toISOString(),
+              status: "pending_verification"
+            }))
+
+          const combinedPendings = [...pendings, ...directPendingRegs, ...directPendingUcs, ...directPendingPayments]
           const uniquePendings = Array.from(new Map(combinedPendings.map(p => [p.course_slug, p])).values())
           setPendingCourses(uniquePendings)
         }
