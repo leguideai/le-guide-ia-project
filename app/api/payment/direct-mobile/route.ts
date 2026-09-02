@@ -56,17 +56,18 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Gestion de l'inscription dans 'registrations' (spécifique au cours sélectionné)
+    // 2. Gestion de l'inscription dans 'registrations' (Garantie de liaison même si email est unique)
     let registrationId: string | null = null
-    const { data: existingRegs } = await supabaseServer
-      .from("registrations")
-      .select("id")
-      .ilike("email", emailClean)
-      .eq("course_slug", courseSlug)
-      .order("created_at", { ascending: false })
-      .limit(1)
 
-    const existingReg = existingRegs && existingRegs.length > 0 ? existingRegs[0] : null
+    // 2.1. Chercher d'abord si une inscription existe pour cet email
+    const { data: existingUserRegs } = await supabaseServer
+      .from("registrations")
+      .select("id, course_slug, notes")
+      .ilike("email", emailClean)
+      .order("created_at", { ascending: false })
+
+    const existingRegExact = (existingUserRegs || []).find(r => r.course_slug === courseSlug)
+    const existingRegAny = (existingUserRegs || [])[0]
 
     const regNotesObj: any = {
       course_slug: courseSlug,
@@ -97,67 +98,45 @@ export async function POST(req: Request) {
     }
     if (courseId) regPayload.course_id = courseId
 
-    if (existingReg) {
-      registrationId = existingReg.id
-      const { error: updErr } = await supabaseServer
+    if (existingRegExact) {
+      registrationId = existingRegExact.id
+      await supabaseServer
         .from("registrations")
         .update(regPayload)
-        .eq("id", existingReg.id)
-
-      if (updErr) {
-        console.warn("Registration update with full payload failed, retrying basic:", updErr.message)
-        await supabaseServer
-          .from("registrations")
-          .update({
-            full_name: fullName,
-            whatsapp,
-            country: country || "CI",
-            course_slug: courseSlug,
-            status: "inscrit"
-          })
-          .eq("id", existingReg.id)
-      }
+        .eq("id", existingRegExact.id)
+    } else if (existingRegAny) {
+      // Un enregistrement existe pour cet utilisateur -> mise à jour et réutilisation de son registrationId
+      registrationId = existingRegAny.id
+      await supabaseServer
+        .from("registrations")
+        .update({
+          full_name: fullName,
+          whatsapp,
+          country: country || "CI",
+          source: "checkout_mobile_direct",
+          status: "inscrit",
+          notes: JSON.stringify(regNotesObj)
+        })
+        .eq("id", existingRegAny.id)
     } else {
+      // Aucun enregistrement pour cet utilisateur -> Création
       const { data: newReg, error: regErr } = await supabaseServer
         .from("registrations")
         .insert(regPayload)
         .select("id")
         .maybeSingle()
 
-      if (regErr) {
-        console.warn("Registration insert note (retrying with safe basic fields):", regErr.message)
-        const safePayload = {
-          full_name: fullName,
-          email: emailClean,
-          whatsapp,
-          country: country || "CI",
-          course_slug: courseSlug,
-          source: "checkout_mobile_direct",
-          status: "inscrit"
-        }
-        const { data: retryNewReg, error: safeErr } = await supabaseServer
-          .from("registrations")
-          .insert(safePayload)
-          .select("id")
-          .maybeSingle()
-
-        if (retryNewReg) {
-          registrationId = retryNewReg.id
-        } else if (safeErr) {
-          console.warn("Safe registration insert error:", safeErr.message)
-        }
-      } else if (newReg) {
+      if (newReg) {
         registrationId = newReg.id
-      }
-
-      if (!registrationId) {
+      } else {
+        console.warn("New registration insert error, fetching any fallback:", regErr?.message)
         const { data: fallbackReg } = await supabaseServer
           .from("registrations")
           .select("id")
           .ilike("email", emailClean)
-          .eq("course_slug", courseSlug)
           .order("created_at", { ascending: false })
           .limit(1)
+
         if (fallbackReg && fallbackReg.length > 0) {
           registrationId = fallbackReg[0].id
         }
