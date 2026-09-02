@@ -56,12 +56,13 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Gestion de l'inscription dans 'registrations'
+    // 2. Gestion de l'inscription dans 'registrations' (spécifique au cours sélectionné)
     let registrationId: string | null = null
     const { data: existingRegs } = await supabaseServer
       .from("registrations")
       .select("id")
       .ilike("email", emailClean)
+      .eq("course_slug", courseSlug)
       .order("created_at", { ascending: false })
       .limit(1)
 
@@ -111,6 +112,7 @@ export async function POST(req: Request) {
             full_name: fullName,
             whatsapp,
             country: country || "CI",
+            course_slug: courseSlug,
             status: "inscrit"
           })
           .eq("id", existingReg.id)
@@ -129,6 +131,7 @@ export async function POST(req: Request) {
           email: emailClean,
           whatsapp,
           country: country || "CI",
+          course_slug: courseSlug,
           source: "checkout_mobile_direct",
           status: "inscrit"
         }
@@ -152,6 +155,7 @@ export async function POST(req: Request) {
           .from("registrations")
           .select("id")
           .ilike("email", emailClean)
+          .eq("course_slug", courseSlug)
           .order("created_at", { ascending: false })
           .limit(1)
         if (fallbackReg && fallbackReg.length > 0) {
@@ -160,7 +164,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Enregistrement du paiement avec statut 'pending' (table payments n'a pas de colonne 'notes')
+    // 3. Enregistrement du paiement avec statut 'pending'
     const paymentPayload: any = {
       registration_id: registrationId,
       amount: price !== undefined && price !== null && !isNaN(Number(price)) ? Number(price) : 49000,
@@ -196,16 +200,37 @@ export async function POST(req: Request) {
       }
     }
 
-    // 4. Enregistrement de l'accès en statut 'pending_verification' dans user_courses
+    // 4. Enregistrement de l'accès en statut 'pending_verification' dans user_courses pour ce cours spécifique
     try {
-      await supabaseServer.from("user_courses").upsert({
-        user_email: emailClean,
-        course_slug: courseSlug,
-        status: "pending_verification",
-        amount_paid: price,
-        payment_method: `mobile_direct_${mobileOperator || "wave"}`,
-        updated_at: new Date().toISOString()
-      }, { onConflict: "user_email,course_slug" })
+      const { data: existingUC } = await supabaseServer
+        .from("user_courses")
+        .select("id")
+        .ilike("user_email", emailClean)
+        .eq("course_slug", courseSlug)
+        .maybeSingle()
+
+      if (existingUC) {
+        await supabaseServer
+          .from("user_courses")
+          .update({
+            status: "pending_verification",
+            amount_paid: price,
+            payment_method: `mobile_direct_${mobileOperator || "wave"}`,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existingUC.id)
+      } else {
+        await supabaseServer
+          .from("user_courses")
+          .insert({
+            user_email: emailClean,
+            course_slug: courseSlug,
+            status: "pending_verification",
+            amount_paid: price,
+            payment_method: `mobile_direct_${mobileOperator || "wave"}`,
+            updated_at: new Date().toISOString()
+          })
+      }
     } catch (ucErr) {
       console.warn("user_courses pending upsert warning:", ucErr)
     }

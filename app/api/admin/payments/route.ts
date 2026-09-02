@@ -113,12 +113,13 @@ export async function POST(req: Request) {
 
       const emailClean = email.toLowerCase().trim()
 
-      // 1. Create or update registration
+      // 1. Create or update registration for this specific course
       let registrationId: string | null = null
       const { data: existingReg } = await supabaseServer
         .from("registrations")
         .select("id")
-        .eq("email", emailClean)
+        .ilike("email", emailClean)
+        .eq("course_slug", courseSlug)
         .maybeSingle()
 
       const regPayload: any = {
@@ -340,11 +341,6 @@ export async function POST(req: Request) {
           })
         }
       }
-
-      await supabaseServer
-        .from("user_courses")
-        .update({ status: "active" })
-        .ilike("user_email", studentEmail)
 
       // Ensure Supabase Auth user account exists
       let tempPassword: string | undefined = undefined
