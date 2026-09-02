@@ -135,7 +135,7 @@ export default function MasterclassHubPage() {
         const emailToCheck = user?.email || ""
 
         // Fetch dynamic session, replays and session-specific registration from Supabase
-        const res = await fetch(`/api/masterclass${emailToCheck ? `?email=${encodeURIComponent(emailToCheck)}` : ""}`)
+        const res = await fetch(`/api/masterclass${emailToCheck ? `?email=${encodeURIComponent(emailToCheck)}` : ""}`, { cache: "no-store" })
         const data = await res.json()
 
         if (data.upcomingSession) {
