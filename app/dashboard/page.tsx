@@ -2137,96 +2137,83 @@ export default function DashboardPage() {
                       <div className="grid gap-6 lg:grid-cols-3">
                         {/* Left: Active Video Player or Upcoming Session Countdown */}
                         <div className="lg:col-span-2 space-y-4">
-                          <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
-                            {selectedBootcamp.status === "upcoming" || activeLesson?.isUpcoming ? (
-                              /* Upcoming Session Countdown Frame (No video iframe) */
-                              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-amber-500/20">
-                                <div className="size-14 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-sm">
-                                  <Clock className="size-7 animate-pulse" />
-                                </div>
-                                <div className="space-y-1.5 max-w-md">
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                                    SESSION LIVE À VENIR
-                                  </span>
-                                  <h3 className="font-heading text-lg md:text-xl font-bold text-white">
-                                    {activeLesson?.title}
-                                  </h3>
-                                  <p className="text-xs text-slate-300 leading-relaxed">
-                                    Cette session aura lieu en direct sur Google Meet ({
-                                      activeLesson?.scheduledAt
-                                        ? new Date(activeLesson.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " à " + new Date(activeLesson.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
-                                        : activeLesson?.scheduledDate || selectedBootcamp.dates
-                                    }). Le replay HD sera accessible immédiatement après la session.
-                                  </p>
-                                </div>
-
-                                {/* Live Ticking Countdown Timer */}
-                                <div className="flex items-center gap-2 pt-2">
-                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                                    <span className="font-heading text-base font-black text-amber-400 font-mono leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Jours</span>
-                                  </div>
-                                  <span className="text-amber-400 font-bold text-sm">:</span>
-                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                                    <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Heures</span>
-                                  </div>
-                                  <span className="text-amber-400 font-bold text-sm">:</span>
-                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                                    <span className="font-heading text-base font-black text-white font-mono leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Min</span>
-                                  </div>
-                                  <span className="text-amber-400 font-bold text-sm">:</span>
-                                  <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-3.5 py-2 min-w-[55px] shadow-sm">
-                                    <span className="font-heading text-base font-black text-amber-400 font-mono leading-none animate-pulse">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                                    <span className="text-[9px] font-bold text-amber-400/80 uppercase mt-0.5">Sec</span>
-                                  </div>
-                                </div>
-
-                                {(() => {
-                                  const hasMeetUrl = Boolean(activeLesson?.meetUrl && activeLesson.meetUrl.trim() && activeLesson.meetUrl !== "https://meet.google.com")
-                                  const startTime = activeLesson?.scheduledAt ? new Date(activeLesson.scheduledAt).getTime() : NaN
-                                  const now = Date.now()
-                                  // Accessible si à moins de 30 minutes du début ou si déjà en direct
-                                  const isWithin30Min = !isNaN(startTime) ? (startTime - now) <= 30 * 60 * 1000 : true
-                                  const isLiveOrPassed = activeLesson?.isLive || (!isNaN(startTime) && now >= startTime)
-                                  const canJoinMeet = hasMeetUrl && (isWithin30Min || isLiveOrPassed)
-
-                                  if (canJoinMeet) {
-                                    return (
-                                      <a
-                                        href={activeLesson!.meetUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-black px-6 py-2.5 text-xs shadow-md transition-all mt-2 cursor-pointer animate-pulse"
-                                      >
-                                        <Video className="size-4" />
-                                        <span>Rejoindre la Session Live sur Google Meet</span>
-                                      </a>
-                                    )
-                                  }
-
-                                  if (hasMeetUrl) {
-                                    return (
-                                      <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center select-none shadow-inner">
-                                        <Lock className="size-3.5 text-amber-400 shrink-0" />
-                                        <span>
-                                          Le lien Google Meet sera activé 30 min avant la session {!isNaN(startTime) ? `(à ${new Date(startTime - 30 * 60 * 1000).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })})` : ""}
-                                        </span>
-                                      </div>
-                                    )
-                                  }
-
-                                  return (
-                                    <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center">
-                                      <Video className="size-4 text-amber-400 shrink-0" />
-                                      <span>Lien Google Meet disponible avant le début de la session</span>
-                                    </div>
-                                  )
-                                })()}
+                          {/* Video Player or Upcoming Live Frame */}
+                          {selectedBootcamp.status === "upcoming" || activeLesson?.isUpcoming ? (
+                            /* Upcoming Session Live Countdown & Direct Access Card (Fully Responsive, No Overflow Truncation) */
+                            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-amber-500/30 shadow-lg p-5 sm:p-8 text-center space-y-4 min-h-[360px] flex flex-col justify-center items-center">
+                              <div className="size-11 sm:size-14 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center shadow-sm">
+                                <Clock className="size-5 sm:size-7 animate-pulse" />
                               </div>
-                            ) : (
-                              /* Completed/Replay Video Player (iframe) */
+
+                              <div className="space-y-1.5 max-w-md mx-auto">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 inline-block">
+                                  SESSION LIVE EN DIRECT
+                                </span>
+                                <h3 className="font-heading text-base sm:text-xl font-bold text-white leading-tight">
+                                  {activeLesson?.title}
+                                </h3>
+                                <p className="text-[11px] sm:text-xs text-slate-300 leading-relaxed">
+                                  Cette session aura lieu en direct sur Google Meet ({
+                                    activeLesson?.scheduledAt
+                                      ? new Date(activeLesson.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " à " + new Date(activeLesson.scheduledAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+                                      : activeLesson?.scheduledDate || selectedBootcamp.dates
+                                  }). Le replay HD sera accessible immédiatement après la session.
+                                </p>
+                              </div>
+
+                              {/* Live Ticking Countdown Timer */}
+                              <div className="flex items-center justify-center gap-1.5 sm:gap-2 py-1">
+                                <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-w-[48px] sm:min-w-[55px] shadow-sm">
+                                  <span className="font-heading text-sm sm:text-base font-black text-amber-400 font-mono leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
+                                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase mt-0.5">Jours</span>
+                                </div>
+                                <span className="text-amber-400 font-bold text-xs sm:text-sm">:</span>
+                                <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-w-[48px] sm:min-w-[55px] shadow-sm">
+                                  <span className="font-heading text-sm sm:text-base font-black text-white font-mono leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase mt-0.5">Heures</span>
+                                </div>
+                                <span className="text-amber-400 font-bold text-xs sm:text-sm">:</span>
+                                <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-w-[48px] sm:min-w-[55px] shadow-sm">
+                                  <span className="font-heading text-sm sm:text-base font-black text-white font-mono leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase mt-0.5">Min</span>
+                                </div>
+                                <span className="text-amber-400 font-bold text-xs sm:text-sm">:</span>
+                                <div className="flex flex-col items-center justify-center rounded-xl bg-slate-950 border border-amber-500/40 px-2.5 sm:px-3.5 py-1.5 sm:py-2 min-w-[48px] sm:min-w-[55px] shadow-sm">
+                                  <span className="font-heading text-sm sm:text-base font-black text-amber-400 font-mono leading-none animate-pulse">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                                  <span className="text-[8px] sm:text-[9px] font-bold text-amber-400/80 uppercase mt-0.5">Sec</span>
+                                </div>
+                              </div>
+
+                              {/* Direct Google Meet Action Box */}
+                              {(() => {
+                                const meetUrl = (activeLesson?.meetUrl && activeLesson.meetUrl.trim() && activeLesson.meetUrl !== "https://meet.google.com")
+                                  ? activeLesson.meetUrl
+                                  : ((selectedBootcamp as any)?.live_meet_url && (selectedBootcamp as any).live_meet_url.trim())
+                                  ? (selectedBootcamp as any).live_meet_url
+                                  : (activeLesson?.meetUrl?.trim() || "https://meet.google.com")
+
+                                return (
+                                  <div className="w-full max-w-sm mx-auto space-y-2 pt-1">
+                                    <a
+                                      href={meetUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+                                    >
+                                      <Video className="size-4" />
+                                      <span>Accéder au Direct sur Google Meet</span>
+                                      <ExternalLink className="size-3.5 opacity-80" />
+                                    </a>
+                                    <p className="text-[10px] text-slate-400 text-center">
+                                      🔒 Inscription confirmée • Cliquez pour ouvrir la salle Google Meet
+                                    </p>
+                                  </div>
+                                )
+                              })()}
+                            </div>
+                          ) : (
+                            /* Completed/Replay Video Player (iframe) */
+                            <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
                               <iframe
                                 src={`${activeLesson?.videoUrl || ""}?autoplay=0`}
                                 title={activeLesson?.title || "Session"}
@@ -2234,10 +2221,10 @@ export default function DashboardPage() {
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
                               />
-                            )}
-                          </div>
+                            </div>
+                          )}
 
-                          <div className="rounded-3xl border border-slate-200/90 bg-white p-6 space-y-4 shadow-xs">
+                          <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 space-y-4 shadow-xs">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -2256,15 +2243,35 @@ export default function DashboardPage() {
                                 </h2>
                               </div>
 
-                              <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border ${
-                                activeLesson?.isLive
-                                  ? "bg-red-50 text-red-700 border-red-200 animate-pulse"
-                                  : activeLesson?.isUpcoming
-                                  ? "bg-amber-50 text-amber-800 border-amber-200"
-                                  : "bg-emerald-50 text-emerald-800 border-emerald-200"
-                              }`}>
-                                {activeLesson?.isLive ? "🟢 En Direct Maintenant" : activeLesson?.isUpcoming ? "🕒 Session à venir" : "🎬 Replay Disponible"}
-                              </span>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border ${
+                                  activeLesson?.isLive
+                                    ? "bg-red-50 text-red-700 border-red-200 animate-pulse"
+                                    : activeLesson?.isUpcoming
+                                    ? "bg-amber-50 text-amber-800 border-amber-200"
+                                    : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                }`}>
+                                  {activeLesson?.isLive ? "🟢 En Direct Maintenant" : activeLesson?.isUpcoming ? "🕒 Session à venir" : "🎬 Replay Disponible"}
+                                </span>
+
+                                {(activeLesson?.isUpcoming || activeLesson?.isLive) && (
+                                  <a
+                                    href={
+                                      (activeLesson?.meetUrl && activeLesson.meetUrl.trim() && activeLesson.meetUrl !== "https://meet.google.com")
+                                        ? activeLesson.meetUrl
+                                        : ((selectedBootcamp as any)?.live_meet_url && (selectedBootcamp as any).live_meet_url.trim())
+                                        ? (selectedBootcamp as any).live_meet_url
+                                        : (activeLesson?.meetUrl?.trim() || "https://meet.google.com")
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition-all shadow-2xs"
+                                  >
+                                    <Video className="size-3" />
+                                    <span>Lien Meet</span>
+                                  </a>
+                                )}
+                              </div>
                             </div>
 
                             {activeLesson?.description && (
