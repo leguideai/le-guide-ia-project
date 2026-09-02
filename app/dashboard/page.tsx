@@ -69,6 +69,8 @@ interface ExerciseDetails {
   title: string
   deadline: string
   status: 'pending' | 'submitted'
+  description?: string
+  fileUrl?: string | null
   submissionUrl?: string
 }
 
@@ -80,14 +82,20 @@ interface Lesson {
   scheduledDate?: string
   scheduledAt?: string
   targetDate?: string
-  videoUrl: string
-  pdfUrl?: string
+  videoUrl: string | null
+  pdfUrl?: string | null
   pdfName?: string
   description: string
   isUpcoming?: boolean
   isLive?: boolean
+  isCompleted?: boolean
   hasRecording?: boolean
   meetUrl?: string
+  homeworkTitle?: string
+  homeworkDesc?: string
+  homeworkFileUrl?: string
+  homeworkDeadline?: string
+  status?: string
   exercise?: ExerciseDetails
 }
 
@@ -1118,6 +1126,18 @@ export default function DashboardPage() {
         const isLive = dynStatus === "live"
         const isUpcoming = dynStatus === "upcoming"
 
+        const hasHomework = Boolean(s.homework_title || s.homework_description || s.homework_file_url)
+        const exerciseObj = hasHomework ? {
+          title: s.homework_title || "Exercice pratique",
+          type: "devoir-a-rendre" as const,
+          deadline: s.homework_deadline 
+            ? new Date(s.homework_deadline).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) 
+            : (s.scheduled_at ? `Avant le ${new Date(new Date(s.scheduled_at).getTime() + 86400000).toLocaleDateString("fr-FR")}` : "Avant la session suivante"),
+          status: "pending" as const,
+          description: s.homework_description || "",
+          fileUrl: s.homework_file_url || null
+        } : undefined
+
         return {
           id: s.id,
           num: String(s.session_number || s.sequence_order || idx + 1).padStart(2, "0"),
@@ -1134,11 +1154,13 @@ export default function DashboardPage() {
           homeworkTitle: s.homework_title,
           homeworkDesc: s.homework_description,
           homeworkFileUrl: s.homework_file_url,
+          homeworkDeadline: s.homework_deadline,
+          exercise: exerciseObj,
           status: dynStatus,
           scheduledAt: s.scheduled_at,
-          pdfUrl: s.homework_file_url || s.pdf_url,
-          pdfName: s.homework_title ? `Exercice_${s.homework_title}.pdf` : undefined,
-          description: s.description || s.homework_description || ""
+          pdfUrl: s.pdf_url || null,
+          pdfName: s.pdf_url ? "Support_de_cours.pdf" : undefined,
+          description: s.description || ""
         }
       })
     })()
@@ -2161,34 +2183,34 @@ export default function DashboardPage() {
                               {activeLesson?.description}
                             </p>
 
-                            {/* PDF Attachment (Available ONLY for past/completed sessions) */}
-                            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                              {activeLesson?.pdfName ? (
-                                activeLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? (
+                            {/* PDF Attachment (Slides de cours) */}
+                            {activeLesson?.pdfUrl && (
+                              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                                {activeLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? (
                                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                                     <FileText className="size-4 text-slate-400" />
-                                    <span>Support PDF du cours : <strong className="text-amber-700 font-semibold">🔒 Disponible immédiatement après la session live</strong></span>
+                                    <span>Support PDF des slides : <strong className="text-amber-700 font-semibold">🔒 Disponible immédiatement après la session live</strong></span>
                                   </div>
                                 ) : (
                                   <div className="flex items-center justify-between w-full">
                                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
                                       <FileText className="size-4 text-purple-600" />
-                                      <span>Support PDF du cours : {activeLesson.pdfName}</span>
+                                      <span>Support PDF des slides : {activeLesson.pdfName || "Slides_Session.pdf"}</span>
                                     </div>
                                     <a
-                                      href={activeLesson.pdfUrl || "#"}
+                                      href={activeLesson.pdfUrl}
                                       download
+                                      target="_blank"
+                                      rel="noreferrer"
                                       className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline cursor-pointer shrink-0"
                                     >
                                       <Download className="size-3.5" />
                                       <span>Télécharger (PDF)</span>
                                     </a>
                                   </div>
-                                )
-                              ) : (
-                                <span className="text-xs text-slate-500">Aucun support PDF attaché pour ce module.</span>
-                              )}
-                            </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* Exercise & Homework Submission Section */}
                             {activeLesson?.exercise && (
@@ -2196,7 +2218,7 @@ export default function DashboardPage() {
                                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
                                   <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
-                                      {activeLesson.exercise.type === 'devoir-a-rendre' ? '📝 Devoir à rendre' : activeLesson.exercise.type === 'cas-pratique' ? '💼 Cas Pratique Métier' : '⚡ Challenge Prompt'}
+                                      📝 Devoir à rendre
                                     </span>
                                     <h4 className="text-xs font-bold text-slate-800">{activeLesson.exercise.title}</h4>
                                   </div>
@@ -2206,6 +2228,32 @@ export default function DashboardPage() {
                                     <span>Date limite : {activeLesson.exercise.deadline}</span>
                                   </div>
                                 </div>
+
+                                {activeLesson.exercise.description && (
+                                  <p className="text-xs text-slate-700 leading-relaxed bg-white/80 p-3 rounded-xl border border-amber-200/60">
+                                    {activeLesson.exercise.description}
+                                  </p>
+                                )}
+
+                                {/* Sujet d'exercice / Fichier joint téléchargeable immédiatement */}
+                                {activeLesson.exercise.fileUrl && (
+                                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-amber-200 shadow-2xs">
+                                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 truncate">
+                                      <FileText className="size-4 text-amber-600 shrink-0" />
+                                      <span className="truncate">Sujet du Devoir : <strong className="text-slate-900">{activeLesson.exercise.title}</strong></span>
+                                    </div>
+                                    <a
+                                      href={activeLesson.exercise.fileUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      download
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 hover:text-black bg-amber-200/80 hover:bg-amber-300 px-3 py-1.5 rounded-lg border border-amber-300/80 shrink-0 cursor-pointer transition-colors shadow-2xs"
+                                    >
+                                      <Download className="size-3.5" />
+                                      <span>Télécharger le sujet</span>
+                                    </a>
+                                  </div>
+                                )}
 
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                                   <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border shrink-0 ${

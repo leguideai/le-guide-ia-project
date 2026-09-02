@@ -3214,11 +3214,19 @@ export default function SuperAdminDashboard() {
   return (
     <div className="min-h-screen bg-[#F4F6F8] text-slate-800 font-sans flex flex-col md:flex-row selection:bg-primary/30">
       
-      {/* Notice Toast */}
+      {/* Notice Toast — Always on top of all modals and backdrops */}
       {noticeMessage && (
-        <div className="fixed top-5 right-5 z-50 bg-emerald-500 text-slate-950 font-bold px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 border border-emerald-400 animate-bounce">
-          <CheckCircle2 className="size-5 shrink-0" />
-          <span className="text-sm">{noticeMessage}</span>
+        <div className="fixed top-5 right-5 z-[9999] bg-slate-900/95 text-white border border-emerald-500/40 font-bold px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="size-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+            <CheckCircle2 className="size-4" />
+          </div>
+          <span className="text-xs md:text-sm font-semibold text-slate-100 max-w-sm sm:max-w-md">{noticeMessage}</span>
+          <button
+            onClick={() => setNoticeMessage(null)}
+            className="ml-2 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            ✕
+          </button>
         </div>
       )}
 
