@@ -298,31 +298,30 @@ export async function POST(req: Request) {
       } catch (_) {}
     }
 
-    // 2. If confirmed, activate registration and user_courses
+    // 2. If confirmed, activate registration and user_courses for the specific course ONLY
     if (status === "confirmed" && studentEmail) {
-      
-      // Update registration status
-      if (updatedPayment.registration_id) {
-        await supabaseServer
-          .from("registrations")
-          .update({ status: "paye" })
-          .eq("id", updatedPayment.registration_id)
+      // Resolve exact course slug from payment's course_title or course_id
+      let resolvedSlug = ""
+      if (updatedPayment.course_title) {
+        const titleNorm = updatedPayment.course_title.toLowerCase()
+        if (titleNorm.includes("business")) resolvedSlug = "bootcamp-business-exec"
+        else if (titleNorm.includes("carriere") || titleNorm.includes("pro")) resolvedSlug = "bootcamp-ia-pro"
       }
-
-      // Activate and upsert matching user_courses
-      let resolvedSlug = reg?.course_slug || ""
+      if (!resolvedSlug && updatedPayment.course_id) {
+        const { data: c } = await supabaseServer.from("courses").select("slug").eq("id", updatedPayment.course_id).maybeSingle()
+        if (c?.slug) resolvedSlug = c.slug
+      }
+      if (!resolvedSlug && reg?.course_slug) {
+        resolvedSlug = reg.course_slug
+      }
       if (!resolvedSlug && reg?.notes) {
         try {
           const parsed = typeof reg.notes === "string" ? JSON.parse(reg.notes) : reg.notes
           if (parsed?.course_slug) resolvedSlug = parsed.course_slug
-        } catch(e) {}
-      }
-      if (!resolvedSlug && updatedPayment.course_title) {
-        const titleNorm = updatedPayment.course_title.toLowerCase()
-        if (titleNorm.includes("business")) resolvedSlug = "bootcamp-business-exec"
-        else if (titleNorm.includes("carriere")) resolvedSlug = "bootcamp-ia-pro"
+        } catch (_) {}
       }
 
+      // 2.1. Activate user_courses specifically for this course
       if (resolvedSlug) {
         const { data: existingUC } = await supabaseServer
           .from("user_courses")
@@ -340,6 +339,14 @@ export async function POST(req: Request) {
             status: "active"
           })
         }
+      }
+
+      // 2.2. Update registration status ONLY if registration matches this exact course
+      if (updatedPayment.registration_id && reg?.course_slug && resolvedSlug && reg.course_slug === resolvedSlug) {
+        await supabaseServer
+          .from("registrations")
+          .update({ status: "paye" })
+          .eq("id", updatedPayment.registration_id)
       }
 
       // Ensure Supabase Auth user account exists

@@ -128,7 +128,7 @@ export async function GET(req: Request) {
         if (slugOrId) {
           regIdToSlug.set(r.id, slugOrId)
           userRegIds.push(r.id)
-          if (["paye", "confirmed", "active"].includes(r.status)) {
+          if (["paye", "confirmed", "active"].includes(r.status) && r.source === "admin_manual_enroll") {
             addCourseIdentifiers(confirmedSet, slugOrId)
           } else if (["en_attente", "pending", "pending_verification", "inscrit", "attente", "a_verifier"].includes(r.status) && !isMasterclass(slugOrId) && r.source !== "masterclass_dimanche") {
             addCourseIdentifiers(pendingSet, slugOrId)
