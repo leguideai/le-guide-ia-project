@@ -658,6 +658,44 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  // Calcul dynamique et automatique du statut de la session selon l'heure actuelle
+  function getDynamicSessionStatus(session: {
+    scheduled_at?: string | null
+    ends_at?: string | null
+    status?: string | null
+    recording_url?: string | null
+  }): "upcoming" | "live" | "completed" {
+    // Si un replay est déjà enregistré, la session est terminée
+    if (session.recording_url && session.recording_url.trim().length > 5) {
+      return "completed"
+    }
+
+    if (!session.scheduled_at) {
+      return (session.status as any) || "upcoming"
+    }
+
+    const now = Date.now()
+    const startTime = new Date(session.scheduled_at).getTime()
+    if (isNaN(startTime)) {
+      return (session.status as any) || "upcoming"
+    }
+
+    let endTime = session.ends_at ? new Date(session.ends_at).getTime() : NaN
+    if (isNaN(endTime)) {
+      // Durée par défaut : 90 minutes (1h30)
+      endTime = startTime + 90 * 60 * 1000
+    }
+
+    if (now < startTime) {
+      return "upcoming"
+    } else if (now >= startTime && now <= endTime) {
+      return "live"
+    } else {
+      // Date passée -> Terminée automatiquement
+      return "completed"
+    }
+  }
+
   // Details Modal State
   const [selectedCourseDetails, setSelectedCourseDetails] = useState<BootcampCourse | null>(null)
   const [detailsSessions, setDetailsSessions] = useState<BootcampSession[]>([])
@@ -2840,7 +2878,7 @@ export default function SuperAdminDashboard() {
         meetUrl: (s.meet_url && s.meet_url.trim() && s.meet_url !== "https://meet.google.com") ? s.meet_url.trim() : (course?.live_meet_url && course.live_meet_url.trim() && course.live_meet_url !== "https://meet.google.com" ? course.live_meet_url.trim() : ""),
         recordingUrl: s.recording_url,
         whatsappUrl: course?.whatsapp_url,
-        status: s.status || "upcoming"
+        status: getDynamicSessionStatus(s)
       }
     })
 
@@ -4931,23 +4969,34 @@ export default function SuperAdminDashboard() {
                     <div className="space-y-2">
                       <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Sessions existantes</h4>
                       <div className="space-y-2">
-                        {bootcampSessions.map((s) => (
-                          <div key={s.id} className="flex items-center justify-between gap-3 bg-[#F4F6F8] rounded-xl px-4 py-3">
-                            <div className="space-y-0.5">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md">Session {s.session_number}</span>
-                                <span className="text-sm font-bold text-slate-800">{s.title}</span>
+                        {bootcampSessions.map((s) => {
+                          const dynStatus = getDynamicSessionStatus(s)
+                          return (
+                            <div key={s.id} className="flex items-center justify-between gap-3 bg-[#F4F6F8] rounded-xl px-4 py-3">
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md">Session {s.session_number}</span>
+                                  <span className="text-sm font-bold text-slate-800">{s.title}</span>
+                                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ${
+                                    dynStatus === "live"
+                                      ? "bg-rose-50 text-rose-700 border border-rose-200 animate-pulse"
+                                      : dynStatus === "completed"
+                                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                      : "bg-blue-50 text-blue-700 border border-blue-200"
+                                  }`}>
+                                    {dynStatus === "live" ? "🟢 En Direct" : dynStatus === "completed" ? "✅ Terminée" : "🕒 À venir"}
+                                  </span>
+                                </div>
+                                {s.description && (
+                                  <p className="text-[11px] text-slate-600 line-clamp-1 italic">{s.description}</p>
+                                )}
+                                <div className="text-[10px] text-slate-500">
+                                  {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Date non définie"}
+                                  {s.meet_url && <span className="ml-2 text-primary">• Meet ✓</span>}
+                                  {s.recording_url && <span className="ml-2 text-emerald-400">• Replay ✓</span>}
+                                  {s.homework_title && <span className="ml-2 text-amber-400">• Devoir ✓</span>}
+                                </div>
                               </div>
-                              {s.description && (
-                                <p className="text-[11px] text-slate-600 line-clamp-1 italic">{s.description}</p>
-                              )}
-                              <div className="text-[10px] text-slate-500">
-                                {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Date non définie"}
-                                {s.meet_url && <span className="ml-2 text-primary">• Meet ✓</span>}
-                                {s.recording_url && <span className="ml-2 text-emerald-400">• Replay ✓</span>}
-                                {s.homework_title && <span className="ml-2 text-amber-400">• Devoir ✓</span>}
-                              </div>
-                            </div>
                             <div className="flex gap-2 shrink-0">
                               <button
                                 onClick={() => setSessionForm({ ...s })}
@@ -4991,8 +5040,9 @@ export default function SuperAdminDashboard() {
                               </button>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        )
+                      })}
+                    </div>
                     </div>
                   )}
 
@@ -5488,43 +5538,46 @@ export default function SuperAdminDashboard() {
                           </div>
                         ) : (
                           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                            {detailsSessions.map((s) => (
-                              <div key={s.id} className="p-3 rounded-xl bg-[#F4F6F8] border border-slate-200 flex items-start justify-between gap-3 text-xs">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-black uppercase px-2 py-0.5 rounded-md">
-                                      Session {s.session_number}
-                                    </span>
-                                    <span className="font-bold text-slate-800">{s.title}</span>
-                                  </div>
-                                  {s.description && (
-                                    <p className="text-[11px] text-slate-600 line-clamp-2 pt-0.5">{s.description}</p>
-                                  )}
-                                  <div className="text-[10px] text-slate-500 flex items-center gap-3">
-                                    <span>📅 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Non planifiée"}</span>
-                                    {s.meet_url && <span className="text-primary font-semibold">Meet ✓</span>}
-                                    {s.recording_url && <span className="text-emerald-400 font-semibold">Replay Video ✓</span>}
-                                  </div>
-                                  {s.homework_title && (
-                                    <div className="text-[10px] text-amber-300/90 pt-0.5 flex items-center gap-1.5">
-                                      <span>📚 Devoir: {s.homework_title}</span>
-                                      {s.homework_file_url && (
-                                        <a href={s.homework_file_url} target="_blank" rel="noreferrer" className="text-primary underline">
-                                          (Fichier sujet)
-                                        </a>
-                                      )}
+                            {detailsSessions.map((s) => {
+                              const dynStatus = getDynamicSessionStatus(s)
+                              return (
+                                <div key={s.id} className="p-3 rounded-xl bg-[#F4F6F8] border border-slate-200 flex items-start justify-between gap-3 text-xs">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="bg-primary/20 text-primary border border-primary/30 text-[9px] font-black uppercase px-2 py-0.5 rounded-md">
+                                        Session {s.session_number}
+                                      </span>
+                                      <span className="font-bold text-slate-800">{s.title}</span>
                                     </div>
-                                  )}
+                                    {s.description && (
+                                      <p className="text-[11px] text-slate-600 line-clamp-2 pt-0.5">{s.description}</p>
+                                    )}
+                                    <div className="text-[10px] text-slate-500 flex items-center gap-3">
+                                      <span>📅 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Non planifiée"}</span>
+                                      {s.meet_url && <span className="text-primary font-semibold">Meet ✓</span>}
+                                      {s.recording_url && <span className="text-emerald-400 font-semibold">Replay Video ✓</span>}
+                                    </div>
+                                    {s.homework_title && (
+                                      <div className="text-[10px] text-amber-300/90 pt-0.5 flex items-center gap-1.5">
+                                        <span>📚 Devoir: {s.homework_title}</span>
+                                        {s.homework_file_url && (
+                                          <a href={s.homework_file_url} target="_blank" rel="noreferrer" className="text-primary underline">
+                                            (Fichier sujet)
+                                          </a>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ${
+                                    dynStatus === "live" ? "bg-rose-50 text-rose-700 border border-rose-200 animate-pulse"
+                                    : dynStatus === "completed" ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                    : "bg-blue-50 text-blue-800 border border-blue-200"
+                                  }`}>
+                                    {dynStatus === "live" ? "🟢 En Direct" : dynStatus === "completed" ? "✅ Terminée" : "🕒 À venir"}
+                                  </span>
                                 </div>
-                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md shrink-0 ${
-                                  s.status === "live" ? "bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse"
-                                  : s.status === "completed" ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                  : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                                }`}>
-                                  {s.status === "live" ? "En Direct" : s.status === "completed" ? "Terminée" : "À venir"}
-                                </span>
-                              </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         )}
                       </div>

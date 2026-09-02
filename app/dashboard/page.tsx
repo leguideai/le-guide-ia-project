@@ -939,6 +939,26 @@ export default function DashboardPage() {
           String(targetCourse?.slug || "").includes("business") || 
           String(s.title || "").toLowerCase().includes("business")
 
+        // Calcul dynamique du statut de la session
+        const now = Date.now()
+        const startTime = s.scheduled_at ? new Date(s.scheduled_at).getTime() : NaN
+        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 90 * 60 * 1000 : NaN)
+
+        let dynStatus: "upcoming" | "live" | "completed" = s.status || "upcoming"
+        if (s.recording_url && s.recording_url.trim().length > 5) {
+          dynStatus = "completed"
+        } else if (s.status === "completed") {
+          dynStatus = "completed"
+        } else if (!isNaN(startTime)) {
+          if (now < startTime) {
+            dynStatus = "upcoming"
+          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 90 * 60 * 1000)) {
+            dynStatus = "live"
+          } else {
+            dynStatus = "completed"
+          }
+        }
+
         evs.push({
           id: s.id || `sess-${s.session_number}-${dateStr}`,
           courseId: s.course_id || targetCourse?.id || "bootcamp-pro-2",
@@ -949,13 +969,13 @@ export default function DashboardPage() {
           title: s.title || `Session #${s.session_number}`,
           description: s.description || "Session intensive interactive en direct avec Alfred Dah sur Google Meet.",
           date: dateStr,
-          startTime: s.start_time || "19:00",
-          endTime: s.end_time || "21:00",
+          startTime: s.scheduled_at && s.scheduled_at.includes("T") ? s.scheduled_at.split("T")[1].slice(0, 5) : (s.start_time || "19:00"),
+          endTime: s.ends_at && s.ends_at.includes("T") ? s.ends_at.split("T")[1].slice(0, 5) : (s.end_time || "20:30"),
           instructor: targetCourse?.instructor || "Alfred Dah",
           meetUrl: (s.meet_url && s.meet_url.trim() && s.meet_url !== "https://meet.google.com") ? s.meet_url.trim() : (targetCourse?.live_meet_url && targetCourse.live_meet_url.trim() && targetCourse.live_meet_url !== "https://meet.google.com" ? targetCourse.live_meet_url.trim() : ""),
           recordingUrl: s.recording_url,
           whatsappUrl: targetCourse?.whatsapp_url || "https://wa.me/22605050577",
-          status: s.status || "upcoming"
+          status: dynStatus
         })
       })
     }
@@ -1076,8 +1096,27 @@ export default function DashboardPage() {
       const sourceList = courseSessions.length > 0 ? courseSessions : dbLessons.filter((l: any) => l.course_id === c.id)
       return sourceList.map((s: any, idx: number) => {
         const hasRecording = Boolean((s.recording_url || s.video_url) && (s.recording_url || s.video_url).trim() !== "")
-        const isLive = s.status === "live"
-        const isUpcoming = s.status === "upcoming" || (!hasRecording && !isLive)
+        
+        // Calcul automatique du statut
+        const now = Date.now()
+        const startTime = s.scheduled_at ? new Date(s.scheduled_at).getTime() : NaN
+        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 90 * 60 * 1000 : NaN)
+
+        let dynStatus: "upcoming" | "live" | "completed" = s.status || "upcoming"
+        if (hasRecording || s.status === "completed") {
+          dynStatus = "completed"
+        } else if (!isNaN(startTime)) {
+          if (now < startTime) {
+            dynStatus = "upcoming"
+          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 90 * 60 * 1000)) {
+            dynStatus = "live"
+          } else {
+            dynStatus = "completed"
+          }
+        }
+
+        const isLive = dynStatus === "live"
+        const isUpcoming = dynStatus === "upcoming"
 
         return {
           id: s.id,
@@ -1090,11 +1129,12 @@ export default function DashboardPage() {
           hasRecording,
           isUpcoming,
           isLive,
+          isCompleted: dynStatus === "completed",
           meetUrl: s.meet_url || c.live_meet_url,
           homeworkTitle: s.homework_title,
           homeworkDesc: s.homework_description,
           homeworkFileUrl: s.homework_file_url,
-          status: s.status || "upcoming",
+          status: dynStatus,
           scheduledAt: s.scheduled_at,
           pdfUrl: s.homework_file_url || s.pdf_url,
           pdfName: s.homework_title ? `Exercice_${s.homework_title}.pdf` : undefined,
