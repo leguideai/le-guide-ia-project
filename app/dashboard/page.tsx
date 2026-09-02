@@ -950,7 +950,7 @@ export default function DashboardPage() {
         // Calcul dynamique du statut de la session
         const now = Date.now()
         const startTime = s.scheduled_at ? new Date(s.scheduled_at).getTime() : NaN
-        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 60 * 60 * 1000 : NaN)
+        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 2 * 60 * 60 * 1000 : NaN)
 
         let dynStatus: "upcoming" | "live" | "completed" = s.status || "upcoming"
         if (s.recording_url && s.recording_url.trim().length > 5) {
@@ -960,7 +960,7 @@ export default function DashboardPage() {
         } else if (!isNaN(startTime)) {
           if (now < startTime) {
             dynStatus = "upcoming"
-          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 60 * 60 * 1000)) {
+          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 2 * 60 * 60 * 1000)) {
             dynStatus = "live"
           } else {
             dynStatus = "completed"
@@ -1108,7 +1108,7 @@ export default function DashboardPage() {
         // Calcul automatique du statut
         const now = Date.now()
         const startTime = s.scheduled_at ? new Date(s.scheduled_at).getTime() : NaN
-        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 60 * 60 * 1000 : NaN)
+        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 2 * 60 * 60 * 1000 : NaN)
 
         let dynStatus: "upcoming" | "live" | "completed" = s.status || "upcoming"
         if (hasRecording || s.status === "completed") {
@@ -1116,7 +1116,7 @@ export default function DashboardPage() {
         } else if (!isNaN(startTime)) {
           if (now < startTime) {
             dynStatus = "upcoming"
-          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 60 * 60 * 1000)) {
+          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 2 * 60 * 60 * 1000)) {
             dynStatus = "live"
           } else {
             dynStatus = "completed"
@@ -1700,7 +1700,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
                       {isSubPending
                         ? `Votre virement (Réf: ${subscriptionData?.transactionRef || "Reçu soumis"}) a été reçu. Notre équipe administrative valide vos accès sous 2h à 4h.`
-                        : "10 000 FCFA / 3 mois ou 30 000 FCFA / an.Deductible des frais d'inscription au prochain bootcamp."}
+                        : `${subscriptionData?.pricing?.price3mDisplay || "9 000 FCFA"} / 3 mois ou ${subscriptionData?.pricing?.price1yDisplay || "29 000 FCFA"} / an • Déductible des frais d'inscription au prochain bootcamp.`}
                     </p>
                   </div>
                 </div>
@@ -2815,7 +2815,7 @@ export default function DashboardPage() {
                     <div className="space-y-1">
                       <span className="text-xs font-black uppercase text-slate-500">Pass 3 Mois</span>
                       <div className="text-2xl font-black text-slate-900">
-                        {subscriptionData?.pricing?.price3mDisplay || "10 000 FCFA"}
+                        {subscriptionData?.pricing?.price3mDisplay || "9 000 FCFA"}
                       </div>
                       <p className="text-xs text-slate-500">Accès illimité pendant 90 jours</p>
                     </div>
@@ -2830,12 +2830,12 @@ export default function DashboardPage() {
 
                   <div className="p-5 rounded-2xl border-2 border-amber-400 bg-amber-50/30 shadow-xs flex flex-col justify-between space-y-4 relative">
                     <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase shadow-xs">
-                      Économisez 10 000 F
+                      Économisez {((subscriptionData?.pricing?.price3m || 9000) * 4 - (subscriptionData?.pricing?.price1y || 29000)).toLocaleString("fr-FR")} F
                     </span>
                     <div className="space-y-1">
                       <span className="text-xs font-black uppercase text-amber-700">Pass 1 An (Recommandé)</span>
                       <div className="text-2xl font-black text-slate-900">
-                        {subscriptionData?.pricing?.price1yDisplay || "30 000 FCFA"}
+                        {subscriptionData?.pricing?.price1yDisplay || "29 000 FCFA"}
                       </div>
                       <p className="text-xs text-slate-500">Accès illimité pendant 365 jours + Mises à jour</p>
                     </div>
@@ -3014,7 +3014,7 @@ export default function DashboardPage() {
                               <Crown className="size-3.5 shrink-0" />
                               <span>Débloquer Tous les Prompts &amp; Replays</span>
                             </div>
-                            <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès 10 000 FCFA</span>
+                            <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès {subscriptionData?.pricing?.price3mDisplay || "9 000 FCFA"}</span>
                           </button>
                         ) : (
                           <>

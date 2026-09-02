@@ -105,19 +105,18 @@ export default function MasterclassHubPage() {
           setReplays(data.replays)
         }
 
-        // Vérifier l'abonnement VIP / inscription Bootcamp
-        if (emailToCheck) {
-          try {
-            const subRes = await fetch(`/api/subscriptions?email=${encodeURIComponent(emailToCheck)}`)
-            const subData = await subRes.json()
-            if (subData) {
-              setSubscriptionInfo(subData)
-              if (subData.isSubscribed) {
-                setIsSubscribed(true)
-              }
+        // Vérifier l'abonnement VIP et charger la tarification Supabase
+        try {
+          const subUrl = emailToCheck ? `/api/subscriptions?email=${encodeURIComponent(emailToCheck)}` : "/api/subscriptions"
+          const subRes = await fetch(subUrl)
+          const subData = await subRes.json()
+          if (subData) {
+            setSubscriptionInfo(subData)
+            if (subData.isSubscribed) {
+              setIsSubscribed(true)
             }
-          } catch (_) {}
-        }
+          }
+        } catch (_) {}
       } catch (err) {
         console.error("Masterclass page load error:", err)
       } finally {
@@ -862,7 +861,7 @@ export default function MasterclassHubPage() {
                         ? "Tous les replays HD et la bibliothèque de prompts sont débloqués sur votre compte." 
                         : isSubPending
                         ? `Votre déclaration de paiement (${subscriptionInfo?.planLabel || "Pass VIP"}, Réf: ${subscriptionInfo?.transactionRef || "Reçu transmis"}) est en cours de validation sous 2h à 4h.`
-                        : "10 000 FCFA / 3 mois ou 30 000 FCFA / an •Deductible des frais d'inscription au prochain bootcamp."}
+                        : `${subscriptionInfo?.pricing?.price3mDisplay || "9 000 FCFA"} / 3 mois ou ${subscriptionInfo?.pricing?.price1yDisplay || "29 000 FCFA"} / an • Déductible des frais d'inscription au prochain bootcamp.`}
                     </p>
                   </div>
 

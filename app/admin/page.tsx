@@ -192,10 +192,10 @@ export default function SuperAdminDashboard() {
     totalRevenueFormatted: "0 FCFA"
   })
   const [subscriptionPricing, setSubscriptionPricing] = useState<any>({
-    price3m: 10000,
-    price1y: 30000,
-    price3mDisplay: "10 000 FCFA",
-    price1yDisplay: "30 000 FCFA"
+    price3m: 9000,
+    price1y: 29000,
+    price3mDisplay: "9 000 FCFA",
+    price1yDisplay: "29 000 FCFA"
   })
   const [subStatusFilter, setSubStatusFilter] = useState<"all" | "active" | "pending" | "expired">("all")
   const [subSearchQuery, setSubSearchQuery] = useState("")
@@ -644,8 +644,8 @@ export default function SuperAdminDashboard() {
     targetDate.setDate(targetDate.getDate() + Math.max(0, sessionNum - 1))
     targetDate.setHours(19, 0, 0, 0) // Heure par défaut : 19h00 GMT
 
-    // Durée par défaut : 1h (60 minutes) -> Fin à 20h00 GMT
-    const targetEndDate = new Date(targetDate.getTime() + 60 * 60 * 1000)
+    // Durée par défaut : 2h (120 minutes) -> Fin à 21h00 GMT
+    const targetEndDate = new Date(targetDate.getTime() + 2 * 60 * 60 * 1000)
 
     const pad = (n: number) => String(n).padStart(2, "0")
     const formatIsoLocal = (d: Date) => {
@@ -682,8 +682,8 @@ export default function SuperAdminDashboard() {
 
     let endTime = session.ends_at ? new Date(session.ends_at).getTime() : NaN
     if (isNaN(endTime)) {
-      // Durée par défaut : 60 minutes (1h)
-      endTime = startTime + 60 * 60 * 1000
+      // Durée par défaut : 120 minutes (2h)
+      endTime = startTime + 2 * 60 * 60 * 1000
     }
 
     if (now < startTime) {
@@ -5148,7 +5148,7 @@ export default function SuperAdminDashboard() {
                             if (newStart) {
                               const startD = new Date(newStart)
                               if (!isNaN(startD.getTime())) {
-                                const endD = new Date(startD.getTime() + 60 * 60 * 1000) // 1h
+                                const endD = new Date(startD.getTime() + 2 * 60 * 60 * 1000) // 2h
                                 const pad = (n: number) => String(n).padStart(2, "0")
                                 newEnd = `${endD.getFullYear()}-${pad(endD.getMonth() + 1)}-${pad(endD.getDate())}T${pad(endD.getHours())}:${pad(endD.getMinutes())}`
                               }
@@ -5163,7 +5163,7 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin <span className="text-slate-400 font-normal">(Durée 1h auto)</span></label>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin <span className="text-slate-400 font-normal">(Durée 2h auto)</span></label>
                         <input type="datetime-local"
                           value={sessionForm.ends_at ? sessionForm.ends_at.slice(0, 16) : ""}
                           onChange={e => setSessionForm({ ...sessionForm, ends_at: e.target.value })}
@@ -9467,7 +9467,7 @@ export default function SuperAdminDashboard() {
                                   {sub.plan === "1_year" ? "Pass 1 An (365j)" : sub.plan === "bootcamp_vip" ? "VIP Bootcamp" : "Pass 3 Mois (90j)"}
                                 </span>
                                 <div className="font-mono font-bold text-xs text-slate-800">
-                                  {sub.amount ? `${Number(sub.amount).toLocaleString("fr-FR")} FCFA` : (sub.plan === "1_year" ? "30 000 FCFA" : "10 000 FCFA")}
+                                  {sub.amount ? `${Number(sub.amount).toLocaleString("fr-FR")} FCFA` : (sub.plan === "1_year" ? (subscriptionPricing.price1yDisplay || "29 000 FCFA") : (subscriptionPricing.price3mDisplay || "9 000 FCFA"))}
                                 </div>
                               </td>
 
@@ -9726,10 +9726,10 @@ export default function SuperAdminDashboard() {
                     required
                     value={priceEditForm.price3m}
                     onChange={e => setPriceEditForm({ ...priceEditForm, price3m: e.target.value })}
-                    placeholder="10000"
+                    placeholder="9000"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-mono font-bold text-sm outline-none focus:border-primary"
                   />
-                  <span className="text-[10px] text-slate-400">Tarif par défaut : 10 000 FCFA</span>
+                  <span className="text-[10px] text-slate-400">Tarif actuel : {subscriptionPricing.price3mDisplay || "9 000 FCFA"}</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -9739,10 +9739,10 @@ export default function SuperAdminDashboard() {
                     required
                     value={priceEditForm.price1y}
                     onChange={e => setPriceEditForm({ ...priceEditForm, price1y: e.target.value })}
-                    placeholder="30000"
+                    placeholder="29000"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 font-mono font-bold text-sm outline-none focus:border-primary"
                   />
-                  <span className="text-[10px] text-slate-400">Tarif par défaut : 30 000 FCFA</span>
+                  <span className="text-[10px] text-slate-400">Tarif actuel : {subscriptionPricing.price1yDisplay || "29 000 FCFA"}</span>
                 </div>
 
                 <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">

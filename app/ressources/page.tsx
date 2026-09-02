@@ -44,13 +44,9 @@ export default function RessourcesPage() {
       const user = session?.user || null
       setCurrentUser(user)
 
-      if (!user?.email) {
-        setIsUnlocked(false)
-        return
-      }
-
       try {
-        const res = await fetch(`/api/subscriptions?email=${encodeURIComponent(user.email)}`)
+        const subUrl = user?.email ? `/api/subscriptions?email=${encodeURIComponent(user.email)}` : "/api/subscriptions"
+        const res = await fetch(subUrl)
         const data = await res.json()
         setSubscriptionInfo(data)
         if (data.isSubscribed) {
@@ -434,7 +430,7 @@ export default function RessourcesPage() {
                                     <Crown className="size-4 shrink-0" />
                                     <span className="text-xs font-black">Débloquer Tous les Prompts &amp; Replays</span>
                                   </div>
-                                  <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès 10 000 FCFA</span>
+                                  <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès {subscriptionInfo?.pricing?.price3mDisplay || "9 000 FCFA"}</span>
                                 </>
                               )}
                             </div>
