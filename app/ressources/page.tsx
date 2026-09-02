@@ -222,10 +222,10 @@ export default function RessourcesPage() {
                     <h3 className="text-sm sm:text-base font-heading font-black text-white">
                       {isSubPending
                         ? `Validation de votre Abonnement VIP en cours (${subscriptionInfo?.planLabel || "Pass VIP"})`
-                        : "Pass VIP Unique — Accès Illimité à Tout le Catalogue"}
+                        : "Pass VIP  — Accès à Tout le Catalogue"}
                     </h3>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40">
-                      {isSubPending ? "⏳ Vérification sous 2h à 4h" : "1 Pass = 100% Débloqué"}
+                      {isSubPending ? "⏳ Vérification sous 2h à 4h" : "1 Pass VIP Débloqué"}
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 leading-relaxed">
