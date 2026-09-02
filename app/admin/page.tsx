@@ -4951,7 +4951,8 @@ export default function SuperAdminDashboard() {
                             <div className="flex gap-2 shrink-0">
                               <button
                                 onClick={() => setSessionForm({ ...s })}
-                                className="p-1.5 rounded-lg bg-slate-700 text-slate-700 hover:text-white"
+                                className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer"
+                                title="Modifier cette session"
                               >
                                 <Edit3 className="size-3.5" />
                               </button>
@@ -4959,10 +4960,32 @@ export default function SuperAdminDashboard() {
                                 onClick={async () => {
                                   if (!confirm("Supprimer cette session ?")) return
                                   await supabase.from("bootcamp_sessions").delete().eq("id", s.id!)
-                                  setBootcampSessions(prev => prev.filter(x => x.id !== s.id))
+                                  const updatedList = bootcampSessions.filter(x => x.id !== s.id)
+                                  setBootcampSessions(updatedList)
                                   setAllSessions(prev => prev.filter(x => x.id !== s.id))
+                                  setDetailsSessions(prev => prev.filter(x => x.id !== s.id))
+                                  
+                                  const nextNum = updatedList.length > 0
+                                    ? Math.max(...updatedList.map(x => Number(x.session_number) || 0), 0) + 1
+                                    : 1
+                                  const nextDates = getDefaultSessionDates(selectedCourseForSessions, nextNum)
+                                  setSessionForm({
+                                    session_number: nextNum,
+                                    title: `Session ${nextNum} — `,
+                                    description: "",
+                                    scheduled_at: nextDates.scheduled_at,
+                                    ends_at: nextDates.ends_at,
+                                    meet_url: selectedCourseForSessions?.live_meet_url || "",
+                                    recording_url: "",
+                                    homework_title: "",
+                                    homework_description: "",
+                                    homework_file_url: "",
+                                    homework_deadline: "",
+                                    status: "upcoming"
+                                  })
                                 }}
-                                className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                                className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
+                                title="Supprimer cette session"
                               >
                                 <Trash2 className="size-3.5" />
                               </button>
@@ -4976,19 +4999,49 @@ export default function SuperAdminDashboard() {
                   {/* Formulaire ajout/édition session */}
                   <div className="border-t border-slate-200 pt-4 space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
                         <Sparkles className="size-3.5 text-primary" />
-                        {sessionForm.id ? `Modifier la session #${sessionForm.session_number}` : `Ajouter la session #${sessionForm.session_number || (bootcampSessions.length + 1)}`}
+                        {sessionForm.id ? `✏️ Modifier la session #${sessionForm.session_number}` : `➕ Ajouter la session #${sessionForm.session_number || (bootcampSessions.length + 1)}`}
                       </h4>
-                      {selectedCourseForSessions?.start_date && (
-                        <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md font-medium">
-                          Début bootcamp: <strong className="text-slate-700">{selectedCourseForSessions.start_date}</strong>
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {sessionForm.id && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextNum = bootcampSessions.length > 0
+                                ? Math.max(...bootcampSessions.map(s => Number(s.session_number) || 0), 0) + 1
+                                : 1
+                              const nextDates = getDefaultSessionDates(selectedCourseForSessions, nextNum)
+                              setSessionForm({
+                                session_number: nextNum,
+                                title: `Session ${nextNum} — `,
+                                description: "",
+                                scheduled_at: nextDates.scheduled_at,
+                                ends_at: nextDates.ends_at,
+                                meet_url: selectedCourseForSessions?.live_meet_url || "",
+                                recording_url: "",
+                                homework_title: "",
+                                homework_description: "",
+                                homework_file_url: "",
+                                homework_deadline: "",
+                                status: "upcoming"
+                              })
+                            }}
+                            className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                          >
+                            + Créer une nouvelle session
+                          </button>
+                        )}
+                        {selectedCourseForSessions?.start_date && (
+                          <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md font-medium">
+                            Début bootcamp: <strong className="text-slate-700">{selectedCourseForSessions.start_date}</strong>
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 text-xs">
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold"># Numéro de session</label>
+                        <label className="text-slate-600 block mb-1 font-bold"># Numéro de session (Auto-adapté)</label>
                         <input
                           type="number"
                           min={1}
@@ -5169,11 +5222,29 @@ export default function SuperAdminDashboard() {
                           const targetCourseSlug = selectedCourseForSessions!.slug
                           const chosenNum = Number(sessionForm.session_number) || (bootcampSessions.length + 1)
 
+                          const cleanTimestamp = (val?: string | null) => {
+                            if (!val || typeof val !== "string" || !val.trim()) return null
+                            return val.trim()
+                          }
+                          const cleanText = (val?: string | null) => {
+                            if (!val || typeof val !== "string" || !val.trim()) return null
+                            return val.trim()
+                          }
+
                           const payload: any = {
                             ...sessionForm,
                             course_id: targetCourseId,
                             course_slug: targetCourseSlug,
-                            session_number: chosenNum
+                            session_number: chosenNum,
+                            scheduled_at: cleanTimestamp(sessionForm.scheduled_at),
+                            ends_at: cleanTimestamp(sessionForm.ends_at),
+                            homework_deadline: cleanTimestamp(sessionForm.homework_deadline),
+                            homework_file_url: cleanText(sessionForm.homework_file_url),
+                            homework_title: cleanText(sessionForm.homework_title),
+                            homework_description: cleanText(sessionForm.homework_description),
+                            description: cleanText(sessionForm.description),
+                            meet_url: cleanText(sessionForm.meet_url),
+                            recording_url: cleanText(sessionForm.recording_url),
                           }
 
                           if (sessionForm.id) {
@@ -5184,7 +5255,27 @@ export default function SuperAdminDashboard() {
                               setBootcampSessions(updatedList)
                               setAllSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
                               setDetailsSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
-                              showNotice("Session mise à jour avec succès !")
+                              
+                              const nextSessionNum = updatedList.length > 0
+                                ? Math.max(...updatedList.map(s => Number(s.session_number) || 0), 0) + 1
+                                : 1
+                              const nextDates = getDefaultSessionDates(selectedCourseForSessions, nextSessionNum)
+                              
+                              setSessionForm({
+                                session_number: nextSessionNum,
+                                title: `Session ${nextSessionNum} — `,
+                                description: "",
+                                scheduled_at: nextDates.scheduled_at,
+                                ends_at: nextDates.ends_at,
+                                meet_url: selectedCourseForSessions?.live_meet_url || "",
+                                recording_url: "",
+                                homework_title: "",
+                                homework_description: "",
+                                homework_file_url: "",
+                                homework_deadline: "",
+                                status: "upcoming"
+                              })
+                              showNotice(`Session #${chosenNum} mise à jour ! Formulaire prêt pour la session #${nextSessionNum}`)
                             } else {
                               alert("Erreur de mise à jour: " + error.message)
                             }
@@ -5215,7 +5306,7 @@ export default function SuperAdminDashboard() {
                                 homework_deadline: "",
                                 status: "upcoming"
                               })
-                              showNotice(`Session #${data.session_number} enregistrée avec succès !`)
+                              showNotice(`Session #${data.session_number} enregistrée avec succès ! Formulaire prêt pour la session #${nextSessionNum}`)
                             } else {
                               alert("Erreur d'ajout: " + error?.message)
                             }
@@ -5223,7 +5314,7 @@ export default function SuperAdminDashboard() {
                         }}
                         className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 shadow-md cursor-pointer"
                       >
-                        {sessionForm.id ? "Mettre à jour la session" : "Enregistrer la session"}
+                        {sessionForm.id ? `Mettre à jour la session #${sessionForm.session_number}` : `+ Enregistrer la session #${sessionForm.session_number || (bootcampSessions.length + 1)}`}
                       </button>
                     </div>
                   </div>
