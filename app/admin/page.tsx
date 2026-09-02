@@ -576,6 +576,88 @@ export default function SuperAdminDashboard() {
   const [selectedCourseForSessions, setSelectedCourseForSessions] = useState<BootcampCourse | null>(null)
   const [showSessionModal, setShowSessionModal] = useState(false)
 
+  // Helper pour auto-calculer les dates de session (1 jour par session, 19h00 GMT par défaut, durée 1h30)
+  function getDefaultSessionDates(course?: BootcampCourse | null, sessionNum: number = 1) {
+    let baseDate: Date | null = null
+
+    // 1. Priorité à course.start_date
+    if (course?.start_date) {
+      const raw = String(course.start_date).trim()
+      const d = new Date(raw.includes("T") ? raw : `${raw}T19:00:00`)
+      if (!isNaN(d.getTime())) {
+        baseDate = d
+      }
+    }
+
+    // 2. Si absent, extraire depuis course.dates
+    if (!baseDate && course?.dates) {
+      const text = String(course.dates).trim()
+      const slashMatch = text.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\b/)
+      if (slashMatch) {
+        const day = parseInt(slashMatch[1], 10)
+        const month = parseInt(slashMatch[2], 10) - 1
+        const year = parseInt(slashMatch[3], 10)
+        const d = new Date(year, month, day, 19, 0, 0)
+        if (!isNaN(d.getTime())) baseDate = d
+      } else {
+        const yearMatch = text.match(/\b(202\d)\b/)
+        const year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear()
+        const frenchMonths: { [k: string]: number } = {
+          "janv": 0, "janvier": 0,
+          "févr": 1, "fevr": 1, "février": 1, "fevrier": 1,
+          "mars": 2,
+          "avr": 3, "avril": 3,
+          "mai": 4,
+          "juin": 5,
+          "juil": 6, "juillet": 6,
+          "août": 7, "aout": 7,
+          "sept": 8, "septembre": 8,
+          "oct": 9, "octobre": 9,
+          "nov": 10, "novembre": 10,
+          "déc": 11, "dec": 11, "décembre": 11, "decembre": 11
+        }
+        const lower = text.toLowerCase()
+        let detectedMonth = -1
+        for (const [name, mIndex] of Object.entries(frenchMonths)) {
+          if (lower.includes(name)) {
+            detectedMonth = mIndex
+            break
+          }
+        }
+        const dayMatch = text.match(/\b(\d{1,2})\b/)
+        if (dayMatch && detectedMonth >= 0) {
+          const day = parseInt(dayMatch[1], 10)
+          const d = new Date(year, detectedMonth, day, 19, 0, 0)
+          if (!isNaN(d.getTime())) baseDate = d
+        }
+      }
+    }
+
+    // 3. Repli : aujourd'hui à 19h00
+    if (!baseDate || isNaN(baseDate.getTime())) {
+      baseDate = new Date()
+      baseDate.setHours(19, 0, 0, 0)
+    }
+
+    // Calcul date de la session N : Date de début + (N - 1) jours
+    const targetDate = new Date(baseDate)
+    targetDate.setDate(targetDate.getDate() + Math.max(0, sessionNum - 1))
+    targetDate.setHours(19, 0, 0, 0) // Heure par défaut : 19h00 GMT
+
+    // Durée par défaut : 1h30 (90 minutes) -> Fin à 20h30 GMT
+    const targetEndDate = new Date(targetDate.getTime() + 90 * 60 * 1000)
+
+    const pad = (n: number) => String(n).padStart(2, "0")
+    const formatIsoLocal = (d: Date) => {
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+    }
+
+    return {
+      scheduled_at: formatIsoLocal(targetDate),
+      ends_at: formatIsoLocal(targetEndDate)
+    }
+  }
+
   // Details Modal State
   const [selectedCourseDetails, setSelectedCourseDetails] = useState<BootcampCourse | null>(null)
   const [detailsSessions, setDetailsSessions] = useState<BootcampSession[]>([])
@@ -602,7 +684,11 @@ export default function SuperAdminDashboard() {
       }
       let { data: sessData } = await query.order("session_number", { ascending: true })
 
-      setDetailsSessions(sessData || [])
+      const sessionsFound = (sessData && sessData.length > 0)
+        ? sessData
+        : allSessions.filter(s => s.course_id === c.id || s.course_id === c.slug || s.course_slug === c.slug)
+
+      setDetailsSessions(sessionsFound || [])
 
       // 2. Fetch enrolled count from registrations
       let regQuery = supabase.from("registrations").select("id", { count: "exact", head: true })
@@ -635,14 +721,24 @@ export default function SuperAdminDashboard() {
     }
     let { data: sessData } = await query.order("session_number", { ascending: true })
 
-    const fetched = sessData || []
+    const fetched = (sessData && sessData.length > 0)
+      ? sessData
+      : allSessions.filter(s => s.course_id === c.id || s.course_id === c.slug || s.course_slug === c.slug)
+
     setBootcampSessions(fetched)
+
+    const nextNum = fetched.length > 0
+      ? Math.max(...fetched.map(s => Number(s.session_number) || 0), 0) + 1
+      : 1
+    
+    const defDates = getDefaultSessionDates(c, nextNum)
+
     setSessionForm({
-      session_number: fetched.length + 1,
-      title: "",
+      session_number: nextNum,
+      title: `Session ${nextNum} — `,
       description: "",
-      scheduled_at: "",
-      ends_at: "",
+      scheduled_at: defDates.scheduled_at,
+      ends_at: defDates.ends_at,
       meet_url: c.live_meet_url || "",
       recording_url: "",
       homework_title: "",
@@ -4837,10 +4933,15 @@ export default function SuperAdminDashboard() {
                       <div className="space-y-2">
                         {bootcampSessions.map((s) => (
                           <div key={s.id} className="flex items-center justify-between gap-3 bg-[#F4F6F8] rounded-xl px-4 py-3">
-                            <div>
-                              <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md mr-2">Session {s.session_number}</span>
-                              <span className="text-sm font-bold text-slate-800">{s.title}</span>
-                              <div className="text-[10px] text-slate-500 mt-0.5">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md">Session {s.session_number}</span>
+                                <span className="text-sm font-bold text-slate-800">{s.title}</span>
+                              </div>
+                              {s.description && (
+                                <p className="text-[11px] text-slate-600 line-clamp-1 italic">{s.description}</p>
+                              )}
+                              <div className="text-[10px] text-slate-500">
                                 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Date non définie"}
                                 {s.meet_url && <span className="ml-2 text-primary">• Meet ✓</span>}
                                 {s.recording_url && <span className="ml-2 text-emerald-400">• Replay ✓</span>}
@@ -4874,46 +4975,93 @@ export default function SuperAdminDashboard() {
 
                   {/* Formulaire ajout/édition session */}
                   <div className="border-t border-slate-200 pt-4 space-y-4">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
-                      {sessionForm.id ? `Modifier la session #${sessionForm.session_number}` : `Ajouter la session #${bootcampSessions.length + 1}`}
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
+                        <Sparkles className="size-3.5 text-primary" />
+                        {sessionForm.id ? `Modifier la session #${sessionForm.session_number}` : `Ajouter la session #${sessionForm.session_number || (bootcampSessions.length + 1)}`}
+                      </h4>
+                      {selectedCourseForSessions?.start_date && (
+                        <span className="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md font-medium">
+                          Début bootcamp: <strong className="text-slate-700">{selectedCourseForSessions.start_date}</strong>
+                        </span>
+                      )}
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2 text-xs">
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold"># Numéro de session (Auto-généré)</label>
+                        <label className="text-slate-600 block mb-1 font-bold"># Numéro de session</label>
                         <input
                           type="number"
-                          readOnly
-                          value={sessionForm.id ? sessionForm.session_number : (bootcampSessions.length + 1)}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-primary font-bold outline-none cursor-not-allowed"
+                          min={1}
+                          value={sessionForm.session_number || (bootcampSessions.length + 1)}
+                          onChange={e => {
+                            const num = parseInt(e.target.value) || 1
+                            const def = getDefaultSessionDates(selectedCourseForSessions, num)
+                            setSessionForm(prev => ({
+                              ...prev,
+                              session_number: num,
+                              scheduled_at: def.scheduled_at,
+                              ends_at: def.ends_at,
+                              title: (!prev.title || prev.title.startsWith("Session ")) ? `Session ${num} — ` : prev.title
+                            }))
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-primary font-black text-sm outline-none focus:border-primary"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">Titre de la session</label>
-                        <input type="text" placeholder="ex: Session 1 — Introduction à l'IA"
+                        <label className="text-slate-600 block mb-1 font-bold">Titre de la session *</label>
+                        <input type="text" placeholder="ex: Session 1 — Introduction à l'IA & Fondations"
                           value={sessionForm.title || ""}
                           onChange={e => setSessionForm({ ...sessionForm, title: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de début</label>
-                        <input type="datetime-local"
-                          value={sessionForm.scheduled_at ? sessionForm.scheduled_at.slice(0, 16) : ""}
-                          onChange={e => setSessionForm({ ...sessionForm, scheduled_at: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin</label>
-                        <input type="datetime-local"
-                          value={sessionForm.ends_at ? sessionForm.ends_at.slice(0, 16) : ""}
-                          onChange={e => setSessionForm({ ...sessionForm, ends_at: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-semibold"
                         />
                       </div>
                       <div className="sm:col-span-2">
                         <label className="text-slate-600 block mb-1 font-bold">
-                          🎬 Lien Google Meet (Direct Live) <span className="text-slate-400 font-normal">(Optionnel — peut être ajouté plus tard)</span>
+                          📝 Description &amp; Programme de la session <span className="text-slate-400 font-normal">(Optionnel)</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="Ex: Fondamentaux, création de prompts avancés, cas d'usage et manipulation des modèles IA..."
+                          value={sessionForm.description || ""}
+                          onChange={e => setSessionForm({ ...sessionForm, description: e.target.value })}
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de début <span className="text-primary font-semibold">(19h00 GMT auto)</span></label>
+                        <input type="datetime-local"
+                          value={sessionForm.scheduled_at ? sessionForm.scheduled_at.slice(0, 16) : ""}
+                          onChange={e => {
+                            const newStart = e.target.value
+                            let newEnd = sessionForm.ends_at
+                            if (newStart) {
+                              const startD = new Date(newStart)
+                              if (!isNaN(startD.getTime())) {
+                                const endD = new Date(startD.getTime() + 90 * 60 * 1000) // 1h30 mn
+                                const pad = (n: number) => String(n).padStart(2, "0")
+                                newEnd = `${endD.getFullYear()}-${pad(endD.getMonth() + 1)}-${pad(endD.getDate())}T${pad(endD.getHours())}:${pad(endD.getMinutes())}`
+                              }
+                            }
+                            setSessionForm(prev => ({
+                              ...prev,
+                              scheduled_at: newStart,
+                              ends_at: newEnd
+                            }))
+                          }}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-mono text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin <span className="text-slate-400 font-normal">(Durée 1h30 auto)</span></label>
+                        <input type="datetime-local"
+                          value={sessionForm.ends_at ? sessionForm.ends_at.slice(0, 16) : ""}
+                          onChange={e => setSessionForm({ ...sessionForm, ends_at: e.target.value })}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-mono text-xs"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-slate-600 block mb-1 font-bold">
+                          🎬 Lien Google Meet (Direct Live) <span className="text-slate-400 font-normal">(Optionnel — peut être complété plus tard)</span>
                         </label>
                         <input type="text" placeholder="https://meet.google.com/... (optionnel)"
                           value={sessionForm.meet_url || ""}
@@ -4922,41 +5070,41 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-600 block mb-1 font-bold">📺 Lien enregistrement replay (rend le replay immédiatement disponible)</label>
+                        <label className="text-slate-600 block mb-1 font-bold">📺 Lien enregistrement replay <span className="text-slate-400 font-normal">(Optionnel — rend le replay disponible immédiatement)</span></label>
                         <input type="url" placeholder="https://youtube.com/... ou vimeo.com/..."
                           value={sessionForm.recording_url || ""}
                           onChange={e => setSessionForm({ ...sessionForm, recording_url: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">📚 Titre du devoir</label>
-                        <input type="text" placeholder="ex: Créez votre premier prompt..."
+                        <label className="text-slate-600 block mb-1 font-bold">📚 Titre du devoir <span className="text-slate-400 font-normal">(Optionnel)</span></label>
+                        <input type="text" placeholder="ex: Exercice pratique — Prompt Engineering"
                           value={sessionForm.homework_title || ""}
                           onChange={e => setSessionForm({ ...sessionForm, homework_title: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">⏰ Date limite du devoir</label>
+                        <label className="text-slate-600 block mb-1 font-bold">⏰ Date limite du devoir <span className="text-slate-400 font-normal">(Optionnel)</span></label>
                         <input type="datetime-local"
                           value={sessionForm.homework_deadline ? sessionForm.homework_deadline.slice(0, 16) : ""}
                           onChange={e => setSessionForm({ ...sessionForm, homework_deadline: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400"
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-600 block mb-1 font-bold">Description du devoir</label>
-                        <textarea rows={2} placeholder="Décrivez le travail demandé aux étudiants..."
+                        <label className="text-slate-600 block mb-1 font-bold">Description du devoir <span className="text-slate-400 font-normal">(Optionnel)</span></label>
+                        <textarea rows={2} placeholder="Consignes de l'exercice pour les étudiants..."
                           value={sessionForm.homework_description || ""}
                           onChange={e => setSessionForm({ ...sessionForm, homework_description: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400"
                         />
                       </div>
                       {/* Téléversement du Fichier du Devoir (PDF ou Image) */}
                       <div className="sm:col-span-2">
                         <FileUploadField
-                          label="📄 Fichier Sujet du Devoir / Exercice (PDF ou Image - Upload Supabase)"
+                          label="📄 Fichier Sujet du Devoir / Exercice (PDF ou Image - Optionnel)"
                           value={sessionForm.homework_file_url || ""}
                           onChange={url => setSessionForm({ ...sessionForm, homework_file_url: url })}
                           accept=".pdf,image/*,application/pdf"
@@ -4964,7 +5112,7 @@ export default function SuperAdminDashboard() {
                           folder="homeworks"
                           placeholder="https://... ou téléversez le sujet d'exercice"
                           preview="none"
-                          hint="Document ou image du sujet d'exercice téléchargé par les étudiants."
+                          hint="Document ou image de consigne à destination des apprenants."
                         />
                       </div>
                       <div className="sm:col-span-2">
@@ -4972,7 +5120,7 @@ export default function SuperAdminDashboard() {
                         <select
                           value={sessionForm.status || "upcoming"}
                           onChange={e => setSessionForm({ ...sessionForm, status: e.target.value as any })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-medium"
                         >
                           <option value="upcoming">🕒 À venir</option>
                           <option value="live">🟢 En Direct Maintenant</option>
@@ -4982,64 +5130,83 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                      {sessionForm.id && (
+                      {sessionForm.id ? (
                         <button
                           type="button"
-                          onClick={() => setSessionForm({
-                            session_number: bootcampSessions.length + 1,
-                            title: "",
-                            description: "",
-                            scheduled_at: "",
-                            ends_at: "",
-                            meet_url: selectedCourseForSessions?.live_meet_url || "",
-                            recording_url: "",
-                            homework_title: "",
-                            homework_description: "",
-                            homework_file_url: "",
-                            homework_deadline: "",
-                            status: "upcoming"
-                          })}
-                          className="py-2.5 px-4 rounded-xl bg-slate-700 text-slate-200 font-bold text-xs hover:bg-slate-600"
+                          onClick={() => {
+                            const nextNum = bootcampSessions.length > 0
+                              ? Math.max(...bootcampSessions.map(s => Number(s.session_number) || 0), 0) + 1
+                              : 1
+                            const nextDates = getDefaultSessionDates(selectedCourseForSessions, nextNum)
+                            setSessionForm({
+                              session_number: nextNum,
+                              title: `Session ${nextNum} — `,
+                              description: "",
+                              scheduled_at: nextDates.scheduled_at,
+                              ends_at: nextDates.ends_at,
+                              meet_url: selectedCourseForSessions?.live_meet_url || "",
+                              recording_url: "",
+                              homework_title: "",
+                              homework_description: "",
+                              homework_file_url: "",
+                              homework_deadline: "",
+                              status: "upcoming"
+                            })
+                          }}
+                          className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
                         >
                           + Nouvelle session
                         </button>
-                      )}
+                      ) : null}
                       <button
                         type="button"
                         onClick={async () => {
-                          if (!sessionForm.title || !sessionForm.scheduled_at) { alert("Titre et date de début requis."); return }
+                          if (!sessionForm.title || !sessionForm.scheduled_at) {
+                            alert("Veuillez renseigner au minimum le Titre et la Date de début de la session.")
+                            return
+                          }
                           const targetCourseId = selectedCourseForSessions!.id || selectedCourseForSessions!.slug
                           const targetCourseSlug = selectedCourseForSessions!.slug
-                          const autoNum = sessionForm.id ? sessionForm.session_number : (bootcampSessions.length + 1)
+                          const chosenNum = Number(sessionForm.session_number) || (bootcampSessions.length + 1)
 
                           const payload: any = {
                             ...sessionForm,
                             course_id: targetCourseId,
                             course_slug: targetCourseSlug,
-                            session_number: autoNum
+                            session_number: chosenNum
                           }
 
                           if (sessionForm.id) {
                             const { error } = await supabase.from("bootcamp_sessions").update(payload).eq("id", sessionForm.id)
                             if (!error) {
                               const updatedObj = { ...payload, id: sessionForm.id } as BootcampSession
-                              setBootcampSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
+                              const updatedList = bootcampSessions.map(s => s.id === sessionForm.id ? updatedObj : s).sort((a,b) => (a.session_number || 0) - (b.session_number || 0))
+                              setBootcampSessions(updatedList)
                               setAllSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
-                              showNotice("Session mise à jour !")
+                              setDetailsSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
+                              showNotice("Session mise à jour avec succès !")
                             } else {
                               alert("Erreur de mise à jour: " + error.message)
                             }
                           } else {
                             const { data, error } = await supabase.from("bootcamp_sessions").insert([payload]).select().single()
                             if (!error && data) {
-                              setBootcampSessions(prev => [...prev, data as BootcampSession])
+                              const updatedList = [...bootcampSessions, data as BootcampSession].sort((a,b) => (a.session_number || 0) - (b.session_number || 0))
+                              setBootcampSessions(updatedList)
                               setAllSessions(prev => [...prev, data as BootcampSession])
+                              setDetailsSessions(prev => [...prev, data as BootcampSession])
+                              
+                              const nextSessionNum = updatedList.length > 0
+                                ? Math.max(...updatedList.map(s => Number(s.session_number) || 0), 0) + 1
+                                : 1
+                              const nextDates = getDefaultSessionDates(selectedCourseForSessions, nextSessionNum)
+                              
                               setSessionForm({
-                                session_number: bootcampSessions.length + 2,
-                                title: "",
+                                session_number: nextSessionNum,
+                                title: `Session ${nextSessionNum} — `,
                                 description: "",
-                                scheduled_at: "",
-                                ends_at: "",
+                                scheduled_at: nextDates.scheduled_at,
+                                ends_at: nextDates.ends_at,
                                 meet_url: selectedCourseForSessions?.live_meet_url || "",
                                 recording_url: "",
                                 homework_title: "",
@@ -5048,13 +5215,13 @@ export default function SuperAdminDashboard() {
                                 homework_deadline: "",
                                 status: "upcoming"
                               })
-                              showNotice("Session ajoutée avec succès !")
+                              showNotice(`Session #${data.session_number} enregistrée avec succès !`)
                             } else {
                               alert("Erreur d'ajout: " + error?.message)
                             }
                           }
                         }}
-                        className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90"
+                        className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 shadow-md cursor-pointer"
                       >
                         {sessionForm.id ? "Mettre à jour la session" : "Enregistrer la session"}
                       </button>
@@ -5239,6 +5406,9 @@ export default function SuperAdminDashboard() {
                                     </span>
                                     <span className="font-bold text-slate-800">{s.title}</span>
                                   </div>
+                                  {s.description && (
+                                    <p className="text-[11px] text-slate-600 line-clamp-2 pt-0.5">{s.description}</p>
+                                  )}
                                   <div className="text-[10px] text-slate-500 flex items-center gap-3">
                                     <span>📅 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Non planifiée"}</span>
                                     {s.meet_url && <span className="text-primary font-semibold">Meet ✓</span>}
