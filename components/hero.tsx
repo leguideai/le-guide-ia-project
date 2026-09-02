@@ -83,7 +83,7 @@ function CountdownTimer() {
 
   if (!mounted || !targetDate) return null
 
-  if (isExpired) {
+  if (expired) {
     return (
       <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-center font-heading text-xs font-bold text-rose-400">
         L'offre promotionnelle a expiré. Les inscriptions se poursuivent au tarif standard.
@@ -125,6 +125,7 @@ function CountdownTimer() {
 export function Hero() {
   const { t } = useLanguage()
   const [programmeUrl, setProgrammeUrl] = useState("/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf")
+  const [promoActive, setPromoActive] = useState(true)
 
   useEffect(() => {
     supabase.from("site_settings").select("value").eq("key", "hero_programme_url").maybeSingle()

@@ -204,7 +204,6 @@ export const translations: Record<string, any> = {
         followers: "8 000",
         followersLabel: "abonnés LinkedIn (à jour)",
         target: "600+",
-        target: "600+",
         targetLabel: "professionnels formés"
       }
     },
@@ -323,102 +322,6 @@ export const translations: Record<string, any> = {
       standardPrice: "149 000 FCFA · Tarif Normal",
       footerNote: "Le futur appartient à ceux qui se préparent avant les autres.",
       rights: "© {year} Le Guide IA. Tous droits réservés.",
-    },
-    services: {
-      tag: "Prestations Sur-Mesure",
-      title: "Des services premium pour accélérer votre croissance",
-      desc: "Au-delà de nos formations, nous vous accompagnons individuellement dans la réalisation de vos projets stratégiques.",
-      cta: "Discuter de mon projet",
-      items: [
-        {
-          title: "Développement de sites web",
-          desc: "Création de sites modernes, ultra-rapides et optimisés pour le SEO et les conversions. Du site vitrine à la plateforme sur-mesure.",
-          features: ["Design unique & responsive", "Optimisation SEO locale", "Intégration de chatbots / outils IA"],
-          message: "Bonjour Le Guide IA, je souhaite discuter d'un projet de création de site web."
-        },
-        {
-          title: "Coaching recherche d'emploi",
-          desc: "Trouvez l'emploi de vos rêves grâce à l'IA. Préparation intensive aux entretiens, ciblage d'opportunités et simulation de recrutement.",
-          features: ["Accompagnement individuel", "Simulation d'entretien IA", "Stratégie de candidature"],
-          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur le coaching de recherche d'emploi."
-        },
-        {
-          title: "Optimisation de CV et LinkedIn",
-          desc: "Propulsez votre marque personnelle. Diagnostic complet de votre profil LinkedIn et refonte de votre CV pour passer les filtres ATS.",
-          features: ["Audit de profil individuel", "Ligne éditoriale sur-mesure", "Optimisation de CV pour ATS"],
-          message: "Bonjour Le Guide IA, je souhaite avoir des informations sur l'optimisation de CV et de profil LinkedIn."
-        },
-        {
-          title: "Création de Business Plans",
-          desc: "Conception de plans d'affaires solides et convaincants pour vos demandes de financement et structurer vos projets au Burkina Faso.",
-          features: ["Modélisation financière", "Analyse des secteurs porteurs", "Dossier prêt pour les investisseurs"],
-          message: "Bonjour Le Guide IA, je souhaite échanger sur la création de Business Plan pour mon projet."
-        }
-      ]
-    },
-    authority: {
-      tag: "L'expert",
-      founderTitle: "Fondateur de Le Guide IA",
-      consultantTitle: "Expert IA & Transformation Digitale",
-      cisa: "CISA — Certified Information Systems Auditor",
-      experience: "24+ ans d'expérience professionnelle",
-      mba: "MBA en Entrepreneurship et développement durable",
-      videoPlaceholder: "Vidéo de présentation (60s)",
-      desc1: "Expert certifié et auditeur de systèmes d'information chevronné, Alfred Dah aide les professionnels et entreprises d'Afrique francophone et de la diaspora à s'approprier les technologies d'avenir.",
-      desc2: "Mon objectif est simple : rendre l'IA pratique, accessible et utile pour que vous travailliez mieux, gagniez en productivité et créiez plus d'opportunités professionnelles.",
-      quote: "Votre avenir professionnel ne dépend plus seulement de vos compétences. Il dépend aussi de votre capacité à travailler avec l'IA.",
-      stats: {
-        countries: "26+ pays",
-        countriesLabel: "représentés parmi les participants",
-        followers: "8 000",
-        followersLabel: "abonnés LinkedIn (à jour)",
-        target: "600+",
-        targetLabel: "professionnels formés"
-      }
-    },
-    payment: {
-      tag: "Paiement",
-      title: "Validez votre inscription",
-      subtitle: "Choisissez votre mode de paiement préféré et envoyez le formulaire de confirmation une fois le transfert effectué.",
-      methods: {
-        om: { name: "Orange Money", target: "Afrique de l'Ouest", detail: "Transfert au +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
-        wave: { name: "Wave", target: "Afrique de l'Ouest", detail: "Transfert direct via Wave au +226 75 75 72 73 (Sanson Alfred Tanguy Dah)." },
-        zelle: { name: "Zelle", target: "Diaspora", detail: "Envoyer via Zelle au numéro : +1 917 903 5628  (Sanson Alfred Tanguy Dah)." },
-        // bank: { name: "Virement Bancaire", target: "", detail: "Veuillez nous contacter sur WhatsApp pour obtenir notre RIB officiel." }
-      },
-      form: {
-        title: "Confirmer mon paiement",
-        subtitle: "Remplissez ce formulaire après votre transfert pour recevoir vos accès sous 24h.",
-        labelName: "Nom et Prénom",
-        placeholderName: "Votre nom complet",
-        labelEmail: "Email de réception",
-        placeholderEmail: "vous@email.com",
-        labelWhatsapp: "Numéro WhatsApp",
-        placeholderWhatsapp: "Ex : +221 77 123 45 67",
-        labelCountry: "Pays de résidence",
-        placeholderCountry: "Sélectionnez votre pays",
-        searchCountryPlaceholder: "Rechercher un pays...",
-        noCountryFound: "Aucun pays trouvé",
-        warningNote: "Après votre paiement, nous vous contacterons par téléphone pour confirmer les détails de votre inscription.",
-        labelMethod: "Moyen de paiement",
-        placeholderMethod: "Sélectionnez le moyen utilisé",
-        labelTxCode: "Code / Référence de transaction",
-        placeholderTxCode: "Ex: OM_123456789 ou Wave Ref...",
-        cta: "Envoyer la confirmation",
-        loading: "Envoi en cours...",
-        successTitle: "Demande reçue !",
-        successDesc: "Merci {name}. Vos informations ont bien été transmises. Notre équipe va valider votre paiement manuellement sous 24 heures et vous recevrez un e-mail de bienvenue automatique contenant le lien de votre groupe WhatsApp Bootcamp IA & Carrière.",
-        errors: {
-          name: "Veuillez entrer votre prénom et nom.",
-          email: "Veuillez entrer une adresse e-mail valide.",
-          whatsapp: "Veuillez entrer votre numéro WhatsApp.",
-          whatsappInvalid: "Numéro WhatsApp invalide pour l'indicatif {dial}.",
-          country: "Veuillez sélectionner votre pays de résidence.",
-          method: "Veuillez sélectionner votre moyen de paiement.",
-          txCode: "Veuillez indiquer la référence de votre transaction.",
-          server: "Une erreur est survenue lors de l'envoi. Veuillez réessayer."
-        }
-      }
     },
     scrollToTop: {
       ariaLabel: "Remonter en haut de page",
@@ -638,11 +541,10 @@ export const translations: Record<string, any> = {
       desc2: "My goal is simple: to make AI practical, accessible, and useful so that you work better, boost productivity, and build more career opportunities.",
       quote: "Your professional future no longer depends only on your skills. It also depends on your ability to work with AI.",
       stats: {
-        countries: "26+ countries",
+        countries: "25+ countries",
         countriesLabel: "represented among participants",
         followers: "6,326",
         followersLabel: "LinkedIn followers (up to date)",
-        target: "600+",
         target: "600+",
         targetLabel: "professionals trained"
       }

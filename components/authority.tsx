@@ -105,11 +105,11 @@ export function Authority() {
                 <span className="block text-[10px] text-muted-foreground">{t("authority.stats.followersLabel")}</span>
               </div>
             </div> */}
-          </div>
           <div className="flex items-center gap-3 rounded-lg border border-border mt-3 bg-card/40 p-3">
               <Star className="size-5 text-primary shrink-0" />
               <span className="text-xs font-bold text-foreground/90">{t("authority.mba")}</span>
-            </div>
+          </div>
+          </div>
 
           <div className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
             <p>{t("authority.desc1")}</p>
