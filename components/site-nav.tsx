@@ -15,6 +15,7 @@ export function SiteNav() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   const links = [
     { label: "Bootcamps IA", href: "/bootcamp" },
@@ -27,13 +28,27 @@ export function SiteNav() {
     onScroll()
     window.addEventListener("scroll", onScroll)
 
+    async function loadUserRole(userId: string) {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle()
+        if (data?.role) setUserRole(data.role)
+      } catch (_) {}
+    }
+
     // Detect Supabase user session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
+      if (session?.user?.id) loadUserRole(session.user.id)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (session?.user?.id) loadUserRole(session.user.id)
+      else setUserRole(null)
     })
 
     return () => {
@@ -119,11 +134,11 @@ export function SiteNav() {
 
           {user ? (
             <a
-              href="/dashboard"
+              href={userRole === "admin" || userRole === "super_admin" ? "/admin" : "/dashboard"}
               className="flex items-center gap-2 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl transition-all shadow-md"
             >
               <LayoutDashboard className="size-3.5" />
-              <span>Mon Dashboard</span>
+              <span>{userRole === "admin" || userRole === "super_admin" ? "Portail Admin" : "Mon Dashboard"}</span>
             </a>
           ) : (
             <a
@@ -186,12 +201,12 @@ export function SiteNav() {
               
               {user ? (
                 <a
-                  href="/dashboard"
+                  href={userRole === "admin" || userRole === "super_admin" ? "/admin" : "/dashboard"}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary mt-1"
                 >
                   <LayoutDashboard className="size-4" />
-                  <span>Mon Dashboard</span>
+                  <span>{userRole === "admin" || userRole === "super_admin" ? "Portail Admin" : "Mon Dashboard"}</span>
                 </a>
               ) : (
                 <a

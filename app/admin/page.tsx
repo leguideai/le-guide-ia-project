@@ -8933,28 +8933,34 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowPriceEditModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:border-slate-800 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Sparkles className="size-3.5 text-amber-500" />
-                  <span>Modifier les Tarifs ({subscriptionPricing.price3mDisplay || "10 000 F"} / {subscriptionPricing.price1yDisplay || "30 000 F"})</span>
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPriceEditModal(true)}
+                    className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:border-slate-800 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    title="Modifier les tarifs publics (Super Admin)"
+                  >
+                    <Sparkles className="size-3.5 text-amber-500" />
+                    <span>Modifier les Tarifs ({subscriptionPricing.price3mDisplay || "10 000 F"} / {subscriptionPricing.price1yDisplay || "30 000 F"})</span>
+                  </button>
+                )}
 
-                <button
-                  type="button"
-                  onClick={() => setShowManualSubModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-slate-950 text-xs font-black shadow-md hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="size-4" />
-                  <span>Créer un Abonnement Manuel</span>
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setShowManualSubModal(true)}
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-slate-950 text-xs font-black shadow-md hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Créer un abonnement manuel (Super Admin)"
+                  >
+                    <Plus className="size-4" />
+                    <span>Créer un Abonnement Manuel</span>
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* 4 Cartes KPI Synthèse */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Cartes KPI Synthèse */}
+            <div className={`grid gap-4 ${isSuperAdmin ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-1 sm:grid-cols-3"}`}>
               <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-slate-500">Abonnés Actifs</span>
@@ -8996,18 +9002,20 @@ export default function SuperAdminDashboard() {
                 <p className="text-[10px] text-slate-400">Accès VIP suspendus</p>
               </div>
 
-              <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 text-white shadow-md space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Revenus Abonnements</span>
-                  <div className="size-8 rounded-xl bg-primary text-slate-950 flex items-center justify-center">
-                    <DollarSign className="size-4" />
+              {isSuperAdmin && (
+                <div className="p-5 rounded-3xl bg-slate-950 border border-slate-800 text-white shadow-md space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Revenus Abonnements</span>
+                    <div className="size-8 rounded-xl bg-primary text-slate-950 flex items-center justify-center">
+                      <DollarSign className="size-4" />
+                    </div>
                   </div>
+                  <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
+                    {adminSubscriptionStats.totalRevenueFormatted || `${Number(adminSubscriptionStats.totalRevenue || 0).toLocaleString("fr-FR")} FCFA`}
+                  </div>
+                  <p className="text-[10px] text-slate-400">Collectés via Mobile Money &amp; Stripe</p>
                 </div>
-                <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
-                  {adminSubscriptionStats.totalRevenueFormatted || `${Number(adminSubscriptionStats.totalRevenue || 0).toLocaleString("fr-FR")} FCFA`}
-                </div>
-                <p className="text-[10px] text-slate-400">Collectés via Mobile Money &amp; Stripe</p>
-              </div>
+              )}
             </div>
 
             {/* Barre de Recherche et Filtres */}
@@ -9207,13 +9215,13 @@ export default function SuperAdminDashboard() {
                                     </button>
                                   )}
 
-                                  {isActive && (
+                                  {isActive && isSuperAdmin && (
                                     <button
                                       type="button"
                                       disabled={processingId === sub.id}
                                       onClick={() => handleProlongSubscription(sub.id, 30)}
                                       className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] transition-all cursor-pointer"
-                                      title="Prolonger l'abonnement de +30 jours gratuitement"
+                                      title="Prolonger l'abonnement de +30 jours gratuitement (Super Admin)"
                                     >
                                       +30j
                                     </button>
@@ -9231,15 +9239,17 @@ export default function SuperAdminDashboard() {
                                     </button>
                                   )}
 
-                                  <button
-                                    type="button"
-                                    disabled={processingId === sub.id}
-                                    onClick={() => handleDeleteSubscription(sub.id)}
-                                    className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 transition-all cursor-pointer"
-                                    title="Supprimer cet enregistrement"
-                                  >
-                                    <Trash2 className="size-3.5" />
-                                  </button>
+                                  {isSuperAdmin && (
+                                    <button
+                                      type="button"
+                                      disabled={processingId === sub.id}
+                                      onClick={() => handleDeleteSubscription(sub.id)}
+                                      className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-700 transition-all cursor-pointer"
+                                      title="Supprimer cet enregistrement (Super Admin)"
+                                    >
+                                      <Trash2 className="size-3.5" />
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>

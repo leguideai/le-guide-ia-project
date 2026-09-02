@@ -143,6 +143,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [isRedirectingToAdmin, setIsRedirectingToAdmin] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
 
@@ -521,8 +522,8 @@ export default function DashboardPage() {
         if (profData.role === "admin" || profData.role === "super_admin") {
           const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
           if (params?.get("view") !== "student") {
-            setLoading(false)
-            router.push("/admin")
+            setIsRedirectingToAdmin(true)
+            router.replace("/admin")
             return
           }
         }
@@ -1144,6 +1145,21 @@ export default function DashboardPage() {
       subscriptionData?.status === "pending_approval"
     )
   )
+
+  if (isRedirectingToAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-white">
+        <div className="size-12 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary animate-pulse">
+          <ShieldCheck className="size-6" />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-bold text-slate-200">Redirection vers la Console d'Administration...</p>
+          <p className="text-xs text-slate-500">Connexion sécurisée en tant qu'administrateur</p>
+        </div>
+        <Loader2 className="size-5 text-primary animate-spin mt-1" />
+      </div>
+    )
+  }
 
   if (loading) {
     return (

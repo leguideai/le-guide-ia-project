@@ -38,7 +38,7 @@ export function BusinessBanner() {
               <div className="space-y-2.5 text-xs font-semibold text-slate-200">
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
-                  <span>Formations intra-entreprise sur-mesure adaptées à vos équipes</span>
+                  <span>Formations intra-entreprise sur mesure adaptées à vos équipes</span>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />

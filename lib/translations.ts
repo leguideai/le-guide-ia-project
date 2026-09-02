@@ -191,7 +191,7 @@ export const translations: Record<string, any> = {
       desc2: "Mon objectif est simple : rendre l'IA pratique, accessible et utile pour que vous travailliez mieux, gagniez en productivité et créiez plus d'opportunités professionnelles.",
       quote: "Votre avenir professionnel ne dépend plus seulement de vos compétences. Il dépend aussi de votre capacité à travailler avec l'IA.",
       stats: {
-        countries: "26+ pays",
+        countries: "25+ pays",
         countriesLabel: "représentés parmi les participants",
         followers: "8 000",
         followersLabel: "abonnés LinkedIn (à jour)",
@@ -517,7 +517,7 @@ export const translations: Record<string, any> = {
       founderTitle: "Founder of Le Guide IA",
       consultantTitle: "AI & Digital Transformation Expert",
       cisa: "Certified Information Systems Auditor",
-      experience: "24+ years of professional experience",
+      experience: "25+ years of professional experience",
       mba: "MBA en Entrepreneurship et développement durable",
       videoPlaceholder: "Intro Video (60s)",
       desc1: "Certified expert and seasoned information systems auditor, Alfred Dah helps professionals and companies across French-speaking Africa and the diaspora master future tech.",

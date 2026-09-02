@@ -54,7 +54,7 @@ export default function LoginPage() {
       }
       setLoading(false)
     } else if (data?.session) {
-      // Check user role for smart redirection
+      // Check user role for smart direct redirection
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -62,9 +62,9 @@ export default function LoginPage() {
         .maybeSingle()
 
       if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
-        router.push("/admin")
+        router.replace("/admin")
       } else {
-        router.push(redirectTarget)
+        router.replace(redirectTarget)
       }
     }
   }
@@ -92,9 +92,9 @@ export default function LoginPage() {
 
         const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
         if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
-          router.push("/admin")
+          router.replace("/admin")
         } else {
-          router.push(redirectTarget)
+          router.replace(redirectTarget)
         }
       }
     }
@@ -111,9 +111,9 @@ export default function LoginPage() {
           .maybeSingle()
 
         if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
-          router.push("/admin")
+          router.replace("/admin")
         } else {
-          router.push(redirectTarget)
+          router.replace(redirectTarget)
         }
       }
     })
