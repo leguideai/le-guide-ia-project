@@ -147,27 +147,71 @@ export async function GET(req: Request) {
       }
     }
 
-    // 2. Vérifier si l'utilisateur est déjà inscrit spécifiquement à CETTE session
+    // 2. Vérifier si l'utilisateur est déjà inscrit à la Masterclass
     let isRegistered = false
-    const requestedSessionId = searchParams.get("sessionId") || upcomingSession?.id
+    const requestedSessionId = searchParams.get("sessionId") || upcomingSession?.id || "mc_default"
 
-    if (emailParam && requestedSessionId) {
+    if (emailParam) {
       const { data: userRegistrations } = await supabaseServer
         .from("registrations")
         .select("id, status, notes, course_slug, source")
         .ilike("email", emailParam)
 
       if (userRegistrations && userRegistrations.length > 0) {
-        // Vérifier si l'une des inscriptions correspond à la session demandée
         isRegistered = userRegistrations.some((r) => {
-          if (!r.notes) return false
-          try {
-            const pNotes = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
-            if (pNotes) {
-              if (pNotes.masterclass_id === requestedSessionId) return true
-              if (Array.isArray(pNotes.registered_masterclasses) && pNotes.registered_masterclasses.includes(requestedSessionId)) return true
+          const slug = String(r.course_slug || "").toLowerCase()
+          const src = String(r.source || "").toLowerCase()
+
+          // 1. Inscription explicite via le cours ou la source masterclass
+          if (slug.includes("masterclass") || src.includes("masterclass") || src.includes("dimanche")) {
+            return true
+          }
+
+          // 2. Inscription enregistrée dans les notes
+          if (r.notes) {
+            try {
+              const pNotes = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
+              if (pNotes) {
+                // Si l'utilisateur est inscrit à cette session ou à la session par défaut
+                if (pNotes.masterclass_id) {
+                  if (
+                    pNotes.masterclass_id === requestedSessionId ||
+                    pNotes.masterclass_id === "mc_default" ||
+                    requestedSessionId === "mc_default" ||
+                    !searchParams.get("sessionId")
+                  ) {
+                    return true
+                  }
+                }
+
+                if (Array.isArray(pNotes.registered_masterclasses) && pNotes.registered_masterclasses.length > 0) {
+                  if (
+                    !searchParams.get("sessionId") ||
+                    pNotes.registered_masterclasses.includes(requestedSessionId) ||
+                    pNotes.registered_masterclasses.includes("mc_default")
+                  ) {
+                    return true
+                  }
+                }
+
+                if (pNotes.masterclass_title) {
+                  return true
+                }
+
+                if (pNotes.source && String(pNotes.source).toLowerCase().includes("masterclass")) {
+                  return true
+                }
+
+                if (pNotes.last_masterclass_at) {
+                  return true
+                }
+              }
+            } catch (_) {
+              if (typeof r.notes === "string" && r.notes.toLowerCase().includes("masterclass")) {
+                return true
+              }
             }
-          } catch (_) {}
+          }
           return false
         })
       }

@@ -620,9 +620,9 @@ export default function DashboardPage() {
         supabase.from("payments").select("id, amount, currency, method, status, transaction_ref, created_at, registration_id, course_id, course_title, registrations(id, email, full_name, course_id, course_slug, courses(id, title, price))"),
         supabase.from("registrations").select("id, course_id, course_slug, status, created_at, notes").eq("email", userEmailClean),
         supabase.from("user_courses").select("id, course_slug, status, created_at").eq("user_email", userEmailClean),
-        fetch(`/api/user/enrollments?email=${encodeURIComponent(userEmailClean)}`).then(r => r.json()).catch(() => null),
-        fetch(`/api/masterclass?email=${encodeURIComponent(userEmailClean)}`).then(r => r.json()).catch(() => null),
-        fetch(`/api/subscriptions?email=${encodeURIComponent(userEmailClean)}`).then(r => r.json()).catch(() => null)
+        fetch(`/api/user/enrollments?email=${encodeURIComponent(userEmailClean)}`, { cache: "no-store" }).then(r => r.json()).catch(() => null),
+        fetch(`/api/masterclass?email=${encodeURIComponent(userEmailClean)}`, { cache: "no-store" }).then(r => r.json()).catch(() => null),
+        fetch(`/api/subscriptions?email=${encodeURIComponent(userEmailClean)}`, { cache: "no-store" }).then(r => r.json()).catch(() => null)
       ])
 
       // 3. Unpack all responses instantly
