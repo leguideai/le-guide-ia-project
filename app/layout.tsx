@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:
-      'Rejoignez le Bootcamp LE GUIDE IA PRO 2 : 7 Sessions intensives en français pour maîtriser l\'IA. 31 Août – 6 Septembre 2026. 149 900 FCFA offre fondateur.',
+      'Rejoignez le Bootcamp IA & Carrière : 6 Sessions pratiques en français pour maîtriser l\'IA. 31 Août – 5 Septembre 2026. 99 000 FCFA offre promo.',
     url: 'https://leguideai.com',
     siteName: 'Le Guide IA',
     type: 'website',
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:
-      'Rejoignez le Bootcamp LE GUIDE IA PRO 2 : 7 Sessions intensives en français pour maîtriser l\'IA. 31 Août – 6 Septembre 2026. 149 900 FCFA offre fondateur.',
+      'Rejoignez le Bootcamp IA & Carrière : 6 Sessions pratiques en français pour maîtriser l\'IA. 31 Août – 5 Septembre 2026. 99 000 FCFA offre promo.',
     images: ['https://leguideai.com/Logo%20avatar.png'],
     site: '@leguideia',
     creator: '@leguideia',
@@ -215,7 +215,7 @@ export default function RootLayout({
                   url: 'https://leguideai.com',
                   name: 'Le Guide IA',
                   description:
-                    'Bootcamp IA en ligne 100% en français pour professionnels, entrepreneurs et la diaspora. 7 Sessions intensives.',
+                    'Bootcamp IA en ligne 100% en français pour professionnels, entrepreneurs et la diaspora. 6 Sessions pratiques.',
                   publisher: {
                     '@id': 'https://leguideai.com/#organization',
                   },
@@ -223,7 +223,7 @@ export default function RootLayout({
                 {
                   '@type': 'Course',
                   '@id': 'https://leguideai.com/#course',
-                  name: 'Bootcamp LE GUIDE IA PRO 2',
+                  name: 'Bootcamp IA & Carrière',
                   description:
                     'Formation pratique et intensive en direct pour maîtriser ChatGPT, Claude, Gemini et Canva IA avec des cas professionnels africains et diaspora.',
                   provider: {
@@ -233,8 +233,8 @@ export default function RootLayout({
                     '@type': 'CourseInstance',
                     courseMode: 'online',
                     startDate: '2026-08-31',
-                    endDate: '2026-09-06',
-                    courseWorkload: 'PT15H',
+                    endDate: '2026-09-05',
+                    courseWorkload: 'PT12H',
                     instructor: {
                       '@id': 'https://leguideai.com/#person',
                     },
@@ -288,10 +288,10 @@ export default function RootLayout({
                     },
                     {
                       '@type': 'Question',
-                      name: 'Quel est le tarif de l\'offre Fondateur et quand expire-t-elle ?',
+                      name: 'Quel est le tarif de l\'offre Promo et quand expire-t-elle ?',
                       acceptedAnswer: {
                         '@type': 'Answer',
-                        text: 'Le tarif Fondateur est de 149 900 FCFA (environ 262 USD). Cette offre exclusive expire le 20 août 2026 à minuit GMT. Le tarif passera ensuite au prix standard de 250 000 FCFA (environ 440 USD).',
+                        text: 'Le tarif Promo est de 99 000 FCFA (environ 174 USD). Cette offre exclusive expire le 20 août 2026 à minuit GMT. Le tarif passera ensuite au prix normal de 149 000 FCFA (environ 262 USD).',
                       },
                     },
                   ],

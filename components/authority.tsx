@@ -97,18 +97,19 @@ export function Authority() {
               <Briefcase className="size-5 text-primary shrink-0" />
               <span className="text-xs font-bold text-foreground/90">{t("authority.experience")}</span>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-3">
-              <Star className="size-5 text-primary shrink-0" />
-              <span className="text-xs font-bold text-foreground/90">{t("authority.mba")}</span>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-3">
+            
+            {/* <div className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-3">
               <Users className="size-5 text-primary shrink-0" />
               <div>
                 <span className="block text-xs font-bold text-foreground/95">{t("authority.stats.followers")}</span>
                 <span className="block text-[10px] text-muted-foreground">{t("authority.stats.followersLabel")}</span>
               </div>
-            </div>
+            </div> */}
           </div>
+          <div className="flex items-center gap-3 rounded-lg border border-border mt-3 bg-card/40 p-3">
+              <Star className="size-5 text-primary shrink-0" />
+              <span className="text-xs font-bold text-foreground/90">{t("authority.mba")}</span>
+            </div>
 
           <div className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
             <p>{t("authority.desc1")}</p>
