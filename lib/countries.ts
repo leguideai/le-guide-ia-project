@@ -363,121 +363,20 @@ export interface SectorCategory {
   options: string[]
 }
 
+export const PROFILE_SECTOR_OPTIONS = [
+  "Professionnels",
+  "Entrepreneurs",
+  "Étudiants"
+] as const
+
 export const SECTOR_CATEGORIES: SectorCategory[] = [
   {
-    category: "Technologies, Informatique & IA",
-    options: [
-      "Développeur / Ingénieur Logiciel",
-      "Data Scientist / Ingénieur IA / Machine Learning",
-      "Data Analyst / Business Intelligence",
-      "DevOps / Administrateur Systèmes & Cloud",
-      "Expert Cybersécurité & Audit Informatique",
-      "Chef de Projet Digital / Product Manager / Scrum Master",
-      "UI/UX Designer / Web Designer / Graphiste",
-      "Spécialiste Automatisation (Make, Zapier, n8n, Python)",
-    ],
-  },
-  {
-    category: "Direction, Stratégie & Entrepreneuriat",
-    options: [
-      "Chef d'Entreprise / Fondateur / CEO",
-      "Directeur Général / Cadre Dirigeant",
-      "Entrepreneur / Auto-entrepreneur",
-      "Freelance / Consultant Indépendant",
-      "Responsable Stratégie & Transformation Digitale",
-      "Directeur des Opérations (COO)",
-    ],
-  },
-  {
-    category: "Marketing, Communication & Vente",
-    options: [
-      "Responsable / Directeur Marketing",
-      "Spécialiste Marketing Digital & Acquisition (Growth / Ads)",
-      "Community Manager / Responsable Réseaux Sociaux",
-      "Créateur de Contenu / Rédacteur Web / Copywriter",
-      "Directeur Commercial / Responsable des Ventes",
-      "Business Developer / Ingénieur Commercial",
-      "Chargé de Relations Publiques & Communication",
-    ],
-  },
-  {
-    category: "Banque, Finance, Audit & Comptabilité",
-    options: [
-      "Analyste Financier / Banquier d'Affaires",
-      "Responsable Administratif et Financier (RAF)",
-      "Comptable / Chef Comptable",
-      "Expert-Comptable / Commissaire aux Comptes",
-      "Auditeur Interne / Auditeur Financier",
-      "Gestionnaire de Patrimoine / Courtier / Actuaire",
-    ],
-  },
-  {
-    category: "Ressources Humaines & Recrutement",
-    options: [
-      "Directeur / Responsable des Ressources Humaines (DRH)",
-      "Chargé de Recrutement / Talent Acquisition",
-      "Responsable Formation & Développement des Compétences",
-      "Consultant RH / Coach Professionnel",
-    ],
-  },
-  {
-    category: "Éducation, Enseignement & Recherche",
-    options: [
-      "Enseignant / Professeur (Lycée, Collège, Primaire)",
-      "Enseignant-Chercheur / Professeur d'Université",
-      "Formateur Professionnel / Consultant Pédagogique",
-      "Étudiant (Licence, Master, Doctorat)",
-      "Élève Ingénieur / Élève en École de Commerce",
-      "En reconversion professionnelle / En recherche d'emploi",
-    ],
-  },
-  {
-    category: "Santé, Médical & Sciences",
-    options: [
-      "Médecin / Chirurgien / Dentiste",
-      "Pharmacien / Industrie Pharmaceutique",
-      "Infirmier / Cadre de Santé / Profession Paramédicale",
-      "Biologiste / Chercheur en Sciences Médicales",
-    ],
-  },
-  {
-    category: "Juridique, Droit & Administration Publique",
-    options: [
-      "Avocat / Notaire / Juriste d'Entreprise",
-      "Magistrat / Juge / Greffier",
-      "Fonctionnaire / Cadre de l'Administration Publique",
-      "Consultant / Expert en ONG & Organisations Internationales",
-      "Diplomate / Relations Internationales",
-    ],
-  },
-  {
-    category: "BTP, Ingénierie, Logistique & Énergie",
-    options: [
-      "Ingénieur Génie Civil / BTP / Construction",
-      "Architecte / Urbaniste / Géomètre",
-      "Responsable Logistique / Supply Chain Manager",
-      "Ingénieur Énergie / Mines / Pétrole / Environnement",
-      "Ingénieur Agronome / Agroalimentaire",
-    ],
-  },
-  {
-    category: "Médias, Journalisme & Création",
-    options: [
-      "Journaliste / Rédacteur en Chef",
-      "Réalisateur / Monteur Vidéo / Motion Designer",
-      "Photographe / Vidéaste",
-      "Artiste / Producteur / Événementiel",
-    ],
-  },
-  {
-    category: "Autre Secteur",
-    options: [
-      "Autre secteur d'activité",
-    ],
+    category: "Profil & Statut",
+    options: ["Professionnels", "Entrepreneurs", "Étudiants"],
   },
 ]
 
-export const ALL_KNOWN_SECTORS = SECTOR_CATEGORIES.flatMap((c) => c.options)
+export const ALL_KNOWN_SECTORS = ["Professionnels", "Entrepreneurs", "Étudiants", "Etudiants"]
 
 
 

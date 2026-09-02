@@ -13,6 +13,7 @@ import {
   Tv, Award, Zap, Mail, MessageCircle, Lock, Crown
 } from "lucide-react"
 import { SubscriptionModal } from "@/components/subscription-modal"
+import { setAuthRedirect } from "@/lib/auth-redirect"
 
 interface ReplayItem {
   id: string
@@ -125,6 +126,22 @@ export default function MasterclassHubPage() {
     }
 
     init()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        init()
+      }
+    })
+
+    const handleProfileUpdated = () => {
+      init()
+    }
+    window.addEventListener("profile-updated", handleProfileUpdated)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener("profile-updated", handleProfileUpdated)
+    }
   }, [])
 
   // 2. Countdown Calculation strictly based on upcomingSession.scheduledAt
@@ -185,7 +202,22 @@ export default function MasterclassHubPage() {
     }
 
     const emailToSubmit = currentUser.email.toLowerCase().trim()
-    const nameToSubmit = currentUser.user_metadata?.full_name || emailToSubmit.split("@")[0]
+    let nameToSubmit = currentUser.user_metadata?.full_name || emailToSubmit.split("@")[0]
+    let userWhatsApp = currentUser.user_metadata?.whatsapp || ""
+    let userCountry = currentUser.user_metadata?.country || "CI"
+
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, whatsapp, country")
+        .eq("id", currentUser.id)
+        .maybeSingle()
+      if (prof) {
+        if (prof.full_name) nameToSubmit = prof.full_name
+        if (prof.whatsapp) userWhatsApp = prof.whatsapp
+        if (prof.country) userCountry = prof.country
+      }
+    } catch (_) {}
 
     setRegistering(true)
     setFeedbackMsg(null)
@@ -200,8 +232,8 @@ export default function MasterclassHubPage() {
         body: JSON.stringify({
           email: emailToSubmit,
           fullName: nameToSubmit,
-          whatsapp: currentUser.user_metadata?.whatsapp || "",
-          country: currentUser.user_metadata?.country || "CI",
+          whatsapp: userWhatsApp,
+          country: userCountry,
           masterclassId: targetSessionId,
           masterclassTitle: targetSessionTitle
         })
@@ -337,6 +369,9 @@ export default function MasterclassHubPage() {
           <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
             <Link
               href="/login?redirect=/masterclass"
+              onClick={() => {
+                setAuthRedirect("/masterclass")
+              }}
               className="flex-1 py-3 px-4 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
             >
               <LogIn className="size-4" />
@@ -345,6 +380,9 @@ export default function MasterclassHubPage() {
             </Link>
             <Link
               href="/register-account?redirect=/masterclass"
+              onClick={() => {
+                setAuthRedirect("/masterclass")
+              }}
               className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-xs text-center border border-border transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Créer un compte</span>

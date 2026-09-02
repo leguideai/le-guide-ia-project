@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut } from "lucide-react"
+import { setAuthRedirect } from "@/lib/auth-redirect"
 
 function getOfferEndTimestamp(rawDate?: string | null): number | null {
   if (!rawDate || String(rawDate).trim() === "") return null
@@ -443,7 +444,12 @@ export function Header() {
             </div>
           ) : (
             <Link
-              href="/login"
+              href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
+              onClick={() => {
+                if (pathname && pathname !== "/") {
+                  setAuthRedirect(pathname)
+                }
+              }}
               className="text-xs font-bold text-slate-950 bg-primary hover:opacity-90 px-4 py-2 rounded-xl shadow-md transition-all inline-flex items-center gap-1.5"
             >
               <User className="size-3.5" />
@@ -558,8 +564,13 @@ export function Header() {
               </div>
             ) : (
               <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
+                href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  if (pathname && pathname !== "/") {
+                    setAuthRedirect(pathname)
+                  }
+                }}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-lg"
               >
                 <User className="size-4" />

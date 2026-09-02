@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
 import { supabase } from "@/lib/supabase"
+import { setAuthRedirect } from "@/lib/auth-redirect"
 
 export function SiteNav() {
   const pathname = usePathname()
@@ -142,7 +143,12 @@ export function SiteNav() {
             </a>
           ) : (
             <a
-              href="/login"
+              href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
+              onClick={() => {
+                if (pathname && pathname !== "/") {
+                  setAuthRedirect(pathname)
+                }
+              }}
               className="text-xs font-bold text-foreground bg-secondary/80 hover:bg-secondary border border-border px-3.5 py-2 rounded-xl transition-all"
             >
               Espace Membre
@@ -210,8 +216,13 @@ export function SiteNav() {
                 </a>
               ) : (
                 <a
-                  href="/login"
-                  onClick={() => setOpen(false)}
+                  href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
+                  onClick={() => {
+                    setOpen(false)
+                    if (pathname && pathname !== "/") {
+                      setAuthRedirect(pathname)
+                    }
+                  }}
                   className="rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary mt-1"
                 >
                   Espace Membre

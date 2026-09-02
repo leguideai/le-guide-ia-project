@@ -13,6 +13,7 @@ import {
   ArrowLeft, CheckCircle2, Eye, EyeOff, Check, X, ShieldCheck,
   ChevronDown, Search, Globe
 } from "lucide-react"
+import { getAuthRedirect, setAuthRedirect, clearAuthRedirect } from "@/lib/auth-redirect"
 
 export default function RegisterAccountPage() {
   const router = useRouter()
@@ -34,6 +35,15 @@ export default function RegisterAccountPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [redirectTarget, setRedirectTarget] = useState("/dashboard")
+
+  useEffect(() => {
+    const target = getAuthRedirect("/dashboard")
+    setRedirectTarget(target)
+    if (target && target !== "/dashboard") {
+      setAuthRedirect(target)
+    }
+  }, [])
 
   // Close country dropdown on click outside
   useEffect(() => {
@@ -166,6 +176,11 @@ export default function RegisterAccountPage() {
     }
 
     const fullWhatsApp = `${selectedCountry.dial}${rawPhoneDigits}`
+    const target = redirectTarget || getAuthRedirect("/dashboard")
+
+    if (target && target !== "/dashboard") {
+      setAuthRedirect(target)
+    }
 
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
@@ -177,7 +192,7 @@ export default function RegisterAccountPage() {
           country_code: selectedCountry.code,
           country_name: selectedCountry.name,
         },
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}${target}`,
       },
     })
 
@@ -195,7 +210,7 @@ export default function RegisterAccountPage() {
       setLoading(false)
     } else {
       if (data?.session) {
-        router.push("/dashboard")
+        window.location.href = target
       } else {
         setSuccess(true)
       }
@@ -247,7 +262,7 @@ export default function RegisterAccountPage() {
                 Un email de confirmation sécurisé a été envoyé à <strong className="text-primary font-bold">{email}</strong>. Cliquez sur le lien reçu pour valider votre compte.
               </p>
               <Link
-                href="/login"
+                href={`/login${redirectTarget !== "/dashboard" ? `?redirect=${encodeURIComponent(redirectTarget)}` : ""}`}
                 className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-primary text-slate-950 font-black py-3 text-xs shadow-lg shadow-primary/20 hover:opacity-90 transition-all mt-4 cursor-pointer"
               >
                 Aller à la connexion
@@ -536,7 +551,10 @@ export default function RegisterAccountPage() {
 
           <div className="text-center text-xs text-muted-foreground pt-2">
             Déjà inscrit ?{" "}
-            <Link href="/login" className="text-primary hover:underline font-bold">
+            <Link 
+              href={`/login${redirectTarget !== "/dashboard" ? `?redirect=${encodeURIComponent(redirectTarget)}` : ""}`} 
+              className="text-primary hover:underline font-bold"
+            >
               Se connecter
             </Link>
           </div>

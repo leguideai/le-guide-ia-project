@@ -53,14 +53,17 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Crown,
+  Briefcase,
+  Rocket,
+  GraduationCap,
   Lock,
   CreditCard,
   Receipt,
-  GraduationCap,
   UserCheck
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { SubscriptionModal } from "@/components/subscription-modal"
+import { getAuthRedirect, clearAuthRedirect } from "@/lib/auth-redirect"
 
 type TabType = "overview" | "courses" | "masterclasses" | "resources" | "subscription" | "certificates" | "invoices" | "profile"
 
@@ -494,6 +497,14 @@ export default function DashboardPage() {
       }
       setUser(user)
 
+      // Redirection immédiate si l'utilisateur venait pour une autre page (ex: /masterclass)
+      const pendingRedirect = getAuthRedirect("/dashboard")
+      if (pendingRedirect && pendingRedirect !== "/dashboard" && !pendingRedirect.includes("dashboard")) {
+        clearAuthRedirect()
+        window.location.href = pendingRedirect
+        return
+      }
+
       // Verification de l'email : si le compte n'a pas confirme son email, bloquer l'acces a l'espace membre
       const isConfirmed = Boolean(
         user.email_confirmed_at || 
@@ -546,6 +557,20 @@ export default function DashboardPage() {
         profData.sector && profData.sector.trim().length > 0
       )
       setIsProfileSavedInDb(isDbComplete)
+
+      // Si le profil est complet et qu'une redirection (ex: /masterclass) est en attente, y aller immédiatement
+      if (isDbComplete) {
+        const redirectParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null
+        const storedRedirect = typeof window !== "undefined" ? sessionStorage.getItem("auth_redirect") : null
+        const target = redirectParam || storedRedirect
+        if (target && target !== "/dashboard" && !target.includes("dashboard")) {
+          if (storedRedirect && typeof window !== "undefined") {
+            try { sessionStorage.removeItem("auth_redirect") } catch (_) {}
+          }
+          window.location.href = target
+          return
+        }
+      }
 
       setFullName(initialFullName)
       setCountry(initialCountryName)
@@ -766,6 +791,19 @@ export default function DashboardPage() {
     }
 
     loadUserData()
+
+    const handleProfileUpdated = (e: any) => {
+      if (e.detail) {
+        setProfile((prev: any) => ({ ...prev, ...e.detail }))
+        setIsProfileSavedInDb(true)
+        if (e.detail.full_name) setFullName(e.detail.full_name)
+        if (e.detail.country) setCountry(e.detail.country)
+        if (e.detail.city) setCity(e.detail.city)
+        if (e.detail.sector) setSector(e.detail.sector)
+      }
+    }
+    window.addEventListener("profile-updated", handleProfileUpdated)
+    return () => window.removeEventListener("profile-updated", handleProfileUpdated)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -872,7 +910,7 @@ export default function DashboardPage() {
     }
 
     if (!sector || !sector.trim()) {
-      setProfileError("Veuillez sélectionner votre secteur d'activité ou métier.")
+      setProfileError("Veuillez sélectionner votre profil (Professionnels, Entrepreneurs ou Étudiants).")
       return
     }
 
@@ -922,6 +960,19 @@ export default function DashboardPage() {
         setSaveSuccess(true)
         setCountry(countryToSave)
         setTimeout(() => setSaveSuccess(false), 4000)
+
+        const searchRedirect = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null
+        const storedRedirect = typeof window !== "undefined" ? sessionStorage.getItem("auth_redirect") : null
+        const target = searchRedirect || storedRedirect
+
+        if (storedRedirect && typeof window !== "undefined") {
+          try { sessionStorage.removeItem("auth_redirect") } catch (_) {}
+        }
+
+        if (target && target !== "/dashboard") {
+          window.location.href = target
+          return
+        }
       }
     } catch (err: any) {
       setProfileError(err?.message || "Une erreur est survenue lors de la sauvegarde.")
@@ -3628,92 +3679,65 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Secteur d'activité / Profession (Sélecteur par Catégories Design) */}
-              <div className="space-y-1.5" ref={sectorDropdownRef}>
-                <label className="text-xs font-semibold text-slate-700">Secteur d'activité / Profession</label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
-                    className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
-                  >
-                    <span className="truncate font-semibold text-slate-800">
-                      {sector || <span className="text-slate-400 font-normal">Sélectionnez votre secteur ou métier...</span>}
-                    </span>
-                    <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isSectorDropdownOpen ? "rotate-180" : ""}`} />
-                  </button>
-
-                  {/* Popover Dropdown Secteur */}
-                  {isSectorDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-full max-h-72 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-                      <div className="p-2 border-b border-slate-100 sticky top-0 bg-white z-10">
-                        <div className="relative">
-                          <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                          <input
-                            type="text"
-                            value={sectorSearch}
-                            onChange={(e) => setSectorSearch(e.target.value)}
-                            placeholder="Rechercher un métier ou domaine..."
-                            className="w-full bg-[#F4F6F8] border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
-                            autoFocus
-                          />
+              {/* Secteur d'activité / Profession : 3 Options Claires */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                  <span>Secteur d'activité / Profil</span>
+                  <span className="text-[10px] text-slate-500 font-normal">Sélectionnez votre statut</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-0.5">
+                  {[
+                    { 
+                      id: "Professionnels", 
+                      label: "Professionnels", 
+                      desc: "Salarié, Cadre, Expert", 
+                      icon: Briefcase, 
+                      color: "text-blue-600 bg-blue-50 border-blue-200" 
+                    },
+                    { 
+                      id: "Entrepreneurs", 
+                      label: "Entrepreneurs", 
+                      desc: "Fondateur, Dirigeant, Freelance", 
+                      icon: Rocket, 
+                      color: "text-amber-600 bg-amber-50 border-amber-200" 
+                    },
+                    { 
+                      id: "Étudiants", 
+                      label: "Étudiants", 
+                      desc: "Université, École, Formation", 
+                      icon: GraduationCap, 
+                      color: "text-emerald-600 bg-emerald-50 border-emerald-200" 
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon
+                    const isSelected = sector === item.id || (item.id === "Étudiants" && (sector === "Etudiants" || sector.toLowerCase().includes("étudiant") || sector.toLowerCase().includes("etudiant")))
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSector(item.id)}
+                        className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between relative space-y-1.5 ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/40 text-slate-900"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-600"
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="absolute top-2.5 right-2.5 size-4 rounded-full bg-primary text-slate-950 flex items-center justify-center">
+                            <Check className="size-2.5 stroke-[3]" />
+                          </span>
+                        )}
+                        <div className={`size-9 rounded-xl flex items-center justify-center ${isSelected ? "bg-primary text-slate-950" : item.color}`}>
+                          <Icon className="size-4.5" />
                         </div>
-                      </div>
-
-                      <div className="overflow-y-auto divide-y divide-slate-100 text-left">
-                        {filteredSectorsByCategory.map((group) => (
-                          <div key={group.category} className="py-1">
-                            {/* Distinct Visible Category Header */}
-                            <div className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-primary bg-[#F4F6F8] sticky top-0 border-y border-slate-100">
-                              {group.category}
-                            </div>
-                            <div className="divide-y divide-slate-100">
-                              {group.options.map((opt) => {
-                                const isSelected = sector === opt
-                                return (
-                                  <button
-                                    key={opt}
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                    }}
-                                    onClick={(e) => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                      setSector(opt)
-                                      setIsSectorDropdownOpen(false)
-                                      setSectorSearch("")
-                                    }}
-                                    className={`w-full px-4 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
-                                      isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
-                                    }`}
-                                  >
-                                    <span className="truncate">{opt}</span>
-                                    {isSelected && <Check className="size-3.5 text-primary shrink-0 ml-2" />}
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                        <div>
+                          <div className="font-extrabold text-xs text-slate-900">{item.label}</div>
+                          <div className="text-[10px] text-slate-500">{item.desc}</div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
-
-                {/* Champ Précision si Autre secteur ou valeur personnalisée */}
-                {(sector === "Autre secteur d'activité" || (sector && !ALL_KNOWN_SECTORS.includes(sector))) && (
-                  <div className="pt-2 animate-in fade-in duration-200">
-                    <input
-                      type="text"
-                      value={sector === "Autre secteur d'activité" ? "" : sector}
-                      onChange={(e) => setSector(e.target.value || "Autre secteur d'activité")}
-                      placeholder="Précisez votre profession ou domaine exact..."
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs"
-                    />
-                  </div>
-                )}
               </div>
 
               <button
@@ -4235,76 +4259,65 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* 5. Secteur / Profession (Ouvre vers le haut pour ne jamais chevaucher le bouton de validation) */}
-              <div className="space-y-1" ref={forcedSectorRef}>
-                <label className="text-xs font-bold text-slate-700">5. Secteur d'activité / Profession *</label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsForcedSectorOpen(!isForcedSectorOpen)}
-                    className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
-                  >
-                    <span className="truncate font-semibold text-slate-800">
-                      {sector || <span className="text-slate-400 font-normal">Sélectionnez votre domaine d'activité...</span>}
-                    </span>
-                    <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isForcedSectorOpen ? "rotate-180" : ""}`} />
-                  </button>
+              {/* 5. Secteur d'activité / Profession : 3 Options Claires */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>5. Secteur d'activité / Statut *</span>
+                  <span className="text-[10px] text-slate-500 font-normal">Sélectionnez votre profil</span>
+                </label>
 
-                  {isForcedSectorOpen && (
-                    <div className="absolute bottom-full left-0 mb-1.5 w-full max-h-60 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[120] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-                      <div className="p-2 border-b border-slate-100 sticky top-0 bg-white z-10">
-                        <div className="relative">
-                          <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                          <input
-                            type="text"
-                            value={forcedSectorSearch}
-                            onChange={(e) => setForcedSectorSearch(e.target.value)}
-                            placeholder="Rechercher un métier ou domaine..."
-                            className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
-                            autoFocus
-                          />
+                <div className="grid grid-cols-3 gap-2 pt-0.5">
+                  {[
+                    { 
+                      id: "Professionnels", 
+                      label: "Professionnels", 
+                      desc: "Salarié, Cadre, Expert", 
+                      icon: Briefcase, 
+                      color: "text-blue-600 bg-blue-50 border-blue-200" 
+                    },
+                    { 
+                      id: "Entrepreneurs", 
+                      label: "Entrepreneurs", 
+                      desc: "Fondateur, Dirigeant, Freelance", 
+                      icon: Rocket, 
+                      color: "text-amber-600 bg-amber-50 border-amber-200" 
+                    },
+                    { 
+                      id: "Étudiants", 
+                      label: "Étudiants", 
+                      desc: "Université, École, Formation", 
+                      icon: GraduationCap, 
+                      color: "text-emerald-600 bg-emerald-50 border-emerald-200" 
+                    },
+                  ].map((item) => {
+                    const Icon = item.icon
+                    const isSelected = sector === item.id || (item.id === "Étudiants" && (sector === "Etudiants" || sector.toLowerCase().includes("étudiant") || sector.toLowerCase().includes("etudiant")))
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSector(item.id)}
+                        className={`p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between relative space-y-1.5 ${
+                          isSelected
+                            ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/40 text-slate-900"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-600"
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="absolute top-2 right-2 size-4 rounded-full bg-primary text-slate-950 flex items-center justify-center">
+                            <Check className="size-2.5 stroke-[3]" />
+                          </span>
+                        )}
+                        <div className={`size-8 rounded-xl flex items-center justify-center ${isSelected ? "bg-primary text-slate-950" : item.color}`}>
+                          <Icon className="size-4" />
                         </div>
-                      </div>
-
-                      <div className="overflow-y-auto divide-y divide-slate-100 text-left">
-                        {filteredForcedSectorsByCategory.map((group) => (
-                          <div key={`fsc-${group.category}`} className="py-1">
-                            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-primary bg-slate-100 sticky top-0">
-                              {group.category}
-                            </div>
-                            <div className="divide-y divide-slate-100">
-                              {group.options.map((opt) => {
-                                const isSelected = sector === opt
-                                return (
-                                  <button
-                                    key={`fso-${opt}`}
-                                    type="button"
-                                    onMouseDown={(e) => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                    }}
-                                    onClick={(e) => {
-                                      e.preventDefault()
-                                      e.stopPropagation()
-                                      setSector(opt)
-                                      setIsForcedSectorOpen(false)
-                                      setForcedSectorSearch("")
-                                    }}
-                                    className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
-                                      isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
-                                    }`}
-                                  >
-                                    <span className="truncate">{opt}</span>
-                                    {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                        <div>
+                          <div className="font-extrabold text-xs text-slate-900">{item.label}</div>
+                          <div className="text-[9px] text-slate-500 line-clamp-1">{item.desc}</div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 

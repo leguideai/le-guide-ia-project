@@ -5,6 +5,7 @@ import './globals.css'
 import { LanguageProvider } from '@/lib/language-context'
 import { PerformancePatch } from '@/components/performance-patch'
 import { AnalyticsTracker } from '@/components/analytics-tracker'
+import { GlobalProfileCompletionModal } from '@/components/global-profile-completion-modal'
 
 const jakarta = Plus_Jakarta_Sans({
   variable: '--font-geist-sans',
@@ -302,6 +303,7 @@ export default function RootLayout({
         <LanguageProvider>
           <PerformancePatch />
           <AnalyticsTracker />
+          <GlobalProfileCompletionModal />
           {children}
         </LanguageProvider>
       </body>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { LogIn, Mail, Lock, AlertCircle, ArrowLeft } from "lucide-react"
+import { getAuthRedirect, setAuthRedirect, clearAuthRedirect } from "@/lib/auth-redirect"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +15,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isMagicLink, setIsMagicLink] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [redirectTarget, setRedirectTarget] = useState("/dashboard")
+
+  useEffect(() => {
+    const target = getAuthRedirect("/dashboard")
+    setRedirectTarget(target)
+    if (target && target !== "/dashboard") {
+      setAuthRedirect(target)
+    }
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,13 +31,13 @@ export default function LoginPage() {
     setError(null)
     setMessage(null)
 
-    const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
+    const target = redirectTarget || getAuthRedirect("/dashboard")
 
     if (isMagicLink) {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}${redirectTarget}`,
+          emailRedirectTo: `${window.location.origin}${target}`,
         },
       })
       if (error) {
@@ -61,10 +71,12 @@ export default function LoginPage() {
         .eq("id", data.session.user.id)
         .maybeSingle()
 
-      if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
-        router.replace("/admin")
+      if (profile?.role === "admin" || profile?.role === "super_admin" || target.includes("admin")) {
+        clearAuthRedirect()
+        window.location.href = "/admin"
       } else {
-        router.replace(redirectTarget)
+        clearAuthRedirect()
+        window.location.href = target
       }
     }
   }
@@ -90,11 +102,13 @@ export default function LoginPage() {
           })
         }
 
-        const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
-        if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
-          router.replace("/admin")
+        const target = getAuthRedirect("/dashboard")
+        if (profile?.role === "admin" || profile?.role === "super_admin" || target.includes("admin")) {
+          clearAuthRedirect()
+          window.location.href = "/admin"
         } else {
-          router.replace(redirectTarget)
+          clearAuthRedirect()
+          window.location.href = target
         }
       }
     }
@@ -103,31 +117,36 @@ export default function LoginPage() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
+        const target = getAuthRedirect("/dashboard")
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", session.user.id)
           .maybeSingle()
 
-        if (profile?.role === "admin" || profile?.role === "super_admin" || redirectTarget.includes("admin")) {
-          router.replace("/admin")
+        if (profile?.role === "admin" || profile?.role === "super_admin" || target.includes("admin")) {
+          clearAuthRedirect()
+          window.location.href = "/admin"
         } else {
-          router.replace(redirectTarget)
+          clearAuthRedirect()
+          window.location.href = target
         }
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [router])
+  }, [router, redirectTarget])
 
   const handleGoogleLogin = async () => {
     setError(null)
-    const redirectTarget = typeof window !== "undefined" ? (new URLSearchParams(window.location.search).get("redirect") || "/dashboard") : "/dashboard"
+    const target = redirectTarget || getAuthRedirect("/dashboard")
+    if (target && target !== "/dashboard") {
+      setAuthRedirect(target)
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}${redirectTarget}`,
+        redirectTo: `${window.location.origin}${target}`,
       },
     })
     if (error) setError(error.message)
@@ -252,7 +271,10 @@ export default function LoginPage() {
             ) : (
               <span>
                 Pas encore de compte ?{" "}
-                <Link href="/register-account" className="text-primary hover:underline font-bold">
+                <Link 
+                  href={`/register-account${redirectTarget !== "/dashboard" ? `?redirect=${encodeURIComponent(redirectTarget)}` : ""}`} 
+                  className="text-primary hover:underline font-bold"
+                >
                   Créer un compte
                 </Link>
               </span>

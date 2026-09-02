@@ -5104,14 +5104,19 @@ export default function SuperAdminDashboard() {
                           value={sessionForm.session_number || (bootcampSessions.length + 1)}
                           onChange={e => {
                             const num = parseInt(e.target.value) || 1
-                            const def = getDefaultSessionDates(selectedCourseForSessions, num)
-                            setSessionForm(prev => ({
-                              ...prev,
-                              session_number: num,
-                              scheduled_at: def.scheduled_at,
-                              ends_at: def.ends_at,
-                              title: (!prev.title || prev.title.startsWith("Session ")) ? `Session ${num} — ` : prev.title
-                            }))
+                            setSessionForm(prev => {
+                              if (prev.id) {
+                                return { ...prev, session_number: num }
+                              }
+                              const def = getDefaultSessionDates(selectedCourseForSessions, num)
+                              return {
+                                ...prev,
+                                session_number: num,
+                                scheduled_at: def.scheduled_at,
+                                ends_at: def.ends_at,
+                                title: (!prev.title || prev.title.startsWith("Session ")) ? `Session ${num} — ` : prev.title
+                              }
+                            })
                           }}
                           className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-primary font-black text-sm outline-none focus:border-primary"
                         />
@@ -5146,7 +5151,10 @@ export default function SuperAdminDashboard() {
                             if (newStart) {
                               const startD = new Date(newStart)
                               if (!isNaN(startD.getTime())) {
-                                const endD = new Date(startD.getTime() + 2 * 60 * 60 * 1000) // 2h
+                                const prevStart = sessionForm.scheduled_at ? new Date(sessionForm.scheduled_at).getTime() : NaN
+                                const prevEnd = sessionForm.ends_at ? new Date(sessionForm.ends_at).getTime() : NaN
+                                const durationMs = (!isNaN(prevStart) && !isNaN(prevEnd) && prevEnd > prevStart) ? (prevEnd - prevStart) : (2 * 60 * 60 * 1000)
+                                const endD = new Date(startD.getTime() + durationMs)
                                 const pad = (n: number) => String(n).padStart(2, "0")
                                 newEnd = `${endD.getFullYear()}-${pad(endD.getMonth() + 1)}-${pad(endD.getDate())}T${pad(endD.getHours())}:${pad(endD.getMinutes())}`
                               }
@@ -5157,15 +5165,15 @@ export default function SuperAdminDashboard() {
                               ends_at: newEnd
                             }))
                           }}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-mono text-xs"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-mono text-xs cursor-pointer"
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin <span className="text-slate-400 font-normal">(Durée 2h auto)</span></label>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin</label>
                         <input type="datetime-local"
                           value={sessionForm.ends_at ? sessionForm.ends_at.slice(0, 16) : ""}
                           onChange={e => setSessionForm({ ...sessionForm, ends_at: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-mono text-xs"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-mono text-xs cursor-pointer"
                         />
                       </div>
                       <div className="sm:col-span-2">
