@@ -44,45 +44,28 @@ export async function GET(req: Request) {
       })
     }
 
-    // 2. Fetch all courses for identifier mapping
-    const { data: dbCourses } = await supabaseServer.from("courses").select("id, title, slug")
-    const allCourses = dbCourses || []
+    // Parallel fetch: courses, profile, registrations, user_courses
+    const [coursesRes, profileRes, userRegsRes, userCoursesRes] = await Promise.all([
+      supabaseServer.from("courses").select("id, title, slug"),
+      userId 
+        ? supabaseServer.from("profiles").select("role").eq("id", userId).maybeSingle()
+        : supabaseServer.from("profiles").select("role").ilike("email", userEmail).maybeSingle(),
+      supabaseServer
+        .from("registrations")
+        .select("id, course_id, course_slug, status, created_at, notes, source")
+        .ilike("email", userEmail),
+      supabaseServer
+        .from("user_courses")
+        .select("id, user_email, course_slug, status, created_at")
+        .ilike("user_email", userEmail),
+    ])
 
-    // 3. Check if user is admin (by userId or by email)
-    let profile: any = null
-    if (userId) {
-      const { data } = await supabaseServer
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .maybeSingle()
-      profile = data
-    }
-    if (!profile && userEmail) {
-      const { data } = await supabaseServer
-        .from("profiles")
-        .select("role")
-        .ilike("email", userEmail)
-        .maybeSingle()
-      profile = data
-    }
+    const allCourses = coursesRes.data || []
+    const profile = profileRes.data
+    const userRegs = userRegsRes.data || []
+    const userCourses = userCoursesRes.data || []
 
-    if (profile?.role === "admin" || profile?.role === "super_admin") {
-      const allIds = ["*"]
-      allCourses.forEach(c => {
-        if (c.id) allIds.push(String(c.id).toLowerCase())
-        if (c.slug) allIds.push(String(c.slug).toLowerCase())
-        if (c.title) allIds.push(normalizeStr(c.title))
-      })
-      return NextResponse.json({
-        success: true,
-        isLoggedIn: true,
-        isAdmin: true,
-        confirmed: allIds,
-        pending: [],
-        pendingDetails: []
-      })
-    }
+    const isAdmin = profile?.role === "admin" || profile?.role === "super_admin"
 
     const confirmedSet = new Set<string>()
     const pendingSet = new Set<string>()
@@ -103,7 +86,7 @@ export async function GET(req: Request) {
       targetSet.add(lower)
       if (norm) targetSet.add(norm)
 
-      // 1. Exact match first
+      // Exact match
       let matched = allCourses.find(c =>
         c.id?.toLowerCase() === lower ||
         c.slug?.toLowerCase() === lower ||
@@ -111,7 +94,7 @@ export async function GET(req: Request) {
         normalizeStr(c.title) === norm
       )
 
-      // 2. Fallback category matching only if no exact match
+      // Fallback match
       if (!matched) {
         matched = allCourses.find(c =>
           (norm.includes("test") && normalizeStr(c.slug).includes("test")) ||
@@ -128,28 +111,23 @@ export async function GET(req: Request) {
       }
     }
 
-    // 4. Fetch registrations for user
-    const { data: userRegs } = await supabaseServer
-      .from("registrations")
-      .select("id, course_id, course_slug, status, created_at, notes, source")
-      .ilike("email", userEmail)
-
+    // Process registrations
     const regIdToSlug = new Map<string, string>()
-    const userRegIdSet = new Set<string>()
+    const userRegIds: string[] = []
 
-    if (userRegs && userRegs.length > 0) {
+    if (userRegs.length > 0) {
       userRegs.forEach(r => {
         let slugOrId = r.course_slug || (r.course_id ? String(r.course_id) : "")
         if (!slugOrId && r.notes) {
           try {
             const parsed = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
             if (parsed?.course_slug) slugOrId = parsed.course_slug
-          } catch(e) {}
+          } catch (_) {}
         }
 
         if (slugOrId) {
           regIdToSlug.set(r.id, slugOrId)
-          userRegIdSet.add(r.id)
+          userRegIds.push(r.id)
           if (["paye", "confirmed", "active"].includes(r.status)) {
             addCourseIdentifiers(confirmedSet, slugOrId)
           } else if (["en_attente", "pending", "pending_verification", "inscrit", "attente", "a_verifier"].includes(r.status) && !isMasterclass(slugOrId) && r.source !== "masterclass_dimanche") {
@@ -165,42 +143,39 @@ export async function GET(req: Request) {
       })
     }
 
-    // 5. Fetch payments linked to user registrations
-    const { data: allPays } = await supabaseServer
-      .from("payments")
-      .select("id, amount, currency, method, status, transaction_ref, created_at, registration_id, course_id, course_title")
+    // Fetch payments only for this user's registrations (targeted query)
+    if (userRegIds.length > 0) {
+      const { data: userPayments } = await supabaseServer
+        .from("payments")
+        .select("id, amount, currency, method, status, transaction_ref, created_at, registration_id, course_id, course_title")
+        .in("registration_id", userRegIds)
 
-    if (allPays && allPays.length > 0) {
-      allPays.forEach((p: any) => {
-        const isLinkedToUser = (p.registration_id && userRegIdSet.has(p.registration_id))
-        const matchingSlug = p.registration_id ? regIdToSlug.get(p.registration_id) : null
-        const targetIdentifier = matchingSlug || p.course_title || (p.course_id ? String(p.course_id) : "")
+      if (userPayments && userPayments.length > 0) {
+        userPayments.forEach((p: any) => {
+          const matchingSlug = p.registration_id ? regIdToSlug.get(p.registration_id) : null
+          const targetIdentifier = matchingSlug || p.course_title || (p.course_id ? String(p.course_id) : "")
 
-        if (isLinkedToUser && targetIdentifier) {
-          if (["confirmed", "paye", "active"].includes(p.status)) {
-            addCourseIdentifiers(confirmedSet, targetIdentifier)
-          } else if (["pending", "en_attente", "pending_verification", "a_verifier"].includes(p.status) && !isMasterclass(targetIdentifier)) {
-            addCourseIdentifiers(pendingSet, targetIdentifier)
-            pendingDetails.push({
-              course_slug: targetIdentifier,
-              created_at: p.created_at,
-              status: p.status,
-              payment_method: p.method,
-              amount: p.amount,
-              ref: p.transaction_ref
-            })
+          if (targetIdentifier) {
+            if (["confirmed", "paye", "active"].includes(p.status)) {
+              addCourseIdentifiers(confirmedSet, targetIdentifier)
+            } else if (["pending", "en_attente", "pending_verification", "a_verifier"].includes(p.status) && !isMasterclass(targetIdentifier)) {
+              addCourseIdentifiers(pendingSet, targetIdentifier)
+              pendingDetails.push({
+                course_slug: targetIdentifier,
+                created_at: p.created_at,
+                status: p.status,
+                payment_method: p.method,
+                amount: p.amount,
+                ref: p.transaction_ref
+              })
+            }
           }
-        }
-      })
+        })
+      }
     }
 
-    // 6. Fetch user_courses (safe select with real database columns)
-    const { data: userCourses } = await supabaseServer
-      .from("user_courses")
-      .select("id, user_email, course_slug, status, created_at")
-      .ilike("user_email", userEmail)
-
-    if (userCourses && userCourses.length > 0) {
+    // Process user_courses
+    if (userCourses.length > 0) {
       userCourses.forEach((uc: any) => {
         const identifier = uc.course_slug || (uc.course_id ? String(uc.course_id) : "")
         if (["active", "confirmed", "completed"].includes(uc.status)) {
@@ -222,7 +197,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       isLoggedIn: true,
-      isAdmin: false,
+      isAdmin,
       confirmed: Array.from(confirmedSet),
       pending: Array.from(pendingSet),
       pendingDetails

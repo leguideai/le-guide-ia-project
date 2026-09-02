@@ -99,8 +99,8 @@ export function useUserEnrollments() {
 
   const loadEnrollments = useCallback(async () => {
     try {
-      const { data: authData } = await supabase.auth.getUser()
-      const currentUser = authData?.user
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
       const storedEmail = typeof window !== "undefined"
         ? (localStorage.getItem("user_email") || localStorage.getItem("member_email") || localStorage.getItem("le_guide_ia_email"))
         : null
@@ -126,14 +126,16 @@ export function useUserEnrollments() {
         setIsLoggedIn(true)
       }
 
-      // Fetch dynamic courses for cross-referencing
-      const { data: cData } = await supabase.from("courses").select("*")
-      const fetchedCourses = cData || []
+      // Parallel fetch: courses list + user enrollments API
+      const [cRes, enrollmentsRes] = await Promise.all([
+        supabase.from("courses").select("id, title, slug"),
+        fetch(`/api/user/enrollments?email=${encodeURIComponent(email)}`)
+      ])
+
+      const fetchedCourses = cRes.data || []
       setAllCourses(fetchedCourses)
 
-      // Fetch unified enrollments & pendings via server API (bypassing client RLS limitations)
-      const res = await fetch(`/api/user/enrollments?email=${encodeURIComponent(email)}`)
-      const data = await res.json()
+      const data = await enrollmentsRes.json()
 
       if (data && data.success) {
         setIsAdmin(Boolean(data.isAdmin))
