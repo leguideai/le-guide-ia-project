@@ -29,6 +29,61 @@ interface ReplayItem {
   is_published?: boolean
 }
 
+// Helper pour formater la date en clair (ex: "Dimanche 6 septembre 2026 à 15h à 16h30 (GMT)")
+function formatMasterclassDate(session: any): string {
+  if (!session) return "Date à venir"
+
+  let calculatedDate = ""
+  if (session.scheduledAt) {
+    const d = new Date(session.scheduledAt)
+    if (!isNaN(d.getTime())) {
+      const formatted = d.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      })
+      calculatedDate = formatted.charAt(0).toUpperCase() + formatted.slice(1)
+    }
+  }
+
+  const rawDisplay = (session.dateDisplay || "").trim()
+
+  if (calculatedDate) {
+    if (rawDisplay) {
+      if (rawDisplay.toLowerCase().includes("dimanche prochain") || rawDisplay.toLowerCase().includes("prochain")) {
+        return rawDisplay.replace(/dimanche\s+prochain/gi, calculatedDate).replace(/prochain/gi, calculatedDate)
+      }
+      if (!/dimanche|\d{1,2}\s+(?:janv|févr|mars|avr|mai|juin|juil|août|sept|oct|nov|déc)/i.test(rawDisplay)) {
+        return `${calculatedDate} ${rawDisplay.startsWith("à") ? rawDisplay : `à ${rawDisplay}`}`
+      }
+      return rawDisplay
+    }
+    return `${calculatedDate} à 15h à 16h30 (GMT)`
+  }
+
+  if (rawDisplay) {
+    if (rawDisplay.toLowerCase().includes("prochain")) {
+      const now = new Date()
+      const nextSunday = new Date()
+      const day = now.getDay()
+      const diff = (7 - day) % 7 || 7
+      nextSunday.setDate(now.getDate() + diff)
+      const formattedNext = nextSunday.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      })
+      const capNext = formattedNext.charAt(0).toUpperCase() + formattedNext.slice(1)
+      return rawDisplay.replace(/dimanche\s+prochain/gi, capNext).replace(/prochain/gi, capNext)
+    }
+    return rawDisplay
+  }
+
+  return "Date à venir"
+}
+
 export default function MasterclassHubPage() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [authChecking, setAuthChecking] = useState(true)
