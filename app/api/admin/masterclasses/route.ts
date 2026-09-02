@@ -200,12 +200,31 @@ export async function GET() {
       }
     }
 
-    // 2. Récupérer les inscriptions liées aux Masterclasses
-    const { data: rawParticipants } = await supabaseServer
+    // 2. Récupérer toutes les inscriptions liées aux Masterclasses (par course_slug, source ou notes)
+    const { data: allRegistrations } = await supabaseServer
       .from("registrations")
       .select("id, full_name, email, whatsapp, country, status, created_at, notes, course_slug, source")
-      .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,course_slug.eq.masterclass-live,source.eq.masterclass_dimanche")
       .order("created_at", { ascending: false })
+
+    const rawParticipants = (allRegistrations || []).filter((r) => {
+      const slug = String(r.course_slug || "").toLowerCase()
+      const src = String(r.source || "").toLowerCase()
+      if (slug.includes("masterclass") || src.includes("masterclass") || src.includes("dimanche")) return true
+
+      if (r.notes) {
+        try {
+          const pNotes = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
+          if (pNotes) {
+            if (pNotes.masterclass_id || pNotes.masterclass_title) return true
+            if (Array.isArray(pNotes.registered_masterclasses) && pNotes.registered_masterclasses.length > 0) return true
+            if (pNotes.source && String(pNotes.source).toLowerCase().includes("masterclass")) return true
+          }
+        } catch (_) {
+          if (typeof r.notes === "string" && r.notes.toLowerCase().includes("masterclass")) return true
+        }
+      }
+      return false
+    })
 
     // Récupérer les profils correspondants pour enrichir avec pays, profession/secteur et numéro WhatsApp officiel
     const participantEmails = (rawParticipants || []).map(p => p.email?.toLowerCase().trim()).filter(Boolean)
