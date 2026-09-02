@@ -2120,22 +2120,47 @@ export default function DashboardPage() {
                                   </div>
                                 </div>
 
-                                {activeLesson?.meetUrl && activeLesson.meetUrl.trim() && activeLesson.meetUrl !== "https://meet.google.com" ? (
-                                  <a
-                                    href={activeLesson.meetUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-all mt-2 cursor-pointer"
-                                  >
-                                    <Video className="size-4" />
-                                    <span>Rejoindre la Session Live sur Google Meet</span>
-                                  </a>
-                                ) : (
-                                  <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center">
-                                    <Video className="size-4 text-amber-400 shrink-0" />
-                                    <span>Lien Google Meet disponible avant le début de la session</span>
-                                  </div>
-                                )}
+                                {(() => {
+                                  const hasMeetUrl = Boolean(activeLesson?.meetUrl && activeLesson.meetUrl.trim() && activeLesson.meetUrl !== "https://meet.google.com")
+                                  const startTime = activeLesson?.scheduledAt ? new Date(activeLesson.scheduledAt).getTime() : NaN
+                                  const now = Date.now()
+                                  // Accessible si à moins de 30 minutes du début ou si déjà en direct
+                                  const isWithin30Min = !isNaN(startTime) ? (startTime - now) <= 30 * 60 * 1000 : true
+                                  const isLiveOrPassed = activeLesson?.isLive || (!isNaN(startTime) && now >= startTime)
+                                  const canJoinMeet = hasMeetUrl && (isWithin30Min || isLiveOrPassed)
+
+                                  if (canJoinMeet) {
+                                    return (
+                                      <a
+                                        href={activeLesson!.meetUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-black px-6 py-2.5 text-xs shadow-md transition-all mt-2 cursor-pointer animate-pulse"
+                                      >
+                                        <Video className="size-4" />
+                                        <span>Rejoindre la Session Live sur Google Meet</span>
+                                      </a>
+                                    )
+                                  }
+
+                                  if (hasMeetUrl) {
+                                    return (
+                                      <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center select-none shadow-inner">
+                                        <Lock className="size-3.5 text-amber-400 shrink-0" />
+                                        <span>
+                                          Le lien Google Meet sera activé 30 min avant la session {!isNaN(startTime) ? `(à ${new Date(startTime - 30 * 60 * 1000).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })})` : ""}
+                                        </span>
+                                      </div>
+                                    )
+                                  }
+
+                                  return (
+                                    <div className="flex items-center justify-center gap-2 rounded-xl bg-slate-900/90 border border-slate-700/80 text-slate-300 font-medium px-4 py-2.5 text-xs mt-2 text-center">
+                                      <Video className="size-4 text-amber-400 shrink-0" />
+                                      <span>Lien Google Meet disponible avant le début de la session</span>
+                                    </div>
+                                  )
+                                })()}
                               </div>
                             ) : (
                               /* Completed/Replay Video Player (iframe) */
@@ -2212,34 +2237,34 @@ export default function DashboardPage() {
                               </div>
                             )}
 
-                            {/* Exercise & Homework Submission Section */}
+                            {/* Exercise & Homework Submission Section (Royal Blue Theme) */}
                             {activeLesson?.exercise && (
-                              <div className="rounded-2xl border border-amber-200/90 bg-amber-50/70 p-4 space-y-3 mt-3 text-left">
-                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-2.5">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300/80">
+                              <div className="rounded-2xl border border-blue-200/90 bg-blue-50/70 p-4 sm:p-5 space-y-3.5 mt-3 text-left">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-200/80 pb-3">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-950 bg-blue-100 px-3 py-1 rounded-full border border-blue-300">
                                       📝 Devoir à rendre
                                     </span>
-                                    <h4 className="text-xs font-bold text-slate-800">{activeLesson.exercise.title}</h4>
+                                    <h4 className="text-sm font-bold text-slate-900">{activeLesson.exercise.title}</h4>
                                   </div>
 
-                                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-900">
-                                    <Clock className="size-3.5" />
+                                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-900 bg-blue-100/80 px-2.5 py-1 rounded-lg border border-blue-200/80">
+                                    <Clock className="size-3.5 text-blue-600" />
                                     <span>Date limite : {activeLesson.exercise.deadline}</span>
                                   </div>
                                 </div>
 
                                 {activeLesson.exercise.description && (
-                                  <p className="text-xs text-slate-700 leading-relaxed bg-white/80 p-3 rounded-xl border border-amber-200/60">
+                                  <p className="text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-blue-100 shadow-2xs">
                                     {activeLesson.exercise.description}
                                   </p>
                                 )}
 
                                 {/* Sujet d'exercice / Fichier joint téléchargeable immédiatement */}
                                 {activeLesson.exercise.fileUrl && (
-                                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-amber-200 shadow-2xs">
+                                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-blue-200 shadow-2xs">
                                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 truncate">
-                                      <FileText className="size-4 text-amber-600 shrink-0" />
+                                      <FileText className="size-4 text-primary shrink-0" />
                                       <span className="truncate">Sujet du Devoir : <strong className="text-slate-900">{activeLesson.exercise.title}</strong></span>
                                     </div>
                                     <a
@@ -2247,19 +2272,19 @@ export default function DashboardPage() {
                                       target="_blank"
                                       rel="noreferrer"
                                       download
-                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 hover:text-black bg-amber-200/80 hover:bg-amber-300 px-3 py-1.5 rounded-lg border border-amber-300/80 shrink-0 cursor-pointer transition-colors shadow-2xs"
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-900 hover:text-black bg-blue-100 hover:bg-blue-200 px-3.5 py-1.5 rounded-lg border border-blue-300/80 shrink-0 cursor-pointer transition-colors shadow-2xs"
                                     >
-                                      <Download className="size-3.5" />
+                                      <Download className="size-3.5 text-blue-700" />
                                       <span>Télécharger le sujet</span>
                                     </a>
                                   </div>
                                 )}
 
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-                                  <span className={`text-[10px] font-semibold px-3 py-1 rounded-full border shrink-0 ${
+                                  <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full border shrink-0 ${
                                     submittedExerciseIds.includes(activeLesson.exercise.title) || activeLesson.exercise.status === 'submitted'
                                       ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                      : "bg-rose-50 text-rose-800 border-rose-200"
+                                      : "bg-blue-100 text-blue-800 border-blue-200"
                                   }`}>
                                     {submittedExerciseIds.includes(activeLesson.exercise.title) || activeLesson.exercise.status === 'submitted' ? "✓ Travail Soumis sur la plateforme" : "⏳ En attente de rendu"}
                                   </span>
@@ -2270,7 +2295,7 @@ export default function DashboardPage() {
                                       title: activeLesson.exercise!.title,
                                       deadline: activeLesson.exercise!.deadline
                                     })}
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 text-xs shadow-2xs transition-all cursor-pointer"
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black px-5 py-2.5 text-xs shadow-md transition-all cursor-pointer"
                                   >
                                     <Upload className="size-3.5" />
                                     <span>{submittedExerciseIds.includes(activeLesson.exercise.title) ? "Modifier mon rendu" : "Soumettre ma réponse sur la plateforme"}</span>
