@@ -644,8 +644,8 @@ export default function SuperAdminDashboard() {
     targetDate.setDate(targetDate.getDate() + Math.max(0, sessionNum - 1))
     targetDate.setHours(19, 0, 0, 0) // Heure par défaut : 19h00 GMT
 
-    // Durée par défaut : 1h30 (90 minutes) -> Fin à 20h30 GMT
-    const targetEndDate = new Date(targetDate.getTime() + 90 * 60 * 1000)
+    // Durée par défaut : 1h (60 minutes) -> Fin à 20h00 GMT
+    const targetEndDate = new Date(targetDate.getTime() + 60 * 60 * 1000)
 
     const pad = (n: number) => String(n).padStart(2, "0")
     const formatIsoLocal = (d: Date) => {
@@ -682,8 +682,8 @@ export default function SuperAdminDashboard() {
 
     let endTime = session.ends_at ? new Date(session.ends_at).getTime() : NaN
     if (isNaN(endTime)) {
-      // Durée par défaut : 90 minutes (1h30)
-      endTime = startTime + 90 * 60 * 1000
+      // Durée par défaut : 60 minutes (1h)
+      endTime = startTime + 60 * 60 * 1000
     }
 
     if (now < startTime) {
@@ -5140,7 +5140,7 @@ export default function SuperAdminDashboard() {
                             if (newStart) {
                               const startD = new Date(newStart)
                               if (!isNaN(startD.getTime())) {
-                                const endD = new Date(startD.getTime() + 90 * 60 * 1000) // 1h30 mn
+                                const endD = new Date(startD.getTime() + 60 * 60 * 1000) // 1h
                                 const pad = (n: number) => String(n).padStart(2, "0")
                                 newEnd = `${endD.getFullYear()}-${pad(endD.getMonth() + 1)}-${pad(endD.getDate())}T${pad(endD.getHours())}:${pad(endD.getMinutes())}`
                               }
@@ -5155,7 +5155,7 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin <span className="text-slate-400 font-normal">(Durée 1h30 auto)</span></label>
+                        <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de fin <span className="text-slate-400 font-normal">(Durée 1h auto)</span></label>
                         <input type="datetime-local"
                           value={sessionForm.ends_at ? sessionForm.ends_at.slice(0, 16) : ""}
                           onChange={e => setSessionForm({ ...sessionForm, ends_at: e.target.value })}

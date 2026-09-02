@@ -942,7 +942,7 @@ export default function DashboardPage() {
         // Calcul dynamique du statut de la session
         const now = Date.now()
         const startTime = s.scheduled_at ? new Date(s.scheduled_at).getTime() : NaN
-        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 90 * 60 * 1000 : NaN)
+        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 60 * 60 * 1000 : NaN)
 
         let dynStatus: "upcoming" | "live" | "completed" = s.status || "upcoming"
         if (s.recording_url && s.recording_url.trim().length > 5) {
@@ -952,7 +952,7 @@ export default function DashboardPage() {
         } else if (!isNaN(startTime)) {
           if (now < startTime) {
             dynStatus = "upcoming"
-          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 90 * 60 * 1000)) {
+          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 60 * 60 * 1000)) {
             dynStatus = "live"
           } else {
             dynStatus = "completed"
@@ -1100,7 +1100,7 @@ export default function DashboardPage() {
         // Calcul automatique du statut
         const now = Date.now()
         const startTime = s.scheduled_at ? new Date(s.scheduled_at).getTime() : NaN
-        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 90 * 60 * 1000 : NaN)
+        let endTime = s.ends_at ? new Date(s.ends_at).getTime() : (!isNaN(startTime) ? startTime + 60 * 60 * 1000 : NaN)
 
         let dynStatus: "upcoming" | "live" | "completed" = s.status || "upcoming"
         if (hasRecording || s.status === "completed") {
@@ -1108,7 +1108,7 @@ export default function DashboardPage() {
         } else if (!isNaN(startTime)) {
           if (now < startTime) {
             dynStatus = "upcoming"
-          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 90 * 60 * 1000)) {
+          } else if (now >= startTime && (!isNaN(endTime) ? now <= endTime : now <= startTime + 60 * 60 * 1000)) {
             dynStatus = "live"
           } else {
             dynStatus = "completed"
