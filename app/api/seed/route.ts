@@ -410,7 +410,7 @@ async function seedDatabase() {
         role: "Lead Cyber Security Analyst at City of Nicos",
         avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
         image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
-        text: "J’ai étudié aux côtés d’Alfred et peux témoigner de son dynamisme et de son expertise exceptionnels. À la croisée de la gouvernance de l’IA et de la formation des dirigeants, il allie certification CISA, rigueur et sens de l’implémentation. Sa capacité à traduire des concepts complexes en recommandations pratiques est remarquable. Je le recommande sans réserve à toute organisation cherchant un leader en IA."
+        text: "J’ai étudié aux côtés d’Alfred et peux témoigner de son dynamisme et de son expertise exceptionnels. À la croisée de la gouvernance de l’IA et de la formation des dirigeants, il allie rigueur et sens de l’implémentation. Sa capacité à traduire des concepts complexes en recommandations pratiques est remarquable. Je le recommande sans réserve à toute organisation cherchant un leader en IA."
       },
       {
         name: "W. Nadine Mariam YODA",

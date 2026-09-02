@@ -4,12 +4,22 @@ import { sendManualEnrollmentEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const { data: profiles, error } = await supabaseServer
+    const url = new URL(req.url)
+    const requesterEmail = url.searchParams.get("requesterEmail")?.toLowerCase()?.trim()
+
+    let query = supabaseServer
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false })
+
+    // Seul samba@leguideai.com peut voir sa ligne dans la table des membres
+    if (requesterEmail !== "samba@leguideai.com") {
+      query = query.neq("email", "samba@leguideai.com")
+    }
+
+    const { data: profiles, error } = await query
 
     if (error) {
       console.error("Admin users fetch error:", error)
@@ -33,6 +43,7 @@ export async function POST(req: Request) {
     } = body
 
     const userEmail = body.userEmail || body.email || body.user_email
+    const requesterEmail = body.requesterEmail?.toLowerCase()?.trim()
     const courseSlug = body.courseSlug || body.course_slug
     const userName = body.userName || body.name || body.fullName || body.full_name
     const paymentMethod = body.paymentMethod || body.payment_method
@@ -42,12 +53,40 @@ export async function POST(req: Request) {
     const courseTitleOverride = body.course_title || body.courseTitle
     const amountPaidOverride = body.amount_paid || body.amountPaid || body.amount
 
+    const IMMUTABLE_SUPER_ADMIN_EMAIL = "samba@leguideai.com"
+    const emailClean = userEmail?.toLowerCase()?.trim()
+
+    // 🛡️ Protection du compte fondateur samba@leguideai.com
+    if (userId || emailClean) {
+      let targetEmail = emailClean
+      if (!targetEmail && userId) {
+        const { data: targetProfile } = await supabaseServer
+          .from("profiles")
+          .select("email, role")
+          .eq("id", userId)
+          .maybeSingle()
+        targetEmail = targetProfile?.email?.toLowerCase()?.trim()
+      }
+
+      if (targetEmail === IMMUTABLE_SUPER_ADMIN_EMAIL) {
+        if (action === "delete_user") {
+          return NextResponse.json({
+            error: "Action interdite : Le compte fondateur samba@leguideai.com ne peut pas être supprimé."
+          }, { status: 403 })
+        }
+        // Seul samba@leguideai.com lui-même peut modifier son propre rôle
+        if (action === "update_role" && requesterEmail !== IMMUTABLE_SUPER_ADMIN_EMAIL) {
+          return NextResponse.json({
+            error: "Action interdite : Seul le superadmin samba@leguideai.com peut modifier son propre rôle."
+          }, { status: 403 })
+        }
+      }
+    }
+
     if (action === "delete_user") {
       if (!userId) {
         return NextResponse.json({ error: "userId requis." }, { status: 400 })
       }
-
-      const emailClean = userEmail?.toLowerCase()?.trim()
 
       // 1. Delete from profiles
       try {

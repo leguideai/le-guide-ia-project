@@ -12,7 +12,7 @@ export default function EntreprisesPage() {
     contactName: "",
     email: "",
     phone: "",
-    companySize: "10 à 50 personnes",
+    companySize: "1 à 10 personnes",
     serviceType: "Formations d'Équipe Sur-Mesure",
     message: ""
   })
@@ -78,7 +78,7 @@ export default function EntreprisesPage() {
               </span>
 
               <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl">
-                Formations intra-entreprise sur-mesure, audits de maturité IA et gouvernance des systèmes d'information menés par Alfred Dah, auditeur certifié CISA.
+                Formations intra-entreprise sur-mesure, audits de maturité IA et gouvernance des systèmes d'information menés par Alfred Dah.
               </p>
 
               {/* Key Metrics Pill Badges */}
@@ -89,7 +89,7 @@ export default function EntreprisesPage() {
                 </span>
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
                   <ShieldCheck className="size-3.5 text-primary" />
-                  Audit & Sécurité CISA
+                  Audit & Sécurité
                 </span>
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
                   <Award className="size-3.5 text-[#D4AF37]" />
@@ -199,14 +199,14 @@ export default function EntreprisesPage() {
                 <div className="size-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
                   <ShieldCheck className="size-6" />
                 </div>
-                <h3 className="font-heading text-xl font-bold text-foreground">Audit & Gouvernance IA (CISA)</h3>
+                <h3 className="font-heading text-xl font-bold text-foreground">Audit & Gouvernance IA</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Évaluation des risques, sécurité des données d'entreprise et mise en conformité de l'utilisation de ChatGPT et LLMs dans vos équipes.
                 </p>
                 <ul className="space-y-2 pt-2 text-xs text-foreground/90">
                   <li className="flex items-center gap-2">
                     <Check className="size-3.5 text-primary" />
-                    <span>Supervision par Auditeur certifié CISA</span>
+                    <span>Supervision par Auditeur certifié</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="size-3.5 text-primary" />
@@ -218,7 +218,7 @@ export default function EntreprisesPage() {
                   </li>
                 </ul>
               </div>
-              <button onClick={() => selectServiceAndScroll("Audit & Gouvernance IA (CISA)")} className="w-full py-2.5 rounded-xl border border-border hover:border-primary hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={() => selectServiceAndScroll("Audit & Gouvernance IA")} className="w-full py-2.5 rounded-xl border border-border hover:border-primary hover:text-primary text-xs font-bold text-foreground transition-all cursor-pointer">
                 Demander un audit →
               </button>
             </div>
@@ -340,18 +340,18 @@ export default function EntreprisesPage() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-foreground/80">Email professionnel *</label>
+                        <label className="text-xs font-bold text-foreground/80">Email *</label>
                         <input
                           type="email"
                           required
                           value={form.email}
                           onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          placeholder="direction@entreprise.com"
+                          placeholder="direction@gmail.com"
                           className="w-full rounded-xl border border-border bg-input/40 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-foreground/80">Numéro Téléphone / WhatsApp *</label>
+                        <label className="text-xs font-bold text-foreground/80">Numéro Téléphone *</label>
                         <input
                           type="tel"
                           required
@@ -372,7 +372,7 @@ export default function EntreprisesPage() {
                           className="w-full rounded-xl border border-border bg-slate-900 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                         >
                           <option value="Formations d'Équipe Sur-Mesure">Formations d'Équipe Sur-Mesure</option>
-                          <option value="Audit & Gouvernance IA (CISA)">Audit & Gouvernance IA (CISA)</option>
+                          <option value="Audit & Gouvernance IA">Audit & Gouvernance IA</option>
                           <option value="Accompagnement Stratégique & Automatisation">Accompagnement Stratégique & Automatisation</option>
                           <option value="Conférence & Masterclass Privée">Conférence & Masterclass Privée</option>
                           <option value="Autre / Projet Spécifique">Autre / Projet Spécifique</option>

@@ -25,12 +25,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Bootcamp IA par Alfred Dah – Formation Intelligence Artificielle | Le Guide IA',
   description:
-    'Maîtrisez l\'IA pratique avec Alfred Dah, expert certifié CISA & Fondateur de Le Guide IA. Bootcamp PRO 2 : 7 sessions intensives du 31 Août au 6 Septembre 2026.',
+    'Maîtrisez l\'IA pratique avec Alfred Dah, expert certifié & Fondateur de Le Guide IA. Bootcamp PRO 2 : 7 sessions intensives du 31 Août au 6 Septembre 2026.',
   keywords: [
     'Alfred Dah',
     'Alfred Dah IA',
     'Alfred Dah Le Guide IA',
-    'Alfred Dah CISA',
     'Alfred Dah Burkina Faso',
     'Sanson Alfred Tanguy Dah',
     'Le Guide IA',
@@ -191,8 +190,8 @@ export default function RootLayout({
                   givenName: 'Alfred',
                   familyName: 'Dah',
                   alternateName: ['Sanson Alfred Tanguy Dah', 'Alfred Dah IA', 'Alfred Dah Le Guide IA'],
-                  jobTitle: 'Expert IA, Auditeur CISA & Fondateur de Le Guide IA',
-                  description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale, audit de systèmes d\'information (CISA) et gouvernance IA.',
+                  jobTitle: 'Expert IA & Fondateur de Le Guide IA',
+                  description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale, audit de systèmes d\'information et gouvernance IA.',
                   image: 'https://leguideai.com/profile_alfred.jpg',
                   url: 'https://leguideai.com',
                   sameAs: ['https://www.linkedin.com/in/alfreddah/'],
@@ -203,7 +202,6 @@ export default function RootLayout({
                     'Claude',
                     'Gemini',
                     'Transformation Digitale',
-                    'Audit CISA',
                     'Gouvernance des Systèmes d\'Information'
                   ],
                   worksFor: {

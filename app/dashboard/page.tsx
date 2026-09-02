@@ -2976,7 +2976,7 @@ export default function DashboardPage() {
               <div className="space-y-2">
                 <h3 className="font-heading text-xl font-bold text-slate-800">Certificat Officiel — Bootcamp IA Pro 2</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Attestation de compétences délivrée par Alfred Dah (Auditeur CISA &amp; Expert IA). Valide pour LinkedIn et valorisation professionnelle.
+                  Attestation de compétences délivrée par Alfred Dah (Expert IA). Valide pour LinkedIn et valorisation professionnelle.
                 </p>
               </div>
 
@@ -3624,7 +3624,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between pt-4 border-t border-amber-200/80 text-xs">
                 <div className="text-left space-y-0.5">
                   <span className="text-[10px] text-slate-500 block">Formateur &amp; Auditeur</span>
-                  <span className="font-bold text-slate-800">Alfred Dah (CISA)</span>
+                  <span className="font-bold text-slate-800">Alfred Dah</span>
                 </div>
                 <div className="size-14 rounded-lg bg-white border border-slate-200 p-1 flex items-center justify-center shadow-xs">
                   <img src="/Logo%20avatar.png" alt="QR" className="size-12 object-cover rounded" />

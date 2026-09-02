@@ -46,7 +46,7 @@ export function BusinessBanner() {
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
-                  <span>Accompagnement par Alfred Dah (Auditeur CISA & Expert IA)</span>
+                  <span>Accompagnement par Alfred Dah (Auditeur & Expert IA)</span>
                 </div>
               </div>
 

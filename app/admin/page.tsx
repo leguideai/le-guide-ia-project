@@ -179,6 +179,7 @@ export default function SuperAdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
+  const isSuperAdmin = userRole === "super_admin"
   const [unauthorized, setUnauthorized] = useState(false)
 
   // Subscription management states
@@ -946,6 +947,8 @@ export default function SuperAdminDashboard() {
         setUserRole(profile.role)
         if (profile.role !== "admin" && profile.role !== "super_admin") {
           setUnauthorized(true)
+        } else if (profile.role === "admin") {
+          setActiveTab(prev => (prev === "kpi" || prev === "users" || prev === "settings" || prev === "export" ? "courses" : prev))
         }
       }
     } catch (e) {
@@ -998,7 +1001,8 @@ export default function SuperAdminDashboard() {
       if (allSess) setAllSessions(allSess)
 
       // 5. Users
-      const resUsers = await fetch("/api/admin/users")
+      const userEmailQuery = currentUser?.email ? `?requesterEmail=${encodeURIComponent(currentUser.email)}` : ""
+      const resUsers = await fetch(`/api/admin/users${userEmailQuery}`)
       const dataUsers = await resUsers.json()
       if (dataUsers.users) setUsers(dataUsers.users)
 
@@ -2100,17 +2104,36 @@ export default function SuperAdminDashboard() {
 
   // Handle Role Change
   async function handleRoleChange(userId: string, newRole: string) {
+    const targetUser = users.find(u => u.id === userId)
+    const isFounder = targetUser?.email?.toLowerCase() === "samba@leguideai.com"
+    const isCurrentFounder = currentUser?.email?.toLowerCase() === "samba@leguideai.com"
+
+    if (isFounder && !isCurrentFounder) {
+      alert("Action interdite : Seul le superadmin samba@leguideai.com peut modifier son propre rôle.")
+      return
+    }
+
     setProcessingId(userId)
     try {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update_role", userId, role: newRole })
+        body: JSON.stringify({
+          action: "update_role",
+          userId,
+          role: newRole,
+          requesterEmail: currentUser?.email
+        })
       })
       const data = await res.json()
       if (data.success) {
         showNotice(`Rôle mis à jour : ${newRole}`)
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole as any } : u))
+        if (isFounder) {
+          setUserRole(newRole)
+        }
+      } else {
+        alert(data.error || "Erreur lors de la mise à jour du rôle")
       }
     } catch (err) {
       alert("Erreur lors de la mise à jour du rôle")
@@ -2122,6 +2145,11 @@ export default function SuperAdminDashboard() {
   // Handle Delete User (Super Admin only)
   async function handleDeleteUser(userToDelete: any) {
     if (!userToDelete?.id) return
+
+    if (userToDelete?.email?.toLowerCase() === "samba@leguideai.com") {
+      alert("Action interdite : Le compte du Super Admin fondateur (samba@leguideai.com) est strictement protégé et immuable.")
+      return
+    }
 
     if (userToDelete.id === currentUser?.id || userToDelete.email === currentUser?.email) {
       alert("Action impossible : Vous ne pouvez pas supprimer votre propre compte actuellement connecté.")
@@ -3136,23 +3164,25 @@ export default function SuperAdminDashboard() {
 
             {/* Mobile Nav Links */}
             <div className="space-y-4 text-left">
-              {/* Section 1 */}
-              <div className="space-y-1">
-                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
-                <button
-                  onClick={() => { setActiveTab("kpi"); setMobileMenuOpen(false) }}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <DollarSign className="size-4 shrink-0" />
-                    <span>Dashboard & KPIs</span>
-                  </div>
-                </button>
-              </div>
+              {/* Section 1: Dashboard & KPIs (Super Admin only) */}
+              {isSuperAdmin && (
+                <div className="space-y-1">
+                  <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
+                  <button
+                    onClick={() => { setActiveTab("kpi"); setMobileMenuOpen(false) }}
+                    className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <DollarSign className="size-4 shrink-0" />
+                      <span>Dashboard & KPIs</span>
+                    </div>
+                  </button>
+                </div>
+              )}
 
-              {/* Section 2 */}
+              {/* Section 2: Gestion du Contenu */}
               <div className="space-y-1">
                 <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Gestion du Contenu</p>
                 
@@ -3313,21 +3343,23 @@ export default function SuperAdminDashboard() {
                 </button>
               </div>
 
-              {/* Section 3 */}
+              {/* Section 3: Apprenants & Devoirs */}
               <div className="space-y-1">
                 <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Apprenants & Devoirs</p>
-                <button
-                  onClick={() => { setActiveTab("users"); setMobileMenuOpen(false) }}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Users className="size-4 shrink-0" />
-                    <span>Membres & Rôles</span>
-                  </div>
-                  <span className="text-[10px] opacity-75">({users.length})</span>
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => { setActiveTab("users"); setMobileMenuOpen(false) }}
+                    className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Users className="size-4 shrink-0" />
+                      <span>Membres & Rôles</span>
+                    </div>
+                    <span className="text-[10px] opacity-75">({users.length})</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => { setActiveTab("submissions"); setMobileMenuOpen(false) }}
@@ -3347,7 +3379,7 @@ export default function SuperAdminDashboard() {
                 </button>
               </div>
 
-              {/* Section 4 */}
+              {/* Section 4: Organisation */}
               <div className="space-y-1">
                 <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Organisation</p>
                 <button
@@ -3393,29 +3425,33 @@ export default function SuperAdminDashboard() {
                   )}
                 </button>
 
-                <button
-                  onClick={() => { setActiveTab("settings"); setMobileMenuOpen(false) }}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Award className="size-4 shrink-0" />
-                    <span>Paramètres</span>
-                  </div>
-                </button>
+                {isSuperAdmin && (
+                  <>
+                    <button
+                      onClick={() => { setActiveTab("settings"); setMobileMenuOpen(false) }}
+                      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Award className="size-4 shrink-0" />
+                        <span>Paramètres</span>
+                      </div>
+                    </button>
 
-                <button
-                  onClick={() => { setActiveTab("export"); setMobileMenuOpen(false) }}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Download className="size-4 shrink-0" />
-                    <span>Exports</span>
-                  </div>
-                </button>
+                    <button
+                      onClick={() => { setActiveTab("export"); setMobileMenuOpen(false) }}
+                      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Download className="size-4 shrink-0" />
+                        <span>Exports</span>
+                      </div>
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Logout Mobile */}
@@ -3463,26 +3499,28 @@ export default function SuperAdminDashboard() {
 
           {/* Nav Categories */}
           <div className="space-y-4">
-            {/* Section 1: ANALYTIQUES & REVENUS */}
-            <div className="space-y-1">
-              {!sidebarCollapsed ? (
-                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
-              ) : (
-                <div className="my-2 border-t border-slate-100" />
-              )}
-              <button
-                onClick={() => setActiveTab("kpi")}
-                title="Dashboard & KPIs"
-                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
-                  <DollarSign className="size-4 shrink-0" />
-                  {!sidebarCollapsed && <span>Dashboard & KPIs</span>}
-                </div>
-              </button>
-            </div>
+            {/* Section 1: ANALYTIQUES & REVENUS (Super Admin only) */}
+            {isSuperAdmin && (
+              <div className="space-y-1">
+                {!sidebarCollapsed ? (
+                  <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Analytiques & Ventes</p>
+                ) : (
+                  <div className="my-2 border-t border-slate-100" />
+                )}
+                <button
+                  onClick={() => setActiveTab("kpi")}
+                  title="Dashboard & KPIs"
+                  className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "kpi" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
+                    <DollarSign className="size-4 shrink-0" />
+                    {!sidebarCollapsed && <span>Dashboard & KPIs</span>}
+                  </div>
+                </button>
+              </div>
+            )}
 
             {/* Section 2: GESTION DU CONTENU */}
             <div className="space-y-1">
@@ -3667,19 +3705,21 @@ export default function SuperAdminDashboard() {
               ) : (
                 <div className="my-2 border-t border-slate-100" />
               )}
-              <button
-                onClick={() => setActiveTab("users")}
-                title={`Membres & Rôles (${users.length})`}
-                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
-                  activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
-                  <Users className="size-4 shrink-0" />
-                  {!sidebarCollapsed && <span>Membres & Rôles</span>}
-                </div>
-                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({users.length})</span>}
-              </button>
+              {isSuperAdmin && (
+                <button
+                  onClick={() => setActiveTab("users")}
+                  title={`Membres & Rôles (${users.length})`}
+                  className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+                    activeTab === "users" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
+                    <Users className="size-4 shrink-0" />
+                    {!sidebarCollapsed && <span>Membres & Rôles</span>}
+                  </div>
+                  {!sidebarCollapsed && <span className="text-[10px] opacity-75">({users.length})</span>}
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveTab("submissions")}
@@ -3761,31 +3801,35 @@ export default function SuperAdminDashboard() {
                 )}
               </button>
 
-              <button
-                onClick={() => setActiveTab("settings")}
-                title="Paramètres"
-                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
-                  <Award className="size-4 shrink-0" />
-                  {!sidebarCollapsed && <span>Paramètres</span>}
-                </div>
-              </button>
+              {isSuperAdmin && (
+                <>
+                  <button
+                    onClick={() => setActiveTab("settings")}
+                    title="Paramètres"
+                    className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "settings" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
+                      <Award className="size-4 shrink-0" />
+                      {!sidebarCollapsed && <span>Paramètres</span>}
+                    </div>
+                  </button>
 
-              <button
-                onClick={() => setActiveTab("export")}
-                title="Exports"
-                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                }`}
-              >
-                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
-                  <Download className="size-4 shrink-0" />
-                  {!sidebarCollapsed && <span>Exports</span>}
-                </div>
-              </button>
+                  <button
+                    onClick={() => setActiveTab("export")}
+                    title="Exports"
+                    className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      activeTab === "export" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
+                      <Download className="size-4 shrink-0" />
+                      {!sidebarCollapsed && <span>Exports</span>}
+                    </div>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -3863,8 +3907,27 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        {/* TAB 1: KPI OVERVIEW */}
-        {activeTab === "kpi" && (
+        {/* ACCESS RESTRICTED NOTICE FOR ADMIN ON SUPER_ADMIN TABS */}
+        {!isSuperAdmin && (activeTab === "kpi" || activeTab === "users" || activeTab === "settings" || activeTab === "export") && (
+          <div className="p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-4 max-w-xl mx-auto my-12 animate-fadeIn">
+            <div className="size-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto">
+              <ShieldAlert className="size-7" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">Accès Réservé au Super Admin</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Cette rubrique est réservée exclusivement au Super Administrateur (Fondateur / Direction).
+            </p>
+            <button
+              onClick={() => setActiveTab("courses")}
+              className="px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 cursor-pointer shadow-lg shadow-primary/20"
+            >
+              Retour aux Bootcamps
+            </button>
+          </div>
+        )}
+
+        {/* TAB 1: KPI OVERVIEW (Super Admin only) */}
+        {activeTab === "kpi" && isSuperAdmin && (
           <div className="space-y-6 sm:space-y-8 animate-fadeIn">
             {/* KPI Cards Grid */}
             <div className="grid gap-3 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -4377,11 +4440,11 @@ export default function SuperAdminDashboard() {
                           </button>
                         </div>
 
-                        {c.id && (
+                        {isSuperAdmin && c.id && (
                           <button
                             onClick={() => handleDeleteCourse(c.id!)}
                             className="py-1.5 px-2.5 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
-                            title="Supprimer"
+                            title="Supprimer ce Bootcamp (Super Admin)"
                           >
                             <Trash2 className="size-3.5 shrink-0" />
                             <span className="text-[10px] font-bold">Supprimer</span>
@@ -9644,13 +9707,15 @@ export default function SuperAdminDashboard() {
                               >
                                 <Edit3 className="size-3.5" />
                               </button>
-                              <button
-                                onClick={() => handleDeletePayment(p.id, p.registration_id, (p.registrations as any)?.email, (p.registrations as any)?.course_slug || p.course_title)}
-                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                                title="Supprimer définitivement l'inscription"
-                              >
-                                <Trash2 className="size-3.5" />
-                              </button>
+                              {isSuperAdmin && (
+                                <button
+                                  onClick={() => handleDeletePayment(p.id, p.registration_id, (p.registrations as any)?.email, (p.registrations as any)?.course_slug || p.course_title)}
+                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                  title="Supprimer définitivement l'inscription (Super Admin)"
+                                >
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -9806,14 +9871,17 @@ export default function SuperAdminDashboard() {
                           <Edit3 className="size-3" />
                           <span>Modifier</span>
                         </button>
-                        <button
-                          onClick={() => handleDeletePayment(p.id, p.registration_id, (p.registrations as any)?.email, (p.registrations as any)?.course_slug || p.course_title)}
-                          disabled={processingId === p.id}
-                          className="flex-1 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-                        >
-                          <Trash2 className="size-3" />
-                          <span>Supprimer</span>
-                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => handleDeletePayment(p.id, p.registration_id, (p.registrations as any)?.email, (p.registrations as any)?.course_slug || p.course_title)}
+                            disabled={processingId === p.id}
+                            className="flex-1 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                            title="Supprimer définitivement l'inscription (Super Admin)"
+                          >
+                            <Trash2 className="size-3" />
+                            <span>Supprimer</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -9831,8 +9899,8 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* TAB 6: USERS & RBAC ROLES */}
-        {activeTab === "users" && (
+        {/* TAB 6: USERS & RBAC ROLES (Super Admin only) */}
+        {activeTab === "users" && isSuperAdmin && (
           <div className="space-y-6 animate-fadeIn">
             <div className="rounded-3xl border border-slate-200/90 bg-white shadow-xs overflow-hidden backdrop-blur-xl">
               <div className="overflow-x-auto">
@@ -9848,81 +9916,85 @@ export default function SuperAdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200/80">
-                    {users.map(u => (
-                      <tr key={u.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
-                        <td className="p-4 font-bold text-slate-800">{u.full_name || "Utilisateur Anonyme"}</td>
-                        <td className="p-4 text-slate-700">{u.email}</td>
-                        <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
-                            u.role === "super_admin" ? "bg-purple-50 text-purple-700 border-purple-200" :
-                            u.role === "admin" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                            "bg-slate-100 text-slate-700 border-slate-200"
-                          }`}>
-                            {u.role || "student"}
-                          </span>
-                        </td>
-                        <td className="p-4 text-slate-500 font-medium">{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
-                        <td className="p-4 text-center">
-                          <div className="inline-flex items-center rounded-xl p-1 bg-[#F4F6F8] border border-slate-200/80 gap-1">
-                            <button
-                              onClick={() => handleRoleChange(u.id, "student")}
-                              disabled={processingId === u.id || (u.role || "student") === "student"}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                                (u.role || "student") === "student"
-                                  ? "bg-slate-800 text-white shadow-xs"
-                                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
-                              }`}
-                            >
-                              Student
-                            </button>
-                            <button
-                              onClick={() => handleRoleChange(u.id, "admin")}
-                              disabled={processingId === u.id || u.role === "admin"}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                                u.role === "admin"
-                                  ? "bg-blue-600 text-white shadow-xs"
-                                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
-                              }`}
-                            >
-                              Admin
-                            </button>
-                            <button
-                              onClick={() => handleRoleChange(u.id, "super_admin")}
-                              disabled={processingId === u.id || u.role === "super_admin"}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                                u.role === "super_admin"
-                                  ? "bg-purple-600 text-white shadow-xs"
-                                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
-                              }`}
-                            >
-                              Super Admin
-                            </button>
-                          </div>
-                        </td>
-                        <td className="p-4 text-right">
-                          {u.id === currentUser?.id || u.email === currentUser?.email ? (
-                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
-                              Votre compte
+                    {users
+                      .filter(u => u.email?.toLowerCase() !== "samba@leguideai.com" || currentUser?.email?.toLowerCase() === "samba@leguideai.com")
+                      .map(u => (
+                        <tr key={u.id} className="hover:bg-[#F4F6F8]/60 transition-colors">
+                          <td className="p-4 font-bold text-slate-800">
+                            {u.full_name || "Utilisateur Anonyme"}
+                          </td>
+                          <td className="p-4 text-slate-700 font-mono text-[11px]">{u.email}</td>
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                              u.role === "super_admin" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                              u.role === "admin" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                              "bg-slate-100 text-slate-700 border-slate-200"
+                            }`}>
+                              {u.role || "student"}
                             </span>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={processingId === u.id}
-                              onClick={() => handleDeleteUser(u)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
-                              title={`Supprimer définitivement le compte de ${u.full_name || u.email}`}
-                            >
-                              {processingId === u.id ? (
-                                <Loader2 className="size-3.5 animate-spin" />
-                              ) : (
-                                <Trash2 className="size-3.5" />
-                              )}
-                              <span>Supprimer</span>
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="p-4 text-slate-500 font-medium">{new Date(u.created_at).toLocaleDateString("fr-FR")}</td>
+                          <td className="p-4 text-center">
+                            <div className="inline-flex items-center rounded-xl p-1 bg-[#F4F6F8] border border-slate-200/80 gap-1">
+                              <button
+                                onClick={() => handleRoleChange(u.id, "student")}
+                                disabled={processingId === u.id || (u.role || "student") === "student"}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                                  (u.role || "student") === "student"
+                                    ? "bg-slate-800 text-white shadow-xs"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                                }`}
+                              >
+                                Student
+                              </button>
+                              <button
+                                onClick={() => handleRoleChange(u.id, "admin")}
+                                disabled={processingId === u.id || u.role === "admin"}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                                  u.role === "admin"
+                                    ? "bg-blue-600 text-white shadow-xs"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                                }`}
+                              >
+                                Admin
+                              </button>
+                              <button
+                                onClick={() => handleRoleChange(u.id, "super_admin")}
+                                disabled={processingId === u.id || u.role === "super_admin"}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                                  u.role === "super_admin"
+                                    ? "bg-purple-600 text-white shadow-xs"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                                }`}
+                              >
+                                Super Admin
+                              </button>
+                            </div>
+                          </td>
+                          <td className="p-4 text-right">
+                            {u.id === currentUser?.id || u.email === currentUser?.email ? (
+                              <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                Votre compte
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={processingId === u.id}
+                                onClick={() => handleDeleteUser(u)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+                                title={`Supprimer définitivement le compte de ${u.full_name || u.email}`}
+                              >
+                                {processingId === u.id ? (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="size-3.5" />
+                                )}
+                                <span>Supprimer</span>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
@@ -10319,8 +10391,8 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* TAB 9: SITE & HERO LANDING SETTINGS */}
-        {activeTab === "settings" && (
+        {/* TAB 9: SITE & HERO LANDING SETTINGS (Super Admin only) */}
+        {activeTab === "settings" && isSuperAdmin && (
           <div className="space-y-6 animate-fadeIn">
             <form onSubmit={handleSaveSettings} className="p-8 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-6">
               <div className="flex items-center justify-between border-b border-slate-200 pb-4">
@@ -10488,8 +10560,8 @@ export default function SuperAdminDashboard() {
           </div>
         )}
 
-        {/* TAB 10: EXPORT CSV */}
-        {activeTab === "export" && (
+        {/* TAB 10: EXPORT CSV (Super Admin only) */}
+        {activeTab === "export" && isSuperAdmin && (
           <div className="p-8 rounded-3xl bg-white border border-slate-200/90 shadow-xs text-center space-y-6 animate-fadeIn">
             <div className="size-16 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center mx-auto">
               <Download className="size-8" />
@@ -10856,7 +10928,7 @@ export default function SuperAdminDashboard() {
                     <input
                       type="text"
                       required
-                      placeholder="Ex: Expert Gouvernance IT · CISA"
+                      placeholder="Ex: Expert Gouvernance IT"
                       value={testimonialForm.role}
                       onChange={e => setTestimonialForm({ ...testimonialForm, role: e.target.value })}
                       className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"

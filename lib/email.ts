@@ -19,7 +19,7 @@ export async function sendRegistrationEmail(name: string, email: string) {
     }
 
     const firstName = name.split(' ')[0]
-    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre inscription au Bootcamp PRO 2 par LE GUIDE IA a bien été enregistrée.\n\nDétails de la formation :\n- Dates : Du 31 Août au 6 Septembre 2026\n- Format : 7 Sessions intensives en direct + Replays\n- Instructeur : Alfred Dah (Expert CISA & IA)\n\nPour accéder à votre espace membre : https://leguideai.com/login\n\nÀ très bientôt,\nL'équipe LE GUIDE IA & Alfred Dah`
+    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre inscription au Bootcamp PRO 2 par LE GUIDE IA a bien été enregistrée.\n\nDétails de la formation :\n- Dates : Du 31 Août au 6 Septembre 2026\n- Format : 7 Sessions intensives en direct + Replays\n- Instructeur : Alfred Dah (Expert & IA)\n\nPour accéder à votre espace membre : https://leguideai.com/login\n\nÀ très bientôt,\nL'équipe LE GUIDE IA & Alfred Dah`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -57,7 +57,7 @@ export async function sendRegistrationEmail(name: string, email: string) {
                 <strong style="color: #ffffff;">Détails de la formation :</strong><br>
                 📅 <strong>Dates :</strong> Du 31 Août au 6 Septembre 2026<br>
                 🎓 <strong>Format :</strong> 7 Sessions intensives en direct + Replays<br>
-                👨‍🏫 <strong>Instructeur :</strong> Alfred Dah (Expert CISA & IA)
+                👨‍🏫 <strong>Instructeur :</strong> Alfred Dah (Expert IA)
               </div>
 
               <p>Pour accéder dès maintenant à votre espace apprenant et consulter le programme détaillé :</p>
@@ -1043,7 +1043,7 @@ export async function sendB2BConfirmationEmail(params: B2BQuoteEmailParams) {
     const firstName = contactName ? contactName.split(' ')[0] : 'Monsieur / Madame'
 
     const subject = `Confirmation de votre demande de devis B2B — LE GUIDE IA (${companyName})`
-    const textContent = `Bonjour ${firstName},\n\nNous confirmons la bonne réception de votre demande de devis et accompagnement B2B pour ${companyName}.\n\nRécapitulatif de votre demande :\n- Entreprise : ${companyName}\n- Contact : ${contactName}\n- Téléphone / WhatsApp : ${phone || 'Non renseigné'}\n- Type de besoin : ${serviceType}\n- Effectif estimé : ${companySize} employés\n- Projet : ${message || 'Formation / Audit d\'équipe'}\n\nNotre équipe et Alfred Dah (Auditeur CISA & Expert IA) analysent votre besoin et vous recontacteront avec une proposition sur-mesure sous 24 heures ouvrées.\n\nEn cas d'urgence, vous pouvez également nous joindre directement sur WhatsApp au +226 0505 0577 ou par email à alfred@leguideai.com.\n\nCordialement,\nAlfred Dah & L'équipe Entreprises LE GUIDE IA`
+    const textContent = `Bonjour ${firstName},\n\nNous confirmons la bonne réception de votre demande de devis et accompagnement B2B pour ${companyName}.\n\nRécapitulatif de votre demande :\n- Entreprise : ${companyName}\n- Contact : ${contactName}\n- Téléphone / WhatsApp : ${phone || 'Non renseigné'}\n- Type de besoin : ${serviceType}\n- Effectif estimé : ${companySize} employés\n- Projet : ${message || 'Formation / Audit d\'équipe'}\n\nNotre équipe et Alfred Dah (Auditeur & Expert IA) analysent votre besoin et vous recontacteront avec une proposition sur-mesure sous 24 heures ouvrées.\n\nEn cas d'urgence, vous pouvez également nous joindre directement sur WhatsApp au +226 0505 0577 ou par email à alfred@leguideai.com.\n\nCordialement,\nAlfred Dah & L'équipe Entreprises LE GUIDE IA`
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -1083,8 +1083,8 @@ export async function sendB2BConfirmationEmail(params: B2BQuoteEmailParams) {
               </div>
               <div class="recap-item"><span class="recap-label">🏢 Entreprise :</span> <span class="recap-value">${companyName}</span></div>
               <div class="recap-item"><span class="recap-label">👤 Responsable :</span> <span class="recap-value">${contactName}</span></div>
-              <div class="recap-item"><span class="recap-label">📧 Email professionnel :</span> <span class="recap-value">${email}</span></div>
-              ${phone ? `<div class="recap-item"><span class="recap-label">📞 Téléphone / WhatsApp :</span> <span class="recap-value">${phone}</span></div>` : ''}
+              <div class="recap-item"><span class="recap-label">📧 Email :</span> <span class="recap-value">${email}</span></div>
+              ${phone ? `<div class="recap-item"><span class="recap-label">📞 Téléphone :</span> <span class="recap-value">${phone}</span></div>` : ''}
               <div class="recap-item"><span class="recap-label">🎯 Service souhaité :</span> <span class="recap-value">${serviceType}</span></div>
               <div class="recap-item"><span class="recap-label">👥 Effectif concerné :</span> <span class="recap-value">${companySize} personnes</span></div>
               ${message ? `<div class="recap-item" style="margin-top: 12px; padding-top: 8px; border-top: 1px dashed #334155;"><span class="recap-label">📝 Message / Objectifs :</span><br><span style="color: #e2e8f0; font-style: italic;">« ${message} »</span></div>` : ''}
@@ -1092,7 +1092,7 @@ export async function sendB2BConfirmationEmail(params: B2BQuoteEmailParams) {
 
             <div style="background-color: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
               <strong style="color: #ECC86B;">⏱️ Traitement sous 24h ouvrées</strong><br>
-              <span style="font-size: 13px; color: #cbd5e1;">Notre équipe pédagogique et Alfred Dah (Auditeur certifié CISA & Fondateur) préparent un programme personnalisé adapté à vos objectifs métiers. Vous recevrez une proposition détaillée très rapidement.</span>
+              <span style="font-size: 13px; color: #cbd5e1;">Notre équipe pédagogique et Alfred Dah (Auditeur certifié & Fondateur) préparent un programme personnalisé adapté à vos objectifs métiers. Vous recevrez une proposition détaillée très rapidement.</span>
             </div>
 
             <p style="font-size: 13px; color: #94a3b8;">

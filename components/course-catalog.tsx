@@ -33,7 +33,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
     title: c.title,
     subtitle: c.description,
     instructor: c.instructor || "Alfred Dah",
-    instructorRole: "Auditeur CISA & Expert IA",
+    instructorRole: "Auditeur & Expert IA",
     rating: "4.9",
     reviewsCount: "Avis apprenants certifiés",
     studentsCount: "Apprenants inscrits",

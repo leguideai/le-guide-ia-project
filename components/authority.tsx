@@ -22,7 +22,7 @@ export function Authority() {
           <div className="relative overflow-hidden p-6 rounded-2xl border border-primary/30 glow-blue bg-black/5">
             <img
               src="/profile_alfred.jpg"
-              alt="Alfred Dah - Expert IA, CISA & Fondateur de Le Guide IA"
+              alt="Alfred Dah - Expert IA & Fondateur de Le Guide IA"
               className="w-full object-cover rounded-full bg-white border border-primary"
             />
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -93,10 +93,6 @@ export function Authority() {
 
           {/* Core Strengths / Badges */}
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-3">
-              <Award className="size-5 text-primary shrink-0" />
-              <span className="text-xs font-bold text-foreground/90">{t("authority.cisa")}</span>
-            </div>
             <div className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-3">
               <Briefcase className="size-5 text-primary shrink-0" />
               <span className="text-xs font-bold text-foreground/90">{t("authority.experience")}</span>

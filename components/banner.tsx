@@ -34,7 +34,7 @@ export function Banner() {
               </h2>
 
               <p className="text-xs md:text-base text-slate-300 leading-relaxed max-w-xl">
-                Sous la direction d'Alfred Dah (Auditeur CISA & Expert IA), nos Bootcamps et formations sont structurés autour de cas d'usage réels pour vous rendre immédiatement opérationnel.
+                Sous la direction d'Alfred Dah (Auditeur & Expert IA), nos Bootcamps et formations sont structurés autour de cas d'usage réels pour vous rendre immédiatement opérationnel.
               </p>
 
               {/* 4 Pillars Grid */}

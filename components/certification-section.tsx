@@ -42,7 +42,7 @@ export function CertificationSection() {
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0" />
-                <span>Garantie d'expertise signée par Alfred Dah (Auditeur CISA & Expert IA)</span>
+                <span>Garantie d'expertise signée par Alfred Dah (Auditeur & Expert IA)</span>
               </div>
             </div>
 
