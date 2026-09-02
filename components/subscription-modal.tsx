@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 import { 
   X, Check, Copy, Upload, ArrowRight, ShieldCheck, 
   Lock, Sparkles, CheckCircle2, AlertCircle, CreditCard, 
@@ -86,15 +87,49 @@ export function SubscriptionModal({
   const [successData, setSuccessData] = useState<any>(null)
   const [existingSubscription, setExistingSubscription] = useState<any>(null)
 
-  // Hydrater les données utilisateur si connecté
+  // Hydrater les données utilisateur et le pays du profil si connecté
   useEffect(() => {
-    if (user) {
-      setEmail(user.email || "")
-      setFullName(user.user_metadata?.full_name || user.email?.split("@")[0] || "")
-      if (user.user_metadata?.whatsapp) {
-        setWhatsappNumber(user.user_metadata.whatsapp.replace(/\D/g, ""))
+    async function loadUserProfile() {
+      if (user) {
+        setEmail(user.email || "")
+        let name = user.user_metadata?.full_name || user.email?.split("@")[0] || ""
+        let phone = user.user_metadata?.whatsapp || user.user_metadata?.phone || ""
+        let userCountry = user.user_metadata?.country || user.user_metadata?.country_name || ""
+
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, whatsapp, phone, country")
+            .eq("id", user.id)
+            .maybeSingle()
+          if (profile) {
+            if (profile.full_name) name = profile.full_name
+            if (profile.whatsapp) phone = profile.whatsapp
+            if (profile.phone && !phone) phone = profile.phone
+            if (profile.country) userCountry = profile.country
+          }
+        } catch (_) {}
+
+        setFullName(name)
+        if (phone) {
+          const parsed = parsePhoneNumber(phone)
+          if (parsed) {
+            setSelectedCountry(parsed.country)
+            setWhatsappNumber(parsed.localNumber)
+          } else {
+            setWhatsappNumber(phone.replace(/\D/g, ""))
+          }
+        } else if (userCountry) {
+          const matched = countries.find(
+            c => c.name.toLowerCase() === userCountry.toLowerCase() || c.code.toLowerCase() === userCountry.toLowerCase()
+          )
+          if (matched) {
+            setSelectedCountry(matched)
+          }
+        }
       }
     }
+    loadUserProfile()
   }, [user])
 
   // Charger les prix dynamiques et le statut actuel depuis l'API

@@ -2255,9 +2255,11 @@ export default function DashboardPage() {
                               </span>
                             </div>
 
-                            <p className="text-xs text-slate-600 leading-relaxed">
-                              {activeLesson?.description}
-                            </p>
+                            {activeLesson?.description && (
+                              <div className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 border border-slate-200/70 p-3.5 rounded-2xl">
+                                {activeLesson.description}
+                              </div>
+                            )}
 
                             {/* PDF Attachment (Slides de cours) */}
                             {activeLesson?.pdfUrl && (
@@ -2306,7 +2308,7 @@ export default function DashboardPage() {
                                 </div>
 
                                 {activeLesson.exercise.description && (
-                                  <p className="text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-blue-100 shadow-2xs">
+                                  <p className="text-xs text-slate-700 leading-relaxed bg-white p-3 rounded-xl border border-blue-100 shadow-2xs whitespace-pre-line">
                                     {activeLesson.exercise.description}
                                   </p>
                                 )}
@@ -2480,7 +2482,7 @@ export default function DashboardPage() {
                       {masterclassSession.title}
                     </h2>
 
-                    <p className="text-xs text-slate-600 leading-relaxed">
+                    <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
                       {masterclassSession.description || "Rejoignez Alfred Dah pour 1h30 de formation intensive et interactive en direct."}
                     </p>
 
@@ -2784,7 +2786,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="p-4 pt-0 text-left space-y-1">
-                    <p className="text-xs text-slate-600">{activeMasterclassReplayModal.description}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-line">{activeMasterclassReplayModal.description}</p>
                     <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
                       <span>Formateur : {activeMasterclassReplayModal.instructor || "Alfred Dah"}</span>
                       <span>Date : {activeMasterclassReplayModal.date}</span>

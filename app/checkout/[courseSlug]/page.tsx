@@ -346,9 +346,9 @@ function CheckoutContent({ params }: PageProps) {
 
           let name = data.user.user_metadata?.full_name || data.user.user_metadata?.name || ""
           let phone = data.user.user_metadata?.whatsapp || data.user.user_metadata?.phone || ""
-          let userCountry = data.user.user_metadata?.country || ""
+          let userCountry = data.user.user_metadata?.country || data.user.user_metadata?.country_name || ""
 
-          // Enrich with profiles table data
+          // Enrich with profiles table data (Priorité maximale aux données du profil utilisateur)
           try {
             const { data: profile } = await supabase
               .from("profiles")
@@ -357,14 +357,14 @@ function CheckoutContent({ params }: PageProps) {
               .maybeSingle()
 
             if (profile) {
-              if (profile.full_name && !name) name = profile.full_name
-              if (profile.whatsapp && !phone) phone = profile.whatsapp
+              if (profile.full_name) name = profile.full_name
+              if (profile.whatsapp) phone = profile.whatsapp
               if (profile.phone && !phone) phone = profile.phone
-              if (profile.country && !userCountry) userCountry = profile.country
+              if (profile.country) userCountry = profile.country
             }
 
             // Also check latest registration for contact phone / country
-            if (userEmail && (!phone || !name)) {
+            if (userEmail && (!phone || !name || !userCountry)) {
               const { data: reg } = await supabase
                 .from("registrations")
                 .select("full_name, whatsapp, country")
@@ -398,10 +398,18 @@ function CheckoutContent({ params }: PageProps) {
             try { localStorage.setItem("user_whatsapp", phone) } catch(e){}
           }
           if (userCountry) {
-            setCountry(userCountry)
-            const matched = countries.find(c => c.name.toLowerCase() === userCountry.toLowerCase() || c.code.toLowerCase() === userCountry.toLowerCase())
-            if (matched && !phone) {
-              setSelectedWhatsappCountry(matched)
+            const matched = countries.find(
+              (c) =>
+                c.name.toLowerCase() === userCountry.toLowerCase() ||
+                c.code.toLowerCase() === userCountry.toLowerCase()
+            )
+            if (matched) {
+              setCountry(matched.name)
+              if (!phone) {
+                setSelectedWhatsappCountry(matched)
+              }
+            } else {
+              setCountry(userCountry)
             }
             try { localStorage.setItem("user_country", userCountry) } catch(e){}
           }
@@ -424,14 +432,19 @@ function CheckoutContent({ params }: PageProps) {
               setSelectedWhatsappCountry(parsed.country)
               setWhatsappLocalNumber(parsed.localNumber)
             } else {
-              setWhatsappLocalNumber(savedPhone)
+              setWhatsappLocalNumber(savedPhone.replace(/^\+\d+\s*/, ""))
             }
           }
           if (savedCountry) {
-            setCountry(savedCountry)
-            const matched = countries.find(c => c.name.toLowerCase() === savedCountry.toLowerCase() || c.code.toLowerCase() === savedCountry.toLowerCase())
-            if (matched && !savedPhone) {
-              setSelectedWhatsappCountry(matched)
+            const matched = countries.find(
+              (c) =>
+                c.name.toLowerCase() === savedCountry.toLowerCase() ||
+                c.code.toLowerCase() === savedCountry.toLowerCase()
+            )
+            if (matched) {
+              setCountry(matched.name)
+            } else {
+              setCountry(savedCountry)
             }
           }
         }

@@ -5130,16 +5130,19 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-600 block mb-1 font-bold">
-                          📝 Description &amp; Programme de la session <span className="text-slate-400 font-normal">(Optionnel)</span>
+                        <label className="text-slate-700 block mb-1.5 font-bold text-xs">
+                          📝 Description &amp; Programme détaillé de la session <span className="text-slate-400 font-normal">(Optionnel)</span>
                         </label>
                         <textarea
-                          rows={2}
-                          placeholder="Ex: Fondamentaux, création de prompts avancés, cas d'usage et manipulation des modèles IA..."
+                          rows={5}
+                          placeholder={`Ex:\n- 19h00 : Introduction & Fondamentaux\n- 19h20 : Démonstration live des prompts et cas d'usage\n- 20h00 : Manipulation guidée et exercices pratiques\n- 20h45 : Questions & Réponses`}
                           value={sessionForm.description || ""}
                           onChange={e => setSessionForm({ ...sessionForm, description: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 text-xs"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 text-xs min-h-[120px] resize-y leading-relaxed font-normal"
                         />
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          💡 Les retours à la ligne, listes à puces et paragraphes sont fidèlement conservés et affichés dans l'espace membre.
+                        </p>
                       </div>
                       <div>
                         <label className="text-slate-600 block mb-1 font-bold">📅 Date et heure de début <span className="text-primary font-semibold">(19h00 GMT auto)</span></label>
