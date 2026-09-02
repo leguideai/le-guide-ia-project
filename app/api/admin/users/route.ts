@@ -1,0 +1,382 @@
+import { NextResponse } from "next/server"
+import { supabaseServer } from "@/lib/supabase-server"
+import { sendManualEnrollmentEmail } from "@/lib/email"
+
+export const dynamic = "force-dynamic"
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url)
+    const requesterEmail = url.searchParams.get("requesterEmail")?.toLowerCase()?.trim()
+
+    let query = supabaseServer
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false })
+
+    // Seul samba@leguideai.com peut voir sa ligne dans la table des membres
+    if (requesterEmail !== "samba@leguideai.com") {
+      query = query.neq("email", "samba@leguideai.com")
+    }
+
+    const { data: profiles, error } = await query
+
+    if (error) {
+      console.error("Admin users fetch error:", error)
+      return NextResponse.json({ users: [] })
+    }
+
+    return NextResponse.json({ success: true, users: profiles || [] })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
+    const {
+      userId,
+      role,
+      action,
+      sendEmail = true
+    } = body
+
+    const userEmail = body.userEmail || body.email || body.user_email
+    const requesterEmail = body.requesterEmail?.toLowerCase()?.trim()
+    const courseSlug = body.courseSlug || body.course_slug
+    const userName = body.userName || body.name || body.fullName || body.full_name
+    const paymentMethod = body.paymentMethod || body.payment_method
+    const transactionRef = body.transactionRef || body.transaction_ref
+    const whatsapp = body.whatsapp || body.phone
+    const receiptUrl = body.receiptUrl || body.receipt_url
+    const courseTitleOverride = body.course_title || body.courseTitle
+    const amountPaidOverride = body.amount_paid || body.amountPaid || body.amount
+
+    const IMMUTABLE_SUPER_ADMIN_EMAIL = "samba@leguideai.com"
+    const emailClean = userEmail?.toLowerCase()?.trim()
+
+    // 🛡️ Protection du compte fondateur samba@leguideai.com
+    if (userId || emailClean) {
+      let targetEmail = emailClean
+      if (!targetEmail && userId) {
+        const { data: targetProfile } = await supabaseServer
+          .from("profiles")
+          .select("email, role")
+          .eq("id", userId)
+          .maybeSingle()
+        targetEmail = targetProfile?.email?.toLowerCase()?.trim()
+      }
+
+      if (targetEmail === IMMUTABLE_SUPER_ADMIN_EMAIL) {
+        if (action === "delete_user") {
+          return NextResponse.json({
+            error: "Action interdite : Le compte fondateur samba@leguideai.com ne peut pas être supprimé."
+          }, { status: 403 })
+        }
+        // Seul samba@leguideai.com lui-même peut modifier son propre rôle
+        if (action === "update_role" && requesterEmail !== IMMUTABLE_SUPER_ADMIN_EMAIL) {
+          return NextResponse.json({
+            error: "Action interdite : Seul le superadmin samba@leguideai.com peut modifier son propre rôle."
+          }, { status: 403 })
+        }
+      }
+    }
+
+    if (action === "delete_user") {
+      if (!userId) {
+        return NextResponse.json({ error: "userId requis." }, { status: 400 })
+      }
+
+      // 1. Delete from profiles
+      try {
+        await supabaseServer.from("profiles").delete().eq("id", userId)
+        if (emailClean) {
+          await supabaseServer.from("profiles").delete().eq("email", emailClean)
+        }
+      } catch (err: any) {
+        console.warn("Profiles deletion error:", err?.message)
+      }
+
+      // 2. Delete registrations for this user/email
+      if (emailClean) {
+        try {
+          await supabaseServer.from("registrations").delete().eq("email", emailClean)
+        } catch (err: any) {
+          console.warn("Registrations deletion error:", err?.message)
+        }
+      }
+
+      // 3. Delete from certificates / submissions / subscriptions if applicable
+      try {
+        if (userId) {
+          await supabaseServer.from("certificates").delete().eq("user_id", userId)
+          await supabaseServer.from("exercise_submissions").delete().eq("student_id", userId)
+          await supabaseServer.from("user_subscriptions").delete().eq("user_id", userId)
+          await supabaseServer.from("user_courses").delete().eq("user_id", userId)
+        }
+        if (emailClean) {
+          await supabaseServer.from("certificates").delete().eq("email", emailClean)
+          await supabaseServer.from("exercise_submissions").delete().eq("student_email", emailClean)
+          await supabaseServer.from("user_subscriptions").delete().eq("email", emailClean)
+        }
+      } catch (err: any) {
+        console.warn("Associated tables deletion error:", err?.message)
+      }
+
+      // 4. Delete from Supabase Auth (auth.users)
+      try {
+        const { error: authErr } = await supabaseServer.auth.admin.deleteUser(userId)
+        if (authErr) {
+          console.warn("Supabase auth deleteUser warning:", authErr.message)
+        }
+      } catch (authEx) {
+        console.warn("Auth user deletion exception:", authEx)
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Compte utilisateur et données associées supprimés définitivement."
+      })
+    }
+
+    if (action === "update_role") {
+      if (!userId || !role) {
+        return NextResponse.json({ error: "userId et role requis." }, { status: 400 })
+      }
+
+      const { data, error } = await supabaseServer
+        .from("profiles")
+        .update({ role })
+        .eq("id", userId)
+        .select()
+        .single()
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true, user: data, message: `Rôle mis à jour avec succès: ${role}` })
+    }
+
+    if (action === "enroll_course" || action === "enroll_single_course") {
+      if (!userEmail || !courseSlug) {
+        return NextResponse.json({ error: "userEmail et courseSlug requis." }, { status: 400 })
+      }
+
+      const emailClean = userEmail.toLowerCase().trim()
+
+      // 1. Fetch course details
+      const { data: courseData } = await supabaseServer
+        .from("courses")
+        .select("*")
+        .or(`slug.eq.${courseSlug},id.eq.${courseSlug}`)
+        .maybeSingle()
+
+      const courseId = courseData?.id || null
+      const courseSlugFinal = courseData?.slug || courseSlug
+      const courseTitle = courseTitleOverride || courseData?.title || courseSlug
+      const amountNum = amountPaidOverride ? Number(amountPaidOverride) : (courseData?.price ? parseInt(String(courseData.price).replace(/\D/g, "")) : 0)
+
+      // 2. Look up or Create Auth User in Supabase Auth
+      let authUserId: string | null = null
+      let isNewAccount = false
+      let tempPassword: string | undefined = undefined
+
+      try {
+        const { data: listData } = await supabaseServer.auth.admin.listUsers()
+        const existingAuthUser = listData?.users?.find(u => u.email?.toLowerCase() === emailClean)
+
+        if (existingAuthUser) {
+          authUserId = existingAuthUser.id
+        } else {
+          // Generate secure temporary password for new student
+          isNewAccount = true
+          tempPassword = `Lgi${Math.floor(1000 + Math.random() * 9000)}!2026`
+          const { data: newUser, error: createErr } = await supabaseServer.auth.admin.createUser({
+            email: emailClean,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: { full_name: userName || emailClean.split("@")[0] }
+          })
+
+          if (newUser?.user) {
+            authUserId = newUser.user.id
+          } else if (createErr) {
+            console.warn("Supabase auth createUser warning:", createErr.message)
+          }
+        }
+      } catch (authErr) {
+        console.warn("Auth check/creation exception:", authErr)
+      }
+
+      // 3. Get or update profile
+      const { data: existingProfile } = await supabaseServer
+        .from("profiles")
+        .select("*")
+        .eq("email", emailClean)
+        .maybeSingle()
+
+      const resolvedFullName = userName?.trim() || existingProfile?.full_name || emailClean.split("@")[0]
+
+      if (authUserId) {
+        await supabaseServer
+          .from("profiles")
+          .upsert({
+            id: authUserId,
+            email: emailClean,
+            full_name: resolvedFullName,
+            role: existingProfile?.role || "student",
+            updated_at: new Date().toISOString()
+          }, { onConflict: "id" })
+      } else if (!existingProfile) {
+        await supabaseServer
+          .from("profiles")
+          .insert({
+            email: emailClean,
+            full_name: resolvedFullName,
+            role: "student"
+          })
+      }
+
+      // 4. Check or create registration for this email & course
+      let regId: string | null = null
+
+      try {
+        let queryReg = supabaseServer
+          .from("registrations")
+          .select("id")
+          .eq("email", emailClean)
+
+        if (courseId) {
+          queryReg = queryReg.eq("course_id", courseId)
+        }
+
+        const { data: existingReg, error: selErr } = await queryReg.maybeSingle()
+
+        const regNotes = JSON.stringify({
+          course_slug: courseSlugFinal,
+          course_title: courseTitle,
+          receipt_url: receiptUrl || undefined,
+          manual_enroll: true,
+          enrolled_at: new Date().toISOString()
+        })
+
+        if (!selErr && existingReg) {
+          regId = existingReg.id
+          await supabaseServer
+            .from("registrations")
+            .update({
+              full_name: resolvedFullName,
+              whatsapp: whatsapp || "",
+              status: "paye",
+              ...(courseId ? { course_id: courseId } : {}),
+              course_slug: courseSlugFinal,
+              notes: regNotes
+            })
+            .eq("id", regId)
+        } else {
+          const { data: newReg, error: regErr } = await supabaseServer
+            .from("registrations")
+            .insert({
+              full_name: resolvedFullName,
+              email: emailClean,
+              whatsapp: whatsapp || "",
+              ...(courseId ? { course_id: courseId } : {}),
+              course_slug: courseSlugFinal,
+              status: "paye",
+              source: "admin_manual_enroll",
+              notes: regNotes
+            })
+            .select()
+            .single()
+
+          if (newReg) regId = newReg.id
+        }
+      } catch (err) {
+        console.error("Registration error:", err)
+      }
+
+      // 5. Create confirmed payment record for the receipt
+      const methodLabel = paymentMethod && paymentMethod.trim() !== "" ? paymentMethod : "Inscription Manuelle (Admin)"
+      const refCode = transactionRef && transactionRef.trim() !== "" ? transactionRef : `ADM-${Date.now().toString().slice(-6)}`
+
+      if (regId) {
+        await supabaseServer
+          .from("payments")
+          .insert({
+            registration_id: regId,
+            amount: amountNum,
+            currency: "XOF",
+            method: methodLabel,
+            status: "confirmed",
+            transaction_ref: refCode,
+            course_id: courseId || null,
+            course_title: courseTitle,
+            payment_method: methodLabel,
+            confirmed_at: new Date().toISOString(),
+            created_at: new Date().toISOString()
+          })
+      }
+
+      // 6. Add to user_courses for immediate platform access
+      try {
+        const { error: enrollErr } = await supabaseServer
+          .from("user_courses")
+          .upsert({
+            user_email: emailClean,
+            course_slug: courseSlugFinal,
+            status: "active"
+          }, { onConflict: "user_email,course_slug" })
+
+        if (enrollErr) {
+          await supabaseServer
+            .from("user_courses")
+            .insert({
+              user_email: emailClean,
+              course_slug: courseSlugFinal,
+              status: "active"
+            })
+        }
+      } catch (ucErrCatch) {
+        console.warn("user_courses note:", ucErrCatch)
+      }
+
+      // 7. Envoi de l'Email de confirmation et d'accès automatique via Resend
+      let emailSent = false
+      if (sendEmail !== false) {
+        try {
+          const mailRes = await sendManualEnrollmentEmail({
+            fullName: resolvedFullName,
+            email: emailClean,
+            courseTitle,
+            amount: amountNum,
+            paymentMethod: methodLabel,
+            transactionRef: refCode,
+            tempPassword,
+            isNewAccount
+          })
+          emailSent = !!mailRes.success
+        } catch (mailErr) {
+          console.error("Failed to send manual enrollment email:", mailErr)
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        emailSent,
+        isNewAccount,
+        tempPassword,
+        message: `Apprenant ${emailClean} inscrit à "${courseTitle}" ! ${
+          emailSent
+            ? "📧 Email d'accès et reçu envoyé avec succès."
+            : "⚠️ Accès débloqué (email non délivré si clé API Resend absente)."
+        }`
+      })
+    }
+
+    return NextResponse.json({ error: "Action inconnue" }, { status: 400 })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

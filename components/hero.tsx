@@ -6,18 +6,88 @@ import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
+import { supabase } from "@/lib/supabase"
 
-import { usePromoStatus } from "@/lib/use-promo"
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
 
 function CountdownTimer() {
   const { t } = useLanguage()
-  const { isExpired, timeLeft, mounted } = usePromoStatus()
+  const [targetDate, setTargetDate] = useState<number | null>(null)
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [expired, setExpired] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  if (!mounted) return null
+  useEffect(() => {
+    async function loadTargetDate() {
+      try {
+        const { data } = await supabase
+          .from("courses")
+          .select("offer_end_date, price, currency")
+          .not("offer_end_date", "is", null)
+          .order("sequence_order", { ascending: true })
+          .limit(1)
 
-  if (isExpired) {
+        if (data && data.length > 0 && data[0].offer_end_date) {
+          const parsed = getOfferEndTimestamp(data[0].offer_end_date)
+          if (parsed) setTargetDate(parsed)
+        }
+      } catch (err) {}
+    }
+    loadTargetDate()
+  }, [])
+
+  useEffect(() => {
+    setMounted(true)
+    if (!targetDate) return
+
+    const updateCountdown = () => {
+      const now = new Date().getTime()
+      const distance = targetDate - now
+
+      if (distance <= 0) {
+        setExpired(true)
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      } else {
+        setExpired(false)
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+        setTimeLeft({ days, hours, minutes, seconds })
+      }
+    }
+
+    updateCountdown()
+    const timer = setInterval(updateCountdown, 1000)
+    return () => clearInterval(timer)
+  }, [targetDate])
+
+  if (!mounted || !targetDate) return null
+
+  if (expired) {
     return (
-     <></>
+      <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-center font-heading text-xs font-bold text-rose-400">
+        L'offre promotionnelle a expiré. Les inscriptions se poursuivent au tarif standard.
+      </div>
     )
   }
 
@@ -54,8 +124,13 @@ function CountdownTimer() {
 
 export function Hero() {
   const { t } = useLanguage()
-  const { isExpired, mounted } = usePromoStatus()
-  const promoActive = mounted ? !isExpired : true
+  const [programmeUrl, setProgrammeUrl] = useState("/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf")
+  const [promoActive, setPromoActive] = useState(true)
+
+  useEffect(() => {
+    supabase.from("site_settings").select("value").eq("key", "hero_programme_url").maybeSingle()
+      .then(({ data }) => { if (data?.value) setProgrammeUrl(data.value) })
+  }, [])
 
   const badges = t("hero.badges") || []
 
@@ -148,7 +223,28 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mt-8 flex flex-col gap-3.5 sm:flex-row sm:items-center"
           >
-            {ctaButtons}
+            <a
+              href="/checkout/bootcamp-ia-pro"
+              className={cn(
+                buttonVariants({ size: "lg" }),
+                "h-12 bg-primary hover:opacity-90 text-primary-foreground font-bold border-none px-8 text-base shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
+              )}
+            >
+              <span>S'inscrire au Bootcamp IA Pro (99 000 FCFA)</span>
+              <ArrowRight className="size-4" />
+            </a>
+            <a
+              href={programmeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-12 border-border/80 bg-transparent px-8 text-base hover:bg-card/50 text-foreground"
+              )}
+            >
+              {t("hero.ctaProgram")}
+              <ArrowRight className="size-4 ml-1" />
+            </a>
           </motion.div>
 
           {/* Countdown timer */}

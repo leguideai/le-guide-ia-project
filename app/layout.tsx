@@ -1,8 +1,11 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { LanguageProvider } from '@/lib/language-context'
+import { PerformancePatch } from '@/components/performance-patch'
+import { AnalyticsTracker } from '@/components/analytics-tracker'
+import { GlobalProfileCompletionModal } from '@/components/global-profile-completion-modal'
 
 const jakarta = Plus_Jakarta_Sans({
   variable: '--font-geist-sans',
@@ -15,15 +18,19 @@ const geistMono = Geist_Mono({
 
 export const metadataBase = new URL('https://leguideai.com')
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export const metadata: Metadata = {
   title: 'Bootcamp IA par Alfred Dah – Formation Intelligence Artificielle | Le Guide IA',
   description:
-    'Maîtrisez l\'IA pratique avec Alfred Dah, expert certifié CISA & Fondateur de Le Guide IA. Bootcamp PRO 2 : 6 sessions pratiques du 31 Août au 5 Septembre 2026.',
+    'Maîtrisez l\'IA pratique avec Alfred Dah, expert certifié & Fondateur de Le Guide IA. Bootcamp PRO 2 : 7 sessions intensives du 31 Août au 6 Septembre 2026.',
   keywords: [
     'Alfred Dah',
     'Alfred Dah IA',
     'Alfred Dah Le Guide IA',
-    'Alfred Dah CISA',
     'Alfred Dah Burkina Faso',
     'Sanson Alfred Tanguy Dah',
     'Le Guide IA',
@@ -53,7 +60,6 @@ export const metadata: Metadata = {
       fr: 'https://leguideai.com',
     },
   },
-  viewport: 'width=device-width, initial-scale=1',
   openGraph: {
     title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
     description:
@@ -110,7 +116,7 @@ export default function RootLayout({
   const clarityProjectId = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID
 
   return (
-    <html lang="fr" className={`${jakarta.variable} ${geistMono.variable}`}>
+    <html lang="fr" className={`${jakarta.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Google Tag Manager (GTM) */}
         {gtmId && (
@@ -143,7 +149,7 @@ export default function RootLayout({
           </Script>
         )}
       </head>
-      <body className="font-sans antialiased bg-background">
+      <body className="font-sans antialiased bg-background" suppressHydrationWarning>
         {/* Google Tag Manager (noscript) */}
         {gtmId && (
           <noscript>
@@ -185,8 +191,8 @@ export default function RootLayout({
                   givenName: 'Alfred',
                   familyName: 'Dah',
                   alternateName: ['Sanson Alfred Tanguy Dah', 'Alfred Dah IA', 'Alfred Dah Le Guide IA'],
-                  jobTitle: 'Expert IA, Auditeur CISA & Fondateur de Le Guide IA',
-                  description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale, audit de systèmes d\'information (CISA) et gouvernance IA.',
+                  jobTitle: 'Expert IA & Fondateur de Le Guide IA',
+                  description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale, audit de systèmes d\'information et gouvernance IA.',
                   image: 'https://leguideai.com/profile_alfred.jpg',
                   url: 'https://leguideai.com',
                   sameAs: ['https://www.linkedin.com/in/alfreddah/'],
@@ -197,7 +203,6 @@ export default function RootLayout({
                     'Claude',
                     'Gemini',
                     'Transformation Digitale',
-                    'Audit CISA',
                     'Gouvernance des Systèmes d\'Information'
                   ],
                   worksFor: {
@@ -236,17 +241,16 @@ export default function RootLayout({
                   offers: [
                     {
                       '@type': 'Offer',
-                      name: 'Offre Promo',
+                      name: 'Bootcamp IA Pro',
                       price: '99000',
                       priceCurrency: 'XOF',
-                      priceValidUntil: '2026-08-20',
                       availability: 'https://schema.org/InStock',
                       url: 'https://leguideai.com/#tarifs',
                     },
                     {
                       '@type': 'Offer',
-                      name: 'Prix Normal',
-                      price: '149000',
+                      name: 'Bootcamp IA Business',
+                      price: '199000',
                       priceCurrency: 'XOF',
                       availability: 'https://schema.org/InStock',
                       url: 'https://leguideai.com/#tarifs',
@@ -297,6 +301,9 @@ export default function RootLayout({
           }}
         />
         <LanguageProvider>
+          <PerformancePatch />
+          <AnalyticsTracker />
+          <GlobalProfileCompletionModal />
           {children}
         </LanguageProvider>
       </body>

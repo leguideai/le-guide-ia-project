@@ -39,18 +39,21 @@ function maxDigitsForDial(dial: string): number {
   return example ? example.nationalNumber.length : 15
 }
 
-const whatsappGroups: Record<string, string> = {
-  Etudiant: "https://chat.whatsapp.com/KrjNwtCRbL04NQHmIPP4WX",
-  Professionnel: "https://chat.whatsapp.com/LKrNkc33XlDBuGlnSqhqLG",
-  Entrepreneur: "https://chat.whatsapp.com/BYZv3RupCjeKW6uEGETWEf",
-}
-
-function getWhatsAppGroupHref(profil: string): string {
-  return whatsappGroups[profil] ?? "https://chat.whatsapp.com/KOzRqZO1HwGKIU3g3d3wYa"
-}
+import { supabase } from "@/lib/supabase"
 
 export function Challenge() {
   const { t, language } = useLanguage()
+  const [dbWhatsappUrl, setDbWhatsappUrl] = useState<string>("https://chat.whatsapp.com/leguideai-bootcamp")
+
+  useEffect(() => {
+    async function loadWhatsapp() {
+      const { data } = await supabase.from("live_sessions").select("whatsapp_url").limit(1).maybeSingle()
+      if (data?.whatsapp_url) {
+        setDbWhatsappUrl(data.whatsapp_url)
+      }
+    }
+    loadWhatsapp()
+  }, [])
 
   const translatedDays = (t("challenge.daysSide") || []) as Array<{ title: string; desc: string }>
   const days = translatedDays.map((d, i) => ({
@@ -150,6 +153,18 @@ function SignupForm({ perks }: { perks: string[] }) {
   const [submitted, setSubmitted] = useState(false)
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
   const [countrySearchQuery, setCountrySearchQuery] = useState("")
+  const [dbWhatsappUrl, setDbWhatsappUrl] = useState<string>("https://chat.whatsapp.com/leguideai-bootcamp")
+
+  useEffect(() => {
+    async function loadWhatsapp() {
+      const { data } = await supabase.from("live_sessions").select("whatsapp_url").limit(1).maybeSingle()
+      if (data?.whatsapp_url) {
+        setDbWhatsappUrl(data.whatsapp_url)
+      }
+    }
+    loadWhatsapp()
+  }, [])
+
   const countryDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -274,7 +289,7 @@ function SignupForm({ perks }: { perks: string[] }) {
 
   const inputBase =
     "rounded-lg border bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary"
-  const whatsappGroupHref = getWhatsAppGroupHref(values.profil)
+  const whatsappGroupHref = dbWhatsappUrl
 
   if (success) {
     const successDesc = t("challenge.success.desc")

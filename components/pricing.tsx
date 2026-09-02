@@ -1,130 +1,347 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import Link from "next/link"
 import { motion } from "motion/react"
-import { Check, Sparkles } from "lucide-react"
-import { useLanguage } from "@/lib/language-context"
-import { usePromoStatus } from "@/lib/use-promo"
-import { cn } from "@/lib/utils"
+import { Check, Sparkles, ArrowRight, Clock, AlertCircle, ShieldCheck, CheckCircle2 } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import { isCourseOpenForPublic } from "@/lib/courses-visibility"
+import { useUserEnrollments } from "@/lib/user-enrollments"
 
-function CountdownTimerBoxes({ timeLeft }: { timeLeft: { days: number; hours: number; minutes: number; seconds: number } }) {
-  return (
-    <div className="mt-4 rounded-lg bg-slate-900/60 p-3 border border-border flex justify-center gap-3">
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.days}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">J</span>
-      </div>
-      <div className="text-sm font-bold text-border/60 mt-1">:</div>
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.hours}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">H</span>
-      </div>
-      <div className="text-sm font-bold text-border/60 mt-1">:</div>
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.minutes}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">M</span>
-      </div>
-      <div className="text-sm font-bold text-border/60 mt-1">:</div>
-      <div className="flex flex-col items-center">
-        <span className="font-heading text-lg font-black text-amber-500">{timeLeft.seconds}</span>
-        <span className="text-[8px] text-muted-foreground uppercase">S</span>
-      </div>
-    </div>
-  )
+interface PricingProps {
+  selectedCourseId?: string
+  courses?: any[]
+  activeCourse?: any
+  onSelectCourse?: (id: string) => void
 }
 
-export function Pricing() {
-  const { t } = useLanguage()
-  const { isExpired, timeLeft, mounted } = usePromoStatus()
-  const features = t("pricing.features") || []
+function getOfferEndTimestamp(rawDate?: string | null): number | null {
+  if (!rawDate || String(rawDate).trim() === "") return null
+  const clean = String(rawDate).trim()
+  
+  // Format YYYY-MM-DD (ex: "2026-08-20") -> épuise toute la journée jusqu'à 23:59:59.999
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    const [y, m, d] = clean.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
 
-  // During SSR or before mount, default to standard non-expired state to avoid hydration mismatch
-  const promoActive = mounted ? !isExpired : true
+  // Format avec heure 00:00:00 -> Repousser à la fin de cette même journée
+  if (clean.includes("T00:00:00")) {
+    const datePart = clean.split("T")[0]
+    const [y, m, d] = datePart.split("-").map(Number)
+    const endOfDay = new Date(y, m - 1, d, 23, 59, 59, 999).getTime()
+    return isNaN(endOfDay) ? null : endOfDay
+  }
+
+  const parsed = new Date(clean).getTime()
+  return isNaN(parsed) ? null : parsed
+}
+
+export function Pricing({ selectedCourseId, courses, activeCourse: propActiveCourse, onSelectCourse }: PricingProps) {
+  const { isEnrolledInCourse, isPendingInCourse } = useUserEnrollments()
+  const [dbCourses, setDbCourses] = useState<any[]>(courses || [])
+  const [activeId, setActiveId] = useState<string>(selectedCourseId || "")
+
+  // Countdown timer state
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  })
+  const [isOfferExpired, setIsOfferExpired] = useState(false)
+  const [hasOfferEndDate, setHasOfferEndDate] = useState(false)
+
+  useEffect(() => {
+    if (courses && courses.length > 0) {
+      setDbCourses(courses)
+    }
+  }, [courses])
+
+  useEffect(() => {
+    async function loadCourses() {
+      if (courses && courses.length > 0) return
+
+      try {
+        const res = await fetch("/api/admin/courses")
+        const data = await res.json()
+        if (data?.courses && data.courses.length > 0) {
+          const publicOnly = data.courses.filter(isCourseOpenForPublic)
+          setDbCourses(publicOnly.length > 0 ? publicOnly : data.courses)
+          if (!activeId) setActiveId(publicOnly[0]?.id || data.courses[0]?.id)
+          return
+        }
+      } catch (e) {}
+
+      try {
+        let { data, error } = await supabase.from("courses").select("*").order("sequence_order", { ascending: true }).order("created_at", { ascending: true })
+        if (error || !data || data.length === 0) {
+          const res = await supabase.from("courses").select("*").order("created_at", { ascending: true })
+          data = res.data
+        }
+        if (data && data.length > 0) {
+          const publicCourses = data.filter(isCourseOpenForPublic)
+          setDbCourses(publicCourses.length > 0 ? publicCourses : data)
+          if (!activeId) setActiveId(publicCourses[0]?.id || data[0]?.id)
+        }
+      } catch (e) {}
+    }
+    loadCourses()
+  }, [])
+
+  useEffect(() => {
+    if (selectedCourseId) {
+      setActiveId(selectedCourseId)
+    }
+  }, [selectedCourseId])
+
+  const isBootcampCourse = (c: any) => {
+    if (!c) return false
+    const slug = String(c.slug || "").toLowerCase()
+    const title = String(c.title || "").toLowerCase()
+    if (slug.includes("masterclass") || title.includes("masterclass")) return false
+    if (Number(c.price) === 0 && !slug.includes("bootcamp")) return false
+    return isCourseOpenForPublic(c)
+  }
+
+  const allCourses = (courses && courses.length > 0) ? courses : dbCourses
+  const bootcampCourses = allCourses.filter(isBootcampCourse)
+  const displayCourses = bootcampCourses.length > 0 ? bootcampCourses : allCourses.filter(isCourseOpenForPublic)
+
+  const activeCourse = propActiveCourse || displayCourses.find(c => 
+    c.id === activeId || 
+    c.slug === activeId || 
+    c.id === selectedCourseId || 
+    c.slug === selectedCourseId ||
+    (selectedCourseId && String(c.slug || "").toLowerCase().includes(String(selectedCourseId).toLowerCase())) ||
+    (selectedCourseId && String(selectedCourseId).toLowerCase().includes(String(c.slug || "").toLowerCase())) ||
+    (activeId && String(c.slug || "").toLowerCase().includes(String(activeId).toLowerCase()))
+  ) || displayCourses[0]
+
+  // Dynamic Live Countdown Engine based on activeCourse?.offer_end_date (with full last day exhausted)
+  useEffect(() => {
+    const targetTime = getOfferEndTimestamp(activeCourse?.offer_end_date)
+    if (!targetTime) {
+      setHasOfferEndDate(false)
+      setIsOfferExpired(false)
+      return
+    }
+
+    setHasOfferEndDate(true)
+
+    const calculateCountdown = () => {
+      const now = new Date().getTime()
+      const diff = targetTime - now
+
+      if (diff <= 0) {
+        setIsOfferExpired(true)
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      } else {
+        setIsOfferExpired(false)
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+        setTimeLeft({ days, hours, minutes, seconds })
+      }
+    }
+
+    calculateCountdown()
+    const interval = setInterval(calculateCountdown, 1000)
+    return () => clearInterval(interval)
+  }, [activeCourse?.offer_end_date])
+
+  if (displayCourses.length === 0) {
+    return (
+      <section className="py-16 bg-background relative overflow-hidden border-t border-border/50 animate-pulse" id="tarifs">
+        <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
+          <div className="space-y-3">
+            <div className="h-6 w-48 bg-white/10 rounded-full" />
+            <div className="h-9 w-80 bg-white/10 rounded-xl" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 max-w-5xl mx-auto">
+            <div className="h-96 rounded-3xl border border-white/10 bg-card/40" />
+            <div className="h-96 rounded-3xl border border-white/10 bg-card/40" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  function formatPrice(val: any, currency = "FCFA") {
+    if (val === undefined || val === null || val === "") return ""
+    if (typeof val === "number") {
+      return val === 0 ? "GRATUIT" : `${val.toLocaleString("fr-FR")} ${currency}`
+    }
+    const str = String(val).trim()
+    if (str === "0" || str.toLowerCase() === "gratuit") return "GRATUIT"
+    return str.includes("FCFA") || str.includes("EUR") || str.includes("$") ? str : `${str} ${currency}`
+  }
+
+  function formatStandardPrice(val: any, orig: any, currency = "FCFA") {
+    if (orig && String(orig).trim() !== "") {
+      return formatPrice(orig, currency)
+    }
+    return formatPrice(val, currency)
+  }
+
+  const isBusiness = Number(activeCourse?.price) >= 140000 || 
+    String(activeCourse?.slug || "").includes("business") || 
+    String(activeCourse?.slug || "").includes("exec") || 
+    String(activeCourse?.title || "").toLowerCase().includes("business") ||
+    String(activeCourse?.badge || "").toLowerCase().includes("vip") ||
+    String(activeCourse?.badge || "").toLowerCase().includes("manager")
+
+  const activeFeatures = (activeCourse?.features && Array.isArray(activeCourse.features))
+    ? activeCourse.features
+    : []
+
+  const current = {
+    title: activeCourse?.title || "",
+    subtitle: activeCourse?.description || activeCourse?.subtitle || "",
+    founderPrice: formatPrice(activeCourse?.price || 0, activeCourse?.currency),
+    standardPrice: formatStandardPrice(activeCourse?.price || 0, activeCourse?.original_price || "", activeCourse?.currency),
+    offerBadge: activeCourse?.offer_badge_text || (isBusiness ? "OFFRE EXCLUSIVE VIP" : "OFFRE SPÉCIALE FONDATEUR"),
+    standardDateText: activeCourse?.dates ? `Session : ${activeCourse.dates}` : "",
+    offerCheckoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT")
+      ? "/register-account" 
+      : `/checkout/${activeCourse?.slug || activeCourse?.id || ""}?tier=offer`,
+    standardCheckoutHref: (activeCourse?.price === 0 || activeCourse?.price === "0" || activeCourse?.price === "GRATUIT")
+      ? "/register-account" 
+      : `/checkout/${activeCourse?.slug || activeCourse?.id || ""}?tier=standard`,
+    features: activeFeatures
+  }
+
+  const theme = isBusiness
+    ? {
+        border: "border-2 border-[#D4AF37] glow-gold bg-slate-950",
+        badge: "bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-slate-950 border border-[#F3E5AB]",
+        priceColor: "text-white",
+        expireColor: "text-[#ECC86B]",
+        expireIcon: "text-[#D4AF37]",
+        checkColor: "text-[#D4AF37]",
+        btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-xl shadow-[#D4AF37]/25",
+      }
+    : {
+        border: "border-2 border-primary glow-blue bg-slate-950",
+        badge: "bg-primary text-slate-950 border border-amber-300 font-black",
+        priceColor: "text-white",
+        expireColor: "text-amber-300",
+        expireIcon: "text-primary",
+        checkColor: "text-primary",
+        btn: "bg-primary hover:bg-primary/90 text-slate-950 font-black shadow-xl shadow-primary/25",
+      }
+
+  const isEnrolled = isEnrolledInCourse(activeCourse)
+  const isPending = isPendingInCourse(activeCourse)
 
   return (
-    <section className="py-24 bg-background relative overflow-hidden" id="tarifs">
-      <div className="mx-auto max-w-7xl px-4 md:px-8">
+    <section className="py-16 bg-background relative overflow-hidden border-t border-border/50" id="tarifs">
+      <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
         
-        <div className="text-center mb-16">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
-            {t("pricing.tag")}
-          </span>
-          <h2 className="mt-4 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            {t("pricing.title")}
-          </h2>
+        {/* Left-Aligned Header */}
+        <div className="space-y-4 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <span className={`inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest px-3.5 py-1.5 rounded-full border ${isBusiness ? "text-[#ECC86B] bg-[#D4AF37]/10 border-[#D4AF37]/30" : "text-primary bg-primary/10 border-primary/20"}`}>
+              TARIFS OFFICIELS · {current.title.toUpperCase()}
+            </span>
+          </div>
+      
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Profitez de votre place officielle avec accès complet aux sessions en direct, aux replays HD à vie et au certificat d'accomplissement.
+          </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto items-stretch">
+        {/* 2 Cards Grid: Offre Spéciale vs Prix Standard */}
+        <div className="grid gap-8 md:grid-cols-2 max-w-5xl mx-auto items-stretch pt-6 md:pt-8">
           
-          {/* CARTE 1 : Offre Promo (99 000 FCFA) */}
+          {/* Card 1: Offre Spéciale / Fondateur (Avec décompteur) */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className={cn(
-              "relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300",
-              promoActive
-                ? "border-2 border-amber-500 bg-card shadow-xl shadow-amber-500/5"
-                : "border border-border/50 bg-card/40 opacity-60 grayscale-[30%] select-none"
-            )}
+            key={`founder-${activeId}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className={`relative rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col justify-between z-10 transition-all ${
+              isOfferExpired 
+                ? "border border-border/60 bg-card/20 opacity-75 grayscale-[0.4]" 
+                : isEnrolled
+                  ? "border-2 border-emerald-500/60 bg-slate-950 shadow-emerald-500/10 shadow-2xl"
+                  : isPending
+                    ? "border-2 border-amber-500/60 bg-slate-950 shadow-amber-500/10 shadow-2xl"
+                    : theme.border
+            }`}
           >
-            {/* Badge */}
-            {promoActive ? (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-4 py-1 text-xs font-extrabold text-slate-950 uppercase tracking-widest flex items-center gap-1.5 shadow">
-                <Sparkles className="size-3.5 fill-slate-950" />
-                {t("pricing.founderCard.badge")}
-              </div>
-            ) : (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-destructive/15 border border-destructive/30 px-4 py-1 text-xs font-extrabold text-destructive uppercase tracking-widest flex items-center gap-1.5 shadow">
-                <span className="size-2 rounded-full bg-destructive inline-block" />
-                {t("pricing.founderCard.badgeExpired")}
-              </div>
-            )}
+            {/* Top Badge */}
+            <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${
+              isEnrolled
+                ? "bg-emerald-600 text-white border border-emerald-400 font-bold"
+                : isPending
+                  ? "bg-amber-500 text-slate-950 border border-amber-300 font-black"
+                  : isOfferExpired 
+                    ? "bg-slate-800 text-slate-400 border border-slate-700" 
+                    : theme.badge
+            }`}>
+              {isEnrolled ? <CheckCircle2 className="size-3.5" /> : isPending ? <Clock className="size-3.5 animate-pulse" /> : <Sparkles className="size-3.5" />}
+              {isEnrolled ? "VOUS ÊTES INSCRIT" : isPending ? "EN COURS DE VALIDATION" : isOfferExpired ? "OFFRE TERMINÉE" : current.offerBadge}
+            </div>
 
             <div>
-              <div className="text-center mt-2 mb-6">
-                <div className="flex items-center justify-center gap-2">
-                  <div className={cn(
-                    "text-4xl font-black transition-colors",
-                    promoActive ? "text-foreground" : "text-muted-foreground/60 line-through"
-                  )}>
-                    {t("pricing.founderCard.priceFcfa")}
-                  </div>
-                  <div className={cn(
-                    "text-sm rounded-full px-2.5 py-1 border transition-colors",
-                    promoActive 
-                      ? "text-muted-foreground bg-card/60 border-border/60" 
-                      : "text-muted-foreground/40 bg-card/30 border-border/40 line-through"
-                  )}>
-                    ≈ {t("pricing.founderCard.priceUsd")}
-                  </div>
+              <div className="text-center mt-4 mb-6 space-y-3">
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <span className={`font-heading text-4xl md:text-5xl font-black ${isOfferExpired ? "text-slate-500 line-through" : theme.priceColor}`}>
+                    {current.founderPrice}
+                  </span>
                 </div>
 
-                {promoActive ? (
-                  <>
-                    <div className="mt-2 text-xs text-amber-500 font-semibold uppercase tracking-wider">
-                      {t("pricing.founderCard.expireLabel")}
-                    </div>
-                    {mounted && <CountdownTimerBoxes timeLeft={timeLeft} />}
-                  </>
-                ) : (
-                  <div className="mt-3 rounded-lg bg-destructive/10 border border-destructive/20 p-2.5 text-center text-xs font-bold text-destructive">
-                    {t("pricing.founderCard.expiredNotice")}
+                {/* Enrolled Status Notice */}
+                {isEnrolled && (
+                  <div className="py-2 px-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2">
+                    <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+                    <span>Votre inscription à ce Bootcamp est confirmée</span>
+                  </div>
+                )}
+
+                {/* Pending Status Notice */}
+                {isPending && (
+                  <div className="py-2 px-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center justify-center gap-2">
+                    <Clock className="size-4 text-amber-400 shrink-0 animate-pulse" />
+                    <span>Votre paiement est en cours de vérification sous 24h</span>
+                  </div>
+                )}
+
+                {/* Dynamic Live Countdown Timer or Expiry Alert (only if not already enrolled/pending) */}
+                {!isEnrolled && !isPending && hasOfferEndDate && !isOfferExpired && (
+                  <div className={`py-2 px-3 rounded-2xl border text-xs font-mono font-bold flex items-center justify-center gap-2 ${
+                    isBusiness ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#F3E5AB]" : "bg-primary/15 border-primary/30 text-amber-300"
+                  }`}>
+                    <Clock className="size-4 animate-pulse shrink-0 text-primary" />
+                    <span>
+                      Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong>
+                    </span>
+                  </div>
+                )}
+
+                {!isEnrolled && !isPending && hasOfferEndDate && isOfferExpired && (
+                  <div className="py-2 px-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center justify-center gap-2">
+                    <AlertCircle className="size-4 text-rose-400 shrink-0" />
+                    <span>Cette offre promotionnelle a expiré</span>
+                  </div>
+                )}
+
+                {current.standardDateText && (
+                  <div className="text-xs text-muted-foreground font-medium pt-1">
+                    {current.standardDateText}
                   </div>
                 )}
               </div>
 
-              <div className={cn("border-t pt-6", promoActive ? "border-border/80" : "border-border/40")}>
+              <div className="border-t border-border/70 pt-6">
                 <ul className="space-y-3.5">
-                  {features.map((f: string, index: number) => (
-                    <li key={index} className="flex items-start gap-3 text-sm">
-                      <Check className={cn(
-                        "size-4.5 shrink-0 mt-0.5",
-                        promoActive ? "text-amber-500" : "text-muted-foreground/40"
-                      )} />
-                      <span className={cn(promoActive ? "text-foreground/95" : "text-muted-foreground/60")}>
-                        {f}
-                      </span>
+                  {current.features.map((f: string, index: number) => (
+                    <li key={index} className={`flex items-start gap-3 text-xs md:text-sm ${isOfferExpired ? "text-muted-foreground" : "text-foreground/95"}`}>
+                      <Check className={`size-4 shrink-0 mt-0.5 ${isEnrolled ? "text-emerald-400" : isPending ? "text-amber-400" : isOfferExpired ? "text-slate-600" : theme.checkColor}`} />
+                      <span>{String(f).replace(/VIP/gi, "Exclusifs")}</span>
                     </li>
                   ))}
                 </ul>
@@ -132,84 +349,92 @@ export function Pricing() {
             </div>
 
             <div className="mt-8">
-              {promoActive ? (
-                <a
-                  href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite profiter du Tarif Promo (99 000 FCFA / environ 174 $  ) pour le Bootcamp IA & Carrière.")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 text-sm transition-transform active:scale-95 shadow shadow-amber-500/10"
+              {isEnrolled ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
                 >
-                  {t("pricing.founderCard.buttonText")}
-                </a>
+                  <CheckCircle2 className="size-4" />
+                  <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : isPending ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-black bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl shadow-amber-500/25 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Clock className="size-4 animate-pulse" />
+                  <span>⏳ Inscription en cours de traitement · Suivre mon statut</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : !isOfferExpired ? (
+                <Link
+                  href={current.offerCheckoutHref}
+                  className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl text-sm transition-all shadow-xl active:scale-95 cursor-pointer ${theme.btn}`}
+                >
+                  <span>Profiter de l'Offre ({current.founderPrice})</span>
+                  <ArrowRight className="size-4" />
+                </Link>
               ) : (
                 <button
                   type="button"
                   disabled
-                  className="w-full flex h-12 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground/60 font-semibold px-6 text-sm cursor-not-allowed pointer-events-none border border-border/40 select-none shadow-none"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm bg-slate-800/80 text-slate-500 font-bold border border-slate-700/60 cursor-not-allowed select-none"
                 >
-                  {t("pricing.founderCard.buttonExpiredText")}
+                  <span>Offre Expirée · Tarif Standard Uniquement</span>
                 </button>
               )}
             </div>
           </motion.div>
 
-          {/* CARTE 2 : Prix Normal (149 000 FCFA) */}
+          {/* Card 2: Prix Standard */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className={cn(
-              "relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300",
-              !promoActive
-                ? "border-2 border-amber-500 bg-card shadow-xl shadow-amber-500/10"
-                : "border border-border bg-card/60 backdrop-blur-sm"
-            )}
+            key={`standard-${activeId}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className={`relative rounded-3xl p-6 md:p-8 shadow-xl flex flex-col justify-between transition-all ${
+              isOfferExpired && !isEnrolled && !isPending
+                ? "border-2 border-primary glow-gold bg-slate-950 shadow-2xl z-20" 
+                : "border border-border/80 bg-card/40 backdrop-blur-xl"
+            }`}
           >
-            {/* Badge */}
-            {!promoActive ? (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-500 px-4 py-1 text-xs font-extrabold text-slate-950 uppercase tracking-widest flex items-center gap-1.5 shadow">
-                <Sparkles className="size-3.5 fill-slate-950" />
-                {t("pricing.standardCard.badgeActive")}
-              </div>
-            ) : (
-              <div className="text-xs font-extrabold text-muted-foreground uppercase tracking-widest text-center mb-2">
-                {t("pricing.standardCard.badge")}
-              </div>
-            )}
+            {/* Standard Badge on Card 2 */}
+            <div className={`absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full px-5 py-1 text-xs font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl z-20 ${
+              isOfferExpired && !isEnrolled && !isPending
+                ? "bg-primary text-slate-950 border border-amber-300 font-black" 
+                : "bg-secondary text-secondary-foreground border border-border"
+            }`}>
+              <ShieldCheck className="size-3.5" />
+              {isOfferExpired && !isEnrolled && !isPending ? "TARIF OFFICIEL ACTIF" : "PRIX STANDARD"}
+            </div>
 
             <div>
-              <div className={cn("text-center mb-6", !promoActive && "mt-2")}>
-                <div className="flex items-center justify-center gap-2">
-                  <div className={cn(
-                    "text-4xl font-black transition-colors",
-                    !promoActive ? "text-foreground" : "text-muted-foreground"
-                  )}>
-                    {t("pricing.standardCard.priceFcfa")}
-                  </div>
-                  <div className="text-sm text-muted-foreground bg-card/60 border border-border/60 rounded-full px-2.5 py-1">
-                    ≈ {t("pricing.standardCard.priceUsd")}
-                  </div>
+              <div className="text-center mt-4 mb-6 space-y-3">
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <span className={`font-heading text-4xl md:text-5xl font-black ${isOfferExpired ? "text-white" : "text-foreground"}`}>
+                    {current.standardPrice}
+                  </span>
                 </div>
-                <div className={cn(
-                  "mt-2 text-xs font-semibold uppercase tracking-wider",
-                  !promoActive ? "text-amber-500" : "text-muted-foreground"
-                )}>
-                  {!promoActive ? t("pricing.standardCard.activeLabel") : t("pricing.standardCard.dateLabel")}
+
+                {isOfferExpired && !isEnrolled && !isPending && (
+                  <div className="py-2 px-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2">
+                    <Check className="size-4 text-emerald-400 shrink-0" />
+                    <span>Inscriptions ouvertes au tarif standard</span>
+                  </div>
+                )}
+
+                <div className="text-xs text-muted-foreground font-semibold pt-1">
+                  {current.standardDateText}
                 </div>
               </div>
 
               <div className="border-t border-border/60 pt-6">
                 <ul className="space-y-3.5">
-                  {features.map((f: string, index: number) => (
-                    <li key={index} className="flex items-start gap-3 text-sm">
-                      <Check className={cn(
-                        "size-4.5 shrink-0 mt-0.5",
-                        !promoActive ? "text-amber-500" : "text-muted-foreground/60"
-                      )} />
-                      <span className={cn(!promoActive ? "text-foreground/95" : "text-muted-foreground/80")}>
-                        {f}
-                      </span>
+                  {current.features.map((f: string, index: number) => (
+                    <li key={index} className="flex items-start gap-3 text-xs md:text-sm text-muted-foreground">
+                      <Check className={`size-4 shrink-0 mt-0.5 ${isOfferExpired ? "text-primary" : "text-muted-foreground"}`} />
+                      <span>{f}</span>
                     </li>
                   ))}
                 </ul>
@@ -217,19 +442,37 @@ export function Pricing() {
             </div>
 
             <div className="mt-8">
-              <a
-                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite réserver l'Accès Normal 149 000 FCFA pour le Bootcamp IA & Carrière.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={cn(
-                  "w-full flex h-12 items-center justify-center rounded-xl font-bold px-6 text-sm transition-all active:scale-95",
-                  !promoActive
-                    ? "bg-amber-500 hover:bg-amber-600 text-slate-950 shadow shadow-amber-500/10"
-                    : "border border-border/80 hover:bg-card/80 text-foreground"
-                )}
-              >
-                {!promoActive ? t("pricing.standardCard.buttonActiveText") : t("pricing.standardCard.buttonText")}
-              </a>
+              {isEnrolled ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/30 active:scale-95 transition-all cursor-pointer"
+                >
+                  <CheckCircle2 className="size-4 text-emerald-400" />
+                  <span>✅ Accès Déjà Actif · Voir mes Formations</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : isPending ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full flex h-13 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Clock className="size-4 animate-pulse text-amber-400" />
+                  <span>⏳ Inscription en cours de validation · Suivre mon statut</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              ) : (
+                <Link
+                  href={current.standardCheckoutHref}
+                  className={`w-full flex h-13 items-center justify-center gap-2 rounded-xl font-bold text-xs md:text-sm transition-all active:scale-95 cursor-pointer shadow-xl ${
+                    isOfferExpired 
+                      ? "bg-primary hover:bg-primary/90 text-slate-950 font-black shadow-primary/25" 
+                      : "bg-secondary/80 hover:bg-secondary text-foreground border border-border"
+                  }`}
+                >
+                  <span>Rejoindre au Tarif Standard ({current.standardPrice})</span>
+                  <ArrowRight className="size-4" />
+                </Link>
+              )}
             </div>
           </motion.div>
 
@@ -239,3 +482,4 @@ export function Pricing() {
     </section>
   )
 }
+

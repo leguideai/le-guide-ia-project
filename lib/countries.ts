@@ -222,3 +222,161 @@ export const countries: Country[] = [
   { name: "Zambie", code: "ZM", dial: "+260" },
   { name: "Zimbabwe", code: "ZW", dial: "+263" },
 ]
+
+// Emoji flag generator from 2-letter ISO code or country name
+export function getCountryFlag(countryCodeOrName: string): string {
+  if (!countryCodeOrName) return "🌐"
+  const clean = countryCodeOrName.trim()
+  if (clean.length === 2) {
+    const codePoints = clean
+      .toUpperCase()
+      .split("")
+      .map((char) => 127397 + char.charCodeAt(0))
+    return String.fromCodePoint(...codePoints)
+  }
+  const found = countries.find(c => c.name.toLowerCase() === clean.toLowerCase())
+  if (found) {
+    const codePoints = found.code
+      .toUpperCase()
+      .split("")
+      .map((char) => 127397 + char.charCodeAt(0))
+    return String.fromCodePoint(...codePoints)
+  }
+  return "🌐"
+}
+
+export function getCountryName(countryCodeOrName: string): string {
+  if (!countryCodeOrName) return "—"
+  const clean = countryCodeOrName.trim()
+  const found = countries.find(c => c.code.toLowerCase() === clean.toLowerCase() || c.name.toLowerCase() === clean.toLowerCase())
+  return found ? found.name : clean
+}
+
+export interface CountryPhoneRule {
+  expectedLength: number | number[]
+  placeholder: string
+  formatExample: string
+}
+
+export const PHONE_RULES: Record<string, CountryPhoneRule> = {
+  BF: { expectedLength: 8, placeholder: "70 12 34 56", formatExample: "8 chiffres" },
+  CI: { expectedLength: 10, placeholder: "07 12 34 56 78", formatExample: "10 chiffres" },
+  SN: { expectedLength: 9, placeholder: "77 123 45 67", formatExample: "9 chiffres" },
+  ML: { expectedLength: 8, placeholder: "70 12 34 56", formatExample: "8 chiffres" },
+  GN: { expectedLength: 9, placeholder: "620 12 34 56", formatExample: "9 chiffres" },
+  TG: { expectedLength: 8, placeholder: "90 12 34 56", formatExample: "8 chiffres" },
+  BJ: { expectedLength: 8, placeholder: "97 12 34 56", formatExample: "8 chiffres" },
+  NE: { expectedLength: 8, placeholder: "90 12 34 56", formatExample: "8 chiffres" },
+  CM: { expectedLength: 9, placeholder: "6 70 12 34 56", formatExample: "9 chiffres" },
+  GA: { expectedLength: 8, placeholder: "77 12 34 56", formatExample: "8 chiffres" },
+  CD: { expectedLength: 9, placeholder: "81 234 5678", formatExample: "9 chiffres" },
+  CG: { expectedLength: 9, placeholder: "06 123 4567", formatExample: "9 chiffres" },
+  FR: { expectedLength: [9, 10], placeholder: "6 12 34 56 78", formatExample: "9 ou 10 chiffres" },
+  BE: { expectedLength: 9, placeholder: "470 12 34 56", formatExample: "9 chiffres" },
+  CH: { expectedLength: 9, placeholder: "79 123 45 67", formatExample: "9 chiffres" },
+  CA: { expectedLength: 10, placeholder: "514 123 4567", formatExample: "10 chiffres" },
+  US: { expectedLength: 10, placeholder: "415 555 2671", formatExample: "10 chiffres" },
+  MA: { expectedLength: 9, placeholder: "6 12 34 56 78", formatExample: "9 chiffres" },
+  DZ: { expectedLength: 9, placeholder: "5 50 12 34 56", formatExample: "9 chiffres" },
+  TN: { expectedLength: 8, placeholder: "20 12 34 56", formatExample: "8 chiffres" },
+}
+
+export const PRIORITY_COUNTRY_CODES = [
+  "BF", "CI", "SN", "ML", "GN", "TG", "BJ", "NE", 
+  "CM", "GA", "CD", "FR", "BE", "CA", "US", "MA"
+]
+
+export function formatPhoneNumber(value: string, countryCode: string): string {
+  const digits = value.replace(/\D/g, "")
+  if (!digits) return ""
+
+  // Burkina Faso: XX XX XX XX
+  if (countryCode === "BF" || countryCode === "ML" || countryCode === "TG" || countryCode === "BJ" || countryCode === "NE" || countryCode === "GA" || countryCode === "TN") {
+    const parts = []
+    for (let i = 0; i < Math.min(digits.length, 8); i += 2) {
+      parts.push(digits.slice(i, i + 2))
+    }
+    return parts.join(" ")
+  }
+
+  // Côte d'Ivoire: XX XX XX XX XX (10 chiffres)
+  if (countryCode === "CI") {
+    const parts = []
+    for (let i = 0; i < Math.min(digits.length, 10); i += 2) {
+      parts.push(digits.slice(i, i + 2))
+    }
+    return parts.join(" ")
+  }
+
+  // Sénégal: XX XXX XX XX (9 chiffres)
+  if (countryCode === "SN") {
+    if (digits.length <= 2) return digits
+    if (digits.length <= 5) return `${digits.slice(0, 2)} ${digits.slice(2)}`
+    if (digits.length <= 7) return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`
+    return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 7)} ${digits.slice(7, 9)}`
+  }
+
+  // France / Maroc / Algérie: X XX XX XX XX (9 ou 10)
+  if (countryCode === "FR" || countryCode === "MA" || countryCode === "DZ") {
+    if (digits.startsWith("0")) {
+      const parts = []
+      for (let i = 0; i < Math.min(digits.length, 10); i += 2) {
+        parts.push(digits.slice(i, i + 2))
+      }
+      return parts.join(" ")
+    }
+    const first = digits.slice(0, 1)
+    const rest = digits.slice(1, 9)
+    const parts = [first]
+    for (let i = 0; i < rest.length; i += 2) {
+      parts.push(rest.slice(i, i + 2))
+    }
+    return parts.join(" ")
+  }
+
+  // Default grouping by 2 or 3
+  const parts = []
+  for (let i = 0; i < Math.min(digits.length, 12); i += 3) {
+    parts.push(digits.slice(i, i + 3))
+  }
+  return parts.join(" ")
+}
+
+export function parsePhoneNumber(rawPhone: string): { country: Country; localNumber: string } | null {
+  if (!rawPhone) return null
+  const cleaned = rawPhone.trim().replace(/\s+/g, "")
+  if (!cleaned.startsWith("+")) return null
+  
+  // Sort by dial code length descending
+  const sorted = [...countries].sort((a, b) => b.dial.length - a.dial.length)
+  for (const c of sorted) {
+    if (cleaned.startsWith(c.dial)) {
+      const localDigits = cleaned.slice(c.dial.length).replace(/\D/g, "")
+      return { country: c, localNumber: formatPhoneNumber(localDigits, c.code) }
+    }
+  }
+  return null
+}
+
+export interface SectorCategory {
+  category: string
+  options: string[]
+}
+
+export const PROFILE_SECTOR_OPTIONS = [
+  "Professionnels",
+  "Entrepreneurs",
+  "Étudiants"
+] as const
+
+export const SECTOR_CATEGORIES: SectorCategory[] = [
+  {
+    category: "Profil & Statut",
+    options: ["Professionnels", "Entrepreneurs", "Étudiants"],
+  },
+]
+
+export const ALL_KNOWN_SECTORS = ["Professionnels", "Entrepreneurs", "Étudiants", "Etudiants"]
+
+
+

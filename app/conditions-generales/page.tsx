@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { Header } from "@/components/header"
 
 export const metadata: Metadata = {
   title: "Conditions Générales de Vente | Le Guide IA",
@@ -9,8 +10,9 @@ export const metadata: Metadata = {
 
 export default function ConditionsGeneralesPage() {
   return (
-    <main className="relative min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-3xl px-4 py-24 md:px-8">
+    <main className="relative min-h-screen bg-background text-foreground flex flex-col">
+      <Header />
+      <div className="mx-auto max-w-3xl px-4 py-16 md:px-8">
         <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline mb-10">
           ← Retour au site
         </Link>
@@ -67,7 +69,7 @@ export default function ConditionsGeneralesPage() {
           </section>
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">8. Contact</h2>
-            <p><a href="mailto:alfred@leguideai.com" className="text-primary hover:underline">alfred@leguideai.com</a> — WhatsApp : +226 05 05 05 77</p>
+            <p><a href="mailto:alfred@leguideai.com" className="text-primary hover:underline">alfred@leguideai.com</a> — WhatsApp : +226 75 75 72 73</p>
           </section>
         </div>
         <div className="mt-12 pt-8 border-t border-border/40 flex flex-wrap gap-4 text-xs text-muted-foreground">

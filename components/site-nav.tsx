@@ -1,32 +1,61 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LayoutDashboard } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
+import { supabase } from "@/lib/supabase"
+import { setAuthRedirect } from "@/lib/auth-redirect"
 
 export function SiteNav() {
+  const pathname = usePathname()
   const { language, setLanguage, t } = useLanguage()
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   const links = [
-    { label: t("nav.programme"), href: "/Programme_Bootcamp_PRO_LE_GUIDE_IA.pdf" },
-    { label: t("nav.audience"), href: "/#audience" },
-    { label: t("nav.bootcamp"), href: "/#tarifs" },
-    // { label: t("nav.testimonials"), href: "/#temoignages" },
-    { label: t("nav.services"), href: "/services" },
-    { label: t("nav.resources"), href: "/ressources" },
-    { label: t("nav.faq"), href: "/#faq" },
+    { label: "Bootcamps IA", href: "/bootcamp" },
+    { label: "Bibliothèque Prompts", href: "/ressources" },
+    { label: "Entreprises (B2B)", href: "/entreprises" },
   ]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
     onScroll()
     window.addEventListener("scroll", onScroll)
-    return () => window.removeEventListener("scroll", onScroll)
+
+    async function loadUserRole(userId: string) {
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle()
+        if (data?.role) setUserRole(data.role)
+      } catch (_) {}
+    }
+
+    // Detect Supabase user session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user?.id) loadUserRole(session.user.id)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user?.id) loadUserRole(session.user.id)
+      else setUserRole(null)
+    })
+
+    return () => {
+      window.removeEventListener("scroll", onScroll)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const languageToggle = (
@@ -79,29 +108,58 @@ export function SiteNav() {
           </span>
         </a>
 
-        <div className="hidden items-center gap-7 lg:flex">
-          {links.map((l,i) => (
-            <a
-              key={l.href}
-              href={l.href}
-              target={i === 0 ? "_blank" : undefined}
-              rel={i === 0 ? "noopener noreferrer" : undefined}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {l.label}
-            </a>
-          ))}
+        {/* Desktop Links with Active Route Highlighting */}
+        <div className="hidden items-center gap-2 lg:flex">
+          {links.map((l) => {
+            const isActive = pathname === l.href || (l.href !== "/" && pathname?.startsWith(l.href))
+            return (
+              <a
+                key={l.href}
+                href={l.href}
+                className={cn(
+                  "text-xs transition-all duration-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold",
+                  isActive
+                    ? "bg-primary/15 text-primary border border-primary/30 shadow-sm font-extrabold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40 font-medium"
+                )}
+              >
+                {isActive && <span className="size-1.5 rounded-full bg-primary animate-pulse" />}
+                <span>{l.label}</span>
+              </a>
+            )
+          })}
         </div>
 
         <div className="hidden items-center gap-4 lg:flex">
           {languageToggle}
+
+          {user ? (
+            <a
+              href={userRole === "admin" || userRole === "super_admin" ? "/admin" : "/dashboard"}
+              className="flex items-center gap-2 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl transition-all shadow-md"
+            >
+              <LayoutDashboard className="size-3.5" />
+              <span>{userRole === "admin" || userRole === "super_admin" ? "Portail Admin" : "Mon Dashboard"}</span>
+            </a>
+          ) : (
+            <a
+              href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
+              onClick={() => {
+                if (pathname && pathname !== "/") {
+                  setAuthRedirect(pathname)
+                }
+              }}
+              className="text-xs font-bold text-foreground bg-secondary/80 hover:bg-secondary border border-border px-3.5 py-2 rounded-xl transition-all"
+            >
+              Espace Membre
+            </a>
+          )}
+
           <a
-            href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp IA & Carrière.")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ size: "lg" }), "glow-blue font-semibold")}
+            href="/checkout/bootcamp-ia-pro"
+            className={cn(buttonVariants({ size: "lg" }), "font-semibold shadow-md")}
           >
-            {t("nav.cta")}
+            S'inscrire au Bootcamp
           </a>
         </div>
 
@@ -126,27 +184,57 @@ export function SiteNav() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-t border-border/60 bg-background/95 backdrop-blur-xl lg:hidden"
           >
-            <div className="flex flex-col gap-1 px-4 py-4">
-              {links.map((l, i) => (
+            <div className="flex flex-col gap-1.5 px-4 py-4">
+              {links.map((l) => {
+                const isActive = pathname === l.href || (l.href !== "/" && pathname?.startsWith(l.href))
+                return (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "rounded-lg px-3 py-2.5 text-sm transition-colors flex items-center justify-between",
+                      isActive
+                        ? "bg-primary/20 text-primary font-extrabold border border-primary/30"
+                        : "font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    <span>{l.label}</span>
+                    {isActive && <span className="text-xs font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">Actif</span>}
+                  </a>
+                )
+              })}
+              
+              {user ? (
                 <a
-                  key={l.href}
-                  href={l.href}
-                  target={i === 0 ? "_blank" : undefined}
-                  rel={i === 0 ? "noopener noreferrer" : undefined}
+                  href={userRole === "admin" || userRole === "super_admin" ? "/admin" : "/dashboard"}
                   onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary mt-1"
                 >
-                  {l.label}
+                  <LayoutDashboard className="size-4" />
+                  <span>{userRole === "admin" || userRole === "super_admin" ? "Portail Admin" : "Mon Dashboard"}</span>
                 </a>
-              ))}
+              ) : (
+                <a
+                  href={`/login${pathname && pathname !== "/" ? `?redirect=${encodeURIComponent(pathname)}` : ""}`}
+                  onClick={() => {
+                    setOpen(false)
+                    if (pathname && pathname !== "/") {
+                      setAuthRedirect(pathname)
+                    }
+                  }}
+                  className="rounded-lg px-3 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-secondary mt-1"
+                >
+                  Espace Membre
+                </a>
+              )}
+
               <a
-                href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je souhaite effectuer mon paiement pour le Bootcamp IA & Carrière.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/checkout/bootcamp-ia-pro"
                 onClick={() => setOpen(false)}
                 className={cn(buttonVariants({ size: "lg" }), "mt-2 w-full font-semibold")}
               >
-                {t("nav.cta")}
+                S'inscrire au Bootcamp
               </a>
             </div>
           </motion.div>

@@ -159,7 +159,7 @@ export function ResourceOptinModal({
 
             {status === "success" ? (
               <div className="text-center py-8">
-                <span className="inline-flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-4 animate-bounce">
+                <span className="inline-flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 mb-4 animate-bounce">
                   <CheckCircle2 className="size-8" />
                 </span>
                 <h3 className="font-heading text-xl font-bold text-foreground">
