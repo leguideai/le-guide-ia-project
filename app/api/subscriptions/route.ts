@@ -75,29 +75,7 @@ export async function GET(req: Request) {
       })
     }
 
-    // 1. Vérifier si l'utilisateur est inscrit à un Bootcamp (accès VIP inclus)
-    let hasBootcampAccess = false
-    let bootcampTitle = ""
-
-    const { data: bootcampRegs } = await supabaseServer
-      .from("registrations")
-      .select("id, course_slug, status, notes")
-      .ilike("email", email)
-      .not("course_slug", "eq", "masterclass-ia")
-      .not("course_slug", "eq", "subscription-vip")
-
-    if (bootcampRegs && bootcampRegs.length > 0) {
-      const validReg = bootcampRegs.find(r => {
-        const isNotMasterclass = r.course_slug && !r.course_slug.includes("masterclass")
-        return isNotMasterclass
-      })
-      if (validReg) {
-        hasBootcampAccess = true
-        bootcampTitle = validReg.course_slug || "Bootcamp Pro"
-      }
-    }
-
-    // 2. Vérifier dans la table 'subscriptions'
+    // 1. Vérifier dans la table 'subscriptions'
     const { data: dbSub } = await supabaseServer
       .from("subscriptions")
       .select("*")
@@ -154,7 +132,7 @@ export async function GET(req: Request) {
       const effectiveStatus = (activeSub.status === "active" && isExpired) ? "expired" : activeSub.status
 
       return NextResponse.json({
-        isSubscribed: effectiveStatus === "active" || hasBootcampAccess,
+        isSubscribed: effectiveStatus === "active",
         status: effectiveStatus,
         plan: activeSub.plan,
         planLabel: activeSub.plan_label,
@@ -164,23 +142,6 @@ export async function GET(req: Request) {
         startsAt: activeSub.starts_at,
         expiresAt: activeSub.expires_at,
         daysRemaining: effectiveStatus === "active" ? daysRemaining : 0,
-        hasBootcampAccess,
-        bootcampTitle,
-        pricing
-      })
-    }
-
-    if (hasBootcampAccess) {
-      return NextResponse.json({
-        isSubscribed: true,
-        status: "active",
-        plan: "bootcamp_vip",
-        planLabel: "Accès VIP Inclus (Bootcamp)",
-        amount: 0,
-        paymentMethod: "Bootcamp Enrolled",
-        daysRemaining: 365,
-        hasBootcampAccess: true,
-        bootcampTitle,
         pricing
       })
     }
@@ -189,7 +150,6 @@ export async function GET(req: Request) {
       isSubscribed: false,
       status: "none",
       daysRemaining: 0,
-      hasBootcampAccess: false,
       pricing
     })
   } catch (error: any) {
