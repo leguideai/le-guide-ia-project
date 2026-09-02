@@ -156,7 +156,6 @@ export async function GET(req: Request) {
         .from("registrations")
         .select("id, status, notes, course_slug, source")
         .ilike("email", emailParam)
-        .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,source.eq.masterclass_dimanche")
 
       if (userRegistrations && userRegistrations.length > 0) {
         // Vérifier si l'une des inscriptions correspond à la session demandée
@@ -164,8 +163,9 @@ export async function GET(req: Request) {
           if (!r.notes) return false
           try {
             const pNotes = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
-            if (pNotes && pNotes.masterclass_id) {
-              return pNotes.masterclass_id === requestedSessionId
+            if (pNotes) {
+              if (pNotes.masterclass_id === requestedSessionId) return true
+              if (Array.isArray(pNotes.registered_masterclasses) && pNotes.registered_masterclasses.includes(requestedSessionId)) return true
             }
           } catch (_) {}
           return false
@@ -216,24 +216,53 @@ export async function POST(req: Request) {
     // 1. Vérifier si déjà inscrit spécifiquement à cette Masterclass
     const { data: userRegistrations } = await supabaseServer
       .from("registrations")
-      .select("id, notes")
+      .select("id, notes, course_slug, source")
       .ilike("email", email)
-      .or("course_slug.ilike.%masterclass%,source.ilike.%masterclass%,course_slug.eq.masterclass-ia,source.eq.masterclass_dimanche")
+      .order("created_at", { ascending: false })
 
     const existingMatch = (userRegistrations || []).find(r => {
       if (!r.notes) return false
       try {
         const pNotes = typeof r.notes === "string" ? JSON.parse(r.notes) : r.notes
-        return pNotes && pNotes.masterclass_id === masterclassId
+        if (pNotes) {
+          if (pNotes.masterclass_id === masterclassId) return true
+          if (Array.isArray(pNotes.registered_masterclasses) && pNotes.registered_masterclasses.includes(masterclassId)) return true
+        }
       } catch (_) {}
       return false
     })
+
+    // 2. Récupérer les données de la session actuelle pour le retour et pour l'email
+    const { data: rows } = await supabaseServer
+      .from("site_settings")
+      .select("key, value")
+
+    const settingsMap: Record<string, string> = {}
+    if (rows && rows.length > 0) {
+      rows.forEach((r) => {
+        if (r.key && r.value !== undefined) {
+          settingsMap[r.key] = r.value
+        }
+      })
+    }
+
+    const sessionInfo = {
+      title: settingsMap.masterclass_title || "Masterclass IA en Direct",
+      scheduledAt: settingsMap.masterclass_date || "",
+      dateDisplay: settingsMap.masterclass_date_display || "",
+      whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
+      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://meet.google.com",
+      instructor: settingsMap.masterclass_instructor || "Alfred Dah"
+    }
 
     if (existingMatch) {
       return NextResponse.json({
         success: true,
         alreadyRegistered: true,
-        message: "Vous êtes déjà inscrit à cette Masterclass !"
+        isRegistered: true,
+        message: "Vous êtes déjà inscrit à cette Masterclass !",
+        whatsappGroupUrl: sessionInfo.whatsappGroupUrl,
+        youtubeLiveUrl: sessionInfo.youtubeLiveUrl
       })
     }
 
@@ -259,49 +288,75 @@ export async function POST(req: Request) {
     const cleanCountry = country || userProf?.country || "CI"
     const cleanSector = body.profession || body.sector || userProf?.sector || ""
 
-    const regPayload: any = {
-      full_name: cleanFullName,
-      email: email,
-      whatsapp: cleanWhatsApp,
-      country: cleanCountry,
-      source: "masterclass_dimanche",
-      course_slug: "masterclass-ia",
-      status: "inscrit",
-      notes: JSON.stringify({
-        source: "masterclass_dimanche",
+    const existingReg = (userRegistrations || [])[0]
+
+    if (existingReg) {
+      // Mettre à jour l'enregistrement existant en ajoutant la masterclass dans notes
+      let existingNotes: any = {}
+      try {
+        existingNotes = typeof existingReg.notes === "string" ? JSON.parse(existingReg.notes) : (existingReg.notes || {})
+      } catch (_) {}
+
+      const registeredMasterclasses = Array.isArray(existingNotes.registered_masterclasses)
+        ? existingNotes.registered_masterclasses
+        : (existingNotes.masterclass_id ? [existingNotes.masterclass_id] : [])
+
+      if (!registeredMasterclasses.includes(masterclassId)) {
+        registeredMasterclasses.push(masterclassId)
+      }
+
+      const updatedNotes = {
+        ...existingNotes,
         masterclass_id: masterclassId,
         masterclass_title: masterclassTitle,
-        profession: cleanSector,
-        sector: cleanSector,
-        country: cleanCountry,
-        city: userProf?.city || body.city || "",
-        registered_at: new Date().toISOString()
-      })
-    }
+        registered_masterclasses: registeredMasterclasses,
+        profession: cleanSector || existingNotes.profession || "",
+        sector: cleanSector || existingNotes.sector || "",
+        country: cleanCountry || existingNotes.country || "",
+        city: userProf?.city || body.city || existingNotes.city || "",
+        last_masterclass_at: new Date().toISOString()
+      }
 
-    let regId: string | null = null
-      const { data: newReg, error: regErr } = await supabaseServer
+      await supabaseServer
+        .from("registrations")
+        .update({
+          full_name: cleanFullName,
+          whatsapp: cleanWhatsApp,
+          country: cleanCountry,
+          notes: JSON.stringify(updatedNotes)
+        })
+        .eq("id", existingReg.id)
+    } else {
+      // Créer une nouvelle fiche d'inscription
+      const regPayload: any = {
+        full_name: cleanFullName,
+        email: email,
+        whatsapp: cleanWhatsApp,
+        country: cleanCountry,
+        source: "masterclass_dimanche",
+        course_slug: "masterclass-ia",
+        status: "inscrit",
+        notes: JSON.stringify({
+          source: "masterclass_dimanche",
+          masterclass_id: masterclassId,
+          masterclass_title: masterclassTitle,
+          registered_masterclasses: [masterclassId],
+          profession: cleanSector,
+          sector: cleanSector,
+          country: cleanCountry,
+          city: userProf?.city || body.city || "",
+          registered_at: new Date().toISOString()
+        })
+      }
+
+      const { error: regErr } = await supabaseServer
         .from("registrations")
         .insert(regPayload)
-        .select("id")
-        .single()
 
       if (regErr) {
-        console.warn("Masterclass registration insert error:", regErr)
-        // Retry with timestamped unique whatsapp if conflict
-        if (regErr.code === "23505") {
-          regPayload.whatsapp = `wa_${email}_${Date.now()}`
-          const { data: retryReg } = await supabaseServer
-            .from("registrations")
-            .insert(regPayload)
-            .select("id")
-            .single()
-          if (retryReg) regId = retryReg.id
-        }
+        console.warn("Masterclass registration insert error:", regErr.message)
       }
-      if (newReg) {
-        regId = newReg.id
-      }
+    }
 
     // 2. Ajouter automatiquement aux abonnés newsletter
     try {
@@ -315,30 +370,7 @@ export async function POST(req: Request) {
       console.warn("Newsletter sync note:", newsErr)
     }
 
-    // 3. Récupérer les données de la session actuelle pour le retour et pour l'email
-    const { data: rows } = await supabaseServer
-      .from("site_settings")
-      .select("key, value")
-
-    const settingsMap: Record<string, string> = {}
-    if (rows && rows.length > 0) {
-      rows.forEach((r) => {
-        if (r.key && r.value !== undefined) {
-          settingsMap[r.key] = r.value
-        }
-      })
-    }
-
-    const sessionInfo = {
-      title: settingsMap.masterclass_title || "Masterclass IA en Direct",
-      scheduledAt: settingsMap.masterclass_date || "",
-      dateDisplay: settingsMap.masterclass_date_display || "",
-      whatsappGroupUrl: settingsMap.masterclass_whatsapp_group_url || "",
-      youtubeLiveUrl: settingsMap.masterclass_youtube_url || "https://meet.google.com",
-      instructor: settingsMap.masterclass_instructor || "Alfred Dah"
-    }
-
-    // 4. Envoyer l'email de confirmation immédiat via Resend
+    // 3. Envoyer l'email de confirmation immédiat via Resend
     try {
       await sendMasterclassRegistrationEmail(cleanFullName, email, sessionInfo)
     } catch (emailErr) {

@@ -127,10 +127,8 @@ export default function MasterclassHubPage() {
 
     init()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        init()
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      init()
     })
 
     const handleProfileUpdated = () => {
