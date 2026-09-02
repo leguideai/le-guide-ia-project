@@ -101,13 +101,8 @@ export function useUserEnrollments() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const currentUser = session?.user
-      const storedEmail = typeof window !== "undefined"
-        ? (localStorage.getItem("user_email") || localStorage.getItem("member_email") || localStorage.getItem("le_guide_ia_email"))
-        : null
 
-      const email = (currentUser?.email || storedEmail || "").toLowerCase().trim()
-
-      if (!currentUser && !storedEmail) {
+      if (!currentUser || !currentUser.email) {
         setUser(null)
         setIsLoggedIn(false)
         setIsAdmin(false)
@@ -118,13 +113,9 @@ export function useUserEnrollments() {
         return
       }
 
-      if (currentUser) {
-        setUser(currentUser)
-        setIsLoggedIn(true)
-      } else if (storedEmail) {
-        setUser({ email: storedEmail, isStoredOnly: true })
-        setIsLoggedIn(true)
-      }
+      const email = currentUser.email.toLowerCase().trim()
+      setUser(currentUser)
+      setIsLoggedIn(true)
 
       // Parallel fetch: courses list + user enrollments API
       const [cRes, enrollmentsRes] = await Promise.all([

@@ -423,7 +423,6 @@ function CheckoutContent({ params }: PageProps) {
           const savedCountry = localStorage.getItem("user_country")
           if (savedEmail) {
             setEmail(savedEmail)
-            setIsLoggedIn(true)
           }
           if (savedName) setFullName(savedName)
           if (savedPhone) {

@@ -300,16 +300,25 @@ export async function POST(req: Request) {
 
     // 2. If confirmed, activate registration and user_courses for the specific course ONLY
     if (status === "confirmed" && studentEmail) {
-      // Resolve exact course slug from payment's course_title or course_id
+      // Resolve exact course slug from payment's course_title or course_id dynamically
       let resolvedSlug = ""
-      if (updatedPayment.course_title) {
-        const titleNorm = updatedPayment.course_title.toLowerCase()
-        if (titleNorm.includes("business")) resolvedSlug = "bootcamp-business-exec"
-        else if (titleNorm.includes("carriere") || titleNorm.includes("pro")) resolvedSlug = "bootcamp-ia-pro"
-      }
-      if (!resolvedSlug && updatedPayment.course_id) {
+      if (updatedPayment.course_id) {
         const { data: c } = await supabaseServer.from("courses").select("slug").eq("id", updatedPayment.course_id).maybeSingle()
         if (c?.slug) resolvedSlug = c.slug
+      }
+      if (!resolvedSlug && updatedPayment.course_title) {
+        const { data: c } = await supabaseServer.from("courses").select("slug").ilike("title", updatedPayment.course_title.trim()).maybeSingle()
+        if (c?.slug) resolvedSlug = c.slug
+        if (!resolvedSlug) {
+          const { data: allC } = await supabaseServer.from("courses").select("slug, title")
+          const norm = updatedPayment.course_title.toLowerCase().replace(/[^a-z0-9]/g, "")
+          const matched = (allC || []).find((c: any) => {
+            const cNorm = (c.title || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+            const sNorm = (c.slug || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+            return (cNorm && (cNorm.includes(norm) || norm.includes(cNorm))) || (sNorm && (sNorm.includes(norm) || norm.includes(sNorm)))
+          })
+          if (matched?.slug) resolvedSlug = matched.slug
+        }
       }
       if (!resolvedSlug && reg?.course_slug) {
         resolvedSlug = reg.course_slug
@@ -560,10 +569,23 @@ export async function DELETE(req: Request) {
         if (!targetSlug) {
           targetSlug = pay.registrations?.course_slug || ""
         }
+        if (!targetSlug && pay.course_id) {
+          const { data: c } = await supabaseServer.from("courses").select("slug").eq("id", pay.course_id).maybeSingle()
+          if (c?.slug) targetSlug = c.slug
+        }
         if (!targetSlug && pay.course_title) {
-          const t = pay.course_title.toLowerCase()
-          if (t.includes("business")) targetSlug = "bootcamp-business-exec"
-          else if (t.includes("carriere") || t.includes("pro")) targetSlug = "bootcamp-pro-2"
+          const { data: c } = await supabaseServer.from("courses").select("slug").ilike("title", pay.course_title.trim()).maybeSingle()
+          if (c?.slug) targetSlug = c.slug
+          if (!targetSlug) {
+            const { data: allC } = await supabaseServer.from("courses").select("slug, title")
+            const norm = pay.course_title.toLowerCase().replace(/[^a-z0-9]/g, "")
+            const matched = (allC || []).find((c: any) => {
+              const cNorm = (c.title || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+              const sNorm = (c.slug || "").toLowerCase().replace(/[^a-z0-9]/g, "")
+              return (cNorm && (cNorm.includes(norm) || norm.includes(cNorm))) || (sNorm && (sNorm.includes(norm) || norm.includes(sNorm)))
+            })
+            if (matched?.slug) targetSlug = matched.slug
+          }
         }
       }
     }
