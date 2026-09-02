@@ -4353,7 +4353,6 @@ export default function SuperAdminDashboard() {
                       <option value="Wave Mobile Money">Wave</option>
                       <option value="Orange Money">Orange Money</option>
                       <option value="Moov Money">Moov Money</option>
-                      <option value="MTN Mobile Money">MTN Mobile Money</option>
                       <option value="Virement Bancaire">Virement Bancaire</option>
                       <option value="Espèces / Cash">Espèces / Cash</option>
                       <option value="Offert / Gratuit">Offert / Gratuit</option>
@@ -6193,7 +6192,6 @@ export default function SuperAdminDashboard() {
                           <option value="Wave Mobile Money">Wave</option>
                           <option value="Orange Money">Orange Money</option>
                           <option value="Moov Money">Moov Money</option>
-                          <option value="MTN Mobile Money">MTN Mobile Money</option>
                           <option value="Virement Bancaire">Virement Bancaire</option>
                           <option value="Espèces / Cash">Espèces / Cash</option>
                           <option value="Offert / Gratuit">Offert / Gratuit</option>

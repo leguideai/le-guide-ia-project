@@ -507,7 +507,7 @@ async function seedDatabase() {
       {
         category: "pricing",
         question: "Quels sont les moyens de paiement acceptés sur la plateforme ?",
-        answer: "Nous proposons des solutions de paiement ultra-flexibles adaptées à chaque pays : Mobile Money instantané (Orange Money, Wave, MTN MoMo, Moov Money), cartes bancaires internationales (Visa, Mastercard) et virements bancaires professionnels (B2B) avec émission de facture proforma."
+        answer: "Nous proposons des solutions de paiement ultra-flexibles adaptées à chaque pays : Mobile Money instantané (Orange Money, Wave, Moov Money), cartes bancaires internationales (Visa, Mastercard) et virements bancaires professionnels (B2B) avec émission de facture proforma."
       },
       {
         category: "pricing",

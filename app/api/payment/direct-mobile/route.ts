@@ -211,7 +211,7 @@ export async function POST(req: Request) {
     }
 
     // 5. Envoi d'email automatique de confirmation de réception (Validation sous 24h)
-    const operatorName = mobileOperator === "orange_money" ? "Orange Money" : mobileOperator === "mtn_momo" ? "MTN MoMo" : "Wave"
+    const operatorName = mobileOperator === "orange_money" ? "Orange Money" : mobileOperator === "moov" ? "Moov" : "Wave"
     const hasDeduction = subscriptionCredit && Number(subscriptionCredit) > 0
     const formattedOriginal = originalPrice ? `${Number(originalPrice).toLocaleString('fr-FR')} FCFA` : `${(Number(price || 0) + Number(subscriptionCredit || 0)).toLocaleString('fr-FR')} FCFA`
     const formattedDeduction = hasDeduction ? `${Number(subscriptionCredit).toLocaleString('fr-FR')} FCFA` : ""

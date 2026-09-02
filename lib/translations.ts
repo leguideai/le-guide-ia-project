@@ -276,7 +276,7 @@ export const translations: Record<string, any> = {
         {
           category: "pricing",
           q: "Quels sont les moyens de paiement acceptés sur la plateforme ?",
-          a: "Nous proposons des solutions de paiement ultra-flexibles adaptées à chaque pays : Mobile Money instantané (Orange Money, Wave, MTN MoMo, Moov Money), cartes bancaires internationales (Visa, Mastercard) et virements bancaires professionnels (B2B) avec émission de facture proforma."
+          a: "Nous proposons des solutions de paiement ultra-flexibles adaptées à chaque pays : Mobile Money instantané (Orange Money, Wave, Moov Money), cartes bancaires internationales (Visa, Mastercard) et virements bancaires professionnels (B2B) avec émission de facture proforma."
         },
         {
           category: "pricing",
@@ -609,7 +609,7 @@ export const translations: Record<string, any> = {
         {
           category: "pricing",
           q: "What payment methods are accepted on the platform?",
-          a: "We provide convenient payment options for every country: Instant Mobile Money (Orange Money, Wave, MTN MoMo, Moov Money), international bank cards (Visa, Mastercard), and corporate wire transfers with proforma invoices."
+          a: "We provide convenient payment options for every country: Instant Mobile Money (Orange Money, Wave, Moov Money), international bank cards (Visa, Mastercard), and corporate wire transfers with proforma invoices."
         },
         {
           category: "pricing",

@@ -55,7 +55,7 @@ function CheckoutContent({ params }: PageProps) {
   const [userSubscription, setUserSubscription] = useState<any>(null)
   const [pendingSubscription, setPendingSubscription] = useState<any>(null)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe" | "paytech">("mobile_direct")
-  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov" | "mtn">("wave")
+  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov">("wave")
   const [transactionRef, setTransactionRef] = useState("")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
@@ -993,10 +993,10 @@ function CheckoutContent({ params }: PageProps) {
               )}
 
               {/* Payment Method Selector */}
-              <div className="space-y-2 pt-2">
+              {/* <div className="space-y-2 pt-2">
                 <label className="text-xs font-bold text-foreground/80">Mode de paiement</label>
                 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 grid-cols-1">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("mobile_direct")}
@@ -1013,11 +1013,13 @@ function CheckoutContent({ params }: PageProps) {
                       {paymentMethod === "mobile_direct" && <CheckCircle2 className="size-4 text-primary" />}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-foreground">Mobile Money Direct</div>
-                      <div className="text-[10px] text-muted-foreground">Wave, Orange Money, Moov, MTN</div>
+                      <div className="text-xs font-bold text-foreground">Paiement Mobile Money Direct</div>
+                      <div className="text-[10px] text-muted-foreground">Wave, Orange Money, Moov (Reçu ou Référence)</div>
                     </div>
                   </button>
 
+                  Stripe Payment Option Commented Out
+                  
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("stripe")}
@@ -1038,6 +1040,7 @@ function CheckoutContent({ params }: PageProps) {
                       <div className="text-[10px] text-muted-foreground">Visa, MasterCard, Amex</div>
                     </div>
                   </button>
+                 
 
                   {ENABLE_PAYTECH && (
                     <button
@@ -1062,7 +1065,7 @@ function CheckoutContent({ params }: PageProps) {
                     </button>
                   )}
                 </div>
-              </div>
+              </div> */}
 
               {/* Mobile Money Direct Info Box & Ref Field */}
               {paymentMethod === "mobile_direct" && (
@@ -1073,7 +1076,7 @@ function CheckoutContent({ params }: PageProps) {
                       <span>Instructions de dépôt Mobile Money</span>
                     </h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Effectuez le transfert de <strong className="text-foreground font-extrabold">{coursePriceFcfa}</strong> sur le numéro officiel unique ci-dessous (Wave, Orange Money, Moov, MTN) :
+                      Effectuez le transfert de <strong className="text-foreground font-extrabold">{coursePriceFcfa}</strong> sur le numéro officiel unique ci-dessous (Wave, Orange Money, Moov) :
                     </p>
                   </div>
 

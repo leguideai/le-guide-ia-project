@@ -46,12 +46,6 @@ const MOBILE_MONEY_ACCOUNTS = {
     beneficiary: OFFICIAL_BENEFICIARY,
     instructions: "Effectuez le transfert Orange Money vers le numéro officiel unique ci-dessous, puis saisissez le code/référence reçu par SMS."
   },
-  mtn: {
-    name: "MTN Mobile Money",
-    number: OFFICIAL_PAYMENT_NUMBER,
-    beneficiary: OFFICIAL_BENEFICIARY,
-    instructions: "Effectuez votre paiement MTN MoMo vers le numéro officiel unique ci-dessous et saisissez votre référence de transaction."
-  },
   moov: {
     name: "Moov Money",
     number: OFFICIAL_PAYMENT_NUMBER,
@@ -71,7 +65,7 @@ export function SubscriptionModal({
   const router = useRouter()
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>(initialPlan)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe">("mobile_direct")
-  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "mtn" | "moov">("wave")
+  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov">("wave")
   
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
@@ -494,21 +488,18 @@ export function SubscriptionModal({
                   3. Choisissez votre Moyen de Paiement :
                 </label>
 
-                {/* Tabs Mobile Money / Carte */}
-                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-900 rounded-xl border border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("mobile_direct")}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                      paymentMethod === "mobile_direct"
-                        ? "bg-primary text-slate-950 shadow-sm"
-                        : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    <Smartphone className="size-3.5" />
-                    <span>Mobile Money Direct</span>
-                  </button>
+                {/* Mode de paiement : Mobile Money Direct (Stripe mis en commentaire) */}
+                {/* <div className="p-1 bg-slate-900 rounded-xl border border-slate-800"> */}
+                  {/* <div className="py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-between bg-primary/10 text-primary border border-primary/20">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="size-4" />
+                      <span>Paiement par Mobile Money Direct (Wave, Orange, Moov)</span>
+                    </div>
+                    <CheckCircle2 className="size-4 text-primary" />
+                  </div> */}
 
+                  {/* Stripe Payment Option Commented Out */}
+                  {/* 
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("stripe")}
@@ -521,7 +512,8 @@ export function SubscriptionModal({
                     <CreditCard className="size-3.5" />
                     <span>Carte Bancaire (Stripe)</span>
                   </button>
-                </div>
+                  */}
+                {/* </div> */}
 
                 {/* Mobile Money Operator Details */}
                 {paymentMethod === "mobile_direct" && (
@@ -532,7 +524,6 @@ export function SubscriptionModal({
                       {[
                         { id: "wave", label: "Wave", color: "border-sky-500 text-sky-400" },
                         { id: "orange_money", label: "Orange", color: "border-orange-500 text-orange-400" },
-                        { id: "mtn", label: "MTN", color: "border-yellow-500 text-yellow-400" },
                         { id: "moov", label: "Moov", color: "border-blue-500 text-blue-400" }
                       ].map(op => (
                         <button
@@ -620,7 +611,8 @@ export function SubscriptionModal({
                   </div>
                 )}
 
-                {/* Stripe Info */}
+                {/* Stripe Info (Commented Out) */}
+                {/* 
                 {paymentMethod === "stripe" && (
                   <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs text-slate-300">
                     <div className="flex items-center gap-2 text-emerald-400 font-bold">
@@ -632,6 +624,7 @@ export function SubscriptionModal({
                     </p>
                   </div>
                 )}
+                */}
 
               </div>
 

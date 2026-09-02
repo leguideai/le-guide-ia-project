@@ -119,7 +119,7 @@ function FormationsContent() {
   // Checkout Modal State
   const [selectedFormation, setSelectedFormation] = useState<FormationItem | null>(null)
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<"wave" | "orange_money" | "mtn_momo" | "stripe">("wave")
+  const [paymentMethod, setPaymentMethod] = useState<"wave" | "orange_money" | "moov" | "stripe">("wave")
   const [transactionRef, setTransactionRef] = useState("")
   const [copiedNum, setCopiedNum] = useState<string | null>(null)
   const [buyerForm, setBuyerForm] = useState({
@@ -252,7 +252,7 @@ function FormationsContent() {
       return
     }
 
-    // 2. PAIEMENT DIRECT MOBILE MONEY (Wave, Orange Money, MTN MoMo)
+    // 2. PAIEMENT DIRECT MOBILE MONEY (Wave, Orange Money)
     if (!transactionRef.trim()) {
       setErrorMessage("Veuillez renseigner la référence de transaction ou votre numéro expéditeur.")
       setProcessingPayment(false)
@@ -610,7 +610,7 @@ function FormationsContent() {
             </div>
             <div className="space-y-1 text-left">
               <h4 className="font-heading text-sm font-bold text-white">Paiements 100% Sécurisés</h4>
-              <p className="text-xs text-slate-400">Wave, Orange Money, MTN MoMo, Carte Bancaire et Stripe.</p>
+              <p className="text-xs text-slate-400">Wave, Orange Money, Carte Bancaire et Stripe.</p>
             </div>
           </div>
 
@@ -784,24 +784,8 @@ function FormationsContent() {
                         <span className="text-[10px] text-slate-400 mt-1">Mobile Money</span>
                       </button>
 
-                      {/* MTN MoMo */}
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod("mtn_momo")}
-                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                          paymentMethod === "mtn_momo"
-                            ? "bg-primary/10 border-primary text-white shadow-md ring-1 ring-primary"
-                            : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="font-bold text-xs text-white">MTN MoMo</span>
-                          {paymentMethod === "mtn_momo" && <CheckCircle2 className="size-4 text-primary" />}
-                        </div>
-                        <span className="text-[10px] text-slate-400 mt-1">Mobile Money</span>
-                      </button>
-
-                      {/* Carte Bancaire / Stripe */}
+                      {/* Carte Bancaire / Stripe (Commenté) */}
+                      {/* 
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("stripe")}
@@ -817,17 +801,18 @@ function FormationsContent() {
                         </div>
                         <span className="text-[10px] text-slate-400 mt-1">Stripe / Visa / Master</span>
                       </button>
+                      */}
 
                     </div>
                   </div>
 
-                  {/* 1. PANNEAU D'INSTRUCTIONS MOBILE MONEY (WAVE / OM / MTN) */}
+                  {/* 1. PANNEAU D'INSTRUCTIONS MOBILE MONEY (WAVE / OM / MOOV) */}
                   {paymentMethod !== "stripe" && (
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
                       <div className="space-y-1">
                         <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
                           <Smartphone className="size-4 text-primary" />
-                          <span>Instructions de transfert ({paymentMethod === "wave" ? "Wave" : paymentMethod === "orange_money" ? "Orange Money" : "MTN MoMo"}) :</span>
+                          <span>Instructions de transfert ({paymentMethod === "wave" ? "Wave" : paymentMethod === "orange_money" ? "Orange Money" : "Moov"}) :</span>
                         </h4>
                         <p className="text-[11px] text-slate-300 leading-relaxed">
                           Effectuez le transfert de <strong className="text-white font-extrabold">{formatPriceNum(selectedFormation.price)}</strong> sur le numéro officiel ci-dessous :
