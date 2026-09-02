@@ -4356,7 +4356,6 @@ export default function SuperAdminDashboard() {
                       <option value="Virement Bancaire">Virement Bancaire</option>
                       <option value="Espèces / Cash">Espèces / Cash</option>
                       <option value="Offert / Gratuit">Offert / Gratuit</option>
-                      <option value="Carte Bancaire">Carte Bancaire</option>
                     </select>
                   </div>
                   <div>
@@ -6195,7 +6194,6 @@ export default function SuperAdminDashboard() {
                           <option value="Virement Bancaire">Virement Bancaire</option>
                           <option value="Espèces / Cash">Espèces / Cash</option>
                           <option value="Offert / Gratuit">Offert / Gratuit</option>
-                          <option value="Carte Bancaire">Carte Bancaire</option>
                         </select>
                       </div>
                       <div>
