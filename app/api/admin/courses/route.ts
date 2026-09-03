@@ -135,7 +135,7 @@ export async function POST(req: Request) {
           value: JSON.stringify({
             offer_start_date: offer_start_date || null,
             offer_end_date: offer_end_date || null,
-            offer_badge_text: offer_badge_text || "Offre Fondateur"
+            offer_badge_text: offer_badge_text || "Offre Promo"
           }),
           updated_at: new Date().toISOString()
         }, { onConflict: "key" })

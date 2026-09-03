@@ -44,7 +44,7 @@ function getOfferEndTimestamp(rawDate?: string | null): number | null {
 }
 
 function getOfferDetails(c: any) {
-  const badgeText = c.offer_badge_text || "Offre Fondateur"
+  const badgeText = c.offer_badge_text || "Offre Promo"
   const rawStart = c.offer_start_date
   const rawEnd = c.offer_end_date
 
