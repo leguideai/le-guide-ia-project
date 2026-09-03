@@ -4740,11 +4740,11 @@ export default function SuperAdminDashboard() {
                       </div>
                     </div>
 
-                    {/* 🔥 Validité de l'Offre Fondateur / Promo */}
+                    {/* 🔥 Validité de l'Offre Promo */}
                     <div className="bg-white border border-amber-500/30 rounded-2xl p-3.5 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                          🔥 Validité de l'Offre Fondateur / Promo (Dynamique)
+                          🔥 Validité de l'Offre Promo
                         </span>
                         <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200">
                           Affiché sur l'accueil
@@ -4773,7 +4773,7 @@ export default function SuperAdminDashboard() {
                           <label className="text-slate-600 block mb-1 font-bold">🏷️ Badge / Label Promo</label>
                           <input
                             type="text"
-                            placeholder="ex: Offre Fondateur"
+                            placeholder="ex: Offre Promo"
                             value={courseForm.offer_badge_text || ""}
                             onChange={e => setCourseForm({ ...courseForm, offer_badge_text: e.target.value })}
                             className="w-full bg-white border border-slate-200/90 shadow-xs rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"

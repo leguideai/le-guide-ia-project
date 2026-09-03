@@ -244,7 +244,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                       ) : (
                         <>
                           {!isOfferExpired && activeCourse?.original_price && (
-                            <span className="font-bold text-white line-through opacity-75">{activeCourse.original_price} {activeCourse?.offer_badge_text ? `• ${activeCourse.offer_badge_text}` : ""}</span>
+                            <span className="font-bold text-white line-through opacity-75">{activeCourse.original_price} FCFA {activeCourse?.offer_badge_text ? `• Offre Standard` : ""}</span>
                           )}
                           {!isOfferExpired && activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
                         </>

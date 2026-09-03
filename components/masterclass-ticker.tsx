@@ -70,7 +70,7 @@ export function MasterclassTicker() {
         >
           <div className="flex items-center gap-12 whitespace-nowrap animate-ticker text-xs font-semibold text-slate-300 group-hover:text-white transition-colors py-0.5">
             <span className="inline-flex items-center gap-2.5">
-              <span className="text-slate-400 font-normal">Thème :</span>
+              {/* <span className="text-slate-400 font-normal">Thème :</span> */}
               <strong className="text-white font-bold">{session.title}</strong>
               <span className="text-slate-600 font-bold">•</span>
               <span className="text-primary font-bold">{session.dateDisplay || "Prochainement en direct"}</span>
@@ -83,7 +83,7 @@ export function MasterclassTicker() {
             </span>
 
             <span className="inline-flex items-center gap-2.5" aria-hidden="true">
-              <span className="text-slate-400 font-normal">Thème :</span>
+              {/* <span className="text-slate-400 font-normal">Thème :</span> */}
               <strong className="text-white font-bold">{session.title}</strong>
               <span className="text-slate-600 font-bold">•</span>
               <span className="text-primary font-bold">{session.dateDisplay || "Prochainement en direct"}</span>
