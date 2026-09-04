@@ -173,14 +173,21 @@ function BootcampContent() {
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
           
           {/* Header Left-Aligned */}
-          <div className="space-y-3 text-left">
+          <div className="space-y-4 text-left">
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
               <Sparkles className="size-3.5 text-primary animate-pulse" />
               CATALOGUE OFFICIEL DES BOOTCAMPS LE GUIDE IA
             </span>
 
-            <p className="text-xs md:text-sm text-muted-foreground max-w-2xl leading-relaxed">
-               Choisissez le Bootcamp adapté à votre profil et vos objectifs.
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-white leading-tight">
+              Bootcamp Intelligence Artificielle :{" "}
+              <span className="bg-gradient-to-r from-primary via-sky-400 to-blue-300 bg-clip-text text-transparent">
+                Formations Intensives &amp; Certifiantes
+              </span>
+            </h1>
+
+            <p className="text-sm md:text-base text-muted-foreground max-w-3xl leading-relaxed">
+              Choisissez le Bootcamp adapté à votre profil et vos ambitions. Projets concrets, mentorat direct par Alfred Dah et certification d&apos;excellence reconnue.
             </p>
           </div>
 

@@ -74,11 +74,18 @@ export default function EntreprisesPage() {
             <div className="lg:col-span-7 space-y-6 text-left">
               <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/10 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/30">
                 <Building2 className="size-3.5 text-[#D4AF37]" />
-                SOLUTIONS ENTREPRISES & INSTITUTIONS
+                SOLUTIONS ENTREPRISES &amp; INSTITUTIONS
               </span>
 
-              <p className="text-xs md:text-sm text-muted-foreground leading-relaxed max-w-xl">
-                Formations intra-entreprise sur-mesure, audits de maturité IA et gouvernance des systèmes d'information menés par Alfred Dah.
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-white leading-tight">
+                Formation Intelligence Artificielle pour{" "}
+                <span className="bg-gradient-to-r from-[#D4AF37] via-amber-300 to-yellow-500 bg-clip-text text-transparent">
+                  Entreprises &amp; Dirigeants
+                </span>
+              </h1>
+
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xl">
+                Formations intra-entreprise sur-mesure, audits de maturité IA, automatisation des processus et gouvernance stratégique menés par Alfred Dah.
               </p>
 
               {/* Key Metrics Pill Badges */}

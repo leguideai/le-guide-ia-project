@@ -195,14 +195,22 @@ export default function RessourcesPage() {
       {/* 2. Section Prompts Métiers & Business Plans IA (Search & Filter) */}
       <section className="py-12 bg-background border-t border-border/50" id="prompts-templates">
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
-          
-          <div className="space-y-3 text-left">
+          {/* Header Left-Aligned */}
+          <div className="space-y-4 text-left">
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-3.5 py-1.5 rounded-full border border-purple-500/20">
               <Sparkles className="size-3.5 text-purple-400" />
-              PROMPTS &amp; BUSINESS PLANS
+              BIBLIOTHÈQUE DE RESSOURCES IA &amp; BUSINESS PLANS
             </span>
-            <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
-              Copiez et téléchargez nos prompts métiers et modèles de projets d'entreprise prêts à l'emploi.
+
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-white leading-tight">
+              Prompts IA Optimisés &amp;{" "}
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
+                Modèles de Business Plans
+              </span>
+            </h1>
+
+            <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
+              Copiez plus de 100 prompts professionnels calibrés pour ChatGPT, Claude et Gemini, et téléchargez des modèles de projets d&apos;entreprise adaptés au contexte africain.
             </p>
           </div>
 

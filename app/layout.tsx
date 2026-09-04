@@ -24,28 +24,28 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Bootcamp IA par Alfred Dah – Formation Intelligence Artificielle | Le Guide IA',
+  title: {
+    default: 'Le Guide IA — Formations, Bootcamps & Masterclasses Intelligence Artificielle',
+    template: '%s | Le Guide IA',
+  },
   description:
-    'Maîtrisez l\'IA pratique avec Alfred Dah, expert certifié & Fondateur de Le Guide IA. Bootcamp PRO 2 : 7 sessions intensives du 31 Août au 6 Septembre 2026.',
+    'Plateforme leader de formation en Intelligence Artificielle en Afrique et Diaspora. Maîtrisez ChatGPT, Claude, Gemini et l\'automatisation avec Alfred Dah. Formations certifiantes, Bootcamps intensifs et Masterclasses gratuites.',
   keywords: [
-    'Alfred Dah',
-    'Alfred Dah IA',
-    'Alfred Dah Le Guide IA',
-    'Alfred Dah Burkina Faso',
-    'Sanson Alfred Tanguy Dah',
     'Le Guide IA',
-    'IA',
-    'intelligence artificielle',
-    'Afrique francophone',
-    'formation IA',
-    'bootcamp IA',
-    'ChatGPT',
-    'Claude',
-    'Gemini',
-    'Canva IA',
-    'challenge IA',
-    'formation en ligne',
-    'productivité',
+    'Alfred Dah',
+    'Formation intelligence artificielle Afrique',
+    'Bootcamp IA',
+    'Formation ChatGPT',
+    'Masterclass IA gratuite',
+    'Prompt Engineering',
+    'Intelligence artificielle Burkina Faso',
+    'Formation IA Côte d\'Ivoire',
+    'Formation IA Sénégal',
+    'Automatisation IA entreprise',
+    'Claude IA',
+    'Gemini IA',
+    'Formation IA certifiante',
+    'IA diaspora africaine',
   ],
   authors: [{ name: 'Alfred Dah - Le Guide IA', url: 'https://leguideai.com' }],
   metadataBase,
@@ -61,9 +61,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
+    title: 'Le Guide IA — Formations & Bootcamps en Intelligence Artificielle',
     description:
-      'Rejoignez le Bootcamp IA & Carrière : 6 Sessions pratiques en français pour maîtriser l\'IA. 31 Août – 5 Septembre 2026. 99 000 FCFA offre promo.',
+      'Maîtrisez l\'IA générative pratique : ChatGPT, Claude, Gemini, Automatisation. Formations certifiantes animées par Alfred Dah pour professionnels, entrepreneurs et entreprises.',
     url: 'https://leguideai.com',
     siteName: 'Le Guide IA',
     type: 'website',
@@ -74,15 +74,15 @@ export const metadata: Metadata = {
         url: 'https://leguideai.com/Logo%20avatar.png',
         width: 1200,
         height: 630,
-        alt: 'Le Guide IA',
+        alt: 'Le Guide IA – Formations Intelligence Artificielle',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Bootcamp IA en ligne – Formation Intelligence Artificielle | Le Guide IA',
+    title: 'Le Guide IA — Formations & Bootcamps en Intelligence Artificielle',
     description:
-      'Rejoignez le Bootcamp IA & Carrière : 6 Sessions pratiques en français pour maîtriser l\'IA. 31 Août – 5 Septembre 2026. 99 000 FCFA offre promo.',
+      'Formations certifiantes, Masterclasses gratuites et Bootcamps intensifs en IA avec Alfred Dah. Boostez votre productivité et vos compétences.',
     images: ['https://leguideai.com/Logo%20avatar.png'],
     site: '@leguideia',
     creator: '@leguideia',
@@ -215,29 +215,37 @@ export default function RootLayout({
                   url: 'https://leguideai.com',
                   name: 'Le Guide IA',
                   description:
-                    'Bootcamp IA en ligne 100% en français pour professionnels, entrepreneurs et la diaspora. 6 Sessions pratiques.',
+                    'Plateforme leader de formation en Intelligence Artificielle en Afrique et Diaspora. Bootcamps, Masterclasses gratuites et certifications.',
                   publisher: {
                     '@id': 'https://leguideai.com/#organization',
+                  },
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: {
+                      '@type': 'EntryPoint',
+                      urlTemplate: 'https://leguideai.com/ressources?q={search_term_string}',
+                    },
+                    'query-input': 'required name=search_term_string',
                   },
                 },
                 {
                   '@type': 'Course',
                   '@id': 'https://leguideai.com/#course',
-                  name: 'Bootcamp IA & Carrière',
+                  name: 'Bootcamp IA & Carrière Certifiant',
                   description:
-                    'Formation pratique et intensive en direct pour maîtriser ChatGPT, Claude, Gemini et Canva IA avec des cas professionnels africains et diaspora.',
+                    'Formation pratique et intensive en ligne pour maîtriser ChatGPT, Claude, Gemini, l\'automatisation et Canva IA avec des cas professionnels concrets.',
                   provider: {
                     '@id': 'https://leguideai.com/#organization',
                   },
+                  url: 'https://leguideai.com/bootcamp',
                   hasCourseInstance: {
                     '@type': 'CourseInstance',
                     courseMode: 'online',
-                    startDate: '2026-08-31',
-                    endDate: '2026-09-05',
-                    courseWorkload: 'PT12H',
+                    courseWorkload: 'PT15H',
                     instructor: {
                       '@id': 'https://leguideai.com/#person',
                     },
+                  },
                   offers: [
                     {
                       '@type': 'Offer',
@@ -245,19 +253,46 @@ export default function RootLayout({
                       price: '99000',
                       priceCurrency: 'XOF',
                       availability: 'https://schema.org/InStock',
-                      url: 'https://leguideai.com/#tarifs',
+                      url: 'https://leguideai.com/bootcamp',
                     },
                     {
                       '@type': 'Offer',
-                      name: 'Bootcamp IA Business',
+                      name: 'Bootcamp IA Business & Dirigeants',
                       price: '199000',
                       priceCurrency: 'XOF',
                       availability: 'https://schema.org/InStock',
-                      url: 'https://leguideai.com/#tarifs',
+                      url: 'https://leguideai.com/bootcamp',
                     },
                   ],
                 },
-              },
+                {
+                  '@type': 'EducationEvent',
+                  '@id': 'https://leguideai.com/#masterclass-event',
+                  name: 'Masterclass IA Interactive en Direct',
+                  description:
+                    'Session hebdomadaire gratuite en direct animée par Alfred Dah sur Google Meet. Démonstrations d\'outils IA, prompting avancé et Q&A interactif.',
+                  eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+                  eventStatus: 'https://schema.org/EventScheduled',
+                  location: {
+                    '@type': 'VirtualLocation',
+                    url: 'https://leguideai.com/masterclass',
+                  },
+                  organizer: {
+                    '@id': 'https://leguideai.com/#organization',
+                  },
+                  performer: {
+                    '@id': 'https://leguideai.com/#person',
+                  },
+                  isAccessibleForFree: true,
+                  offers: {
+                    '@type': 'Offer',
+                    name: 'Place Gratuite Masterclass',
+                    price: '0',
+                    priceCurrency: 'XOF',
+                    availability: 'https://schema.org/InStock',
+                    url: 'https://leguideai.com/masterclass',
+                  },
+                },
                 {
                   '@type': 'FAQPage',
                   '@id': 'https://leguideai.com/#faq',
