@@ -63,7 +63,7 @@ import {
 } from "lucide-react"
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { SubscriptionModal } from "@/components/subscription-modal"
-import { getAuthRedirect, clearAuthRedirect } from "@/lib/auth-redirect"
+import { getAuthRedirect, clearAuthRedirect, isValidRedirectTarget } from "@/lib/auth-redirect"
 
 type TabType = "overview" | "courses" | "masterclasses" | "resources" | "subscription" | "certificates" | "invoices" | "profile"
 
@@ -497,9 +497,9 @@ export default function DashboardPage() {
       }
       setUser(user)
 
-      // Redirection immédiate si l'utilisateur venait pour une autre page (ex: /masterclass)
+      // Redirection immédiate si l'utilisateur venait pour une autre page valide (ex: /masterclass)
       const pendingRedirect = getAuthRedirect("/dashboard")
-      if (pendingRedirect && pendingRedirect !== "/dashboard" && !pendingRedirect.includes("dashboard")) {
+      if (isValidRedirectTarget(pendingRedirect) && pendingRedirect !== "/dashboard" && !pendingRedirect.includes("dashboard")) {
         clearAuthRedirect()
         window.location.href = pendingRedirect
         return
@@ -563,7 +563,7 @@ export default function DashboardPage() {
         const redirectParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null
         const storedRedirect = typeof window !== "undefined" ? sessionStorage.getItem("auth_redirect") : null
         const target = redirectParam || storedRedirect
-        if (target && target !== "/dashboard" && !target.includes("dashboard")) {
+        if (isValidRedirectTarget(target) && target !== "/dashboard" && !target.includes("dashboard")) {
           if (storedRedirect && typeof window !== "undefined") {
             try { sessionStorage.removeItem("auth_redirect") } catch (_) {}
           }
@@ -981,7 +981,7 @@ export default function DashboardPage() {
           try { sessionStorage.removeItem("auth_redirect") } catch (_) {}
         }
 
-        if (target && target !== "/dashboard") {
+        if (isValidRedirectTarget(target) && target !== "/dashboard") {
           window.location.href = target
           return
         }

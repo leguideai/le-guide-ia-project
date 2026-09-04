@@ -71,12 +71,13 @@ export default function LoginPage() {
         .eq("id", data.session.user.id)
         .maybeSingle()
 
-      if (profile?.role === "admin" || profile?.role === "super_admin" || target.includes("admin")) {
+      const roleToUse = profile?.role || "student"
+      if (roleToUse === "admin" || roleToUse === "super_admin" || target.includes("admin")) {
         clearAuthRedirect()
         window.location.href = "/admin"
       } else {
         clearAuthRedirect()
-        window.location.href = target
+        window.location.href = target || "/dashboard"
       }
     }
   }
@@ -92,6 +93,7 @@ export default function LoginPage() {
           .eq("id", session.user.id)
           .maybeSingle()
 
+        let roleToUse = profile?.role
         if (!profile) {
           await supabase.from("profiles").upsert({
             id: session.user.id,
@@ -100,15 +102,16 @@ export default function LoginPage() {
             avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
             role: "student"
           })
+          roleToUse = "student"
         }
 
         const target = getAuthRedirect("/dashboard")
-        if (profile?.role === "admin" || profile?.role === "super_admin" || target.includes("admin")) {
+        if (roleToUse === "admin" || roleToUse === "super_admin" || target.includes("admin")) {
           clearAuthRedirect()
           window.location.href = "/admin"
         } else {
           clearAuthRedirect()
-          window.location.href = target
+          window.location.href = target || "/dashboard"
         }
       }
     }
@@ -124,12 +127,13 @@ export default function LoginPage() {
           .eq("id", session.user.id)
           .maybeSingle()
 
-        if (profile?.role === "admin" || profile?.role === "super_admin" || target.includes("admin")) {
+        const roleToUse = profile?.role || "student"
+        if (roleToUse === "admin" || roleToUse === "super_admin" || target.includes("admin")) {
           clearAuthRedirect()
           window.location.href = "/admin"
         } else {
           clearAuthRedirect()
-          window.location.href = target
+          window.location.href = target || "/dashboard"
         }
       }
     })

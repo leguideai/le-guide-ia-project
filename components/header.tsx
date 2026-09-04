@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut } from "lucide-react"
+import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut, ShieldCheck } from "lucide-react"
 import { setAuthRedirect } from "@/lib/auth-redirect"
 
 function getOfferEndTimestamp(rawDate?: string | null): number | null {
@@ -32,24 +32,52 @@ export function Header() {
   const [categoriesOpen, setCategoriesOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [user, setUser] = useState<any>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   const isMasterclassActive = pathname.startsWith("/masterclass")
   const isBootcampActive = pathname.startsWith("/bootcamp")
   const isRessourcesActive = pathname.startsWith("/ressources")
   const isEntreprisesActive = pathname.startsWith("/entreprises")
   const isDashboardActive = pathname.startsWith("/dashboard")
+  const isAdminActive = pathname.startsWith("/admin")
+
+  const isAdmin = userRole === "admin" || userRole === "super_admin"
+  const spaceHref = isAdmin ? "/admin" : "/dashboard"
+  const spaceLabel = isAdmin ? "Portail Admin" : "Mon Espace"
 
   useEffect(() => {
     // Check initial user session
     async function checkUser() {
       const { data } = await supabase.auth.getUser()
-      setUser(data?.user || null)
+      const currentUser = data?.user || null
+      setUser(currentUser)
+      if (currentUser) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", currentUser.id)
+          .maybeSingle()
+        setUserRole(prof?.role || "student")
+      } else {
+        setUserRole(null)
+      }
     }
     checkUser()
 
     // Subscribe to auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null)
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user || null
+      setUser(currentUser)
+      if (currentUser) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", currentUser.id)
+          .maybeSingle()
+        setUserRole(prof?.role || "student")
+      } else {
+        setUserRole(null)
+      }
     })
 
     return () => {
@@ -422,15 +450,15 @@ export function Header() {
           {user ? (
             <div className="flex items-center gap-2">
               <Link
-                href="/dashboard"
+                href={spaceHref}
                 className={`inline-flex items-center gap-1.5 text-xs font-black px-3.5 py-2 rounded-xl shadow-md transition-all ${
-                  isDashboardActive 
+                  (isAdmin ? isAdminActive : isDashboardActive)
                     ? "bg-primary text-slate-950 ring-2 ring-primary/50 shadow-primary/20" 
                     : "bg-primary/90 hover:bg-primary text-slate-950"
                 }`}
               >
-                <User className="size-3.5" />
-                <span>Mon Espace</span>
+                {isAdmin ? <ShieldCheck className="size-3.5" /> : <User className="size-3.5" />}
+                <span>{spaceLabel}</span>
               </Link>
 
               <button
@@ -544,12 +572,12 @@ export function Header() {
             {user ? (
               <div className="space-y-2">
                 <Link
-                  href="/dashboard"
+                  href={spaceHref}
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-lg"
                 >
-                  <User className="size-4" />
-                  <span>Accéder à Mon Espace</span>
+                  {isAdmin ? <ShieldCheck className="size-4" /> : <User className="size-4" />}
+                  <span>{isAdmin ? "Accéder au Portail Admin" : "Accéder à Mon Espace"}</span>
                 </Link>
                 <button
                   onClick={() => {
