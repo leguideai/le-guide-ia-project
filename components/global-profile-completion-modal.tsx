@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { countries, Country, parsePhoneNumber, formatPhoneNumber, PHONE_RULES } from "@/lib/countries"
-import { getAuthRedirect, clearAuthRedirect } from "@/lib/auth-redirect"
+import { getAuthRedirect, clearAuthRedirect, getPendingMasterclassRegistration } from "@/lib/auth-redirect"
 import { 
   Sparkles, 
   Check, 
@@ -297,9 +297,17 @@ export function GlobalProfileCompletionModal() {
           detail: updatedDetail
         }))
 
+        // Vérifier si une inscription automatique à la Masterclass est en attente
+        const pending = getPendingMasterclassRegistration()
+
         // Redirection vers l'écran d'origine (ex: /masterclass)
-        const target = getAuthRedirect("/dashboard")
+        const target = getAuthRedirect(pending.autoRegister ? "/masterclass" : "/dashboard")
         clearAuthRedirect()
+
+        if (pending.autoRegister && pathname !== "/masterclass") {
+          window.location.href = "/masterclass"
+          return
+        }
 
         if (target && target !== "/dashboard" && pathname !== target) {
           window.location.href = target

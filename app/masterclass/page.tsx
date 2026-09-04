@@ -13,7 +13,12 @@ import {
   Tv, Award, Zap, Mail, MessageCircle, Lock, Crown
 } from "lucide-react"
 import { SubscriptionModal } from "@/components/subscription-modal"
-import { setAuthRedirect } from "@/lib/auth-redirect"
+import { 
+  setAuthRedirect, 
+  setPendingMasterclassRegistration, 
+  getPendingMasterclassRegistration, 
+  clearPendingMasterclassRegistration 
+} from "@/lib/auth-redirect"
 
 interface ReplayItem {
   id: string
@@ -138,8 +143,10 @@ export default function MasterclassHubPage() {
         const res = await fetch(`/api/masterclass${emailToCheck ? `?email=${encodeURIComponent(emailToCheck)}` : ""}`, { cache: "no-store" })
         const data = await res.json()
 
+        let currentActiveSession = null
         if (data.upcomingSession) {
           setUpcomingSession(data.upcomingSession)
+          currentActiveSession = data.upcomingSession
         } else {
           setUpcomingSession(null)
         }
@@ -151,14 +158,62 @@ export default function MasterclassHubPage() {
         }
 
         // Seul un utilisateur connecté et inscrit en base est considéré comme inscrit au direct
+        let userIsRegistered = false
         if (user && data.isRegistered) {
           setIsRegistered(true)
+          userIsRegistered = true
         } else {
           setIsRegistered(false)
         }
 
         if (data.replays && Array.isArray(data.replays)) {
           setReplays(data.replays)
+        }
+
+        // Inscription automatique si l'utilisateur s'est connecté ou a créé un compte avec intention
+        const pending = getPendingMasterclassRegistration()
+        if (user && pending.autoRegister) {
+          if (userIsRegistered) {
+            setFeedbackMsg("ℹ️ Vous êtes déjà inscrit à cette Masterclass ! Vos accès sont débloqués ci-dessous.")
+            clearPendingMasterclassRegistration()
+            if (typeof window !== "undefined") {
+              window.history.replaceState({}, "", "/masterclass")
+            }
+          } else {
+            try {
+              const { data: prof } = await supabase
+                .from("profiles")
+                .select("full_name, whatsapp, country, city, sector")
+                .eq("id", user.id)
+                .maybeSingle()
+
+              const isComplete = Boolean(
+                prof &&
+                prof.full_name && prof.full_name.trim().length >= 2 &&
+                prof.whatsapp && prof.whatsapp.trim().length >= 6 &&
+                prof.country && prof.country.trim().length > 0 &&
+                prof.city && prof.city.trim().length > 0 &&
+                prof.sector && prof.sector.trim().length > 0
+              )
+
+              if (prof && isComplete) {
+                clearPendingMasterclassRegistration()
+                await handleRegister({
+                  user,
+                  fullName: prof.full_name,
+                  whatsapp: prof.whatsapp,
+                  country: prof.country,
+                  sessionId: pending.sessionId || currentActiveSession?.id || undefined,
+                  sessionTitle: currentActiveSession?.title || undefined
+                })
+                if (typeof window !== "undefined") {
+                  window.history.replaceState({}, "", "/masterclass")
+                }
+              }
+            } catch (pErr) {
+              console.warn("Auto-registration profile check error:", pErr)
+            }
+          }
         }
 
         // Vérifier l'abonnement VIP et charger la tarification Supabase
@@ -186,8 +241,28 @@ export default function MasterclassHubPage() {
       init()
     })
 
-    const handleProfileUpdated = () => {
+    const handleProfileUpdated = (event: any) => {
       init()
+      const pending = getPendingMasterclassRegistration()
+      if (pending.autoRegister) {
+        clearPendingMasterclassRegistration()
+        const detail = (event as CustomEvent)?.detail
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          const user = session?.user
+          if (user) {
+            handleRegister({
+              user,
+              fullName: detail?.full_name,
+              whatsapp: detail?.whatsapp,
+              country: detail?.country,
+              sessionId: pending.sessionId || undefined
+            })
+            if (typeof window !== "undefined") {
+              window.history.replaceState({}, "", "/masterclass")
+            }
+          }
+        })
+      }
     }
     window.addEventListener("profile-updated", handleProfileUpdated)
 
@@ -248,35 +323,47 @@ export default function MasterclassHubPage() {
   }
 
   // 3. Registration handler (Utilisateur connecté requis)
-  async function handleRegister() {
-    if (!currentUser?.email) {
+  async function handleRegister(customData?: {
+    user?: any
+    fullName?: string
+    whatsapp?: string
+    country?: string
+    sessionId?: string
+    sessionTitle?: string
+  }) {
+    const userToUse = customData?.user || currentUser
+    if (!userToUse?.email) {
+      setPendingMasterclassRegistration(upcomingSession?.id)
+      setAuthRedirect("/masterclass")
       window.location.href = "/login?redirect=/masterclass"
       return
     }
 
-    const emailToSubmit = currentUser.email.toLowerCase().trim()
-    let nameToSubmit = currentUser.user_metadata?.full_name || emailToSubmit.split("@")[0]
-    let userWhatsApp = currentUser.user_metadata?.whatsapp || ""
-    let userCountry = currentUser.user_metadata?.country || "CI"
+    const emailToSubmit = userToUse.email.toLowerCase().trim()
+    let nameToSubmit = customData?.fullName || userToUse.user_metadata?.full_name || emailToSubmit.split("@")[0]
+    let userWhatsApp = customData?.whatsapp || userToUse.user_metadata?.whatsapp || ""
+    let userCountry = customData?.country || userToUse.user_metadata?.country || "CI"
 
-    try {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("full_name, whatsapp, country")
-        .eq("id", currentUser.id)
-        .maybeSingle()
-      if (prof) {
-        if (prof.full_name) nameToSubmit = prof.full_name
-        if (prof.whatsapp) userWhatsApp = prof.whatsapp
-        if (prof.country) userCountry = prof.country
-      }
-    } catch (_) {}
+    if (!customData?.fullName || !customData?.whatsapp || !customData?.country) {
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name, whatsapp, country")
+          .eq("id", userToUse.id)
+          .maybeSingle()
+        if (prof) {
+          if (prof.full_name && !customData?.fullName) nameToSubmit = prof.full_name
+          if (prof.whatsapp && !customData?.whatsapp) userWhatsApp = prof.whatsapp
+          if (prof.country && !customData?.country) userCountry = prof.country
+        }
+      } catch (_) {}
+    }
 
     setRegistering(true)
     setFeedbackMsg(null)
 
-    const targetSessionId = upcomingSession?.id || "mc_default"
-    const targetSessionTitle = upcomingSession?.title || "Masterclass IA en Direct"
+    const targetSessionId = customData?.sessionId || upcomingSession?.id || "mc_default"
+    const targetSessionTitle = customData?.sessionTitle || upcomingSession?.title || "Masterclass IA en Direct"
 
     try {
       const res = await fetch("/api/masterclass", {
@@ -300,6 +387,12 @@ export default function MasterclassHubPage() {
         } else {
           setFeedbackMsg("🎉 Inscription confirmée avec succès ! Rejoignez le groupe WhatsApp des apprenants ci-dessous.")
         }
+        setTimeout(() => {
+          const actionBox = document.querySelector(".masterclass-action-box")
+          if (actionBox) {
+            actionBox.scrollIntoView({ behavior: "smooth", block: "center" })
+          }
+        }, 100)
       } else {
         setFeedbackMsg(data.error || "Erreur lors de la réservation.")
       }
@@ -321,7 +414,7 @@ export default function MasterclassHubPage() {
 
   // Composant du bloc d'action (Boutons de réservation ou Liens direct débloqués)
   const renderActionBox = () => (
-    <div className="p-5 sm:p-6 rounded-2xl border border-border bg-card space-y-4 text-left shadow-lg">
+    <div className="masterclass-action-box p-5 sm:p-6 rounded-2xl border border-border bg-card space-y-4 text-left shadow-lg">
       {authChecking ? (
         <div className="py-3 text-center text-xs text-muted-foreground animate-pulse">
           Vérification de votre statut d'inscription...
@@ -421,24 +514,16 @@ export default function MasterclassHubPage() {
 
           <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
             <Link
-              href="/login?redirect=/masterclass"
+              href="/login?redirect=/masterclass?action=auto_register"
               onClick={() => {
-                setAuthRedirect("/masterclass")
+                setPendingMasterclassRegistration(upcomingSession?.id)
+                setAuthRedirect("/masterclass?action=auto_register")
               }}
               className="flex-1 py-3 px-4 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
             >
               <LogIn className="size-4" />
               <span>Se connecter</span>
               <ArrowRight className="size-3.5" />
-            </Link>
-            <Link
-              href="/register-account?redirect=/masterclass"
-              onClick={() => {
-                setAuthRedirect("/masterclass")
-              }}
-              className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-xs text-center border border-border transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Créer un compte</span>
             </Link>
           </div>
 
@@ -449,8 +534,15 @@ export default function MasterclassHubPage() {
       )}
 
       {feedbackMsg && (
-        <div className="p-3 rounded-lg bg-[#090d16] border border-border text-xs text-emerald-400 font-semibold">
-          {feedbackMsg}
+        <div className={`p-3.5 rounded-xl border text-xs font-semibold flex items-start gap-2.5 animate-in fade-in duration-300 ${
+          feedbackMsg.includes("🎉")
+            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-md shadow-emerald-500/10"
+            : feedbackMsg.includes("ℹ️")
+            ? "bg-blue-500/15 border-blue-500/40 text-blue-300"
+            : "bg-rose-500/15 border-rose-500/40 text-rose-300"
+        }`}>
+          <Sparkles className="size-4 shrink-0 mt-0.5 text-emerald-400" />
+          <span className="leading-relaxed">{feedbackMsg}</span>
         </div>
       )}
     </div>
