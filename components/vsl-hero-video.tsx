@@ -112,7 +112,7 @@ export function VslHeroVideo() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[250px] bg-gradient-to-tr from-primary/20 via-blue-600/15 to-[#D4AF37]/10 blur-[120px] pointer-events-none rounded-full" />
 
       <div className="max-w-5xl mx-auto relative z-10">
-        
+
         {/* Video Player Container */}
         <div className="relative rounded-3xl border-2 border-primary/40 bg-card p-2 sm:p-3 shadow-[0_0_60px_rgba(2,132,199,0.25)] backdrop-blur-2xl transition-all">
           <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-950 shadow-inner">

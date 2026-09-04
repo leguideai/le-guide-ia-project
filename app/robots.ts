@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/'],
+      disallow: ['/admin/', '/superadmin/', '/dashboard/', '/api/', '/checkout/success/'],
     },
     sitemap: 'https://leguideai.com/sitemap.xml',
   }
