@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
 import { sendMasterclassRegistrationEmail } from "@/lib/email"
+import { parsePhoneNumber } from "@/lib/countries"
 
 export const dynamic = "force-dynamic"
 
@@ -293,9 +294,27 @@ export async function GET() {
         ? p.whatsapp
         : (prof?.whatsapp || parsedNotes.whatsapp || parsedNotes.phone || "")
 
-      const resolvedCountry = prof?.country || p.country || parsedNotes.country || parsedNotes.country_name || "CI"
+      const rawCountry = prof?.country || p.country || parsedNotes.country || parsedNotes.country_name || ""
       const resolvedSector = prof?.sector || parsedNotes.sector || parsedNotes.profession || parsedNotes.job || ""
       const resolvedCity = prof?.city || parsedNotes.city || ""
+
+      // Déduction intelligente du pays :
+      let resolvedCountry = rawCountry
+      if (resolvedWhatsApp) {
+        const parsed = parsePhoneNumber(resolvedWhatsApp)
+        if (parsed?.country?.name) {
+          // Si le pays est le faux fallback "CI" ou vide alors que le WhatsApp indique un autre pays (ex: Sénégal +221)
+          if (!resolvedCountry || (resolvedCountry === "CI" && parsed.country.code !== "CI" && !resolvedCity && !resolvedSector)) {
+            resolvedCountry = parsed.country.name
+          }
+        }
+      }
+
+      // Si le pays est encore resté sur le placeholder technique "CI" sans confirmation de ville/secteur ni téléphone ivoirien (+225)
+      if (resolvedCountry === "CI" && !resolvedCity && !resolvedSector && (!resolvedWhatsApp || !resolvedWhatsApp.includes("225"))) {
+        resolvedCountry = ""
+      }
+
       const resolvedFullName = (p.full_name && p.full_name !== "Participant Masterclass" && !p.full_name.includes("@"))
         ? p.full_name
         : (prof?.full_name || parsedNotes.full_name || p.email?.split("@")[0] || "Apprenant")
@@ -604,7 +623,7 @@ export async function POST(req: Request) {
         full_name: cleanFullName,
         email: emailClean,
         whatsapp: cleanWhatsApp,
-        country: participantData.country || "CI",
+        country: participantData.country || "",
         source: "masterclass_dimanche",
         course_slug: "masterclass-ia",
         status: "inscrit",
@@ -662,6 +681,7 @@ export async function POST(req: Request) {
       const {
         sessionId = "current_live",
         sessionTitle = "Masterclass IA en Direct",
+        sessionData,
         users = [],
         sendEmail = true,
         requesterEmail
@@ -694,18 +714,23 @@ export async function POST(req: Request) {
         })
       }
 
-      // Trouver les détails de la session
-      let targetSessionObj: any = null
-      if (sessionsList.length > 0) {
+      // Trouver les détails de la session (sessionData passé par le client ou trouvé dans sessionsList)
+      let targetSessionObj: any = sessionData || null
+      if (!targetSessionObj && sessionsList.length > 0) {
         targetSessionObj = sessionsList.find(s => s.id === sessionId)
+        if (!targetSessionObj && (sessionId === "current_live" || sessionId === "mc_default" || !sessionId)) {
+          targetSessionObj = sessionsList.find(s => s.status === "upcoming" || s.is_active !== false) || sessionsList[0]
+        }
       }
+
+      const liveMeetUrl = targetSessionObj?.youtubeLiveUrl || targetSessionObj?.meetUrl || targetSessionObj?.meet_url || settingsMap.masterclass_youtube_url || "https://meet.google.com"
 
       const sessionInfo = {
         title: targetSessionObj?.title || sessionTitle || settingsMap.masterclass_title || "Masterclass IA en Direct",
         scheduledAt: targetSessionObj?.scheduledAt || settingsMap.masterclass_date || "",
         dateDisplay: targetSessionObj?.dateDisplay || settingsMap.masterclass_date_display || "",
         whatsappGroupUrl: targetSessionObj?.whatsappGroupUrl || settingsMap.masterclass_whatsapp_group_url || "",
-        youtubeLiveUrl: targetSessionObj?.youtubeLiveUrl || settingsMap.masterclass_youtube_url || "https://meet.google.com",
+        youtubeLiveUrl: liveMeetUrl,
         instructor: targetSessionObj?.instructor || settingsMap.masterclass_instructor || "Alfred Dah"
       }
 
@@ -729,7 +754,7 @@ export async function POST(req: Request) {
           ? u.whatsapp.trim()
           : `wa_${emailClean}`
 
-        const country = u.country || "CI"
+        const country = u.country || ""
         const sector = u.sector || ""
         const city = u.city || ""
 

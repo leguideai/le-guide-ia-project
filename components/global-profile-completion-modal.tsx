@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { countries, Country, parsePhoneNumber, formatPhoneNumber, PHONE_RULES } from "@/lib/countries"
-import { getAuthRedirect, clearAuthRedirect, getPendingMasterclassRegistration } from "@/lib/auth-redirect"
+import { getAuthRedirect, clearAuthRedirect, getPendingMasterclassRegistration, clearPendingMasterclassRegistration } from "@/lib/auth-redirect"
 import { 
   Sparkles, 
   Check, 
@@ -17,7 +17,7 @@ import {
   Rocket, 
   GraduationCap, 
   ShieldCheck, 
-  LogOut 
+  X 
 } from "lucide-react"
 
 export function GlobalProfileCompletionModal() {
@@ -28,6 +28,9 @@ export function GlobalProfileCompletionModal() {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  const [isDismissed, setIsDismissed] = useState(false)
+  const isDismissedRef = useRef(false)
 
   // Form Fields
   const [fullName, setFullName] = useState("")
@@ -86,8 +89,9 @@ export function GlobalProfileCompletionModal() {
       setUser(currentUser)
       setProfile(profData)
 
-      // Ne pas afficher pour les administrateurs
-      if (profData?.role === "admin" || profData?.role === "super_admin") {
+      // Ne pas afficher sur les pages de login et d'administration interne
+      const isExcludedPath = pathname.startsWith("/login") || pathname.startsWith("/admin")
+      if (isExcludedPath) {
         setIsOpen(false)
         setLoading(false)
         return
@@ -96,12 +100,23 @@ export function GlobalProfileCompletionModal() {
       const meta = currentUser.user_metadata || {}
       const curFullName = profData?.full_name || meta.full_name || meta.name || ""
       const curPhone = profData?.whatsapp || meta.whatsapp || meta.phone || ""
-      const curCountry = profData?.country || meta.country_name || meta.country || ""
+      const rawCountry = profData?.country || meta.country_name || meta.country || ""
       const curCity = profData?.city || meta.city || ""
       const curSector = profData?.sector || meta.sector || ""
 
+      // Résolution du pays : si le pays en base est le vieux fallback automatique "CI" alors que le profil n'a jamais été complété
+      let initialCountry = ""
+      if (rawCountry) {
+        const found = countries.find(c => c.name.toLowerCase() === rawCountry.toLowerCase() || c.code.toLowerCase() === rawCountry.toLowerCase())
+        if (rawCountry === "CI" && !curCity && !curSector) {
+          initialCountry = ""
+        } else {
+          initialCountry = found ? found.name : rawCountry
+        }
+      }
+
       setFullName(curFullName)
-      setCountry(curCountry)
+      setCountry(initialCountry)
       setCity(curCity)
       setSector(curSector)
 
@@ -112,7 +127,7 @@ export function GlobalProfileCompletionModal() {
           setProfilePhone(parsed.localNumber)
         } else {
           const foundC = countries.find(c => c.code === meta.country_code) || 
-                         countries.find(c => c.name.toLowerCase() === curCountry.toLowerCase())
+                         countries.find(c => c.name.toLowerCase() === initialCountry.toLowerCase())
           if (foundC) {
             setProfileCountry(foundC)
             setProfilePhone(formatPhoneNumber(curPhone, foundC.code))
@@ -131,9 +146,22 @@ export function GlobalProfileCompletionModal() {
         profData.sector && profData.sector.trim().length > 0
       )
 
-      // Si incomplet et pas sur /login ou /admin, ouvrir le modal
-      const isExcludedPath = pathname.startsWith("/login") || pathname.startsWith("/admin")
-      setIsOpen(!isComplete && !isExcludedPath)
+      // Vérifier si l'utilisateur connecté a déjà ignoré le modal durant sa session active
+      let isAlreadyDismissed = false
+      try {
+        if (currentUser?.id) {
+          isAlreadyDismissed = 
+            localStorage.getItem(`profile_dismissed_${currentUser.id}`) === "true" ||
+            sessionStorage.getItem(`profile_dismissed_${currentUser.id}`) === "true"
+        }
+      } catch (_) {}
+
+      // Si l'utilisateur a ignoré le modal, ne plus l'afficher tant qu'il ne s'est pas déconnecté puis reconnecté
+      if (isAlreadyDismissed || isDismissedRef.current) {
+        setIsOpen(false)
+      } else {
+        setIsOpen(!isComplete)
+      }
     } catch (err) {
       console.error("Global profile check error:", err)
     } finally {
@@ -147,8 +175,23 @@ export function GlobalProfileCompletionModal() {
       checkProfileCompleteness(session?.user || null)
     })
 
-    // Auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Auth state listener : réinitialise l'état d'affichage uniquement lors d'une déconnexion explicite
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        setIsDismissed(false)
+        isDismissedRef.current = false
+        try {
+          const toRemove: string[] = []
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i)
+            if (k && (k.startsWith("profile_dismissed_") || k.includes("profile_modal_dismissed"))) {
+              toRemove.push(k)
+            }
+          }
+          toRemove.forEach(k => localStorage.removeItem(k))
+          sessionStorage.clear()
+        } catch (_) {}
+      }
       checkProfileCompleteness(session?.user || null)
     })
 
@@ -255,7 +298,7 @@ export function GlobalProfileCompletionModal() {
 
     setSavingProfile(true)
     const fullWhatsApp = `${profileCountry.dial}${rawProfilePhoneDigits}`
-    const countryToSave = country || profileCountry.name
+    const countryToSave = country.trim()
 
     try {
       const { error: profErr } = await supabase
@@ -286,6 +329,12 @@ export function GlobalProfileCompletionModal() {
         setProfileError(profErr.message)
       } else {
         setIsOpen(false)
+        if (user?.id) {
+          try {
+            localStorage.removeItem(`profile_dismissed_${user.id}`)
+            sessionStorage.removeItem(`profile_dismissed_${user.id}`)
+          } catch (_) {}
+        }
         const updatedDetail = {
           full_name: fullName.trim(),
           whatsapp: fullWhatsApp,
@@ -299,6 +348,22 @@ export function GlobalProfileCompletionModal() {
 
         // Vérifier si une inscription automatique à la Masterclass est en attente
         const pending = getPendingMasterclassRegistration()
+        if (pending.autoRegister && user.email) {
+          try {
+            await fetch("/api/masterclass", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: user.email.toLowerCase().trim(),
+                fullName: fullName.trim(),
+                whatsapp: fullWhatsApp,
+                country: countryToSave,
+                masterclassId: pending.sessionId || "current_live"
+              })
+            })
+          } catch (_) {}
+          clearPendingMasterclassRegistration()
+        }
 
         // Redirection vers l'écran d'origine (ex: /masterclass)
         const target = getAuthRedirect(pending.autoRegister ? "/masterclass" : "/dashboard")
@@ -320,10 +385,50 @@ export function GlobalProfileCompletionModal() {
     }
   }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+  const handleDismiss = async () => {
+    setIsDismissed(true)
+    isDismissedRef.current = true
+    if (user?.id) {
+      try {
+        localStorage.setItem(`profile_dismissed_${user.id}`, "true")
+        sessionStorage.setItem(`profile_dismissed_${user.id}`, "true")
+      } catch (_) {}
+    }
     setIsOpen(false)
-    router.push("/login")
+
+    // Si une inscription Masterclass est en attente, inscrire immédiatement l'apprenant même s'il a ignoré le profil
+    const pending = getPendingMasterclassRegistration()
+    if (pending.autoRegister && user?.email) {
+      try {
+        const cleanEmail = user.email.toLowerCase().trim()
+        const fullWhatsApp = rawProfilePhoneDigits.length >= 6 
+          ? `${profileCountry.dial}${rawProfilePhoneDigits}` 
+          : (user.user_metadata?.whatsapp || "")
+        await fetch("/api/masterclass", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: cleanEmail,
+            fullName: fullName.trim() || user.user_metadata?.full_name || cleanEmail.split("@")[0],
+            whatsapp: fullWhatsApp,
+            country: country.trim() || undefined,
+            masterclassId: pending.sessionId || "current_live"
+          })
+        })
+      } catch (e) {
+        console.warn("Auto-registration on modal dismiss error:", e)
+      }
+
+      clearPendingMasterclassRegistration()
+      clearAuthRedirect()
+
+      if (pathname !== "/masterclass") {
+        window.location.href = "/masterclass"
+        return
+      } else {
+        window.dispatchEvent(new CustomEvent("profile-updated"))
+      }
+    }
   }
 
   if (loading || !isOpen || !user) return null
@@ -332,23 +437,40 @@ export function GlobalProfileCompletionModal() {
   if (pathname.startsWith("/login") || pathname.startsWith("/admin")) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden w-full max-w-xl my-auto animate-in fade-in zoom-in-95 duration-200 text-slate-900">
+    <div 
+      onClick={handleDismiss}
+      className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden w-full max-w-xl my-auto animate-in fade-in zoom-in-95 duration-200 text-slate-900 relative"
+      >
         
         {/* Modal Header */}
         <div className="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
+          {/* Close Button X */}
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
+            title="Ignorer pour le moment"
+            aria-label="Fermer"
+          >
+            <X className="size-4" />
+          </button>
+
           <div className="absolute -top-12 -right-12 size-36 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
-          <div className="relative z-10 space-y-2">
+          <div className="relative z-10 space-y-2 pr-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary text-[11px] font-bold uppercase tracking-wider">
               <Sparkles className="size-3.5" />
-              <span>Étape Obligatoire • Finalisation du Profil</span>
+              <span>Personnalisation du Profil • Optionnel</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold font-heading text-white flex items-center gap-2">
               <span>Complétez votre profil apprenant</span>
               <span className="text-2xl">🎓</span>
             </h2>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Ces informations sont indispensables pour délivrer vos <strong>certificats officiels</strong>, vous intégrer à votre <strong>groupe WhatsApp de formation</strong> et adapter vos contenus.
+              Ces informations facultatives nous permettent d&apos;adapter vos formations, de vous intégrer à votre <strong>groupe WhatsApp</strong> et d&apos;émettre vos <strong>certificats officiels</strong>. Vous pouvez aussi le faire plus tard.
             </p>
 
             {/* Progress Bar */}
@@ -493,7 +615,14 @@ export function GlobalProfileCompletionModal() {
                   className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
                 >
                   <span className="truncate font-semibold text-slate-800">
-                    {country || <span className="text-slate-400 font-normal">Sélectionnez...</span>}
+                    {country ? (
+                      <span className="flex items-center gap-2">
+                        <span>{getCountryFlag(countries.find(c => c.name.toLowerCase() === country.toLowerCase() || c.code.toLowerCase() === country.toLowerCase())?.code || "")}</span>
+                        <span>{country}</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 font-normal">Sélectionnez votre pays...</span>
+                    )}
                   </span>
                   <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isResidenceCountryOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -625,25 +754,34 @@ export function GlobalProfileCompletionModal() {
             </div>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit & Dismiss Actions */}
           <div className="pt-2 space-y-3">
-            <button
-              type="submit"
-              disabled={savingProfile || profileCompletionStats.completedCount < profileCompletionStats.total}
-              className="w-full py-3.5 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {savingProfile ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  <span>Enregistrement du profil...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="size-4" />
-                  <span>Valider et Débloquer mon Compte 🚀</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="px-5 py-3 rounded-2xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Plus tard
+              </button>
+              <button
+                type="submit"
+                disabled={savingProfile}
+                className="flex-1 py-3 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {savingProfile ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    <span>Enregistrement...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="size-4" />
+                    <span>Enregistrer mon profil 🚀</span>
+                  </>
+                )}
+              </button>
+            </div>
 
             <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
               <span className="flex items-center gap-1">
@@ -652,11 +790,10 @@ export function GlobalProfileCompletionModal() {
               </span>
               <button
                 type="button"
-                onClick={handleLogout}
-                className="text-slate-500 hover:text-slate-800 hover:underline flex items-center gap-1 cursor-pointer"
+                onClick={handleDismiss}
+                className="text-slate-400 hover:text-slate-700 hover:underline text-[11px] cursor-pointer"
               >
-                <LogOut className="size-3" />
-                <span>Se déconnecter</span>
+                Ignorer pour le moment
               </button>
             </div>
           </div>

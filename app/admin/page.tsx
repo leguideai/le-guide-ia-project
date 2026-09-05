@@ -1395,7 +1395,7 @@ export default function SuperAdminDashboard() {
       `"${(p.full_name || "").replace(/"/g, '""')}"`,
       `"${(p.email || "").replace(/"/g, '""')}"`,
       `"${(p.whatsapp || "").replace(/"/g, '""')}"`,
-      `"${(getCountryName(p.country) || p.country || "Côte d'Ivoire").replace(/"/g, '""')}"`,
+      `"${(getCountryName(p.country) || p.country || "Non spécifié").replace(/"/g, '""')}"`,
       `"${(p.sector || "Non spécifié").replace(/"/g, '""')}"`,
       `"${(p.masterclass_title || masterclassSession.title || "Masterclass IA").replace(/"/g, '""')}"`,
       `"${new Date(p.created_at).toLocaleString("fr-FR")}"`,
@@ -1639,6 +1639,7 @@ export default function SuperAdminDashboard() {
           action: "batch_enroll_users",
           sessionId: enrollTargetSessionId,
           sessionTitle: sessionTitle,
+          sessionData: targetSession,
           sendEmail: batchEnrollSendEmail,
           requesterEmail: currentUser?.email,
           users: usersToEnroll.map((u: any) => ({
@@ -8187,10 +8188,14 @@ export default function SuperAdminDashboard() {
                             )}
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-800">
-                              <span className="text-base leading-none">{getCountryFlag(p.country)}</span>
-                              <span>{getCountryName(p.country)}</span>
-                            </div>
+                            {p.country && p.country !== "—" ? (
+                              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-800">
+                                <span className="text-base leading-none">{getCountryFlag(p.country)}</span>
+                                <span>{getCountryName(p.country)}</span>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic text-[11px]">Non spécifié</span>
+                            )}
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap">
                             {p.sector && p.sector !== "—" ? (
@@ -10619,7 +10624,7 @@ export default function SuperAdminDashboard() {
                         </div>
                         <div className="flex items-center justify-between text-slate-700">
                           <span className="text-slate-500 text-[11px]">Pays :</span>
-                          <span className="font-bold text-slate-800 text-[11px]">{p.registrations?.country || "CI"}</span>
+                          <span className="font-bold text-slate-800 text-[11px]">{p.registrations?.country ? getCountryName(p.registrations.country) : "Non spécifié"}</span>
                         </div>
                       </div>
 

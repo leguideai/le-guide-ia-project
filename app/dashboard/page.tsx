@@ -558,18 +558,26 @@ export default function DashboardPage() {
       )
       setIsProfileSavedInDb(isDbComplete)
 
-      // Si le profil est complet et qu'une redirection (ex: /masterclass) est en attente, y aller immédiatement
-      if (isDbComplete) {
-        const redirectParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null
-        const storedRedirect = typeof window !== "undefined" ? sessionStorage.getItem("auth_redirect") : null
-        const target = redirectParam || storedRedirect
-        if (isValidRedirectTarget(target) && target !== "/dashboard" && !target.includes("dashboard")) {
-          if (storedRedirect && typeof window !== "undefined") {
-            try { sessionStorage.removeItem("auth_redirect") } catch (_) {}
-          }
-          window.location.href = target
-          return
+      // Si une redirection (ex: /masterclass) est en attente, y aller immédiatement sans bloquer sur le profil
+      const redirectParam = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null
+      const storedRedirect = typeof window !== "undefined" ? sessionStorage.getItem("auth_redirect") : null
+      const target = redirectParam || storedRedirect
+      const hasPendingMc = typeof window !== "undefined" && (
+        sessionStorage.getItem("pending_masterclass_register") === "true" || 
+        localStorage.getItem("pending_masterclass_register") === "true"
+      )
+
+      if (hasPendingMc) {
+        window.location.href = "/masterclass"
+        return
+      }
+
+      if (isValidRedirectTarget(target) && target !== "/dashboard" && !target.includes("dashboard")) {
+        if (storedRedirect && typeof window !== "undefined") {
+          try { sessionStorage.removeItem("auth_redirect") } catch (_) {}
         }
+        window.location.href = target
+        return
       }
 
       setFullName(initialFullName)
@@ -830,7 +838,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           email: user.email,
           fullName: profile?.full_name || fullName || user.email.split("@")[0],
-          country: profile?.country || country || "CI",
+          country: profile?.country || country || "",
           whatsapp: profile?.whatsapp || user?.user_metadata?.whatsapp || "",
           masterclassId: masterclassSession?.id || "mc_default",
           masterclassTitle: masterclassSession?.title || "Masterclass IA Interactive"
@@ -4024,363 +4032,6 @@ export default function DashboardPage() {
           }
         }}
       />
-
-      {/* MODAL OBLIGATOIRE DE FINALISATION DU PROFIL (Non-Admins uniquement) */}
-      {!loading && user && !isAdmin && profile?.role !== "admin" && profile?.role !== "super_admin" && !isProfileSavedInDb && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden w-full max-w-xl my-auto animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
-              <div className="absolute -top-12 -right-12 size-36 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
-              <div className="relative z-10 space-y-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary text-[11px] font-bold uppercase tracking-wider">
-                  <Sparkles className="size-3.5" />
-                  <span>Étape Obligatoire • Finalisation du Profil</span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold font-heading text-white flex items-center gap-2">
-                  <span>Complétez votre profil apprenant</span>
-                  <span className="text-2xl">🎓</span>
-                </h2>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Ces informations sont indispensables pour délivrer vos <strong>certificats officiels</strong>, vous intégrer à votre <strong>groupe WhatsApp de formation</strong> et adapter vos contenus.
-                </p>
-
-                {/* Progress Bar */}
-                <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300">
-                    <span>Progression du profil</span>
-                    <span className="text-primary font-bold">{profileCompletionStats.percentage}% ({profileCompletionStats.completedCount}/{profileCompletionStats.total} complétés)</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-300 rounded-full"
-                      style={{ width: `${profileCompletionStats.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleSaveProfile} className="p-5 sm:p-6 space-y-4">
-              {profileError && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 flex items-start gap-2.5 text-xs text-rose-800 animate-in fade-in duration-150">
-                  <AlertCircle className="size-4 shrink-0 mt-0.5 text-rose-600" />
-                  <span>{profileError}</span>
-                </div>
-              )}
-
-              {/* 1. Nom complet */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>1. Nom et Prénoms officiels *</span>
-                  <span className="text-[10px] text-slate-500 font-normal">Inscrit sur vos certificats</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Ex: Jean-Marc Kouassi"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
-                />
-              </div>
-
-              {/* 2. Numéro WhatsApp */}
-              <div className="space-y-1" ref={forcedPhoneCountryRef}>
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>2. Numéro WhatsApp actif *</span>
-                  <span className="text-[10px] text-slate-500 font-normal">{profileCountry.name} ({profileCountry.dial})</span>
-                </label>
-                <div className="relative flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setIsForcedPhoneCountryOpen(!isForcedPhoneCountryOpen)}
-                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-xs font-semibold text-slate-800 hover:bg-slate-200 transition-all cursor-pointer shrink-0 z-10"
-                    title={`Changer d'indicatif (${profileCountry.name})`}
-                  >
-                    <span className="text-base leading-none">{getCountryFlag(profileCountry.code)}</span>
-                    <span className="font-mono text-slate-700">{profileCountry.dial}</span>
-                    <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isForcedPhoneCountryOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  <input
-                    type="tel"
-                    required
-                    value={profilePhone}
-                    onChange={(e) => handleProfilePhoneChange(e.target.value)}
-                    placeholder={currentProfilePhoneRule?.placeholder || "70 12 34 56"}
-                    className={`w-full rounded-r-xl border bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all shadow-2xs ${
-                      rawProfilePhoneDigits.length > 0 && isProfilePhoneValid
-                        ? "border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                        : rawProfilePhoneDigits.length > 0 && !isProfilePhoneValid
-                        ? "border-amber-500 focus:ring-1 focus:ring-amber-500"
-                        : "border-slate-200 focus:ring-1 focus:ring-primary"
-                    }`}
-                  />
-
-                  {/* Dropdown Indicatifs */}
-                  {isForcedPhoneCountryOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-full max-h-56 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[120] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-                      <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
-                        <div className="relative">
-                          <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                          <input
-                            type="text"
-                            value={forcedPhoneCountrySearch}
-                            onChange={(e) => setForcedPhoneCountrySearch(e.target.value)}
-                            placeholder="Rechercher un pays ou indicatif..."
-                            className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
-                            autoFocus
-                          />
-                        </div>
-                      </div>
-                      <div className="overflow-y-auto divide-y divide-slate-100 text-left">
-                        {filteredForcedPhoneCountries.map((c) => {
-                          const isSelected = c.code === profileCountry.code
-                          return (
-                            <button
-                              key={`fpc-${c.code}-${c.dial}`}
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                              }}
-                              onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                setProfileCountry(c)
-                                setIsForcedPhoneCountryOpen(false)
-                                setForcedPhoneCountrySearch("")
-                                if (profilePhone) {
-                                  setProfilePhone(formatPhoneNumber(profilePhone, c.code))
-                                }
-                              }}
-                              className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
-                                isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
-                              }`}
-                            >
-                              <span className="flex items-center gap-2 truncate">
-                                <span className="text-base">{getCountryFlag(c.code)}</span>
-                                <span className="truncate">{c.name}</span>
-                              </span>
-                              <span className="font-mono text-slate-500 font-semibold ml-2 shrink-0">{c.dial}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] pt-0.5">
-                  {rawProfilePhoneDigits.length > 0 ? (
-                    isProfilePhoneValid ? (
-                      <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                        <Check className="size-3" /> Numéro valide pour {profileCountry.name}
-                      </span>
-                    ) : (
-                      <span className="text-amber-700 flex items-center gap-1 font-semibold">
-                        <AlertCircle className="size-3" /> {currentProfilePhoneRule ? `Format : ${currentProfilePhoneRule.formatExample}` : "Numéro incomplet"}
-                      </span>
-                    )
-                  ) : (
-                    <span className="text-slate-500">Nécessaire pour vous inviter au groupe WhatsApp d'entraide</span>
-                  )}
-                </div>
-              </div>
-
-              {/* 3 & 4. Pays et Ville */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {/* Pays de résidence */}
-                <div className="space-y-1" ref={forcedResidenceCountryRef}>
-                  <label className="text-xs font-bold text-slate-700">3. Pays de résidence *</label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setIsForcedResidenceCountryOpen(!isForcedResidenceCountryOpen)}
-                      className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
-                    >
-                      <span className="flex items-center gap-2 truncate">
-                        {selectedResidenceCountryObj ? (
-                          <>
-                            <span className="text-base leading-none">{getCountryFlag(selectedResidenceCountryObj.code)}</span>
-                            <span className="font-semibold text-slate-800">{selectedResidenceCountryObj.name}</span>
-                          </>
-                        ) : country ? (
-                          <span className="font-semibold text-slate-800">{country}</span>
-                        ) : (
-                          <span className="text-slate-400">Choisir un pays...</span>
-                        )}
-                      </span>
-                      <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isForcedResidenceCountryOpen ? "rotate-180" : ""}`} />
-                    </button>
-
-                    {isForcedResidenceCountryOpen && (
-                      <div className="absolute top-full left-0 mt-1 w-full max-h-56 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[120] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-                        <div className="p-2 border-b border-slate-100 sticky top-0 bg-white">
-                          <div className="relative">
-                            <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
-                            <input
-                              type="text"
-                              value={forcedResidenceCountrySearch}
-                              onChange={(e) => setForcedResidenceCountrySearch(e.target.value)}
-                              placeholder="Rechercher un pays..."
-                              className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
-                              autoFocus
-                            />
-                          </div>
-                        </div>
-                        <div className="overflow-y-auto divide-y divide-slate-100 text-left">
-                          {filteredForcedResidenceCountries.map((c) => {
-                            const isSelected = country.toLowerCase() === c.name.toLowerCase() || country.toLowerCase() === c.code.toLowerCase()
-                            return (
-                              <button
-                                key={`frc-${c.code}`}
-                                type="button"
-                                onMouseDown={(e) => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                }}
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  setCountry(c.name)
-                                  setIsForcedResidenceCountryOpen(false)
-                                  setForcedResidenceCountrySearch("")
-                                }}
-                                className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer text-left ${
-                                  isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-700"
-                                }`}
-                              >
-                                <span className="flex items-center gap-2 truncate">
-                                  <span className="text-base">{getCountryFlag(c.code)}</span>
-                                  <span className="truncate">{c.name}</span>
-                                </span>
-                                {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Ville */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">4. Ville de résidence *</label>
-                  <input
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Ouagadougou, Abidjan..."
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* 5. Secteur d'activité / Profession : 3 Options Claires */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>5. Secteur d'activité / Statut *</span>
-                  <span className="text-[10px] text-slate-500 font-normal">Sélectionnez votre profil</span>
-                </label>
-
-                <div className="grid grid-cols-3 gap-2 pt-0.5">
-                  {[
-                    { 
-                      id: "Professionnels", 
-                      label: "Professionnels", 
-                      desc: "Salarié, Cadre, Expert", 
-                      icon: Briefcase, 
-                      color: "text-blue-600 bg-blue-50 border-blue-200" 
-                    },
-                    { 
-                      id: "Entrepreneurs", 
-                      label: "Entrepreneurs", 
-                      desc: "Fondateur, Dirigeant, Freelance", 
-                      icon: Rocket, 
-                      color: "text-amber-600 bg-amber-50 border-amber-200" 
-                    },
-                    { 
-                      id: "Étudiants", 
-                      label: "Étudiants", 
-                      desc: "Université, École, Formation", 
-                      icon: GraduationCap, 
-                      color: "text-emerald-600 bg-emerald-50 border-emerald-200" 
-                    },
-                  ].map((item) => {
-                    const Icon = item.icon
-                    const isSelected = sector === item.id || (item.id === "Étudiants" && (sector === "Etudiants" || sector.toLowerCase().includes("étudiant") || sector.toLowerCase().includes("etudiant")))
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSector(item.id)}
-                        className={`p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between relative space-y-1.5 ${
-                          isSelected
-                            ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/40 text-slate-900"
-                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-600"
-                        }`}
-                      >
-                        {isSelected && (
-                          <span className="absolute top-2 right-2 size-4 rounded-full bg-primary text-slate-950 flex items-center justify-center">
-                            <Check className="size-2.5 stroke-[3]" />
-                          </span>
-                        )}
-                        <div className={`size-8 rounded-xl flex items-center justify-center ${isSelected ? "bg-primary text-slate-950" : item.color}`}>
-                          <Icon className="size-4" />
-                        </div>
-                        <div>
-                          <div className="font-extrabold text-xs text-slate-900">{item.label}</div>
-                          <div className="text-[9px] text-slate-500 line-clamp-1">{item.desc}</div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-2 space-y-3">
-                <button
-                  type="submit"
-                  disabled={savingProfile || profileCompletionStats.completedCount < profileCompletionStats.total}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {savingProfile ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      <span>Enregistrement du profil...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="size-4" />
-                      <span>Valider et Débloquer mon Espace Membre 🚀</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                  <span className="flex items-center gap-1">
-                    <ShieldCheck className="size-3.5 text-emerald-600" />
-                    <span>Données protégées &amp; conformes RGPD</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="text-slate-500 hover:text-slate-800 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <LogOut className="size-3" />
-                    <span>Se déconnecter</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -179,7 +179,6 @@ export default function MasterclassHubPage() {
             if (typeof window !== "undefined") {
               window.history.replaceState({}, "", "/masterclass")
             }
-          } else {
             try {
               const { data: prof } = await supabase
                 .from("profiles")
@@ -187,31 +186,21 @@ export default function MasterclassHubPage() {
                 .eq("id", user.id)
                 .maybeSingle()
 
-              const isComplete = Boolean(
-                prof &&
-                prof.full_name && prof.full_name.trim().length >= 2 &&
-                prof.whatsapp && prof.whatsapp.trim().length >= 6 &&
-                prof.country && prof.country.trim().length > 0 &&
-                prof.city && prof.city.trim().length > 0 &&
-                prof.sector && prof.sector.trim().length > 0
-              )
-
-              if (prof && isComplete) {
-                clearPendingMasterclassRegistration()
-                await handleRegister({
-                  user,
-                  fullName: prof.full_name,
-                  whatsapp: prof.whatsapp,
-                  country: prof.country,
-                  sessionId: pending.sessionId || currentActiveSession?.id || undefined,
-                  sessionTitle: currentActiveSession?.title || undefined
-                })
-                if (typeof window !== "undefined") {
-                  window.history.replaceState({}, "", "/masterclass")
-                }
+              // 🚀 Inscription automatique immédiate : fonctionne même si l'apprenant ignore ou n'a pas encore complété son profil !
+              clearPendingMasterclassRegistration()
+              await handleRegister({
+                user,
+                fullName: prof?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0],
+                whatsapp: prof?.whatsapp || user.user_metadata?.whatsapp || "",
+                country: prof?.country || user.user_metadata?.country || "",
+                sessionId: pending.sessionId || currentActiveSession?.id || undefined,
+                sessionTitle: currentActiveSession?.title || undefined
+              })
+              if (typeof window !== "undefined") {
+                window.history.replaceState({}, "", "/masterclass")
               }
             } catch (pErr) {
-              console.warn("Auto-registration profile check error:", pErr)
+              console.warn("Auto-registration error:", pErr)
             }
           }
         }
@@ -342,7 +331,7 @@ export default function MasterclassHubPage() {
     const emailToSubmit = userToUse.email.toLowerCase().trim()
     let nameToSubmit = customData?.fullName || userToUse.user_metadata?.full_name || emailToSubmit.split("@")[0]
     let userWhatsApp = customData?.whatsapp || userToUse.user_metadata?.whatsapp || ""
-    let userCountry = customData?.country || userToUse.user_metadata?.country || "CI"
+    let userCountry = customData?.country || userToUse.user_metadata?.country || ""
 
     if (!customData?.fullName || !customData?.whatsapp || !customData?.country) {
       try {
@@ -514,7 +503,7 @@ export default function MasterclassHubPage() {
 
           <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
             <Link
-              href="/login?redirect=/masterclass?action=auto_register"
+              href="/login?redirect=%2Fmasterclass%3Faction%3Dauto_register"
               onClick={() => {
                 setPendingMasterclassRegistration(upcomingSession?.id)
                 setAuthRedirect("/masterclass?action=auto_register")
