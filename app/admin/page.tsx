@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from "react"
+import { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
@@ -9,7 +9,7 @@ import { FormationItem, FormationCategory } from "@/lib/formations-data"
 import { 
   ShieldAlert, ShieldCheck, Users, DollarSign, BookOpen, FileCheck, 
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
-  ExternalLink, Award, Mail, ArrowRight, UserPlus, Filter, Plus,
+  ExternalLink, Award, Mail, ArrowRight, UserPlus, UserCheck, Filter, Plus,
   Edit3, Trash2, Video, Calendar, Sparkles, Layers, FileText, Lock,
   ArrowUp, ArrowDown, Eye, MessageCircle, LogOut, Shuffle, Play, Menu, X,
   Bot, Film, ShoppingBag, Zap, CalendarCheck, Quote, MessageSquare, Star,
@@ -180,6 +180,7 @@ export default function SuperAdminDashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
   const isSuperAdmin = userRole === "super_admin"
+  const isFounderSamba = currentUser?.email?.toLowerCase().trim() === "samba@leguideai.com"
   const [unauthorized, setUnauthorized] = useState(false)
 
   // Subscription management states
@@ -279,6 +280,14 @@ export default function SuperAdminDashboard() {
   })
   const [addingManualParticipant, setAddingManualParticipant] = useState(false)
   const [refreshingMasterclass, setRefreshingMasterclass] = useState(false)
+
+  // Enrollment states for Samba
+  const [showEnrollUsersModal, setShowEnrollUsersModal] = useState(false)
+  const [enrollTargetSessionId, setEnrollTargetSessionId] = useState<string>("current_live")
+  const [selectedUserIdsToEnroll, setSelectedUserIdsToEnroll] = useState<string[]>([])
+  const [enrollSearchQuery, setEnrollSearchQuery] = useState("")
+  const [batchEnrollSendEmail, setBatchEnrollSendEmail] = useState(true)
+  const [enrollingUsers, setEnrollingUsers] = useState(false)
 
   // Data states
   const [stats, setStats] = useState({
@@ -1607,6 +1616,63 @@ export default function SuperAdminDashboard() {
       alert("Erreur réseau: " + err.message)
     } finally {
       setAddingManualParticipant(false)
+    }
+  }
+
+  async function handleBatchEnrollUsers(targetUsersToEnroll?: any[]) {
+    if (!isFounderSamba) return
+    const usersToEnroll = targetUsersToEnroll || eligibleUnenrolledUsers.filter(u => selectedUserIdsToEnroll.includes(u.id))
+    if (usersToEnroll.length === 0) {
+      alert("Veuillez sélectionner au moins un apprenant à inscrire.")
+      return
+    }
+
+    const targetSession = upcomingMasterclasses.find(s => s.id === enrollTargetSessionId) || masterclassSession
+    const sessionTitle = targetSession?.title || "Masterclass IA en Direct"
+
+    setEnrollingUsers(true)
+    try {
+      const res = await fetch("/api/admin/masterclasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "batch_enroll_users",
+          sessionId: enrollTargetSessionId,
+          sessionTitle: sessionTitle,
+          sendEmail: batchEnrollSendEmail,
+          requesterEmail: currentUser?.email,
+          users: usersToEnroll.map((u: any) => ({
+            id: u.id,
+            email: u.email,
+            full_name: u.full_name,
+            whatsapp: u.whatsapp,
+            country: u.country,
+            sector: u.sector,
+            city: u.city
+          }))
+        })
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        if (Array.isArray(data.participants) && data.participants.length > 0) {
+          setMasterclassParticipants(prev => {
+            const newEmails = new Set(data.participants.map((p: any) => p.email?.toLowerCase().trim()))
+            const remaining = prev.filter(p => !newEmails.has(p.email?.toLowerCase().trim()))
+            return [...data.participants, ...remaining]
+          })
+        }
+        setSelectedUserIdsToEnroll([])
+        setShowEnrollUsersModal(false)
+        showNotice(data.message || `${usersToEnroll.length} apprenant(s) inscrit(s) avec succès !`)
+        refreshMasterclassData()
+      } else {
+        alert("Erreur lors de l'inscription : " + (data.error || "Erreur inconnue"))
+      }
+    } catch (err: any) {
+      alert("Erreur réseau : " + err.message)
+    } finally {
+      setEnrollingUsers(false)
     }
   }
 
@@ -3145,6 +3211,99 @@ export default function SuperAdminDashboard() {
       )
     })
   }, [masterclassParticipants, selectedMasterclassFilter, masterclassSearch, masterclassSession.title, masterclassReplays])
+
+  // Helper ultra-sécurisé pour vérifier si un utilisateur est déjà inscrit à la session ciblée
+  const isUserEnrolledInMasterclass = useCallback((email: string | null | undefined, targetSessionId: string) => {
+    if (!email) return false
+    const norm = email.toLowerCase().trim()
+
+    // 1. Déterminer si la session ciblée est la prochaine Masterclass en direct principale
+    const primaryUpcomingId = masterclassSession?.id || upcomingMasterclasses[0]?.id || "current_live"
+    const isTargetingPrimaryUpcoming = 
+      !targetSessionId ||
+      targetSessionId === "current_live" || 
+      targetSessionId === "mc_default" || 
+      targetSessionId === primaryUpcomingId ||
+      (upcomingMasterclasses.length > 0 && targetSessionId === upcomingMasterclasses[0]?.id)
+
+    const targetSession = upcomingMasterclasses.find(s => s.id === targetSessionId) || (masterclassSession?.id === targetSessionId ? masterclassSession : null)
+    const targetTitle = (targetSession?.title || masterclassSession?.title || "").toLowerCase().trim()
+
+    // Vérifier dans la liste de tous les participants inscrits
+    return masterclassParticipants.some(p => {
+      const pEmail = (p.email || "").toLowerCase().trim()
+      if (pEmail !== norm) return false
+
+      const pId = p.masterclass_id || "current_live"
+      const pTitle = (p.masterclass_title || "").toLowerCase().trim()
+      const regList: string[] = Array.isArray(p.parsed_notes?.registered_masterclasses) 
+        ? p.parsed_notes.registered_masterclasses 
+        : []
+
+      // Correspondance exacte par ID ou dans le tableau d'inscriptions
+      if (pId === targetSessionId) return true
+      if (regList.includes(targetSessionId)) return true
+
+      // Si la session ciblée est le direct principal à venir
+      if (isTargetingPrimaryUpcoming) {
+        if (pId === "current_live" || pId === "mc_default" || !p.masterclass_id) return true
+        if (pId === primaryUpcomingId) return true
+        if (regList.includes("current_live") || regList.includes("mc_default") || regList.includes(primaryUpcomingId)) return true
+
+        // Si l'inscription n'appartient pas explicitement à un replay ou une session passée spécifique,
+        // c'est une inscription active au direct à venir !
+        const isSpecificPastOrReplay = 
+          masterclassReplays.some(r => r.id === pId) || 
+          pastMasterclasses.some(ps => ps.id === pId)
+
+        if (!isSpecificPastOrReplay) {
+          return true
+        }
+
+        // Correspondance par titre de la Masterclass
+        if (targetTitle && pTitle && (pTitle.includes(targetTitle) || targetTitle.includes(pTitle))) {
+          return true
+        }
+      } else {
+        // Pour une session spécifique différente
+        if (targetTitle && pTitle && (pTitle.includes(targetTitle) || targetTitle.includes(pTitle))) {
+          return true
+        }
+      }
+
+      return false
+    })
+  }, [upcomingMasterclasses, masterclassSession, masterclassParticipants, masterclassReplays, pastMasterclasses])
+
+  // Liste des utilisateurs éligibles non encore inscrits (strictement réservée à samba@leguideai.com)
+  const eligibleUnenrolledUsers = useMemo(() => {
+    if (!isFounderSamba) return []
+    return users.filter(u => {
+      const email = (u.email || "").toLowerCase().trim()
+      if (!email) return false
+      // Exclure samba et tout compte avec rôle admin ou super_admin
+      if (email === "samba@leguideai.com") return false
+      if (u.role === "admin" || u.role === "super_admin") return false
+      // Exclure si déjà inscrit à la session ciblée
+      if (isUserEnrolledInMasterclass(email, enrollTargetSessionId)) return false
+      return true
+    })
+  }, [isFounderSamba, users, enrollTargetSessionId, isUserEnrolledInMasterclass])
+
+  // Filtrage par recherche dans le modal d'inscription
+  const filteredEligibleUsers = useMemo(() => {
+    if (!enrollSearchQuery) return eligibleUnenrolledUsers
+    const q = enrollSearchQuery.toLowerCase().trim()
+    return eligibleUnenrolledUsers.filter(u => {
+      return (
+        (u.full_name || "").toLowerCase().includes(q) ||
+        (u.email || "").toLowerCase().includes(q) ||
+        ((u as any).whatsapp || "").toLowerCase().includes(q) ||
+        ((u as any).country || "").toLowerCase().includes(q) ||
+        ((u as any).sector || "").toLowerCase().includes(q)
+      )
+    })
+  }, [eligibleUnenrolledUsers, enrollSearchQuery])
 
   if (unauthorized) {
     return (
@@ -7830,6 +7989,25 @@ export default function SuperAdminDashboard() {
                   </span>
                 </button>
               </div>
+
+              {isFounderSamba && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEnrollTargetSessionId(selectedMasterclassFilter !== "all" ? selectedMasterclassFilter : (masterclassSession?.id || "current_live"))
+                      setSelectedUserIdsToEnroll([])
+                      setEnrollSearchQuery("")
+                      setShowEnrollUsersModal(true)
+                    }}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all hover:scale-[1.01]"
+                    title="Inscrire des apprenants de la plateforme non encore inscrits"
+                  >
+                    <UserPlus className="size-3.5" />
+                    <span>Inscrire des apprenants ({eligibleUnenrolledUsers.length})</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Registered Participants Table & Targeted Emailing */}
@@ -7855,7 +8033,22 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-                
+                  {isFounderSamba && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnrollTargetSessionId(selectedMasterclassFilter !== "all" ? selectedMasterclassFilter : (masterclassSession?.id || "current_live"))
+                        setSelectedUserIdsToEnroll([])
+                        setEnrollSearchQuery("")
+                        setShowEnrollUsersModal(true)
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Inscrire des apprenants de la plateforme non encore inscrits"
+                    >
+                      <UserPlus className="size-3.5" />
+                      <span>Inscrire des apprenants ({eligibleUnenrolledUsers.length})</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -8046,10 +8239,30 @@ export default function SuperAdminDashboard() {
 
                     {filteredMasterclassParticipants.length === 0 && (
                       <tr>
-                        <td colSpan={9} className="py-10 text-center text-slate-400">
-                          {selectedMasterclassFilter !== "all" 
-                            ? `Aucun apprenant inscrit pour cette Masterclass spécifique.` 
-                            : `Aucun inscrit pour le moment. Cliquez sur « Inscrire un apprenant » pour ajouter une inscription.`}
+                        <td colSpan={9} className="py-12 text-center text-slate-400">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <Users className="size-8 text-slate-300" />
+                            <p className="text-sm font-medium">
+                              {selectedMasterclassFilter !== "all" 
+                                ? `Aucun apprenant inscrit pour cette Masterclass spécifique.` 
+                                : `Aucun apprenant inscrit pour le moment.`}
+                            </p>
+                            {isFounderSamba && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEnrollTargetSessionId(selectedMasterclassFilter !== "all" ? selectedMasterclassFilter : (masterclassSession?.id || "current_live"))
+                                  setSelectedUserIdsToEnroll([])
+                                  setEnrollSearchQuery("")
+                                  setShowEnrollUsersModal(true)
+                                }}
+                                className="mt-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+                              >
+                                <UserPlus className="size-3.5" />
+                                <span>Inscrire des apprenants ({eligibleUnenrolledUsers.length} disponibles)</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -8171,6 +8384,281 @@ export default function SuperAdminDashboard() {
                         </button>
                       </div>
                     </form>
+                  </div>
+                </div>
+              )}
+
+              {/* MODAL INSCRIPTION DES APPRENANTS DE LA PLATEFORME (RÉSERVÉ SAMBA) */}
+              {showEnrollUsersModal && isFounderSamba && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col animate-fadeIn">
+                    
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3.5 shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-emerald-500/15 text-emerald-700 flex items-center justify-center border border-emerald-500/30">
+                          <UserPlus className="size-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-heading text-base font-bold text-slate-900">
+                              Inscrire des Apprenants à la Masterclass
+                            </h4>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-800 border border-amber-500/40">
+                              Fondateur Samba
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Sélectionnez les membres de la plateforme non encore inscrits à cette session (les comptes administrateurs sont exclus).
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowEnrollUsersModal(false)}
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+
+                    {/* Masterclass Selection & Stats Bar */}
+                    <div className="grid sm:grid-cols-12 gap-3 shrink-0">
+                      <div className="sm:col-span-7 space-y-1">
+                        <label className="text-xs font-bold text-slate-700">Masterclass à Venir Ciblée :</label>
+                        <select
+                          value={enrollTargetSessionId}
+                          onChange={e => {
+                            setEnrollTargetSessionId(e.target.value)
+                            setSelectedUserIdsToEnroll([])
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 font-bold outline-none focus:border-primary cursor-pointer shadow-2xs"
+                        >
+                          {upcomingMasterclasses.length > 0 ? (
+                            upcomingMasterclasses.map((s, idx) => (
+                              <option key={s.id || idx} value={s.id}>
+                                {idx === 0 ? "🔴 Prochain direct" : "📅 Session"} : {s.title} ({s.dateDisplay || "Date à venir"})
+                              </option>
+                            ))
+                          ) : (
+                            <option value="current_live">🔴 {masterclassSession?.title || "Masterclass IA en Direct"}</option>
+                          )}
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-5 flex items-center gap-2">
+                        <div className="flex-1 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Éligibles non-inscrits</span>
+                          <span className="text-base font-black text-emerald-700">{eligibleUnenrolledUsers.length}</span>
+                        </div>
+                        <div className="flex-1 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center">
+                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Sélectionnés</span>
+                          <span className="text-base font-black text-blue-700">{selectedUserIdsToEnroll.length}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Search & Bulk Select Toolbar */}
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedUserIdsToEnroll.length === filteredEligibleUsers.length) {
+                              setSelectedUserIdsToEnroll([])
+                            } else {
+                              setSelectedUserIdsToEnroll(filteredEligibleUsers.map(u => u.id))
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer flex items-center gap-1.5"
+                        >
+                          <CheckCircle2 className="size-3.5 text-emerald-600" />
+                          <span>
+                            {selectedUserIdsToEnroll.length === filteredEligibleUsers.length && filteredEligibleUsers.length > 0
+                              ? "Tout désélectionner"
+                              : `Tout sélectionner (${filteredEligibleUsers.length})`}
+                          </span>
+                        </button>
+
+                        {selectedUserIdsToEnroll.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserIdsToEnroll([])}
+                            className="text-xs text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                          >
+                            Réinitialiser ({selectedUserIdsToEnroll.length})
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="relative w-full sm:w-64">
+                        <Search className="size-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={enrollSearchQuery}
+                          onChange={e => setEnrollSearchQuery(e.target.value)}
+                          placeholder="Chercher par nom, email, tél, pays..."
+                          className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:border-primary shadow-2xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Users List (Scrollable) */}
+                    <div className="flex-1 overflow-y-auto min-h-[220px] max-h-[380px] rounded-xl border border-slate-200 divide-y divide-slate-100 bg-white shadow-inner">
+                      {filteredEligibleUsers.length === 0 ? (
+                        <div className="p-10 text-center space-y-2 text-slate-500">
+                          <UserCheck className="size-8 text-slate-400 mx-auto" />
+                          <p className="font-bold text-xs">
+                            {enrollSearchQuery
+                              ? "Aucun apprenant ne correspond à votre recherche."
+                              : "Tous les apprenants éligibles de la plateforme sont déjà inscrits à cette session !"}
+                          </p>
+                          <p className="text-[11px] text-slate-400">
+                            {eligibleUnenrolledUsers.length === 0 && !enrollSearchQuery && "Aucun apprenant restant à inscrire."}
+                          </p>
+                        </div>
+                      ) : (
+                        filteredEligibleUsers.map(u => {
+                          const isSelected = selectedUserIdsToEnroll.includes(u.id)
+                          const initials = (u.full_name || u.email || "AP")
+                            .split(" ")
+                            .map(n => n[0])
+                            .join("")
+                            .substring(0, 2)
+                            .toUpperCase()
+
+                          return (
+                            <div
+                              key={u.id}
+                              onClick={() => {
+                                setSelectedUserIdsToEnroll(prev =>
+                                  prev.includes(u.id) ? prev.filter(id => id !== u.id) : [...prev, u.id]
+                                )
+                              }}
+                              className={`p-3 flex items-center justify-between gap-3 cursor-pointer transition-colors ${
+                                isSelected ? "bg-emerald-50/70" : "hover:bg-slate-50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {}}
+                                  className="size-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 shrink-0 cursor-pointer"
+                                />
+
+                                <div className="size-8 rounded-full bg-primary/15 text-slate-900 font-extrabold text-xs flex items-center justify-center shrink-0 border border-primary/30">
+                                  {initials}
+                                </div>
+
+                                <div className="min-w-0 space-y-0.5 text-left">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-bold text-xs text-slate-900 truncate">
+                                      {u.full_name || "Apprenant"}
+                                    </span>
+                                    {(u as any).country && (
+                                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-100 text-slate-600 border border-slate-200">
+                                        {(u as any).country}
+                                      </span>
+                                    )}
+                                    {(u as any).sector && (
+                                      <span className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                                        • {(u as any).sector}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-3 text-[11px] text-slate-500 font-mono flex-wrap">
+                                    <span className="text-primary font-semibold">{u.email}</span>
+                                    {(u as any).whatsapp && !(u as any).whatsapp.startsWith("wa_") && (
+                                      <span className="text-slate-600">📱 {(u as any).whatsapp}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleBatchEnrollUsers([u])
+                                }}
+                                disabled={enrollingUsers}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold shrink-0 transition-colors cursor-pointer"
+                                title="Inscrire uniquement cet apprenant maintenant"
+                              >
+                                Inscrire seul
+                              </button>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+
+                    {/* Email Option Toggle */}
+                    <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between gap-3 shrink-0 text-xs">
+                      <label className="flex items-center gap-2.5 cursor-pointer text-slate-800 font-medium">
+                        <input
+                          type="checkbox"
+                          checked={batchEnrollSendEmail}
+                          onChange={e => setBatchEnrollSendEmail(e.target.checked)}
+                          className="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span>
+                          Envoyer automatiquement l&apos;email de confirmation avec le lien Google Meet et WhatsApp
+                        </span>
+                      </label>
+                      <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md shrink-0">
+                        Recommandé
+                      </span>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowEnrollUsersModal(false)}
+                        className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors cursor-pointer"
+                      >
+                        Annuler
+                      </button>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {filteredEligibleUsers.length > 0 && (
+                          <button
+                            type="button"
+                            disabled={enrollingUsers}
+                            onClick={() => {
+                              if (window.confirm(`Confirmez-vous l'inscription directe de tous les ${filteredEligibleUsers.length} apprenants éligibles à cette Masterclass ?`)) {
+                                handleBatchEnrollUsers(filteredEligibleUsers)
+                              }
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                          >
+                            ⚡ Inscrire TOUS les {filteredEligibleUsers.length} non-inscrits
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          disabled={enrollingUsers || selectedUserIdsToEnroll.length === 0}
+                          onClick={() => handleBatchEnrollUsers()}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {enrollingUsers ? (
+                            <>
+                              <RefreshCw className="size-3.5 animate-spin" />
+                              <span>Inscription en cours...</span>
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="size-3.5" />
+                              <span>Inscrire la sélection ({selectedUserIdsToEnroll.length})</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               )}
