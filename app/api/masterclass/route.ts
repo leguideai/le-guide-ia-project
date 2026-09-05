@@ -329,7 +329,7 @@ export async function POST(req: Request) {
       ? fullName.trim() 
       : (userProf?.full_name || email.split("@")[0])
 
-    const cleanCountry = country || userProf?.country || "CI"
+    const cleanCountry = country || userProf?.country || ""
     const cleanSector = body.profession || body.sector || userProf?.sector || ""
 
     const existingReg = (userRegistrations || [])[0]
