@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabaseServer } from "@/lib/supabase-server"
+import { sendMasterclassRegistrationEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
@@ -654,6 +655,232 @@ export async function POST(req: Request) {
         success: true,
         participant: newParticipant,
         message: "Apprenant inscrit à la Masterclass avec succès !"
+      })
+    }
+
+    if (action === "batch_enroll_users") {
+      const {
+        sessionId = "current_live",
+        sessionTitle = "Masterclass IA en Direct",
+        users = [],
+        sendEmail = true,
+        requesterEmail
+      } = body
+
+      // 🛡️ Sécurité stricte : Seul samba@leguideai.com est autorisé
+      const cleanRequester = String(requesterEmail || "").toLowerCase().trim()
+      if (cleanRequester !== "samba@leguideai.com") {
+        return NextResponse.json(
+          { error: "Accès refusé : Seul le super-administrateur fondateur (samba@leguideai.com) peut inscrire des utilisateurs en masse." },
+          { status: 403 }
+        )
+      }
+
+      if (!Array.isArray(users) || users.length === 0) {
+        return NextResponse.json({ error: "Aucun utilisateur sélectionné pour l'inscription." }, { status: 400 })
+      }
+
+      // Récupérer les informations de la session pour l'email
+      const { data: rows } = await supabaseServer
+        .from("site_settings")
+        .select("key, value")
+
+      const settingsMap: Record<string, string> = {}
+      if (rows && rows.length > 0) {
+        rows.forEach((r) => {
+          if (r.key && r.value !== undefined) {
+            settingsMap[r.key] = r.value
+          }
+        })
+      }
+
+      // Trouver les détails de la session
+      let targetSessionObj: any = null
+      if (sessionsList.length > 0) {
+        targetSessionObj = sessionsList.find(s => s.id === sessionId)
+      }
+
+      const sessionInfo = {
+        title: targetSessionObj?.title || sessionTitle || settingsMap.masterclass_title || "Masterclass IA en Direct",
+        scheduledAt: targetSessionObj?.scheduledAt || settingsMap.masterclass_date || "",
+        dateDisplay: targetSessionObj?.dateDisplay || settingsMap.masterclass_date_display || "",
+        whatsappGroupUrl: targetSessionObj?.whatsappGroupUrl || settingsMap.masterclass_whatsapp_group_url || "",
+        youtubeLiveUrl: targetSessionObj?.youtubeLiveUrl || settingsMap.masterclass_youtube_url || "https://meet.google.com",
+        instructor: targetSessionObj?.instructor || settingsMap.masterclass_instructor || "Alfred Dah"
+      }
+
+      const enrolledParticipants: any[] = []
+      const errors: string[] = []
+
+      for (const u of users) {
+        const emailClean = (u.email || "").toLowerCase().trim()
+        if (!emailClean) continue
+
+        // Double protection : ignorer tout compte admin ou superadmin
+        if (u.role === "admin" || u.role === "super_admin" || emailClean === "samba@leguideai.com") {
+          continue
+        }
+
+        const fullName = (u.full_name && u.full_name.trim() && !u.full_name.includes("@"))
+          ? u.full_name.trim()
+          : (emailClean.split("@")[0] || "Apprenant")
+
+        const whatsapp = (u.whatsapp && u.whatsapp.trim())
+          ? u.whatsapp.trim()
+          : `wa_${emailClean}`
+
+        const country = u.country || "CI"
+        const sector = u.sector || ""
+        const city = u.city || ""
+
+        try {
+          // Vérifier si déjà présent dans registrations
+          const { data: existingRegs } = await supabaseServer
+            .from("registrations")
+            .select("id, notes, full_name, whatsapp, country")
+            .ilike("email", emailClean)
+            .limit(1)
+
+          const existing = existingRegs && existingRegs.length > 0 ? existingRegs[0] : null
+
+          let savedReg: any = null
+
+          if (existing) {
+            let existingNotes: any = {}
+            try {
+              existingNotes = typeof existing.notes === "string" ? JSON.parse(existing.notes) : (existing.notes || {})
+            } catch (_) {}
+
+            const registeredMasterclasses = Array.isArray(existingNotes.registered_masterclasses)
+              ? existingNotes.registered_masterclasses
+              : (existingNotes.masterclass_id ? [existingNotes.masterclass_id] : [])
+
+            if (!registeredMasterclasses.includes(sessionId)) {
+              registeredMasterclasses.push(sessionId)
+            }
+
+            const updatedNotes = {
+              ...existingNotes,
+              added_by_admin: true,
+              enrolled_by: "samba@leguideai.com",
+              masterclass_id: sessionId,
+              masterclass_title: sessionInfo.title,
+              registered_masterclasses: registeredMasterclasses,
+              profession: sector || existingNotes.profession || "",
+              sector: sector || existingNotes.sector || "",
+              country: country || existingNotes.country || "",
+              city: city || existingNotes.city || "",
+              last_masterclass_at: new Date().toISOString()
+            }
+
+            const { data: updData, error: updErr } = await supabaseServer
+              .from("registrations")
+              .update({
+                notes: JSON.stringify(updatedNotes),
+                course_slug: "masterclass-ia",
+                status: "inscrit"
+              })
+              .eq("id", existing.id)
+              .select()
+              .single()
+
+            if (!updErr && updData) {
+              savedReg = updData
+            } else {
+              savedReg = existing
+            }
+          } else {
+            const newPayload = {
+              full_name: fullName,
+              email: emailClean,
+              whatsapp: whatsapp,
+              country: country,
+              source: "admin_batch_enrollment",
+              course_slug: "masterclass-ia",
+              status: "inscrit",
+              notes: JSON.stringify({
+                added_by_admin: true,
+                enrolled_by: "samba@leguideai.com",
+                masterclass_id: sessionId,
+                masterclass_title: sessionInfo.title,
+                registered_masterclasses: [sessionId],
+                profession: sector,
+                sector: sector,
+                country: country,
+                city: city,
+                registered_at: new Date().toISOString()
+              })
+            }
+
+            let { data: insData, error: insErr } = await supabaseServer
+              .from("registrations")
+              .insert(newPayload)
+              .select()
+              .single()
+
+            if (insErr && insErr.code === "23505") {
+              newPayload.whatsapp = `wa_${emailClean}_${Date.now()}`
+              const { data: retryData } = await supabaseServer
+                .from("registrations")
+                .insert(newPayload)
+                .select()
+                .single()
+              insData = retryData
+            }
+
+            if (insData) {
+              savedReg = insData
+            }
+          }
+
+          if (savedReg) {
+            enrolledParticipants.push({
+              ...savedReg,
+              full_name: fullName,
+              email: emailClean,
+              whatsapp: whatsapp,
+              country: country,
+              sector: sector,
+              city: city,
+              masterclass_id: sessionId,
+              masterclass_title: sessionInfo.title,
+              parsed_notes: {
+                added_by_admin: true,
+                masterclass_id: sessionId,
+                masterclass_title: sessionInfo.title
+              }
+            })
+          }
+
+          // Inscription newsletter
+          try {
+            await supabaseServer.from("newsletter_subscribers").upsert({
+              email: emailClean,
+              name: fullName,
+              status: "active",
+              subscribed_at: new Date().toISOString()
+            }, { onConflict: "email" })
+          } catch (_) {}
+
+          // Envoi d'email de confirmation si demandé
+          if (sendEmail) {
+            try {
+              await sendMasterclassRegistrationEmail(fullName, emailClean, sessionInfo)
+            } catch (emErr) {
+              console.warn(`Could not send confirmation email to ${emailClean}:`, emErr)
+            }
+          }
+        } catch (itemErr: any) {
+          errors.push(`${emailClean}: ${itemErr.message}`)
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        enrolledCount: enrolledParticipants.length,
+        participants: enrolledParticipants,
+        errors: errors.length > 0 ? errors : undefined,
+        message: `${enrolledParticipants.length} apprenant(s) inscrit(s) avec succès à la Masterclass !`
       })
     }
 
