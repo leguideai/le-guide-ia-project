@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut, ShieldCheck } from "lucide-react"
+import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut, ShieldCheck, CreditCard } from "lucide-react"
 import { setAuthRedirect } from "@/lib/auth-redirect"
 
 function getOfferEndTimestamp(rawDate?: string | null): number | null {
@@ -37,6 +37,7 @@ export function Header() {
   const isMasterclassActive = pathname.startsWith("/masterclass")
   const isBootcampActive = pathname.startsWith("/bootcamp")
   const isRessourcesActive = pathname.startsWith("/ressources")
+  const isTarifsActive = pathname.startsWith("/tarifs") || pathname.startsWith("/pricing")
   const isEntreprisesActive = pathname.startsWith("/entreprises")
   const isDashboardActive = pathname.startsWith("/dashboard")
   const isAdminActive = pathname.startsWith("/admin")
@@ -380,6 +381,17 @@ export function Header() {
                   <span>Espace Entreprises (B2B)</span>
                 </Link>
                 <Link 
+                  href="/tarifs" 
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs transition-colors ${
+                    isTarifsActive 
+                      ? "bg-primary/20 text-primary font-bold border border-primary/30" 
+                      : "hover:bg-secondary text-foreground font-semibold"
+                  }`}
+                >
+                  <CreditCard className="size-4 text-emerald-400" />
+                  <span>Grille Tarifaire & Abonnements</span>
+                </Link>
+                <Link 
                   href="/masterclass" 
                   className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-bold transition-colors ${
                     isMasterclassActive 
@@ -432,6 +444,17 @@ export function Header() {
             }`}
           >
             Prompts
+          </Link>
+
+          <Link 
+            href="/tarifs" 
+            className={`hidden md:inline-block text-xs transition-all px-3 py-1.5 rounded-xl ${
+              isTarifsActive 
+                ? "text-primary font-black bg-primary/15 border border-primary/40 shadow-xs" 
+                : "text-slate-300 font-bold hover:text-white hover:bg-white/5"
+            }`}
+          >
+            Tarifs
           </Link>
 
 
@@ -565,6 +588,19 @@ export function Header() {
             >
               <Building2 className="size-4 text-blue-400" />
               <span>Espace Entreprises (B2B)</span>
+            </Link>
+
+            <Link
+              href="/tarifs"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-3 p-3 rounded-xl text-xs transition-all ${
+                isTarifsActive 
+                  ? "text-primary font-black bg-primary/15 border border-primary/40 shadow-xs" 
+                  : "text-foreground font-bold hover:bg-secondary"
+              }`}
+            >
+              <CreditCard className="size-4 text-emerald-400" />
+              <span>Tarifs & Abonnements</span>
             </Link>
           </div>
 

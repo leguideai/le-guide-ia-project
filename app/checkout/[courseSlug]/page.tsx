@@ -55,7 +55,7 @@ function CheckoutContent({ params }: PageProps) {
   const [userSubscription, setUserSubscription] = useState<any>(null)
   const [pendingSubscription, setPendingSubscription] = useState<any>(null)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe" | "paytech">("mobile_direct")
-  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov">("wave")
+  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money">("wave")
   const [transactionRef, setTransactionRef] = useState("")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
@@ -1026,7 +1026,7 @@ function CheckoutContent({ params }: PageProps) {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-foreground">Paiement Mobile Money Direct</div>
-                      <div className="text-[10px] text-muted-foreground">Wave, Orange Money, Moov (Reçu ou Référence)</div>
+                      <div className="text-[10px] text-muted-foreground">Wave, Orange Money (Reçu ou Référence)</div>
                     </div>
                   </button>
 
@@ -1088,7 +1088,7 @@ function CheckoutContent({ params }: PageProps) {
                       <span>Instructions de dépôt Mobile Money</span>
                     </h4>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Effectuez le transfert de <strong className="text-foreground font-extrabold">{coursePriceFcfa}</strong> sur le numéro officiel unique ci-dessous (Wave, Orange Money, Moov) :
+                      Effectuez le transfert de <strong className="text-foreground font-extrabold">{coursePriceFcfa}</strong> sur le numéro officiel unique ci-dessous (Wave, Orange Money) :
                     </p>
                   </div>
 

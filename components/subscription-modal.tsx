@@ -46,12 +46,6 @@ const MOBILE_MONEY_ACCOUNTS = {
     number: OFFICIAL_PAYMENT_NUMBER,
     beneficiary: OFFICIAL_BENEFICIARY,
     instructions: "Effectuez le transfert Orange Money vers le numéro officiel unique ci-dessous, puis saisissez le code/référence reçu par SMS."
-  },
-  moov: {
-    name: "Moov Money",
-    number: OFFICIAL_PAYMENT_NUMBER,
-    beneficiary: OFFICIAL_BENEFICIARY,
-    instructions: "Effectuez votre transfert Moov Money vers le numéro officiel unique ci-dessous et conservez votre SMS de confirmation."
   }
 }
 
@@ -66,7 +60,7 @@ export function SubscriptionModal({
   const router = useRouter()
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan>(initialPlan)
   const [paymentMethod, setPaymentMethod] = useState<"mobile_direct" | "stripe">("mobile_direct")
-  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money" | "moov">("wave")
+  const [mobileOperator, setMobileOperator] = useState<"wave" | "orange_money">("wave")
   
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
@@ -528,7 +522,7 @@ export function SubscriptionModal({
                   {/* <div className="py-2.5 px-3 rounded-lg text-xs font-bold flex items-center justify-between bg-primary/10 text-primary border border-primary/20">
                     <div className="flex items-center gap-2">
                       <Smartphone className="size-4" />
-                      <span>Paiement par Mobile Money Direct (Wave, Orange, Moov)</span>
+                      <span>Paiement par Mobile Money Direct (Wave, Orange Money)</span>
                     </div>
                     <CheckCircle2 className="size-4 text-primary" />
                   </div> */}
@@ -555,17 +549,16 @@ export function SubscriptionModal({
                   <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
                     
                     {/* Choix de l'opérateur */}
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {[
                         { id: "wave", label: "Wave", color: "border-sky-500 text-sky-400" },
-                        { id: "orange_money", label: "Orange", color: "border-orange-500 text-orange-400" },
-                        { id: "moov", label: "Moov", color: "border-blue-500 text-blue-400" }
+                        { id: "orange_money", label: "Orange Money", color: "border-orange-500 text-orange-400" }
                       ].map(op => (
                         <button
                           key={op.id}
                           type="button"
                           onClick={() => setMobileOperator(op.id as any)}
-                          className={`py-2 px-1 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                          className={`py-2 px-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
                             mobileOperator === op.id
                               ? `bg-white/10 ${op.color} shadow-sm`
                               : "border-slate-800 text-slate-400 hover:border-slate-700"

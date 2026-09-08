@@ -119,7 +119,7 @@ function FormationsContent() {
   // Checkout Modal State
   const [selectedFormation, setSelectedFormation] = useState<FormationItem | null>(null)
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<"wave" | "orange_money" | "moov" | "stripe">("wave")
+  const [paymentMethod, setPaymentMethod] = useState<"wave" | "orange_money" | "stripe">("wave")
   const [transactionRef, setTransactionRef] = useState("")
   const [copiedNum, setCopiedNum] = useState<string | null>(null)
   const [buyerForm, setBuyerForm] = useState({
@@ -806,13 +806,13 @@ function FormationsContent() {
                     </div>
                   </div>
 
-                  {/* 1. PANNEAU D'INSTRUCTIONS MOBILE MONEY (WAVE / OM / MOOV) */}
+                  {/* 1. PANNEAU D'INSTRUCTIONS MOBILE MONEY (WAVE / ORANGE MONEY) */}
                   {paymentMethod !== "stripe" && (
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
                       <div className="space-y-1">
                         <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
                           <Smartphone className="size-4 text-primary" />
-                          <span>Instructions de transfert ({paymentMethod === "wave" ? "Wave" : paymentMethod === "orange_money" ? "Orange Money" : "Moov"}) :</span>
+                          <span>Instructions de transfert ({paymentMethod === "wave" ? "Wave" : "Orange Money"}) :</span>
                         </h4>
                         <p className="text-[11px] text-slate-300 leading-relaxed">
                           Effectuez le transfert de <strong className="text-white font-extrabold">{formatPriceNum(selectedFormation.price)}</strong> sur le numéro officiel ci-dessous :
