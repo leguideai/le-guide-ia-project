@@ -263,11 +263,22 @@ export default function SuperAdminDashboard() {
   const [showTargetedEmailModal, setShowTargetedEmailModal] = useState(false)
   const [targetedEmailTarget, setTargetedEmailTarget] = useState<string>("current_live")
   const [targetedEmailType, setTargetedEmailType] = useState<"reminder" | "replay" | "custom">("reminder")
+  const [targetedEmailReminderType, setTargetedEmailReminderType] = useState<"j_minus_2" | "h_minus_1">("j_minus_2")
   const [targetedEmailSubject, setTargetedEmailSubject] = useState<string>("")
   const [targetedEmailCustomMessage, setTargetedEmailCustomMessage] = useState<string>("")
   const [targetedEmailTestAddress, setTargetedEmailTestAddress] = useState<string>("")
   const [sendingTargetedEmail, setSendingTargetedEmail] = useState(false)
   const [sendingTestEmail, setSendingTestEmail] = useState(false)
+  const [runningMasterclassCron, setRunningMasterclassCron] = useState(false)
+  const [masterclassCronResult, setMasterclassCronResult] = useState<any>(null)
+
+  const chosenMasterclassTargetTitle = useMemo(() => {
+    if (targetedEmailTarget === "current_live") return masterclassSession.title
+    const found = upcomingMasterclasses.find(s => s.id === targetedEmailTarget) ||
+                  pastMasterclasses.find(s => s.id === targetedEmailTarget) ||
+                  masterclassReplays.find(r => r.id === targetedEmailTarget)
+    return found?.title || masterclassSession.title
+  }, [targetedEmailTarget, masterclassSession.title, upcomingMasterclasses, pastMasterclasses, masterclassReplays])
 
   const [isManualAddParticipantOpen, setIsManualAddParticipantOpen] = useState(false)
   const [manualParticipantForm, setManualParticipantForm] = useState({
@@ -1677,6 +1688,29 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  async function handleTriggerMasterclassCron() {
+    setRunningMasterclassCron(true)
+    setMasterclassCronResult(null)
+    try {
+      const res = await fetch("/api/cron/masterclasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      })
+      const data = await res.json()
+      setMasterclassCronResult(data)
+      if (data.success) {
+        showNotice(data.message || "Vérification automatique du Cron terminée avec succès !")
+        refreshMasterclassData()
+      } else {
+        alert("Erreur Cron : " + (data.error || "Erreur inconnue"))
+      }
+    } catch (err: any) {
+      alert("Erreur réseau Cron : " + err.message)
+    } finally {
+      setRunningMasterclassCron(false)
+    }
+  }
+
   async function handleSendTargetedMasterclassEmail(isTest = false) {
     if (isTest) {
       if (!targetedEmailTestAddress || !targetedEmailTestAddress.includes("@")) {
@@ -1693,8 +1727,10 @@ export default function SuperAdminDashboard() {
       } else if (targetedEmailTarget === "all_masterclasses") {
         targetDesc = "TOUS les apprenants inscrits à l'ensemble des Masterclasses"
       } else {
-        const rep = masterclassReplays.find(r => r.id === targetedEmailTarget)
-        targetDesc = `les apprenants du Replay « ${rep?.title || targetedEmailTarget} »`
+        const found = upcomingMasterclasses.find(s => s.id === targetedEmailTarget) ||
+                      pastMasterclasses.find(s => s.id === targetedEmailTarget) ||
+                      masterclassReplays.find(r => r.id === targetedEmailTarget)
+        targetDesc = `les apprenants de « ${found?.title || targetedEmailTarget} »`
       }
 
       if (!confirm(`Confirmez-vous l'envoi de cet email à ${targetDesc} ?`)) {
@@ -1706,8 +1742,10 @@ export default function SuperAdminDashboard() {
     try {
       let chosenTitle = masterclassSession.title
       if (targetedEmailTarget !== "current_live" && targetedEmailTarget !== "all_masterclasses" && targetedEmailTarget !== "all_platform_users") {
-        const rep = masterclassReplays.find(r => r.id === targetedEmailTarget)
-        if (rep) chosenTitle = rep.title
+        const found = upcomingMasterclasses.find(s => s.id === targetedEmailTarget) ||
+                      pastMasterclasses.find(s => s.id === targetedEmailTarget) ||
+                      masterclassReplays.find(r => r.id === targetedEmailTarget)
+        if (found) chosenTitle = found.title
       }
 
       const res = await fetch("/api/admin/masterclasses/broadcast", {
@@ -1722,6 +1760,7 @@ export default function SuperAdminDashboard() {
           masterclassId: targetedEmailTarget,
           masterclassTitle: chosenTitle,
           emailType: targetedEmailType,
+          reminderType: targetedEmailReminderType,
           subject: targetedEmailSubject.trim(),
           customMessage: targetedEmailCustomMessage.trim(),
           testEmail: isTest ? targetedEmailTestAddress.trim() : undefined
@@ -1730,7 +1769,7 @@ export default function SuperAdminDashboard() {
 
       const data = await res.json()
       if (data.success) {
-        showNotice(data.message || (isTest ? "Email test envoyé !" : "Campagne envoyée avec succès !"))
+        showNotice(data.message || (isTest ? "Email test envoyé avec succès !" : "Campagne envoyée avec succès !"))
         if (!isTest) {
           setShowTargetedEmailModal(false)
           setTargetedEmailCustomMessage("")
@@ -3166,21 +3205,47 @@ export default function SuperAdminDashboard() {
       all: masterclassParticipants.length,
       current_live: 0
     }
+
+    upcomingMasterclasses.forEach(s => {
+      if (s.id) counts[s.id] = 0
+    })
+    pastMasterclasses.forEach(s => {
+      if (s.id) counts[s.id] = 0
+    })
     masterclassReplays.forEach(r => {
-      counts[r.id] = 0
+      if (r.id) counts[r.id] = 0
     })
 
     masterclassParticipants.forEach(p => {
       const pId = p.masterclass_id || "current_live"
-      if (counts[pId] !== undefined) {
-        counts[pId]++
-      } else {
+      let registeredList: string[] = []
+      if (p.notes) {
+        try {
+          const parsed = typeof p.notes === "string" ? JSON.parse(p.notes) : p.notes
+          if (parsed && Array.isArray(parsed.registered_masterclasses)) {
+            registeredList = parsed.registered_masterclasses
+          }
+        } catch (_) {}
+      }
+      if (pId && !registeredList.includes(pId)) {
+        registeredList.push(pId)
+      }
+
+      let countedForAnySpecific = false
+      registeredList.forEach(id => {
+        if (counts[id] !== undefined) {
+          counts[id]++
+          countedForAnySpecific = true
+        }
+      })
+
+      if (!countedForAnySpecific || pId === "current_live" || pId === "mc_default") {
         counts.current_live++
       }
     })
 
     return counts
-  }, [masterclassParticipants, masterclassReplays])
+  }, [masterclassParticipants, upcomingMasterclasses, pastMasterclasses, masterclassReplays])
 
   const filteredMasterclassParticipants = useMemo(() => {
     return masterclassParticipants.filter(p => {
@@ -3188,14 +3253,31 @@ export default function SuperAdminDashboard() {
       if (selectedMasterclassFilter !== "all") {
         const pId = p.masterclass_id || "current_live"
         const pTitle = (p.masterclass_title || "").toLowerCase()
+        let registeredList: string[] = [pId]
+        if (p.notes) {
+          try {
+            const parsed = typeof p.notes === "string" ? JSON.parse(p.notes) : p.notes
+            if (parsed && Array.isArray(parsed.registered_masterclasses)) {
+              registeredList = parsed.registered_masterclasses
+            }
+          } catch (_) {}
+        }
+        if (pId && !registeredList.includes(pId)) registeredList.push(pId)
+
         if (selectedMasterclassFilter === "current_live") {
-          if (pId !== "current_live" && !pTitle.includes(masterclassSession.title.toLowerCase())) {
-            return false
-          }
+          const liveTitleLower = (masterclassSession.title || "").toLowerCase()
+          const matchesLive = pId === "current_live" || pId === "mc_default" || !pId || registeredList.includes("current_live") || registeredList.includes("mc_default") || (liveTitleLower && pTitle.includes(liveTitleLower))
+          if (!matchesLive) return false
         } else {
-          const replay = masterclassReplays.find(r => r.id === selectedMasterclassFilter)
-          const replayTitle = (replay?.title || "").toLowerCase()
-          if (pId !== selectedMasterclassFilter && (!replayTitle || !pTitle.includes(replayTitle))) {
+          // Can be an upcoming session, a past session, or a replay
+          const targetSession = upcomingMasterclasses.find(s => s.id === selectedMasterclassFilter) ||
+                                pastMasterclasses.find(s => s.id === selectedMasterclassFilter) ||
+                                masterclassReplays.find(r => r.id === selectedMasterclassFilter)
+          const targetTitle = (targetSession?.title || "").toLowerCase()
+
+          const matchesId = registeredList.includes(selectedMasterclassFilter)
+          const matchesTitle = targetTitle && pTitle && (pTitle.includes(targetTitle) || targetTitle.includes(pTitle))
+          if (!matchesId && !matchesTitle) {
             return false
           }
         }
@@ -3211,7 +3293,7 @@ export default function SuperAdminDashboard() {
         (p.masterclass_title || "").toLowerCase().includes(q)
       )
     })
-  }, [masterclassParticipants, selectedMasterclassFilter, masterclassSearch, masterclassSession.title, masterclassReplays])
+  }, [masterclassParticipants, selectedMasterclassFilter, masterclassSearch, masterclassSession.title, upcomingMasterclasses, pastMasterclasses, masterclassReplays])
 
   // Helper ultra-sécurisé pour vérifier si un utilisateur est déjà inscrit à la session ciblée
   const isUserEnrolledInMasterclass = useCallback((email: string | null | undefined, targetSessionId: string) => {
@@ -7648,6 +7730,110 @@ export default function SuperAdminDashboard() {
               </div>
             )}
 
+            {/* Section Cron Job: Automatisation Totale des Rappels */}
+            <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-indigo-500/30 shadow-lg space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-500/20 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                      <Bot className="size-5" />
+                    </span>
+                    <div>
+                      <h3 className="font-heading text-base font-bold text-white flex items-center gap-2">
+                        <span>Automatisation des Rappels (Cron Job 100% Autonome)</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Actif 24/7
+                        </span>
+                      </h3>
+                      <p className="text-xs text-indigo-200/80 mt-0.5">
+                        Surveillance continue et envois programmés sans intervention humaine (via Vercel Cron toutes les heures).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled={runningMasterclassCron}
+                    onClick={handleTriggerMasterclassCron}
+                    className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-md disabled:opacity-50"
+                  >
+                    <RefreshCw className={`size-3.5 ${runningMasterclassCron ? "animate-spin" : ""}`} />
+                    <span>{runningMasterclassCron ? "Vérification en cours..." : "⚡ Tester la vérification Cron"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Badges / Explications de fonctionnement */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <div className="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <Clock className="size-3.5" />
+                    <span>1. Rappel J-2 (Dans 48h)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    Déclenché automatiquement 48h avant le direct avec le récapitulatif, la date et le lien d'intégration WhatsApp.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <div className="font-bold text-amber-400 flex items-center gap-1.5">
+                    <Zap className="size-3.5" />
+                    <span>2. Rappel H-1 (Dans 1 heure)</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    Déclenché automatiquement 1h avant le direct avec le lien direct Google Meet pour rejoindre la salle.
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                  <div className="font-bold text-sky-400 flex items-center gap-1.5">
+                    <ShieldCheck className="size-3.5" />
+                    <span>3. Protection Anti-Doublon</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    Chaque envoi est historisé dans les métadonnées de l'inscrit. Aucun apprenant ne reçoit deux fois le même email.
+                  </p>
+                </div>
+              </div>
+
+              {/* Affichage du résultat de la dernière exécution Cron */}
+              {masterclassCronResult && (
+                <div className="p-3.5 rounded-xl bg-slate-950/80 border border-indigo-500/30 text-xs space-y-2">
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="size-4" />
+                      Dernière exécution : {new Date(masterclassCronResult.executedAt || Date.now()).toLocaleTimeString("fr-FR")}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {masterclassCronResult.sessionsEvaluated} session(s) analysée(s)
+                    </span>
+                  </div>
+                  <p className="text-slate-200 text-xs font-medium">
+                    {masterclassCronResult.message || "Vérification Cron terminée."}
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      J-2 envoyés : <strong>{masterclassCronResult.remindersSent?.j_minus_2 || 0}</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      H-1 envoyés : <strong>{masterclassCronResult.remindersSent?.h_minus_1 || 0}</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                      Déjà envoyés (ignorés) : <strong>{masterclassCronResult.skippedAlreadySent || 0}</strong>
+                    </span>
+                    {masterclassCronResult.errors && masterclassCronResult.errors.length > 0 && (
+                      <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        Erreurs : <strong>{masterclassCronResult.errors.length}</strong>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Section B: Liste de Toutes les Masterclasses Programmées à Venir */}
             <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -7734,16 +7920,34 @@ export default function SuperAdminDashboard() {
                           </div>
 
                           <div className="flex items-center justify-between gap-2 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedMasterclassFilter(s.id)
-                                setActiveTab("masterclass_participants")
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-[10px] font-bold cursor-pointer"
-                            >
-                              Voir les inscrits
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedMasterclassFilter(s.id)
+                                  setActiveTab("masterclass_participants")
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-[10px] font-bold cursor-pointer"
+                              >
+                                Inscrits ({participantCount})
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTargetedEmailTarget(s.id)
+                                  setTargetedEmailType("reminder")
+                                  setTargetedEmailReminderType("j_minus_2")
+                                  setTargetedEmailSubject(`⏳ Dans 48h : Masterclass IA en Direct — ${s.title}`)
+                                  setTargetedEmailCustomMessage("")
+                                  setShowTargetedEmailModal(true)
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                                title="Envoyer un rappel manuel aux inscrits de cette session"
+                              >
+                                <Mail className="size-3" />
+                                <span>Rappeler</span>
+                              </button>
+                            </div>
 
                             <div className="flex items-center gap-1.5">
                               <button
@@ -8052,8 +8256,15 @@ export default function SuperAdminDashboard() {
                   <button
                     type="button"
                     onClick={() => {
-                      setTargetedEmailTarget(selectedMasterclassFilter === "all" ? "current_live" : selectedMasterclassFilter)
-                      setTargetedEmailSubject("")
+                      const target = selectedMasterclassFilter === "all" ? "current_live" : selectedMasterclassFilter
+                      setTargetedEmailTarget(target)
+                      const found = upcomingMasterclasses.find(s => s.id === target) ||
+                                    pastMasterclasses.find(s => s.id === target) ||
+                                    masterclassReplays.find(r => r.id === target)
+                      const tTitle = found?.title || masterclassSession.title
+                      setTargetedEmailType("reminder")
+                      setTargetedEmailReminderType("j_minus_2")
+                      setTargetedEmailSubject(`⏳ Dans 48h : Masterclass IA en Direct — ${tTitle}`)
                       setTargetedEmailCustomMessage("")
                       setShowTargetedEmailModal(true)
                     }}
@@ -8707,7 +8918,21 @@ export default function SuperAdminDashboard() {
                         </label>
                         <select
                           value={targetedEmailTarget}
-                          onChange={e => setTargetedEmailTarget(e.target.value)}
+                          onChange={e => {
+                            const newTarget = e.target.value
+                            setTargetedEmailTarget(newTarget)
+                            const found = upcomingMasterclasses.find(s => s.id === newTarget) ||
+                                          pastMasterclasses.find(s => s.id === newTarget) ||
+                                          masterclassReplays.find(r => r.id === newTarget)
+                            const tTitle = found?.title || masterclassSession.title
+                            if (targetedEmailType === "reminder") {
+                              setTargetedEmailSubject(targetedEmailReminderType === "h_minus_1"
+                                ? `🔴 EN DIRECT DANS 1 HEURE : ${tTitle}`
+                                : `⏳ Dans 48h : Masterclass IA en Direct — ${tTitle}`)
+                            } else if (targetedEmailType === "replay") {
+                              setTargetedEmailSubject(`📼 Replay disponible : ${tTitle}`)
+                            }
+                          }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-blue-500 font-bold"
                         >
                           <optgroup label="🔴 Sessions à Venir">
@@ -8754,7 +8979,9 @@ export default function SuperAdminDashboard() {
                             type="button"
                             onClick={() => {
                               setTargetedEmailType("reminder")
-                              setTargetedEmailSubject(`⏰ Rappel Masterclass : ${masterclassSession.title}`)
+                              setTargetedEmailSubject(targetedEmailReminderType === "h_minus_1"
+                                ? `🔴 EN DIRECT DANS 1 HEURE : ${chosenMasterclassTargetTitle}`
+                                : `⏳ Dans 48h : Masterclass IA en Direct — ${chosenMasterclassTargetTitle}`)
                             }}
                             className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
                               targetedEmailType === "reminder"
@@ -8770,7 +8997,7 @@ export default function SuperAdminDashboard() {
                             type="button"
                             onClick={() => {
                               setTargetedEmailType("replay")
-                              setTargetedEmailSubject(`📼 Replay disponible : ${masterclassSession.title}`)
+                              setTargetedEmailSubject(`📼 Replay disponible : ${chosenMasterclassTargetTitle}`)
                             }}
                             className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
                               targetedEmailType === "replay"
@@ -8799,6 +9026,47 @@ export default function SuperAdminDashboard() {
                           </button>
                         </div>
                       </div>
+
+                      {/* Sous-choix pour le rappel : J-2 vs H-1 */}
+                      {targetedEmailType === "reminder" && (
+                        <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
+                          <label className="text-[11px] font-bold text-emerald-900 block">
+                            Format du rappel à expédier :
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTargetedEmailReminderType("j_minus_2")
+                                setTargetedEmailSubject(`⏳ Dans 48h : Masterclass IA en Direct — ${chosenMasterclassTargetTitle}`)
+                              }}
+                              className={`p-2 rounded-lg text-xs font-bold border text-left transition cursor-pointer ${
+                                targetedEmailReminderType === "j_minus_2"
+                                  ? "bg-white border-emerald-600 text-emerald-900 shadow-xs"
+                                  : "bg-emerald-100/40 border-transparent text-emerald-700 hover:bg-white/60"
+                              }`}
+                            >
+                              <div className="font-extrabold text-[11px]">⏳ J-2 (48h avant)</div>
+                              <div className="text-[10px] text-slate-500 font-normal">Préparation + Lien WhatsApp</div>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTargetedEmailReminderType("h_minus_1")
+                                setTargetedEmailSubject(`🔴 EN DIRECT DANS 1 HEURE : ${chosenMasterclassTargetTitle}`)
+                              }}
+                              className={`p-2 rounded-lg text-xs font-bold border text-left transition cursor-pointer ${
+                                targetedEmailReminderType === "h_minus_1"
+                                  ? "bg-white border-emerald-600 text-emerald-900 shadow-xs"
+                                  : "bg-emerald-100/40 border-transparent text-emerald-700 hover:bg-white/60"
+                              }`}
+                            >
+                              <div className="font-extrabold text-[11px]">🔴 H-1 (1h avant)</div>
+                              <div className="text-[10px] text-slate-500 font-normal">Lien Google Meet direct</div>
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Subject */}
                       <div className="space-y-1">
@@ -8832,10 +9100,14 @@ export default function SuperAdminDashboard() {
                         <div className="font-bold text-slate-800">📌 Éléments automatiquement inclus dans cet email :</div>
                         <ul className="list-disc list-inside space-y-0.5">
                           <li>Prénom personnalisé de l'apprenant</li>
-                          <li>Titre de la session : <strong>{masterclassSession.title}</strong></li>
-                          {masterclassSession.dateDisplay && <li>Date : <strong>{masterclassSession.dateDisplay}</strong></li>}
+                          <li>Titre ciblé : <strong>{chosenMasterclassTargetTitle}</strong></li>
                           <li>Bouton d'accès direct <strong>Google Meet</strong></li>
                           <li>Bouton d'accès au <strong>Groupe WhatsApp des Apprenants</strong></li>
+                          {targetedEmailType === "reminder" && (
+                            <li className="text-emerald-700 font-bold">
+                              Format : {targetedEmailReminderType === "h_minus_1" ? "🔴 Rappel H-1 (début dans 1h)" : "⏳ Rappel J-2 (48h avant)"}
+                            </li>
+                          )}
                           <li>Signature officielle <strong>Alfred Dah &amp; LE GUIDE IA</strong></li>
                         </ul>
                       </div>

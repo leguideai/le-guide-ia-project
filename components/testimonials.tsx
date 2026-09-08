@@ -86,7 +86,7 @@ export function Testimonials() {
           <div className="space-y-3 text-left">
             <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
               <Sparkles className="size-3.5" />
-              RECOMMANDATIONS & AVIS APRENANTS
+              RECOMMANDATIONS & AVIS APPRENANTS
             </span>
             <p className="text-xs md:text-sm text-muted-foreground max-w-2xl">
               Retours d'expérience concrets de cadres, consultants et entrepreneurs formés et accompagnés.
