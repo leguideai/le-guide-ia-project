@@ -13,6 +13,16 @@ export const metadata: Metadata = {
     'Automatisation processus entreprise',
     'Gouvernance IA Afrique',
     'Formation ChatGPT collaborateurs',
+    'IA pour PME',
+    'IA pour grands groupes',
+    'Coaching IA dirigeants',
+    'Intégration IA entreprise',
+    'Google Workspace IA',
+    'Gemini entreprise',
+    'Copilot entreprise',
+    'Formation IA intra-entreprise',
+    'Conseil IA Afrique',
+    'Transformation digitale PME',
   ],
   alternates: {
     canonical: 'https://leguideai.com/entreprises',
@@ -25,7 +35,7 @@ export const metadata: Metadata = {
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/Logo%20avatar.png',
+        url: 'https://leguideai.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Formation IA Entreprises & Dirigeants — Le Guide IA',
@@ -39,7 +49,7 @@ export const metadata: Metadata = {
     title: 'Formation IA pour Entreprises & Dirigeants | Le Guide IA',
     description:
       'Accompagnement et formation IA sur mesure pour équipes et comités de direction. Développez l\'avantage concurrentiel de votre entreprise.',
-    images: ['https://leguideai.com/Logo%20avatar.png'],
+    images: ['https://leguideai.com/og-image.jpg'],
   },
 }
 

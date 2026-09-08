@@ -5,14 +5,22 @@ export const metadata: Metadata = {
   description:
     'Téléchargez gratuitement nos modèles de Business Plans adaptés à l\'Afrique et copiez 100+ prompts IA optimisés pour ChatGPT, Claude et Gemini par Le Guide IA.',
   keywords: [
-    'prompts IA',
-    'prompts ChatGPT',
-    'modèles business plan',
-    'business plan Burkina Faso',
-    'ressources IA gratuites',
-    'Claude prompts',
-    'Gemini prompts',
+    'Prompts IA',
+    'Prompts ChatGPT',
+    'Prompts Claude',
+    'Prompts Gemini',
+    'Modèles business plan',
+    'Business plan Burkina Faso',
+    'Ressources IA gratuites',
+    'Prompts IA gratuits',
+    'Templates IA',
     'Le Guide IA ressources',
+    'Prompts professionnels',
+    'Prompts marketing IA',
+    'Prompts RH IA',
+    'Prompts vente IA',
+    'Outils IA gratuits',
+    'Bibliothèque prompts IA',
   ],
   alternates: {
     canonical: 'https://leguideai.com/ressources',
@@ -25,7 +33,7 @@ export const metadata: Metadata = {
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/Logo%20avatar.png',
+        url: 'https://leguideai.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Ressources & Prompts IA – Le Guide IA',
@@ -39,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Ressources & Prompts IA Gratuits | Le Guide IA',
     description:
       'Téléchargez des modèles de Business Plans et copiez des prompts IA optimisés pour booster votre productivité.',
-    images: ['https://leguideai.com/Logo%20avatar.png'],
+    images: ['https://leguideai.com/og-image.jpg'],
   },
 }
 

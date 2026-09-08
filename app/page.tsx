@@ -1,5 +1,3 @@
-"use client"
-
 import { GridBackground } from "@/components/grid-background"
 import { Header } from "@/components/header"
 import { MasterclassTicker } from "@/components/masterclass-ticker"
@@ -23,6 +21,8 @@ export default function Page() {
 
       {/* Bandeau Défilant Masterclass Live (Actif uniquement si session programmée) */}
       <MasterclassTicker />
+
+      <h1 className="sr-only">Le Guide IA — Formations en Intelligence Artificielle avec Alfred Dah</h1>
 
       {/* 2. Vidéo VSL Haute Conversion */}
       <VslHeroVideo />
