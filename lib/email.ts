@@ -786,7 +786,8 @@ export async function sendMasterclassReminderEmail(
     instructor?: string
   },
   reminderType: 'j_minus_2' | 'h_minus_1' | 'custom',
-  customMessage?: string
+  customMessage?: string,
+  customSubject?: string
 ) {
   try {
     const resend = getResendClient()
@@ -817,6 +818,10 @@ export async function sendMasterclassReminderEmail(
       badgeText = `🔴 DIRECT DANS 60 MINUTES`
       mainHeading = `La Masterclass démarre dans 1 heure !`
       introText = `Préparez-vous ! La session interactive <strong>"${sessionTitle}"</strong> commence dans quelques instants sur Google Meet.`
+    }
+
+    if (customSubject && customSubject.trim()) {
+      subject = customSubject.trim()
     }
 
     const htmlContent = `
@@ -850,7 +855,7 @@ export async function sendMasterclassReminderEmail(
             <p>Bonjour <strong>${firstName}</strong>,</p>
             <p>${introText}</p>
             
-            ${customMessage ? `<div style="background-color: #1e293b; padding: 14px; border-radius: 8px; margin: 16px 0; border-left: 3px solid #10b981; font-size: 13px;">${customMessage}</div>` : ''}
+            ${customMessage ? `<div style="background-color: #1e293b; padding: 16px; border-radius: 10px; margin: 18px 0; border-left: 4px solid #10b981; font-size: 13px; line-height: 1.6; color: #f1f5f9; white-space: pre-wrap;">${customMessage}</div>` : ''}
 
             <div class="card-box">
               <strong style="color: #ffffff; font-size: 14px; display: block; margin-bottom: 8px;">📍 Informations du Direct :</strong>

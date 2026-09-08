@@ -116,13 +116,14 @@ export async function POST(req: Request) {
           testEmail.trim(),
           chosenSession
         )
-      } else if (emailType === "reminder" && !customMessage) {
+      } else if (emailType === "reminder") {
         result = await sendMasterclassReminderEmail(
           "Testeur Admin",
           testEmail.trim(),
           chosenSession,
           reminderType as any,
-          customMessage
+          customMessage,
+          `[TEST] ${emailSubject}`
         )
       } else {
         result = await sendMasterclassTargetedEmail({
@@ -321,13 +322,14 @@ export async function POST(req: Request) {
             r.email,
             chosenSession
           )
-        } else if (emailType === "reminder" && !customMessage) {
+        } else if (emailType === "reminder") {
           res = await sendMasterclassReminderEmail(
             r.name || "Apprenant",
             r.email,
             chosenSession,
             reminderType as any,
-            customMessage
+            customMessage,
+            emailSubject
           )
         } else {
           res = await sendMasterclassTargetedEmail({

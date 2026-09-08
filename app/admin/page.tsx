@@ -280,6 +280,136 @@ export default function SuperAdminDashboard() {
     return found?.title || masterclassSession.title
   }, [targetedEmailTarget, masterclassSession.title, upcomingMasterclasses, pastMasterclasses, masterclassReplays])
 
+  const getTargetSessionData = useCallback((targetId: string) => {
+    if (targetId === "all_platform_users") {
+      return {
+        title: masterclassSession.title || "Masterclass IA Interactive",
+        dateDisplay: masterclassSession.dateDisplay || "Ce Dimanche à 19h00 GMT",
+        instructor: masterclassSession.instructor || "Alfred Dah",
+        whatsappUrl: masterclassSession.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass",
+        meetUrl: masterclassSession.youtubeLiveUrl || "https://meet.google.com",
+        replayUrl: ""
+      }
+    }
+    if (targetId === "all_masterclasses") {
+      return {
+        title: "Masterclasses LE GUIDE IA",
+        dateDisplay: masterclassSession.dateDisplay || "Sessions Hebdomadaires",
+        instructor: masterclassSession.instructor || "Alfred Dah",
+        whatsappUrl: masterclassSession.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass",
+        meetUrl: masterclassSession.youtubeLiveUrl || "https://meet.google.com",
+        replayUrl: ""
+      }
+    }
+
+    const upcoming = upcomingMasterclasses.find(s => s.id === targetId)
+    if (upcoming) {
+      return {
+        title: upcoming.title || masterclassSession.title,
+        dateDisplay: upcoming.dateDisplay || (upcoming.scheduledAt ? new Date(upcoming.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : masterclassSession.dateDisplay || "Ce Dimanche à 19h00 GMT"),
+        instructor: upcoming.instructor || masterclassSession.instructor || "Alfred Dah",
+        whatsappUrl: upcoming.whatsappGroupUrl || masterclassSession.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass",
+        meetUrl: upcoming.youtubeLiveUrl || upcoming.meetUrl || masterclassSession.youtubeLiveUrl || "https://meet.google.com",
+        replayUrl: upcoming.replayUrl || ""
+      }
+    }
+
+    const past = pastMasterclasses.find(s => s.id === targetId)
+    if (past) {
+      return {
+        title: past.title,
+        dateDisplay: past.dateDisplay || (past.scheduledAt ? new Date(past.scheduledAt).toLocaleDateString("fr-FR") : "Session passée"),
+        instructor: past.instructor || "Alfred Dah",
+        whatsappUrl: past.whatsappGroupUrl || masterclassSession.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass",
+        meetUrl: past.youtubeLiveUrl || "https://meet.google.com",
+        replayUrl: past.replayUrl || past.youtubeUrl || ""
+      }
+    }
+
+    const replay = masterclassReplays.find(r => r.id === targetId)
+    if (replay) {
+      return {
+        title: replay.title,
+        dateDisplay: replay.dateDisplay || "Replay disponible",
+        instructor: replay.instructor || "Alfred Dah",
+        whatsappUrl: masterclassSession.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass",
+        meetUrl: "https://meet.google.com",
+        replayUrl: replay.youtubeUrl || replay.videoUrl || replay.url || ""
+      }
+    }
+
+    return {
+      title: masterclassSession.title || "Masterclass IA Interactive",
+      dateDisplay: masterclassSession.dateDisplay || "Ce Dimanche à 19h00 GMT",
+      instructor: masterclassSession.instructor || "Alfred Dah",
+      whatsappUrl: masterclassSession.whatsappGroupUrl || "https://chat.whatsapp.com/leguideai-masterclass",
+      meetUrl: masterclassSession.youtubeLiveUrl || "https://meet.google.com",
+      replayUrl: ""
+    }
+  }, [masterclassSession, upcomingMasterclasses, pastMasterclasses, masterclassReplays])
+
+  const getPredefinedEmailTemplate = useCallback((
+    type: "reminder" | "replay" | "custom",
+    reminderType: "j_minus_2" | "h_minus_1",
+    targetId: string
+  ) => {
+    const session = getTargetSessionData(targetId)
+    const title = session.title
+    const dateStr = session.dateDisplay
+    const instructor = session.instructor
+    const meetUrl = session.meetUrl
+    const whatsappUrl = session.whatsappUrl
+    const replayUrl = session.replayUrl || meetUrl
+
+    if (type === "reminder") {
+      if (reminderType === "h_minus_1") {
+        return {
+          subject: `🔴 EN DIRECT DANS 1 HEURE : ${title}`,
+          message: `C'est le grand moment ! La session démarre dans exactement 60 minutes.\n\n🎯 Thématique : ${title}\n👨‍🏫 Animé par : ${instructor}\n⏰ Heure de démarrage : ${dateStr}\n🎥 Lien direct Google Meet : ${meetUrl}\n💬 Groupe WhatsApp officiel : ${whatsappUrl}\n\nCliquez sur le lien Google Meet ci-dessus quelques minutes avant le démarrage pour vous installer confortablement.\n\nÀ tout de suite en direct !`
+        }
+      }
+      return {
+        subject: `⏳ Dans 48h : Masterclass IA en Direct — ${title}`,
+        message: `Bonjour et bienvenue !\n\nNous vous confirmons que votre session Masterclass « ${title} » aura lieu dans 48 heures.\n\n📅 Date & Heure : ${dateStr}\n👨‍🏫 Formateur : ${instructor}\n💻 Plateforme : Google Meet (Accès direct en direct)\n💬 Groupe WhatsApp des Apprenants : ${whatsappUrl}\n\nConsignes importantes pour bien vous préparer :\n1. Rejoignez impérativement le groupe WhatsApp ci-dessus pour recevoir les supports et poser vos questions en direct.\n2. Connectez-vous 5 à 10 minutes avant le début de la session afin de tester votre audio et micro.\n3. Munissez-vous d'un bloc-notes ou d'un ordinateur pour appliquer les cas pratiques présentés.\n\nNous avons hâte de vous retrouver en direct !`
+      }
+    }
+
+    if (type === "replay") {
+      return {
+        subject: `📼 Replay disponible & Ressources : ${title}`,
+        message: `Merci pour votre participation ou votre intérêt pour notre Masterclass « ${title} » animée par ${instructor}.\n\nL'enregistrement vidéo intégral ainsi que les ressources et supports présentés lors de la session sont désormais disponibles :\n\n🎥 Visionner le Replay : ${replayUrl}\n📚 Supports & Exercices : Disponibles sur votre espace membre Le Guide IA\n💬 Échanges & Questions : Partagez vos impressions et retours sur le groupe WhatsApp (${whatsappUrl})\n\nN'hésitez pas à revoir la session et à mettre en pratique les outils et astuces présentés.\n\nÀ très vite sur Le Guide IA !`
+      }
+    }
+
+    // type === "custom"
+    return {
+      subject: `📢 Message important : Masterclass — ${title}`,
+      message: `Bonjour à toutes et à tous,\n\nVoici une communication concernant la Masterclass « ${title} » (animée par ${instructor}).\n\n📅 Date : ${dateStr}\n💻 Accès direct : ${meetUrl}\n💬 Groupe WhatsApp : ${whatsappUrl}\n\n[Saisissez ici votre message spécifique, vos consignes pratiques ou vos annonces aux apprenants...]\n\nBien cordialement,\n${instructor} & L'équipe LE GUIDE IA`
+    }
+  }, [getTargetSessionData])
+
+  const handleOpenTargetedEmailModal = useCallback((targetId?: string, defaultType?: "reminder" | "replay" | "custom", defaultReminderType?: "j_minus_2" | "h_minus_1") => {
+    const target = targetId || (selectedMasterclassFilter === "all" ? "current_live" : selectedMasterclassFilter)
+    const type = defaultType || "reminder"
+    const remType = defaultReminderType || "j_minus_2"
+    setTargetedEmailTarget(target)
+    setTargetedEmailType(type)
+    setTargetedEmailReminderType(remType)
+    const tpl = getPredefinedEmailTemplate(type, remType, target)
+    setTargetedEmailSubject(tpl.subject)
+    setTargetedEmailCustomMessage(tpl.message)
+    setShowTargetedEmailModal(true)
+  }, [selectedMasterclassFilter, getPredefinedEmailTemplate])
+
+  // Pré-remplir automatiquement le contenu et l'objet dès l'ouverture de la modal si vide
+  useEffect(() => {
+    if (showTargetedEmailModal && (!targetedEmailCustomMessage || targetedEmailCustomMessage.trim() === "")) {
+      const tpl = getPredefinedEmailTemplate(targetedEmailType, targetedEmailReminderType, targetedEmailTarget)
+      setTargetedEmailSubject(tpl.subject)
+      setTargetedEmailCustomMessage(tpl.message)
+    }
+  }, [showTargetedEmailModal, targetedEmailType, targetedEmailReminderType, targetedEmailTarget, targetedEmailCustomMessage, getPredefinedEmailTemplate])
+
   const [isManualAddParticipantOpen, setIsManualAddParticipantOpen] = useState(false)
   const [manualParticipantForm, setManualParticipantForm] = useState({
     fullName: "",
@@ -7725,6 +7855,24 @@ export default function SuperAdminDashboard() {
                         <p className="text-[10px] font-bold text-slate-700">{platformInviteStatus}</p>
                       )}
                     </div>
+
+                    {/* Bouton de Rappel Manuel du Direct */}
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-emerald-900">
+                        <span>⏰ Rappeler les inscrits</span>
+                        <span className="text-[10px] font-extrabold text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200">
+                          {masterclassCounts[masterclassSession.id] || masterclassCounts.current_live || masterclassCounts.mc_default || 0} inscrits
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenTargetedEmailModal("current_live", "reminder", "j_minus_2")}
+                        className="w-full py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Mail className="size-3.5" />
+                        <span>Envoyer un rappel (J-2 ou H-1)</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -7933,14 +8081,7 @@ export default function SuperAdminDashboard() {
                               </button>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setTargetedEmailTarget(s.id)
-                                  setTargetedEmailType("reminder")
-                                  setTargetedEmailReminderType("j_minus_2")
-                                  setTargetedEmailSubject(`⏳ Dans 48h : Masterclass IA en Direct — ${s.title}`)
-                                  setTargetedEmailCustomMessage("")
-                                  setShowTargetedEmailModal(true)
-                                }}
+                                onClick={() => handleOpenTargetedEmailModal(s.id, "reminder", "j_minus_2")}
                                 className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
                                 title="Envoyer un rappel manuel aux inscrits de cette session"
                               >
@@ -8255,19 +8396,7 @@ export default function SuperAdminDashboard() {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      const target = selectedMasterclassFilter === "all" ? "current_live" : selectedMasterclassFilter
-                      setTargetedEmailTarget(target)
-                      const found = upcomingMasterclasses.find(s => s.id === target) ||
-                                    pastMasterclasses.find(s => s.id === target) ||
-                                    masterclassReplays.find(r => r.id === target)
-                      const tTitle = found?.title || masterclassSession.title
-                      setTargetedEmailType("reminder")
-                      setTargetedEmailReminderType("j_minus_2")
-                      setTargetedEmailSubject(`⏳ Dans 48h : Masterclass IA en Direct — ${tTitle}`)
-                      setTargetedEmailCustomMessage("")
-                      setShowTargetedEmailModal(true)
-                    }}
+                    onClick={() => handleOpenTargetedEmailModal()}
                     className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                     title="Envoyer un email ciblé aux apprenants de cette Masterclass"
                   >
@@ -8921,17 +9050,9 @@ export default function SuperAdminDashboard() {
                           onChange={e => {
                             const newTarget = e.target.value
                             setTargetedEmailTarget(newTarget)
-                            const found = upcomingMasterclasses.find(s => s.id === newTarget) ||
-                                          pastMasterclasses.find(s => s.id === newTarget) ||
-                                          masterclassReplays.find(r => r.id === newTarget)
-                            const tTitle = found?.title || masterclassSession.title
-                            if (targetedEmailType === "reminder") {
-                              setTargetedEmailSubject(targetedEmailReminderType === "h_minus_1"
-                                ? `🔴 EN DIRECT DANS 1 HEURE : ${tTitle}`
-                                : `⏳ Dans 48h : Masterclass IA en Direct — ${tTitle}`)
-                            } else if (targetedEmailType === "replay") {
-                              setTargetedEmailSubject(`📼 Replay disponible : ${tTitle}`)
-                            }
+                            const tpl = getPredefinedEmailTemplate(targetedEmailType, targetedEmailReminderType, newTarget)
+                            setTargetedEmailSubject(tpl.subject)
+                            setTargetedEmailCustomMessage(tpl.message)
                           }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-blue-500 font-bold"
                         >
@@ -8979,9 +9100,9 @@ export default function SuperAdminDashboard() {
                             type="button"
                             onClick={() => {
                               setTargetedEmailType("reminder")
-                              setTargetedEmailSubject(targetedEmailReminderType === "h_minus_1"
-                                ? `🔴 EN DIRECT DANS 1 HEURE : ${chosenMasterclassTargetTitle}`
-                                : `⏳ Dans 48h : Masterclass IA en Direct — ${chosenMasterclassTargetTitle}`)
+                              const tpl = getPredefinedEmailTemplate("reminder", targetedEmailReminderType, targetedEmailTarget)
+                              setTargetedEmailSubject(tpl.subject)
+                              setTargetedEmailCustomMessage(tpl.message)
                             }}
                             className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
                               targetedEmailType === "reminder"
@@ -8997,7 +9118,9 @@ export default function SuperAdminDashboard() {
                             type="button"
                             onClick={() => {
                               setTargetedEmailType("replay")
-                              setTargetedEmailSubject(`📼 Replay disponible : ${chosenMasterclassTargetTitle}`)
+                              const tpl = getPredefinedEmailTemplate("replay", targetedEmailReminderType, targetedEmailTarget)
+                              setTargetedEmailSubject(tpl.subject)
+                              setTargetedEmailCustomMessage(tpl.message)
                             }}
                             className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
                               targetedEmailType === "replay"
@@ -9013,7 +9136,9 @@ export default function SuperAdminDashboard() {
                             type="button"
                             onClick={() => {
                               setTargetedEmailType("custom")
-                              setTargetedEmailSubject(`📢 Message important : Masterclass IA`)
+                              const tpl = getPredefinedEmailTemplate("custom", targetedEmailReminderType, targetedEmailTarget)
+                              setTargetedEmailSubject(tpl.subject)
+                              setTargetedEmailCustomMessage(tpl.message)
                             }}
                             className={`p-2.5 rounded-xl border text-left font-bold transition-all cursor-pointer ${
                               targetedEmailType === "custom"
@@ -9038,7 +9163,9 @@ export default function SuperAdminDashboard() {
                               type="button"
                               onClick={() => {
                                 setTargetedEmailReminderType("j_minus_2")
-                                setTargetedEmailSubject(`⏳ Dans 48h : Masterclass IA en Direct — ${chosenMasterclassTargetTitle}`)
+                                const tpl = getPredefinedEmailTemplate("reminder", "j_minus_2", targetedEmailTarget)
+                                setTargetedEmailSubject(tpl.subject)
+                                setTargetedEmailCustomMessage(tpl.message)
                               }}
                               className={`p-2 rounded-lg text-xs font-bold border text-left transition cursor-pointer ${
                                 targetedEmailReminderType === "j_minus_2"
@@ -9053,7 +9180,9 @@ export default function SuperAdminDashboard() {
                               type="button"
                               onClick={() => {
                                 setTargetedEmailReminderType("h_minus_1")
-                                setTargetedEmailSubject(`🔴 EN DIRECT DANS 1 HEURE : ${chosenMasterclassTargetTitle}`)
+                                const tpl = getPredefinedEmailTemplate("reminder", "h_minus_1", targetedEmailTarget)
+                                setTargetedEmailSubject(tpl.subject)
+                                setTargetedEmailCustomMessage(tpl.message)
                               }}
                               className={`p-2 rounded-lg text-xs font-bold border text-left transition cursor-pointer ${
                                 targetedEmailReminderType === "h_minus_1"
@@ -9083,15 +9212,30 @@ export default function SuperAdminDashboard() {
 
                       {/* Custom Message Body */}
                       <div className="space-y-1">
-                        <label className="font-bold text-slate-700">
-                          Message personnalisé / Instructions supplémentaires
-                        </label>
+                        <div className="flex items-center justify-between">
+                          <label className="font-bold text-slate-700">
+                            Contenu du message (Pré-rempli avec les infos réelles) *
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const tpl = getPredefinedEmailTemplate(targetedEmailType, targetedEmailReminderType, targetedEmailTarget)
+                              setTargetedEmailSubject(tpl.subject)
+                              setTargetedEmailCustomMessage(tpl.message)
+                            }}
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
+                            title="Réinsérer le modèle type avec les informations de la session"
+                          >
+                            <RefreshCw className="size-2.5" />
+                            <span>Réinitialiser le modèle</span>
+                          </button>
+                        </div>
                         <textarea
-                          rows={4}
+                          rows={8}
                           value={targetedEmailCustomMessage}
                           onChange={e => setTargetedEmailCustomMessage(e.target.value)}
                           placeholder="Saisissez ici le texte de votre message ou vos consignes pratiques..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-blue-500 text-xs"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-blue-500 text-xs font-mono leading-relaxed"
                         />
                       </div>
 
