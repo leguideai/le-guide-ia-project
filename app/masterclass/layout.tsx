@@ -6,13 +6,21 @@ export const metadata: Metadata = {
     'Participez chaque dimanche à 1h30 de Masterclass IA interactive animée par Alfred Dah sur Google Meet. Démonstrations pratiques, cas réels, prompting et accès au groupe WhatsApp.',
   keywords: [
     'Masterclass IA gratuite',
+    'Masterclass intelligence artificielle',
     'Formation IA en direct',
+    'Formation IA gratuite',
     'Webinaire IA Afrique',
     'Google Meet IA direct',
     'Alfred Dah Masterclass',
     'Apprendre ChatGPT en direct',
     'Replays Masterclass IA',
     'Groupe WhatsApp apprenants IA',
+    'Formation IA live',
+    'Cours IA gratuit',
+    'Webinaire IA gratuit',
+    'Apprendre IA gratuitement',
+    'IA démonstration live',
+    'Masterclass IA hebdomadaire',
   ],
   alternates: {
     canonical: 'https://leguideai.com/masterclass',
@@ -25,7 +33,7 @@ export const metadata: Metadata = {
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/Logo%20avatar.png',
+        url: 'https://leguideai.com/og-masterclass.jpg',
         width: 1200,
         height: 630,
         alt: 'Masterclass IA Gratuite en Direct — Le Guide IA',
@@ -39,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Masterclass IA Gratuite en Direct | Le Guide IA',
     description:
       '1h30 de formation intensive et interactive en direct sur Google Meet chaque dimanche avec Alfred Dah. 100% gratuit.',
-    images: ['https://leguideai.com/Logo%20avatar.png'],
+    images: ['https://leguideai.com/og-masterclass.jpg'],
   },
 }
 

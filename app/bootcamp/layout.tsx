@@ -6,14 +6,24 @@ export const metadata: Metadata = {
     'Devenez autonome et hautement productif avec l\'intelligence artificielle. 6 sessions intensives en direct animées par Alfred Dah, cas pratiques professionnels, groupe WhatsApp privé et certificat officiel.',
   keywords: [
     'Bootcamp IA',
+    'Bootcamp intelligence artificielle',
     'Formation IA certifiante',
+    'Formation IA intensive',
     'Formation ChatGPT Afrique',
     'Prompt Engineering certifié',
-    'Formation intelligence artificielle Burkina Faso',
+    'Formation IA Burkina Faso',
     'Formation IA Côte d\'Ivoire',
+    'Formation IA Sénégal',
     'Certificat officiel IA',
     'Bootcamp IA Alfred Dah',
     'Automatisation IA travail',
+    'Bootcamp IA en ligne',
+    'Formation IA professionnels',
+    'Apprendre IA rapidement',
+    'Formation IA pratique',
+    'Bootcamp IA Afrique',
+    'Formation IA carrière',
+    'IA générative formation intensive',
   ],
   alternates: {
     canonical: 'https://leguideai.com/bootcamp',
@@ -26,7 +36,7 @@ export const metadata: Metadata = {
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/Logo%20avatar.png',
+        url: 'https://leguideai.com/og-bootcamp.jpg',
         width: 1200,
         height: 630,
         alt: 'Bootcamp IA & Carrière Certifiant — Le Guide IA',
@@ -40,7 +50,7 @@ export const metadata: Metadata = {
     title: 'Bootcamp IA & Carrière Certifiant | Le Guide IA',
     description:
       'Formation intensive en direct pour maîtriser ChatGPT, Claude, Gemini et l\'automatisation des tâches professionnelles. Certificat officiel.',
-    images: ['https://leguideai.com/Logo%20avatar.png'],
+    images: ['https://leguideai.com/og-bootcamp.jpg'],
   },
 }
 

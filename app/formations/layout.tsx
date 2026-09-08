@@ -8,10 +8,19 @@ export const metadata: Metadata = {
     'Catalogue formation IA',
     'Cours intelligence artificielle en ligne',
     'Formation IA certifiante Afrique',
-    'Apprendre l\'IA',
+    'Apprendre IA',
     'Parcours métiers IA',
     'Prompt engineering cours',
     'Certifications IA reconnues',
+    'Formation ChatGPT',
+    'Formation Claude IA',
+    'Formation Gemini',
+    'Formation IA débutant',
+    'Formation IA avancée',
+    'Modules IA en ligne',
+    'Cours IA pratique',
+    'Formation IA Afrique',
+    'Parcours IA certifiant',
   ],
   alternates: {
     canonical: 'https://leguideai.com/formations',
@@ -24,7 +33,7 @@ export const metadata: Metadata = {
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/Logo%20avatar.png',
+        url: 'https://leguideai.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Catalogue Formations IA — Le Guide IA',
@@ -38,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Catalogue des Formations IA Certifiantes | Le Guide IA',
     description:
       'Trouvez la formation IA adaptée à vos objectifs professionnels avec Le Guide IA.',
-    images: ['https://leguideai.com/Logo%20avatar.png'],
+    images: ['https://leguideai.com/og-image.jpg'],
   },
 }
 
