@@ -4512,7 +4512,6 @@ export default function SuperAdminDashboard() {
                       <option value="">Sélectionner un moyen (optionnel)</option>
                       <option value="Wave Mobile Money">Wave</option>
                       <option value="Orange Money">Orange Money</option>
-                      <option value="Moov Money">Moov Money</option>
                       <option value="Virement Bancaire">Virement Bancaire</option>
                       <option value="Espèces / Cash">Espèces / Cash</option>
                       <option value="Offert / Gratuit">Offert / Gratuit</option>
@@ -6361,7 +6360,6 @@ export default function SuperAdminDashboard() {
                         >
                           <option value="Wave Mobile Money">Wave</option>
                           <option value="Orange Money">Orange Money</option>
-                          <option value="Moov Money">Moov Money</option>
                           <option value="Virement Bancaire">Virement Bancaire</option>
                           <option value="Espèces / Cash">Espèces / Cash</option>
                           <option value="Offert / Gratuit">Offert / Gratuit</option>
@@ -11932,7 +11930,7 @@ export default function SuperAdminDashboard() {
                     <label className="text-xs font-bold text-slate-700">Méthode de Paiement</label>
                     <input
                       type="text"
-                      placeholder="Ex: Wave, Orange Money, Moov, Carte..."
+                      placeholder="Ex: Wave, Orange Money, Carte..."
                       value={paymentForm.method}
                       onChange={e => setPaymentForm({ ...paymentForm, method: e.target.value })}
                       className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"

@@ -159,17 +159,46 @@ export function TarifsClient() {
     setIsSubModalOpen(true)
   }
 
-  // Formatting helpers
+  // Helper to safely parse and clean any price field from DB or props
+  const parsePrice = (val: any, fallback: number): number => {
+    if (val === undefined || val === null || val === "" || val === "null" || val === "undefined") {
+      return fallback
+    }
+    if (typeof val === "number") {
+      return isNaN(val) || val <= 0 ? fallback : val
+    }
+    const cleaned = String(val).replace(/[^0-9]/g, "")
+    const parsed = parseInt(cleaned, 10)
+    return isNaN(parsed) || parsed <= 0 ? fallback : parsed
+  }
+
+  // Formatting helpers - strictly bulletproof against NaN
   const formatFCFA = (amount: number | string) => {
-    const num = typeof amount === "number" ? amount : parseInt(String(amount).replace(/\D/g, ""), 10) || 0
+    if (amount === undefined || amount === null) return "0 FCFA"
+    let num: number
+    if (typeof amount === "number") {
+      num = isNaN(amount) ? 0 : amount
+    } else {
+      const cleaned = String(amount).replace(/[^0-9]/g, "")
+      num = parseInt(cleaned, 10) || 0
+    }
+    if (num <= 0) return "0 FCFA"
     return `${num.toLocaleString("fr-FR")} FCFA`
   }
 
-  // Bootcamp prices
-  const proPromoPrice = activeBootcamp?.price ? Number(activeBootcamp.price) : 99000
-  const proOriginalPrice = activeBootcamp?.original_price ? Number(activeBootcamp.original_price) : 149000
-  const bizPromoPrice = businessBootcamp?.price ? Number(businessBootcamp.price) : 149000
-  const bizOriginalPrice = businessBootcamp?.original_price ? Number(businessBootcamp.original_price) : 199000
+  // Bootcamp prices (100% immune to NaN)
+  const proPromoPrice = parsePrice(activeBootcamp?.price, 99000)
+  const proOriginalPrice = parsePrice(activeBootcamp?.original_price, 149000)
+
+  const rawBizPrice = parsePrice(businessBootcamp?.price, 149000)
+  const rawBizOriginal = parsePrice(businessBootcamp?.original_price, 199000)
+  
+  const bizPromoPrice = rawBizOriginal > rawBizPrice 
+    ? rawBizPrice 
+    : (rawBizPrice <= 150000 ? rawBizPrice : 149000)
+  const bizOriginalPrice = rawBizOriginal > rawBizPrice 
+    ? rawBizOriginal 
+    : (rawBizPrice > 150000 ? rawBizPrice : 199000)
 
   // Comparison matrix items grouped by domain (comparing 3 core paid offerings)
   const COMPARISON_SECTIONS = [
@@ -290,7 +319,7 @@ export function TarifsClient() {
       domain: "Réseau, Communauté & Accompagnement",
       features: [
         {
-          name: "Groupe privé VIP WhatsApp restreint (Max 30 places)",
+          name: "Groupe privé VIP WhatsApp restreint",
           desc: "Échanges privilégiés de proximité entre membres actifs du Cercle IA",
           vip: true,
           pro: true,
@@ -356,24 +385,32 @@ export function TarifsClient() {
 
   const FAQ_ITEMS = [
     {
-      q: "Quels sont les modes de paiement acceptés pour les abonnements et formations ?",
-      a: "Nous acceptons les paiements directs par Mobile Money : Wave, Orange Money et Moov Money via notre numéro officiel unique +226 75 75 72 73 (bénéficiaire Sanson Alfred Dah). Pour les paiements internationaux et la diaspora, les cartes bancaires (Visa, Mastercard) sont prises en charge via Stripe. Pour les entreprises, nous émettons également des factures proforma pour virement bancaire."
+      q: "Comment fonctionnent les tarifs des Bootcamps (Offre Promo vs Tarif Standard) ?",
+      a: "Pour chaque cohorte, nous proposons deux niveaux de tarification transparents :\n• L'Offre Promo (avec compte à rebours) : Un tarif préférentiel temporaire (99 000 FCFA pour le Bootcamp Carrière et 149 000 FCFA pour le Bootcamp Business). Il ne s'agit pas d'un prix définitif : cette offre est soumise à une date limite stricte indiquée par le décompteur en temps réel sur la page.\n• Le Tarif Standard Officiel : C'est le prix régulier définitif de la formation (149 000 FCFA pour Carrière et 199 000 FCFA pour Business). Dès que le compte à rebours atteint zéro ou que les places allouées à la promo sont épuisées, les inscriptions basculent automatiquement et irréversiblement au tarif standard officiel."
     },
     {
-      q: "Comment fonctionne la déduction à 100% de l'Abonnement VIP sur le Bootcamp ?",
-      a: "C'est notre garantie sans risque : si vous souscrivez au Pass VIP (9 000 FCFA ou 29 000 FCFA) et décidez ensuite de rejoindre un Bootcamp IA dans un délai de 6 mois, la totalité des sommes déjà versées pour votre abonnement est automatiquement déduite du prix du Bootcamp. Votre abonnement ne vous coûte donc rien !"
-    },
-    {
-      q: "Quelle est la différence entre l'abonnement VIP et les Bootcamps ?",
-      a: "L'Abonnement Le Cercle IA est une adhésion en continu donnant un accès illimité à tous les Replays HD des masterclasses, à la bibliothèque des +100 prompts métiers et à 1h de coaching mensuel privé. Les Bootcamps sont des programmes intensifs en direct live (14h sur 6 sessions) avec apprentissage pas à pas, corrections de vos exercices par Alfred Dah, livrables concrets et certificat officiel vérifiable."
+      q: "Que se passe-t-il lorsque le compte à rebours de l'Offre Promo expire ?",
+      a: "Dès que le délai expire (chronomètre à 0j 0h 0m 0s), l'accès à la réduction de 50 000 FCFA est immédiatement clôturé. Le bouton de réservation bascule alors sur le Tarif Standard officiel (149 000 FCFA pour le Bootcamp Carrière et 199 000 FCFA pour le Bootcamp Business). Pour bénéficier du tarif préférentiel, il est indispensable de finaliser votre inscription avant l'échéance du décompte."
     },
     {
       q: "Quel Bootcamp choisir entre le parcours Carrière et le parcours Business ?",
-      a: "Le Bootcamp IA & Carrière (99 000 FCFA) s'adresse en priorité aux salariés, cadres, consultants et freelances souhaitant automatiser leurs tâches quotidiennes, gagner 2 à 3 heures par jour et valoriser leur profil sur le marché de l'emploi. Le Bootcamp IA & Business (149 000 FCFA) est conçu pour les entrepreneurs, fondateurs de startups et directeurs d'entreprises : il inclut la masterclass exécutive, l'audit de maturité IA de leur organisation, les business models IA et les workflows avancés de prospection commerciale."
+      a: "• Le Bootcamp IA & Carrière (actuellement à 99 000 FCFA en offre promo temporaire au lieu de 149 000 FCFA au tarif standard) s'adresse aux salariés, cadres, consultants et freelances souhaitant automatiser leurs tâches, gagner 2 à 3 heures par jour, maîtriser ChatGPT, Claude, Make, optimiser leur CV au format ATS et booster leur employabilité.\n• Le Bootcamp IA & Business (actuellement à 149 000 FCFA en offre promo temporaire au lieu de 199 000 FCFA au tarif standard) est conçu pour les entrepreneurs, fondateurs de startups et directeurs d'entreprises : il inclut la masterclass exécutive, l'audit de maturité IA de leur organisation, les business models IA, les workflows de prospection et un coaching stratégique personnalisé."
+    },
+    {
+      q: "Comment fonctionne la déduction à 100% de l'Abonnement VIP sur le Bootcamp ?",
+      a: "C'est notre garantie sans risque : si vous souscrivez au Pass VIP Le Cercle IA (9 000 FCFA pour 3 mois ou 29 000 FCFA pour 1 an) et décidez ensuite de rejoindre un Bootcamp IA dans un délai de 6 mois, la totalité des sommes déjà versées pour votre abonnement est intégralement déduite du prix de votre inscription au Bootcamp (qu'elle soit en offre promo ou au tarif standard). Votre abonnement ne vous coûte donc rien !"
+    },
+    {
+      q: "Quelle est la différence entre l'Abonnement Le Cercle IA et les Bootcamps certifiants ?",
+      a: "L'Abonnement Le Cercle IA est une adhésion continue en auto-formation : il donne un accès illimité à tous les Replays HD des masterclasses passées et futures, à la bibliothèque de plus de 100 prompts métiers et à 1h de coaching mensuel privé chaque dernier dimanche du mois. Les Bootcamps sont des formations intensives certifiantes de 14h en direct live (6 sessions interactives) avec apprentissage pas à pas, corrections directes de vos projets par Alfred Dah, livrables concrets et certificat officiel vérifiable."
+    },
+    {
+      q: "Quels sont les modes de paiement acceptés pour les abonnements et formations ?",
+      a: "Nous acceptons les paiements directs par Mobile Money : Wave et Orange Money via notre numéro officiel unique +226 75 75 72 73 (bénéficiaire Sanson Alfred Dah). Pour les paiements internationaux et la diaspora, les cartes bancaires (Visa, Mastercard) sont prises en charge via Stripe. Pour les entreprises, nous émettons également des factures proforma pour virement bancaire."
     },
     {
       q: "Les replays des sessions sont-ils limités dans le temps ?",
-      a: "Non ! Pour les participants aux Bootcamps, l'accès aux enregistrements complets de leur cohorte est garanti à vie dans leur Espace Membre. Pour les abonnés au Cercle IA, l'accès à tous les replays des masterclasses passées et à venir est illimité pendant toute la durée de validité de leur abonnement (3 mois ou 1 an)."
+      a: "Non ! Pour les participants inscrits aux Bootcamps, l'accès aux enregistrements complets de leur cohorte est garanti à vie dans leur Espace Membre. Pour les abonnés au Cercle IA, l'accès à tous les replays des masterclasses passées et à venir est illimité pendant toute la durée de validité de leur abonnement (3 mois ou 1 an)."
     },
     {
       q: "Est-ce qu'une facture officielle est délivrée pour ma société ?",
@@ -387,35 +424,33 @@ export function TarifsClient() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 border-b border-border/40 overflow-hidden">
+      <section className="relative pt-10 pb-8 sm:pt-14 sm:pb-10 md:pt-16 md:pb-12 px-4 sm:px-6 md:px-8 border-b border-border/40 overflow-hidden">
         {/* Glow ambient effects */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[320px] bg-gradient-to-tr from-primary/25 via-purple-600/15 to-[#D4AF37]/15 blur-[140px] pointer-events-none rounded-full" />
         
-        <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-5 relative z-10">
           
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
             <Sparkles className="size-3.5 animate-pulse text-amber-300" />
             <span>GRILLE TARIFAIRE OFFICIELLE · 3 FORMULES CLAIRES</span>
           </div>
 
-          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15] max-w-3xl mx-auto">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15] w-full text-center">
             Investissez dans vos compétences IA avec une <span className="bg-gradient-to-r from-primary via-purple-300 to-[#D4AF37] bg-clip-text text-transparent">transparence absolue</span>
           </h1>
 
-          <p className="text-sm sm:text-base md:text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Choisissez la formule adaptée à vos objectifs : boîte à outils continue avec l'abonnement VIP, ou formation intensive certifiante en direct live.
+          <p className="text-sm sm:text-base md:text-sm text-slate-300 w-full text-center max-w-2xl mx-auto leading-relaxed">
+            Choisissez la formule adaptée à vos objectifs : boîte à outils continue avec l'abonnement VIP, ou formation intensive certifiante en direct live avec tarif promotionnel temporaire ou tarif standard.
           </p>
-
-
 
         </div>
       </section>
 
       {/* Main 3 Pricing Cards Grid */}
-      <section className="py-4 sm:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto space-y-12" id="grille-tarifs">
+      <section className="py-8 sm:py-10 md:py-12 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto space-y-8" id="grille-tarifs">
         
         {/* Exact 3 Cards Grid */}
-        <div className="grid gap-8 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-stretch">
+        <div className="grid gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-stretch">
           
           {/* CARD 1: Abonnement « Le Cercle IA » avec Toggle des prix intégré */}
           <div className="rounded-3xl border-2 border-purple-500 bg-slate-950 p-6 sm:p-8 flex flex-col justify-between shadow-2xl shadow-purple-950/40 relative overflow-hidden">
@@ -475,9 +510,6 @@ export function TarifsClient() {
                     {subCycle === "3_months" ? "/ 3 mois" : "/ 1 an"}
                   </span>
                 </div>
-                <p className="text-xs text-amber-300 font-bold">
-                  {subCycle === "3_months" ? "Soit 3 000 FCFA / mois" : "Soit ~2 416 FCFA / mois • Économie 10 000 FCFA"}
-                </p>
               </div>
 
               {/* Feature List */}
@@ -534,7 +566,7 @@ export function TarifsClient() {
           {/* CARD 2: Bootcamp IA & Carrière (Certifiant Pro) */}
           <div className="rounded-3xl border-2 border-primary glow-blue bg-slate-950 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 bg-primary text-slate-950 text-[10px] font-black uppercase tracking-wider py-1.5 px-3.5 rounded-bl-xl shadow-sm">
-              LE PROGRAMME PHARE CERTIFIANT
+              LE PROGRAMME INTENSIF
             </div>
 
             <div className="space-y-6">
@@ -573,7 +605,7 @@ export function TarifsClient() {
                     }`}
                   >
                     <ShieldCheck className="size-3.5 shrink-0" />
-                    <span>Prix Fondateur</span>
+                    <span>Tarif Standard</span>
                   </button>
                 </div>
               </div>
@@ -591,22 +623,32 @@ export function TarifsClient() {
                       {formatFCFA(proOriginalPrice)}
                     </span>
                   )}
+                  <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
+                    proBootcampTier === "offer" && !isOfferExpired
+                      ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
+                      : "bg-slate-800 border-slate-700 text-slate-300"
+                  }`}>
+                    {proBootcampTier === "offer" && !isOfferExpired ? "Offre Promo Temporaire" : "Tarif Standard Officiel"}
+                  </span>
                 </div>
                 
                 {proBootcampTier === "offer" ? (
                   !isOfferExpired && timeLeft.days + timeLeft.hours + timeLeft.minutes + timeLeft.seconds > 0 ? (
-                    <div className="py-2.5 px-3 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-mono font-bold flex items-center gap-2">
-                      <Clock className="size-4 animate-pulse text-amber-400 shrink-0" />
-                      <span>Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong></span>
+                    <div className="space-y-1.5">
+                      <div className="py-2.5 px-3 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-mono font-bold flex items-center gap-2">
+                        <Clock className="size-4 animate-pulse text-amber-400 shrink-0" />
+                        <span>Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong></span>
+                      </div>
+                     
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 font-semibold">Offre promotionnelle échue</p>
+                    <div className="py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium flex items-center gap-2">
+                      <AlertCircle className="size-4 text-amber-400 shrink-0" />
+                      <span>Offre promo échue — Le tarif standard officiel de {formatFCFA(proOriginalPrice)} s'applique désormais.</span>
+                    </div>
                   )
                 ) : (
-                  <div className="py-2.5 px-3 rounded-xl bg-primary/10 border border-primary/30 text-sky-200 text-xs font-medium flex items-center gap-2">
-                    <ShieldCheck className="size-4 text-primary shrink-0" />
-                    <span>Tarif officiel garanti sans décompteur</span>
-                  </div>
+                  <></>
                 )}
               </div>
 
@@ -614,11 +656,11 @@ export function TarifsClient() {
               <div className="border-t border-border/60 pt-5 space-y-3 text-xs text-slate-200 text-left">
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">14h de formation en direct live</strong> (6 sessions interactives de 19h à 21h30 GMT)</span>
+                  <span className="font-medium"><strong className="text-white">14h de formation en direct live</strong> (6 sessions interactives)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Cas pratiques sur cas réels</strong> : ChatGPT, Claude 3.7, Gemini, Canva IA</span>
+                  <span className="font-medium"><strong className="text-white">Cas pratiques sur cas réels</strong> : ChatGPT, Claude, Gemini, Canva IA</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
@@ -661,8 +703,8 @@ export function TarifsClient() {
               >
                 <span>
                   {proBootcampTier === "offer" && !isOfferExpired
-                    ? `Réserver avec l'Offre (${formatFCFA(proPromoPrice)})`
-                    : `Réserver au Prix Fondateur (${formatFCFA(proOriginalPrice)})`}
+                    ? `Profiter de l'Offre Promo (${formatFCFA(proPromoPrice)})`
+                    : `S'inscrire au Tarif Standard (${formatFCFA(proOriginalPrice)})`}
                 </span>
                 <ArrowRight className="size-4" />
               </Link>
@@ -711,7 +753,7 @@ export function TarifsClient() {
                     }`}
                   >
                     <ShieldCheck className="size-3.5 shrink-0" />
-                    <span>Prix Fondateur</span>
+                    <span>Tarif Standard</span>
                   </button>
                 </div>
               </div>
@@ -729,22 +771,32 @@ export function TarifsClient() {
                       {formatFCFA(bizOriginalPrice)}
                     </span>
                   )}
+                  <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
+                    bizBootcampTier === "offer" && !isOfferExpired
+                      ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#ECC86B]"
+                      : "bg-slate-800 border-slate-700 text-slate-300"
+                  }`}>
+                    {bizBootcampTier === "offer" && !isOfferExpired ? "Offre Promo Temporaire" : "Tarif Standard Officiel"}
+                  </span>
                 </div>
                 
                 {bizBootcampTier === "offer" ? (
                   !isOfferExpired && timeLeft.days + timeLeft.hours + timeLeft.minutes + timeLeft.seconds > 0 ? (
-                    <div className="py-2.5 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F3E5AB] text-xs font-mono font-bold flex items-center gap-2">
-                      <Clock className="size-4 animate-pulse text-[#D4AF37] shrink-0" />
-                      <span>Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong></span>
+                    <div className="space-y-1.5">
+                      <div className="py-2.5 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F3E5AB] text-xs font-mono font-bold flex items-center gap-2">
+                        <Clock className="size-4 animate-pulse text-[#D4AF37] shrink-0" />
+                        <span>Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong></span>
+                      </div>
+                    
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 font-semibold">Offre promotionnelle échue</p>
+                    <div className="py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium flex items-center gap-2">
+                      <AlertCircle className="size-4 text-[#D4AF37] shrink-0" />
+                      <span>Offre promo échue — Le tarif standard officiel de {formatFCFA(bizOriginalPrice)} s'applique désormais.</span>
+                    </div>
                   )
                 ) : (
-                  <div className="py-2.5 px-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#ECC86B] text-xs font-medium flex items-center gap-2">
-                    <ShieldCheck className="size-4 text-[#D4AF37] shrink-0" />
-                    <span>Tarif Exécutif officiel sans décompteur</span>
-                  </div>
+                 <></>
                 )}
               </div>
 
@@ -799,8 +851,8 @@ export function TarifsClient() {
               >
                 <span>
                   {bizBootcampTier === "offer" && !isOfferExpired
-                    ? `Rejoindre avec l'Offre (${formatFCFA(bizPromoPrice)})`
-                    : `Rejoindre au Prix Fondateur (${formatFCFA(bizOriginalPrice)})`}
+                    ? `Profiter de l'Offre Promo (${formatFCFA(bizPromoPrice)})`
+                    : `S'inscrire au Tarif Standard (${formatFCFA(bizOriginalPrice)})`}
                 </span>
                 <ArrowRight className="size-4" />
               </Link>
@@ -836,18 +888,18 @@ export function TarifsClient() {
       </section>
 
       {/* Feature Comparison Matrix (Domain by Domain comparing the 3 cards) */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 md:px-8 bg-slate-950/70 border-t border-border/60">
-        <div className="max-w-7xl mx-auto space-y-10">
+      <section className="py-10 sm:py-12 md:py-14 px-4 sm:px-6 md:px-8 bg-slate-950/70 border-t border-border/60">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
           
-          <div className="space-y-3 text-center max-w-3xl mx-auto">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1 rounded-full border border-primary/20">
+          <div className="space-y-2 text-center w-full">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1 rounded-full border border-primary/20 inline-flex">
               TABLEAU COMPARATIF DÉTAILLÉ
             </span>
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-black text-white">
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-black text-white w-full text-center">
               Que recevez-vous concrètement selon votre formule ?
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
-              Comparez les services inclus par domaine d'expertise entre les 3 formules officielles.
+            <p className="text-sm sm:text-base text-slate-300 w-full text-center max-w-3xl mx-auto">
+              Comparez les services inclus par domaine d'expertise entre l'Abonnement Le Cercle IA et nos deux Bootcamps intensifs (Offre Promo temporaire vs Tarif Standard officiel).
             </p>
           </div>
 
@@ -861,13 +913,16 @@ export function TarifsClient() {
                       Services & Livrables Inclus
                     </th>
                     <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-purple-300 bg-purple-950/30">
-                      Pass Cercle IA
+                      <div>Pass Cercle IA</div>
+                      <div className="text-[10px] font-normal text-purple-300/80 mt-1">9 000 ou 29 000 FCFA</div>
                     </th>
                     <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-primary bg-primary/10">
-                      Bootcamp Carrière
+                      <div>Bootcamp Carrière</div>
+                      <div className="text-[10px] font-normal text-sky-300 mt-1">Promo: 99 000 · Std: 149 000 FCFA</div>
                     </th>
                     <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-[#ECC86B] bg-[#D4AF37]/10">
-                      Bootcamp Business
+                      <div>Bootcamp Business</div>
+                      <div className="text-[10px] font-normal text-amber-300 mt-1">Promo: 149 000 · Std: 199 000 FCFA</div>
                     </th>
                   </tr>
                 </thead>
@@ -940,16 +995,19 @@ export function TarifsClient() {
       </section>
 
       {/* Pricing FAQ */}
-      <section className="py-16 sm:py-20 px-4 sm:px-6 md:px-8 bg-card/5 border-t border-border/60">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <section className="py-10 sm:py-12 md:py-14 px-4 sm:px-6 md:px-8 bg-card/5 border-t border-border/60">
+        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
           
-          <div className="space-y-3 text-center">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-              QUESTIONS FRÉQUENTES
+          <div className="space-y-2 text-center w-full">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 inline-flex">
+              QUESTIONS FRÉQUENTES & MODALITÉS
             </span>
-            <h2 className="font-heading text-2xl sm:text-3xl font-black text-white">
-              Tout ce que vous devez savoir sur nos tarifs
+            <h2 className="font-heading text-2xl sm:text-3xl font-black text-white w-full text-center">
+              Tout ce que vous devez savoir sur nos tarifs & offres promotionnelles
             </h2>
+            <p className="text-xs sm:text-sm text-slate-300 w-full text-center max-w-2xl mx-auto leading-relaxed">
+              Clarifications détaillées sur les offres promo à durée limitée avec compte à rebours, les tarifs standards officiels et nos garanties.
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -980,7 +1038,7 @@ export function TarifsClient() {
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-border/40 pt-3">
+                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-border/40 pt-3 whitespace-pre-line">
                           {item.a}
                         </div>
                       </motion.div>
@@ -993,10 +1051,10 @@ export function TarifsClient() {
 
           <div className="p-6 rounded-2xl border border-primary/30 bg-primary/5 text-center space-y-3">
             <h4 className="font-heading text-sm font-bold text-white">
-              Une question spécifique sur votre mode de paiement ?
+              Une question spécifique sur les tarifs ou votre mode de paiement ?
             </h4>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              Notre équipe vous répond directement sur WhatsApp pour faciliter votre inscription.
+              Notre équipe vous répond directement sur WhatsApp pour vérifier la disponibilité de l'offre promotionnelle ou vous accompagner dans votre inscription.
             </p>
             <a
               href="https://wa.me/22675757273?text=Bonjour%20Alfred,%20j'ai%20une%20question%20sur%20les%20tarifs%20et%20le%20paiement"
