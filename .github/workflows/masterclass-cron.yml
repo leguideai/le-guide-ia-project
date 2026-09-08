@@ -1,0 +1,23 @@
+name: Masterclass Automatic Reminders Cron
+
+on:
+  schedule:
+    # S'exécute automatiquement toutes les heures (0 * * * *)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Permet aussi de déclencher manuellement depuis l'onglet Actions de GitHub
+
+jobs:
+  run-masterclass-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appeler l'endpoint de vérification des rappels Masterclass
+        run: |
+          echo "Exécution du Cron de rappel Masterclass..."
+          STATUS=$(curl -s -o response.json -w "%{http_code}" -X GET "https://leguideai.com/api/cron/masterclasses")
+          echo "Code HTTP de réponse: $STATUS"
+          cat response.json || true
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "Cron exécuté avec succès."
+          else
+            echo "Avertissement lors de l'appel du Cron: statut $STATUS"
+          fi
