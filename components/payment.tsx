@@ -424,9 +424,16 @@ export function Payment() {
 
                   {/* Payment Method select */}
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="paymentMethod" className="text-xs font-bold text-foreground/80">
-                      {t("payment.form.labelMethod")}
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="paymentMethod" className="text-xs font-bold text-foreground/80">
+                        {t("payment.form.labelMethod")}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <img src="/wave.png" alt="Wave" className="h-4 w-auto max-w-[45px] object-contain" />
+                        <span className="text-muted-foreground text-xs font-mono">•</span>
+                        <img src="/orange_money.png" alt="Orange Money" className="h-4 w-auto max-w-[45px] object-contain" />
+                      </div>
+                    </div>
                     <select
                       id="paymentMethod"
                       value={form.method}

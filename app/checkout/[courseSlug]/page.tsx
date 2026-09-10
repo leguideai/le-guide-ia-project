@@ -1019,8 +1019,15 @@ function CheckoutContent({ params }: PageProps) {
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <div className="size-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                        <Smartphone className="size-4" />
+                      <div className="flex items-center gap-2">
+                        <div className="size-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                          <Smartphone className="size-4" />
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 px-2 py-1 rounded-lg">
+                          <img src="/wave.png" alt="Wave" className="h-4 w-auto max-w-[50px] object-contain" />
+                          <span className="text-slate-600 text-xs font-mono">•</span>
+                          <img src="/orange_money.png" alt="Orange Money" className="h-4 w-auto max-w-[50px] object-contain" />
+                        </div>
                       </div>
                       {paymentMethod === "mobile_direct" && <CheckCircle2 className="size-4 text-primary" />}
                     </div>
@@ -1031,62 +1038,24 @@ function CheckoutContent({ params }: PageProps) {
                   </button>
 
                   Stripe Payment Option Commented Out
-                  
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("stripe")}
-                    className={`flex flex-col items-start gap-2 p-3.5 rounded-2xl border text-left transition-all ${
-                      paymentMethod === "stripe"
-                        ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary"
-                        : "border-border bg-card/50 hover:bg-secondary/60"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="size-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
-                        <CreditCard className="size-4" />
-                      </div>
-                      {paymentMethod === "stripe" && <CheckCircle2 className="size-4 text-primary" />}
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-foreground">Carte Internationale</div>
-                      <div className="text-[10px] text-muted-foreground">Visa, MasterCard, Amex</div>
-                    </div>
-                  </button>
-                 
-
-                  {ENABLE_PAYTECH && (
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("paytech")}
-                      className={`flex flex-col items-start gap-2 p-3.5 rounded-2xl border text-left transition-all ${
-                        paymentMethod === "paytech"
-                          ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary"
-                          : "border-border bg-card/50 hover:bg-secondary/60"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="size-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
-                          <Smartphone className="size-4" />
-                        </div>
-                        {paymentMethod === "paytech" && <CheckCircle2 className="size-4 text-primary" />}
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-foreground">PayTech Guichet</div>
-                        <div className="text-[10px] text-muted-foreground">Paiement automatisé</div>
-                      </div>
-                    </button>
-                  )}
                 </div>
               </div> */}
 
               {/* Mobile Money Direct Info Box & Ref Field */}
               {paymentMethod === "mobile_direct" && (
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-4">
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-primary flex items-center gap-1.5">
-                      <Smartphone className="size-4" />
-                      <span>Instructions de dépôt Mobile Money</span>
-                    </h4>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <h4 className="text-xs font-bold text-primary flex items-center gap-1.5">
+                        <Smartphone className="size-4" />
+                        <span>Instructions de dépôt Mobile Money</span>
+                      </h4>
+                      <div className="flex items-center gap-2 bg-card px-2.5 py-1 rounded-lg border border-primary/20">
+                        <img src="/wave.png" alt="Wave" className="h-4 w-auto max-w-[50px] object-contain" />
+                        <span className="text-muted-foreground text-xs font-mono">•</span>
+                        <img src="/orange_money.png" alt="Orange Money" className="h-4 w-auto max-w-[50px] object-contain" />
+                      </div>
+                    </div>
                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                       Effectuez le transfert de <strong className="text-foreground font-extrabold">{coursePriceFcfa}</strong> sur le numéro officiel unique ci-dessous (Wave, Orange Money) :
                     </p>

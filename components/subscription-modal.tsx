@@ -37,12 +37,14 @@ const OFFICIAL_BENEFICIARY = "Sanson Alfred Dah (LE GUIDE IA)"
 const MOBILE_MONEY_ACCOUNTS = {
   wave: {
     name: "Wave",
+    logo: "/wave.png",
     number: OFFICIAL_PAYMENT_NUMBER,
     beneficiary: OFFICIAL_BENEFICIARY,
     instructions: "Effectuez votre transfert via Wave vers le numéro officiel unique ci-dessous, puis renseignez l'ID de transaction ou joignez votre reçu."
   },
   orange_money: {
     name: "Orange Money",
+    logo: "/orange_money.png",
     number: OFFICIAL_PAYMENT_NUMBER,
     beneficiary: OFFICIAL_BENEFICIARY,
     instructions: "Effectuez le transfert Orange Money vers le numéro officiel unique ci-dessous, puis saisissez le code/référence reçu par SMS."
@@ -549,30 +551,36 @@ export function SubscriptionModal({
                   <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-4">
                     
                     {/* Choix de l'opérateur */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2.5">
                       {[
-                        { id: "wave", label: "Wave", color: "border-sky-500 text-sky-400" },
-                        { id: "orange_money", label: "Orange Money", color: "border-orange-500 text-orange-400" }
+                        { id: "wave", label: "Wave", logo: "/wave.png", color: "border-sky-500 text-sky-400 bg-sky-500/10", activeBorder: "border-sky-400 ring-1 ring-sky-400" },
+                        { id: "orange_money", label: "Orange Money", logo: "/orange_money.png", color: "border-orange-500 text-orange-400 bg-orange-500/10", activeBorder: "border-orange-400 ring-1 ring-orange-400" }
                       ].map(op => (
                         <button
                           key={op.id}
                           type="button"
                           onClick={() => setMobileOperator(op.id as any)}
-                          className={`py-2 px-2 rounded-xl text-center text-xs font-bold border transition-all cursor-pointer ${
+                          className={`py-2.5 px-3 rounded-xl flex items-center justify-center gap-2.5 text-xs font-bold border transition-all cursor-pointer ${
                             mobileOperator === op.id
-                              ? `bg-white/10 ${op.color} shadow-sm`
-                              : "border-slate-800 text-slate-400 hover:border-slate-700"
+                              ? `bg-white/10 ${op.activeBorder} shadow-sm`
+                              : "border-slate-800 text-slate-400 hover:border-slate-700 bg-slate-950/40"
                           }`}
                         >
-                          {op.label}
+                          <img src={op.logo} alt={op.label} className="h-5 w-auto max-w-[65px] object-contain shrink-0 rounded-xs" />
+                          <span>{op.label}</span>
                         </button>
                       ))}
                     </div>
 
                     {/* Instructions du transfert */}
                     <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2 text-xs">
-                      <div className="text-[11px] text-slate-400">
-                        {MOBILE_MONEY_ACCOUNTS[mobileOperator].instructions}
+                      <div className="flex items-start gap-2.5 text-[11px] text-slate-400">
+                        <img 
+                          src={MOBILE_MONEY_ACCOUNTS[mobileOperator].logo} 
+                          alt={MOBILE_MONEY_ACCOUNTS[mobileOperator].name} 
+                          className="h-4.5 w-auto max-w-[55px] object-contain shrink-0 mt-0.5" 
+                        />
+                        <span className="leading-relaxed">{MOBILE_MONEY_ACCOUNTS[mobileOperator].instructions}</span>
                       </div>
                       
                       <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900 border border-slate-800">
