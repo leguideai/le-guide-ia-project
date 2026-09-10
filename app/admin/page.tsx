@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
 import { formatVideoEmbedUrl, HeroVslVideo } from "@/components/vsl-hero-video"
 import { FormationItem, FormationCategory } from "@/lib/formations-data"
+import { RESOURCE_CATEGORIES } from "@/lib/resources-data"
 import { 
   ShieldAlert, ShieldCheck, Users, DollarSign, BookOpen, FileCheck, 
   Building2, Download, CheckCircle2, XCircle, Clock, Search, RefreshCw, 
@@ -81,12 +82,18 @@ interface BootcampSession {
 interface ResourceItem {
   id?: string
   title: string
-  description: string
+  description?: string
   category: string
-  access_level: "Gratuit" | "Membre Premium"
+  access_level?: "Gratuit" | "Membre Premium"
+  tier?: "Gratuit" | "Membre Premium"
   download_url?: string
+  file_url?: string
   prompt_text?: string
   downloads_count?: number
+  download_count?: number
+  slug?: string
+  type?: string
+  is_free?: boolean
 }
 
 interface LiveSession {
@@ -985,11 +992,18 @@ export default function SuperAdminDashboard() {
   const [resourceForm, setResourceForm] = useState<Partial<ResourceItem>>({
     title: "",
     description: "",
-    category: "",
+    category: RESOURCE_CATEGORIES[0],
     access_level: "Gratuit",
     prompt_text: "",
     download_url: ""
   })
+  const [selectedResourceIds, setSelectedResourceIds] = useState<string[]>([])
+  const [resourceSearch, setResourceSearch] = useState("")
+  const [resourceCategoryFilter, setResourceCategoryFilter] = useState("all")
+  const [resourceAccessFilter, setResourceAccessFilter] = useState("all")
+  const [resourceFormatFilter, setResourceFormatFilter] = useState<"all" | "text_only" | "file_only" | "bundle">("all")
+  const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null)
+  const [isBulkDeletingResources, setIsBulkDeletingResources] = useState(false)
 
   const [showLiveModal, setShowLiveModal] = useState(false)
   const [liveForm, setLiveForm] = useState<Partial<LiveSession>>({
@@ -2411,6 +2425,17 @@ export default function SuperAdminDashboard() {
   // Create or Update Resource Item
   async function handleSaveResource(e: React.FormEvent) {
     e.preventDefault()
+    if (!resourceForm.title?.trim()) {
+      alert("Le titre de la ressource est obligatoire.")
+      return
+    }
+    const hasText = Boolean(resourceForm.prompt_text && resourceForm.prompt_text.trim().length > 0)
+    const hasFile = Boolean(resourceForm.download_url && resourceForm.download_url.trim().length > 0)
+    if (!hasText && !hasFile) {
+      alert("Veuillez saisir un texte de prompt OU joindre un fichier (ou les deux) pour cette ressource.")
+      return
+    }
+
     setProcessingId("save_resource")
     try {
       const res = await fetch("/api/admin/resources", {
@@ -2423,11 +2448,86 @@ export default function SuperAdminDashboard() {
         showNotice(data.message || "Ressource enregistrée dans Supabase !")
         setShowResourceModal(false)
         fetchAllData()
+      } else {
+        alert(data.error || "Erreur lors de l'enregistrement de la ressource")
       }
     } catch (err) {
       alert("Erreur d'enregistrement ressource")
     } finally {
       setProcessingId(null)
+    }
+  }
+
+  // Delete a single resource
+  async function handleDeleteSingleResource(id: string, title?: string) {
+    const resourceName = title ? `« ${title} »` : "cette ressource"
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement ${resourceName} ?`)) return
+
+    setDeletingResourceId(id)
+    try {
+      const res = await fetch(`/api/admin/resources?id=${encodeURIComponent(id)}`, {
+        method: "DELETE"
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Erreur lors de la suppression")
+      }
+      showNotice(data.message || `Ressource ${resourceName} supprimée avec succès.`)
+      setResources(prev => prev.filter(r => r.id !== id))
+      setSelectedResourceIds(prev => prev.filter(i => i !== id))
+      if (showResourceModal && resourceForm.id === id) {
+        setShowResourceModal(false)
+      }
+    } catch (err: any) {
+      alert("Erreur: " + err.message)
+    } finally {
+      setDeletingResourceId(null)
+    }
+  }
+
+  // Delete multiple selected resources
+  async function handleDeleteSelectedResources() {
+    if (selectedResourceIds.length === 0) return
+    const count = selectedResourceIds.length
+    const confirmMessage = count === 1
+      ? "Êtes-vous sûr de vouloir supprimer définitivement la ressource sélectionnée ?"
+      : `Êtes-vous sûr de vouloir supprimer définitivement ces ${count} ressources sélectionnées ?`
+    if (!confirm(confirmMessage)) return
+
+    setIsBulkDeletingResources(true)
+    try {
+      const res = await fetch("/api/admin/resources", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedResourceIds })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Erreur lors de la suppression multiple")
+      }
+      showNotice(data.message || `${count} ressource(s) supprimée(s) avec succès.`)
+      setResources(prev => prev.filter(r => !r.id || !selectedResourceIds.includes(r.id)))
+      setSelectedResourceIds([])
+    } catch (err: any) {
+      alert("Erreur: " + err.message)
+    } finally {
+      setIsBulkDeletingResources(false)
+    }
+  }
+
+  function toggleSelectResource(id: string) {
+    setSelectedResourceIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  function toggleSelectAllResources(filteredList: ResourceItem[]) {
+    const validIds = filteredList.map(r => r.id).filter(Boolean) as string[]
+    const allSelected = validIds.length > 0 && validIds.every(id => selectedResourceIds.includes(id))
+    if (allSelected) {
+      setSelectedResourceIds(prev => prev.filter(id => !validIds.includes(id)))
+    } else {
+      setSelectedResourceIds(prev => Array.from(new Set([...prev, ...validIds])))
     }
   }
 
@@ -3517,6 +3617,30 @@ export default function SuperAdminDashboard() {
       )
     })
   }, [eligibleUnenrolledUsers, enrollSearchQuery])
+
+  // Filtrage des ressources (Prompts & Templates)
+  const filteredResources = useMemo(() => {
+    return resources.filter(r => {
+      if (resourceCategoryFilter !== "all" && r.category !== resourceCategoryFilter) return false
+      if (resourceAccessFilter !== "all" && r.access_level !== resourceAccessFilter) return false
+      
+      const hasText = Boolean(r.prompt_text && r.prompt_text.trim().length > 0)
+      const hasFile = Boolean(r.download_url && r.download_url.trim().length > 0)
+      if (resourceFormatFilter === "text_only" && (!hasText || hasFile)) return false
+      if (resourceFormatFilter === "file_only" && (hasText || !hasFile)) return false
+      if (resourceFormatFilter === "bundle" && (!hasText || !hasFile)) return false
+
+      if (resourceSearch.trim()) {
+        const q = resourceSearch.toLowerCase()
+        const matchTitle = (r.title || "").toLowerCase().includes(q)
+        const matchDesc = (r.description || "").toLowerCase().includes(q)
+        const matchCategory = (r.category || "").toLowerCase().includes(q)
+        const matchPrompt = (r.prompt_text || "").toLowerCase().includes(q)
+        if (!matchTitle && !matchDesc && !matchCategory && !matchPrompt) return false
+      }
+      return true
+    })
+  }, [resources, resourceCategoryFilter, resourceAccessFilter, resourceFormatFilter, resourceSearch])
 
   if (unauthorized) {
     return (
@@ -7166,61 +7290,290 @@ export default function SuperAdminDashboard() {
         {/* TAB 3: PROMPTS & RESOURCES CRUD */}
         {activeTab === "resources" && (
           <div className="space-y-6 animate-fadeIn">
-            <div className="flex justify-between items-center">
+            {/* Header & Description */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <p className="text-xs text-slate-500">Ajoutez des guides, templates et prompts réutilisables réservés aux membres.</p>
+                <h2 className="font-heading text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <BookOpen className="size-6 text-primary" />
+                  Bibliothèque de Prompts &amp; Templates
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Gérez, éditez ou supprimez vos guides, blueprints et prompts réutilisables réservés aux membres ({resources.length} au total).
+                </p>
               </div>
+
               <button
                 onClick={() => {
                   setResourceForm({
                     title: "",
                     description: "",
-                    category: "Productivity",
+                    category: RESOURCE_CATEGORIES[0],
                     access_level: "Gratuit",
                     prompt_text: "",
                     download_url: ""
                   })
                   setShowResourceModal(true)
                 }}
-                className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 flex items-center gap-2 shadow-lg shadow-primary/20 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer shrink-0"
               >
                 <Plus className="size-4" />
                 Ajouter une Ressource
               </button>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {resources.map(r => (
-                <div key={r.id || r.title} className="p-5 rounded-3xl border border-slate-200/90 bg-white shadow-xs backdrop-blur-xl flex flex-col justify-between space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                        {r.category || "Ressource"}
-                      </span>
-                      <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-md border ${
-                        r.access_level === "Gratuit" 
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                          : "bg-amber-50 text-amber-800 border-amber-200"
-                      }`}>
-                        {r.access_level || "Gratuit"}
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-slate-800 text-base leading-snug">{r.title}</h3>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.description}</p>
-                  </div>
+            {/* Toolbar: Search & Filters */}
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
+              <div className="relative flex-1 min-w-[220px]">
+                <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={resourceSearch}
+                  onChange={e => setResourceSearch(e.target.value)}
+                  placeholder="Rechercher par titre, description ou prompt..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-xs text-slate-800 outline-none focus:border-primary focus:bg-white transition-all placeholder:text-slate-400"
+                />
+                {resourceSearch && (
+                  <button
+                    onClick={() => setResourceSearch("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
 
-                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
-                    <span className="text-slate-500">{r.downloads_count || 0} téléchargements</span>
-                    <button
-                      onClick={() => { setResourceForm(r); setShowResourceModal(true) }}
-                      className="text-primary hover:underline font-bold"
-                    >
-                      Éditer
-                    </button>
-                  </div>
-                </div>
-              ))}
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={resourceCategoryFilter}
+                  onChange={e => setResourceCategoryFilter(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none focus:border-primary font-medium cursor-pointer max-w-[200px] truncate"
+                >
+                  <option value="all">Toutes les catégories</option>
+                  {RESOURCE_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={resourceFormatFilter}
+                  onChange={e => setResourceFormatFilter(e.target.value as any)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none focus:border-primary font-medium cursor-pointer"
+                >
+                  <option value="all">Tous les formats</option>
+                  <option value="text_only">📝 Texte seul (Prompt)</option>
+                  <option value="file_only">📁 Fichier seul (Document)</option>
+                  <option value="bundle">📦 Texte + Fichier joint</option>
+                </select>
+
+                <select
+                  value={resourceAccessFilter}
+                  onChange={e => setResourceAccessFilter(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none focus:border-primary font-medium cursor-pointer"
+                >
+                  <option value="all">Tous les accès</option>
+                  <option value="Gratuit">Gratuit</option>
+                  <option value="Membre Premium">Membre Premium</option>
+                </select>
+              </div>
             </div>
+
+            {/* Selection & Bulk Actions Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50/90 border border-slate-200/80 rounded-2xl px-4 py-2.5 text-xs">
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer select-none font-bold text-slate-700 hover:text-slate-900">
+                  <input
+                    type="checkbox"
+                    checked={
+                      filteredResources.length > 0 &&
+                      filteredResources.every(r => r.id && selectedResourceIds.includes(r.id))
+                    }
+                    onChange={() => toggleSelectAllResources(filteredResources)}
+                    className="rounded border-slate-300 text-primary focus:ring-primary size-4 cursor-pointer"
+                  />
+                  <span>Tout sélectionner ({filteredResources.length})</span>
+                </label>
+
+                {selectedResourceIds.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5 bg-primary/20 text-slate-900 font-extrabold px-2.5 py-0.5 rounded-lg text-[11px] border border-primary/30">
+                    <CheckCircle2 className="size-3.5 text-primary" />
+                    {selectedResourceIds.length} sélectionnée{selectedResourceIds.length > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+
+              {selectedResourceIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedResourceIds([])}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-bold transition-all text-xs cursor-pointer shadow-2xs"
+                  >
+                    Désélectionner
+                  </button>
+                  <button
+                    onClick={handleDeleteSelectedResources}
+                    disabled={isBulkDeletingResources}
+                    className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center gap-1.5 shadow-md shadow-rose-500/20 disabled:opacity-50 transition-all text-xs cursor-pointer"
+                  >
+                    {isBulkDeletingResources ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-3.5" />
+                    )}
+                    <span>Supprimer ({selectedResourceIds.length})</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Resources Cards Grid */}
+            {filteredResources.length === 0 ? (
+              <div className="p-12 text-center rounded-3xl border border-dashed border-slate-200 bg-white space-y-3">
+                <BookOpen className="size-10 text-slate-300 mx-auto" />
+                <h4 className="font-bold text-slate-700 text-sm">Aucune ressource trouvée</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  {resourceSearch || resourceCategoryFilter !== "all" || resourceAccessFilter !== "all"
+                    ? "Aucune ressource ne correspond à vos filtres actuels."
+                    : "Votre bibliothèque est actuellement vide. Cliquez sur « Ajouter une Ressource » pour en créer une."}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredResources.map(r => {
+                  const isSelected = r.id ? selectedResourceIds.includes(r.id) : false
+                  const isDeletingThis = r.id ? deletingResourceId === r.id : false
+                  const hasText = Boolean(r.prompt_text && r.prompt_text.trim().length > 0)
+                  const hasFile = Boolean(r.download_url && r.download_url.trim().length > 0)
+
+                  return (
+                    <div
+                      key={r.id || r.title}
+                      className={`p-5 rounded-3xl border transition-all flex flex-col justify-between space-y-4 relative ${
+                        isSelected
+                          ? "border-primary ring-2 ring-primary/30 bg-amber-50/20 shadow-md"
+                          : "border-slate-200/90 bg-white shadow-xs hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        {/* Top Badges & Checkbox */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {r.id && (
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleSelectResource(r.id!)}
+                                className="rounded border-slate-300 text-primary focus:ring-primary size-4 cursor-pointer mr-1"
+                              />
+                            )}
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                              {r.category || "Ressource"}
+                            </span>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                hasText && hasFile
+                                  ? "bg-purple-50 text-purple-700 border-purple-200"
+                                  : hasFile
+                                  ? "bg-blue-50 text-blue-700 border-blue-200"
+                                  : "bg-slate-100 text-slate-700 border-slate-200"
+                              }`}
+                            >
+                              {hasText && hasFile ? "📦 Texte + Fichier" : hasFile ? "📁 Fichier seul" : "📝 Texte seul"}
+                            </span>
+                          </div>
+
+                          <span
+                            className={`text-[10px] font-extrabold px-2.5 py-1 rounded-md border shrink-0 ${
+                              r.access_level === "Gratuit"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : "bg-amber-50 text-amber-800 border-amber-200"
+                            }`}
+                          >
+                            {r.access_level || "Gratuit"}
+                          </span>
+                        </div>
+
+                        {/* Title & Description */}
+                        <div>
+                          <h3 className="font-bold text-slate-800 text-base leading-snug">{r.title}</h3>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.description}</p>
+                        </div>
+
+                        {/* Prompt snippet preview if present */}
+                        {hasText && (
+                          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 text-[11px] font-mono text-slate-600 line-clamp-2">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 block mb-0.5 font-sans">Prompt :</span>
+                            {r.prompt_text}
+                          </div>
+                        )}
+
+                        {/* Attached file if present */}
+                        {hasFile && (
+                          <div className="flex items-center justify-between bg-blue-50/70 border border-blue-200/70 rounded-xl p-2.5 text-xs text-blue-900">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <FileText className="size-4 text-blue-600 shrink-0" />
+                              <span className="truncate font-medium text-[11px]">
+                                {r.download_url ? r.download_url.split("/").pop()?.split("?")[0] || "Fichier joint" : "Fichier joint"}
+                              </span>
+                            </div>
+                            {r.download_url && (
+                              <a
+                                href={r.download_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[11px] font-bold text-blue-700 hover:text-blue-900 underline shrink-0 ml-2"
+                              >
+                                Télécharger
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom stats & Actions */}
+                      <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                        <span className="text-slate-400 text-[11px] font-medium">
+                          {r.downloads_count || 0} téléchargements
+                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setResourceForm({
+                                ...r,
+                                access_level: (r.access_level || r.tier || (r.is_free ? "Gratuit" : "Membre Premium") || "Gratuit") as any,
+                                download_url: r.download_url || r.file_url || ""
+                              })
+                              setShowResourceModal(true)
+                            }}
+                            className="text-primary hover:text-primary/80 font-bold px-2.5 py-1.5 rounded-lg hover:bg-primary/10 transition-colors flex items-center gap-1 cursor-pointer"
+                            title="Modifier cette ressource"
+                          >
+                            <Edit3 className="size-3.5" />
+                            <span>Éditer</span>
+                          </button>
+
+                          {r.id && (
+                            <button
+                              onClick={() => handleDeleteSingleResource(r.id!, r.title)}
+                              disabled={isDeletingThis}
+                              className="text-rose-600 hover:text-rose-700 font-bold px-2.5 py-1.5 rounded-lg hover:bg-rose-50 border border-rose-200/60 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              title="Supprimer cette ressource"
+                            >
+                              {isDeletingThis ? (
+                                <Loader2 className="size-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="size-3.5" />
+                              )}
+                              <span>Supprimer</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {/* Resource Modal */}
             {showResourceModal && (
@@ -7229,65 +7582,113 @@ export default function SuperAdminDashboard() {
                 className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
               >
                 <div className="bg-white border border-slate-200/90 rounded-3xl shadow-2xl p-6 max-w-lg w-full space-y-4">
-                  <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <Sparkles className="size-5 text-primary" />
-                    Ajouter / Éditer une Ressource
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <Sparkles className="size-5 text-primary" />
+                      {resourceForm.id ? "Éditer la Ressource" : "Ajouter une Ressource"}
+                    </h3>
+                    <button
+                      onClick={() => setShowResourceModal(false)}
+                      className="size-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  </div>
 
                   <form onSubmit={handleSaveResource} className="space-y-3 text-xs">
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">Titre de la Ressource / Prompt</label>
+                      <label className="text-slate-600 block mb-1 font-bold">Titre de la Ressource / Prompt *</label>
                       <input
                         type="text"
                         required
-                        value={resourceForm.title}
+                        value={resourceForm.title || ""}
                         onChange={e => setResourceForm({ ...resourceForm, title: e.target.value })}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400"
+                        placeholder="Ex: Prompt Ultime Analyse Financière..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-slate-600 block mb-1 font-bold">Description courte</label>
+                      <textarea
+                        rows={2}
+                        value={resourceForm.description || ""}
+                        onChange={e => setResourceForm({ ...resourceForm, description: e.target.value })}
+                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 text-xs"
+                        placeholder="Brève description de ce que permet cette ressource..."
                       />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">Catégorie</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Catégorie *</label>
                         <select
-                          value={resourceForm.category}
+                          value={resourceForm.category || RESOURCE_CATEGORIES[0]}
                           onChange={e => setResourceForm({ ...resourceForm, category: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary cursor-pointer text-xs"
                         >
-                          <option value="Productivity">Productivité</option>
-                          <option value="Automation">Automation Make/n8n</option>
-                          <option value="Marketing">Marketing & Copywriting</option>
-                          <option value="Leadership">Leadership & Exec</option>
+                          {RESOURCE_CATEGORIES.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
                         </select>
                       </div>
                       <div>
-                        <label className="text-slate-600 block mb-1 font-bold">Niveau d'Accès</label>
+                        <label className="text-slate-600 block mb-1 font-bold">Niveau d'Accès *</label>
                         <select
-                          value={resourceForm.access_level}
+                          value={resourceForm.access_level || "Gratuit"}
                           onChange={e => setResourceForm({ ...resourceForm, access_level: e.target.value as any })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary cursor-pointer text-xs"
                         >
-                          <option value="Membre Premium">Membre Premium</option>
-                          <option value="Gratuit">Gratuit (Lead Gen)</option>
+                          <option value="Gratuit">Gratuit (Lead Gen / Découverte)</option>
+                          <option value="Membre Premium">Membre Premium (VIP)</option>
                         </select>
                       </div>
                     </div>
 
+                    {/* Format indicator badge */}
+                    {(() => {
+                      const formHasText = Boolean(resourceForm.prompt_text && resourceForm.prompt_text.trim().length > 0)
+                      const formHasFile = Boolean(resourceForm.download_url && resourceForm.download_url.trim().length > 0)
+                      return (
+                        <div className={`p-2.5 rounded-xl border text-xs flex items-center justify-between ${
+                          formHasText && formHasFile
+                            ? "bg-purple-50 border-purple-200 text-purple-800"
+                            : formHasFile
+                            ? "bg-blue-50 border-blue-200 text-blue-800"
+                            : formHasText
+                            ? "bg-amber-50 border-amber-200 text-amber-800"
+                            : "bg-slate-100 border-slate-200 text-slate-500"
+                        }`}>
+                          <span className="font-medium">Type de ressource détecté :</span>
+                          <span className="font-extrabold">
+                            {formHasText && formHasFile && "📦 Pack complet (Prompt + Fichier joint)"}
+                            {formHasText && !formHasFile && "📝 Prompt seul (Texte copiable)"}
+                            {!formHasText && formHasFile && "📁 Document seul (Fichier à télécharger)"}
+                            {!formHasText && !formHasFile && "⚠️ Saisir un Texte OU joindre un Fichier requis"}
+                          </span>
+                        </div>
+                      )
+                    })()}
+
                     <div>
-                      <label className="text-slate-600 block mb-1 font-bold">Texte du Prompt Parfait</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-slate-600 font-bold">Texte du Prompt (Optionnel si fichier joint)</label>
+                        <span className="text-[10px] text-slate-400">Pour ChatGPT, Claude, Gemini</span>
+                      </div>
                       <textarea
                         rows={3}
-                        value={resourceForm.prompt_text}
+                        value={resourceForm.prompt_text || ""}
                         onChange={e => setResourceForm({ ...resourceForm, prompt_text: e.target.value })}
-                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-500 font-mono text-[11px]"
+                        className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
+                        placeholder="Ex: Tu es un consultant senior en stratégie d'entreprise..."
                       />
                     </div>
 
                     <FileUploadField
-                      label="Fichier à Télécharger (PDF, DOCX, Blueprint)"
+                      label="Fichier joint / Modèle à Télécharger (Optionnel si prompt fourni)"
                       value={(resourceForm as any).download_url || ""}
                       onChange={url => setResourceForm({ ...resourceForm, download_url: url })}
-                      accept=".pdf,.doc,.docx,.json,.xlsx,.zip,application/*"
+                      accept=".pdf,.doc,.docx,.json,.xlsx,.zip,.pptx,application/*"
                       bucket="resources-files"
                       folder="documents"
                       placeholder="https://... ou téléversez le document"
@@ -7295,20 +7696,42 @@ export default function SuperAdminDashboard() {
                       hint="Formats supportés : PDF, DOCX, JSON (Blueprint Make.com), XLSX, ZIP"
                     />
 
-                    <div className="flex gap-2 pt-3 border-t border-slate-200">
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-200">
+                      {resourceForm.id && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (resourceForm.id) {
+                              handleDeleteSingleResource(resourceForm.id, resourceForm.title)
+                            }
+                          }}
+                          disabled={deletingResourceId === resourceForm.id}
+                          className="px-3.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold flex items-center gap-1.5 transition-colors cursor-pointer text-xs disabled:opacity-50"
+                          title="Supprimer définitivement cette ressource"
+                        >
+                          {deletingResourceId === resourceForm.id ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="size-3.5" />
+                          )}
+                          <span>Supprimer</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => setShowResourceModal(false)}
-                        className="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-700 font-bold hover:bg-slate-200"
+                        className="flex-1 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors text-xs cursor-pointer"
                       >
                         Annuler
                       </button>
+
                       <button
                         type="submit"
                         disabled={processingId === "save_resource"}
-                        className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-bold hover:opacity-90"
+                        className="flex-1 py-2.5 rounded-xl bg-primary text-slate-950 font-bold hover:opacity-90 transition-opacity text-xs cursor-pointer disabled:opacity-50"
                       >
-                        Enregistrer
+                        {processingId === "save_resource" ? "Enregistrement..." : "Enregistrer"}
                       </button>
                     </div>
                   </form>

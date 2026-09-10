@@ -756,15 +756,18 @@ function FormationsContent() {
                         onClick={() => setPaymentMethod("wave")}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           paymentMethod === "wave"
-                            ? "bg-primary/10 border-primary text-white shadow-md ring-1 ring-primary"
+                            ? "bg-sky-500/10 border-sky-400 text-white shadow-md ring-1 ring-sky-400"
                             : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-bold text-xs text-white">Wave</span>
-                          {paymentMethod === "wave" && <CheckCircle2 className="size-4 text-primary" />}
+                          <div className="flex items-center gap-2">
+                            <img src="/wave.png" alt="Wave" className="h-5 w-auto max-w-[65px] object-contain shrink-0 rounded-xs" />
+                            <span className="font-bold text-xs text-white">Wave</span>
+                          </div>
+                          {paymentMethod === "wave" && <CheckCircle2 className="size-4 text-sky-400" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-1">Mobile Money</span>
+                        <span className="text-[10px] text-slate-400 mt-1.5">Mobile Money Direct</span>
                       </button>
 
                       {/* Orange Money */}
@@ -773,15 +776,18 @@ function FormationsContent() {
                         onClick={() => setPaymentMethod("orange_money")}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           paymentMethod === "orange_money"
-                            ? "bg-primary/10 border-primary text-white shadow-md ring-1 ring-primary"
+                            ? "bg-orange-500/10 border-orange-400 text-white shadow-md ring-1 ring-orange-400"
                             : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-bold text-xs text-white">Orange Money</span>
-                          {paymentMethod === "orange_money" && <CheckCircle2 className="size-4 text-primary" />}
+                          <div className="flex items-center gap-2">
+                            <img src="/orange_money.png" alt="Orange Money" className="h-5 w-auto max-w-[65px] object-contain shrink-0 rounded-xs" />
+                            <span className="font-bold text-xs text-white">Orange Money</span>
+                          </div>
+                          {paymentMethod === "orange_money" && <CheckCircle2 className="size-4 text-orange-400" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-1">Mobile Money</span>
+                        <span className="text-[10px] text-slate-400 mt-1.5">Mobile Money Direct</span>
                       </button>
 
                       {/* Carte Bancaire / Stripe (Commenté) */}
@@ -810,8 +816,12 @@ function FormationsContent() {
                   {paymentMethod !== "stripe" && (
                     <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <Smartphone className="size-4 text-primary" />
+                        <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                          <img 
+                            src={paymentMethod === "wave" ? "/wave.png" : "/orange_money.png"} 
+                            alt={paymentMethod === "wave" ? "Wave" : "Orange Money"} 
+                            className="h-4.5 w-auto max-w-[55px] object-contain shrink-0" 
+                          />
                           <span>Instructions de transfert ({paymentMethod === "wave" ? "Wave" : "Orange Money"}) :</span>
                         </h4>
                         <p className="text-[11px] text-slate-300 leading-relaxed">

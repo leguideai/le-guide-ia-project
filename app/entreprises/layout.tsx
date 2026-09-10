@@ -1,10 +1,15 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Formation IA pour Entreprises & Dirigeants | Transformation Digitale B2B',
+  title: 'Formation IA, Développement Web & Mobile pour Entreprises | Solutions B2B',
   description:
-    'Accompagnement stratégique et formation sur mesure des équipes et cadres dirigeants pour intégrer l\'intelligence artificielle dans vos opérations. Audit de maturité IA, cas d\'usage métiers et gains mesurables de productivité.',
+    'Solutions digitales B2B par Le Guide IA : Développement de sites web modernes et applications mobiles iOS & Android sur-mesure, formations intra-entreprise en intelligence artificielle, audits de maturité IA et automatisation des processus.',
   keywords: [
+    'Développement site web entreprise',
+    'Développement application mobile entreprise',
+    'Création application mobile iOS Android',
+    'Développement web sur mesure Afrique',
+    'Refonte site web entreprise',
     'Formation IA entreprise',
     'Formation IA dirigeants',
     'Transformation digitale IA Afrique',
