@@ -3,25 +3,40 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
-import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn, Crown, Clock } from "lucide-react"
+import { Search, Copy, Check, Download, FileText, Sparkles, BookOpen, Lock, LogIn, Crown, Clock, Filter, Layers } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { Header } from "@/components/header"
 import { TabbedCourses } from "@/components/tabbed-courses"
 import { CtaFooter } from "@/components/cta-footer"
 import { GridBackground } from "@/components/grid-background"
 import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
-import { resourcesData, ResourceItem } from "@/lib/resources-data"
+import { resourcesData, ResourceItem, RESOURCE_CATEGORIES } from "@/lib/resources-data"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ResourceOptinModal } from "@/components/resource-optin-modal"
 import { SubscriptionModal } from "@/components/subscription-modal"
 import { supabase } from "@/lib/supabase"
 
+function getFileInfo(url?: string) {
+  if (!url) return { name: "Document joint", ext: "FICHIER" }
+  try {
+    const clean = url.split("?")[0]
+    const rawName = clean.split("/").pop() || "Document"
+    const parts = rawName.split(".")
+    const ext = parts.length > 1 ? parts.pop()?.toUpperCase() || "DOC" : "DOC"
+    const readableName = decodeURIComponent(parts.join(".")).replace(/^\d+[-_]/, "").replace(/[-_]/g, " ")
+    return { name: readableName || "Document prêt à l'emploi", ext }
+  } catch {
+    return { name: "Document joint", ext: "DOC" }
+  }
+}
+
 export function RessourcesClient() {
   const router = useRouter()
   const { t, language } = useLanguage()
   const [search, setSearch] = useState("")
-  const [activeFilter, setActiveFilter] = useState<'all' | 'prompt' | 'business-plan'>('all')
+  const [formatFilter, setFormatFilter] = useState<'all' | 'prompt' | 'file' | 'bundle' | 'business-plan'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   // Auth & Subscription unlock state
@@ -89,22 +104,57 @@ export function RessourcesClient() {
     })
   }
 
-  const handleAction = (item: ResourceItem, title: string, content: string) => {
-    if (!currentUser) {
-      router.push("/login?redirect=/ressources")
-      return
+  // Handle prompt copying with access checks
+  const handleCopyPrompt = (item: ResourceItem, text: string) => {
+    const isFree = item.tier === "Gratuit" || (item.tier !== "Membre Premium" && item.tier !== "VIP")
+
+    // Only premium/VIP resources require authentication and active VIP subscription
+    if (!isFree) {
+      if (!currentUser) {
+        router.push("/login?redirect=/ressources")
+        return
+      }
+      if (!isUnlocked) {
+        setShowSubscriptionModal(true)
+        return
+      }
     }
 
-    if (!isUnlocked) {
-      setShowSubscriptionModal(true)
-      return
+    executeCopy(item.id, text)
+  }
+
+  // Handle file downloading with direct URL or fallback
+  const handleDownloadFile = (item: ResourceItem) => {
+    const isFree = item.tier === "Gratuit" || (item.tier !== "Membre Premium" && item.tier !== "VIP")
+
+    // Only premium/VIP resources require authentication and active VIP subscription
+    if (!isFree) {
+      if (!currentUser) {
+        router.push("/login?redirect=/ressources")
+        return
+      }
+      if (!isUnlocked) {
+        setShowSubscriptionModal(true)
+        return
+      }
     }
 
-    if (item.type === 'prompt') {
-      executeCopy(item.id, content)
+    if (item.fileUrl) {
+      window.open(item.fileUrl, "_blank", "noopener,noreferrer")
     } else {
-      const waUrl = `https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le modèle de Business Plan complet pour le projet : " + title)}`
+      const title = item.title[language] || item.title.fr
+      const waUrl = `https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le document/modèle gratuit pour la ressource : " + title)}`
       window.open(waUrl, "_blank", "noopener,noreferrer")
+    }
+  }
+
+  const handleAction = (item: ResourceItem, title: string, content: string) => {
+    if (item.hasText && !item.hasFile) {
+      handleCopyPrompt(item, content)
+    } else if (item.hasFile && !item.hasText) {
+      handleDownloadFile(item)
+    } else {
+      handleCopyPrompt(item, content)
     }
   }
 
@@ -141,39 +191,66 @@ export function RessourcesClient() {
 
   // Strict mapping directly from Supabase table 'resources'
   const currentResourcesMap: ResourceItem[] = dbResources.map((r: any) => {
-    const rawType = (r.type || "Prompt").toLowerCase()
-    const itemType: 'prompt' | 'business-plan' | 'exercise' = 
-      rawType.includes("plan") || rawType.includes("document") 
-        ? "business-plan" 
-        : rawType.includes("exercice") || rawType.includes("exercise")
-        ? "exercise"
-        : "prompt"
+    const promptText = (r.prompt_text || r.content || "").trim()
+    const rawFileUrl = (r.download_url || r.file_url || "").trim()
+    const hasText = promptText.length > 0
+    const hasFile = rawFileUrl.length > 0
+    const category = r.category || "Autre"
+    const catLower = category.toLowerCase()
+
+    let itemType: 'prompt' | 'business-plan' | 'file' | 'bundle' = 'prompt'
+    if (catLower.includes("business plan") || catLower.includes("plan d'affaires")) {
+      itemType = "business-plan"
+    } else if (hasText && hasFile) {
+      itemType = "bundle"
+    } else if (!hasText && hasFile) {
+      itemType = "file"
+    } else {
+      itemType = "prompt"
+    }
 
     return {
       id: r.id,
       type: itemType,
       title: { fr: r.title, en: r.title },
-      desc: { fr: r.description || r.category || "Ressource certifiée Le Guide IA", en: r.description || r.category || "Ressource certifiée" },
-      content: { fr: r.prompt_text || r.content || "", en: r.prompt_text || r.content || "" },
-      fileUrl: r.file_url || r.download_url || undefined,
-      sector: r.category ? { fr: r.category, en: r.category } : undefined,
-      tier: r.tier || r.access_level || "VIP"
+      desc: { fr: r.description || category || "Ressource certifiée Le Guide IA", en: r.description || category || "Ressource certifiée" },
+      content: { fr: promptText, en: promptText },
+      fileUrl: rawFileUrl || undefined,
+      downloadUrl: rawFileUrl || undefined,
+      sector: { fr: category, en: category },
+      tier: r.access_level || r.tier || "Gratuit",
+      hasText,
+      hasFile,
+      downloadsCount: r.downloads_count || 0
     }
   })
 
   // Filter & Search logic
   const filteredResources = currentResourcesMap.filter((item) => {
-    const matchesFilter = activeFilter === 'all' || item.type === activeFilter
+    // 1. Format Filter
+    if (formatFilter === 'prompt' && (!item.hasText || item.hasFile)) return false
+    if (formatFilter === 'file' && (item.hasText || !item.hasFile)) return false
+    if (formatFilter === 'bundle' && (!item.hasText || !item.hasFile)) return false
+    if (formatFilter === 'business-plan' && item.type !== 'business-plan') return false
+
+    // 2. Category Filter
+    if (selectedCategory !== 'all') {
+      const itemCat = (item.sector?.fr || "").toLowerCase()
+      if (itemCat !== selectedCategory.toLowerCase()) return false
+    }
+
+    // 3. Search text
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      const titleText = (item.title[language] || item.title.fr || "").toLowerCase()
+      const descText = (item.desc[language] || item.desc.fr || "").toLowerCase()
+      const contentText = (item.content[language] || item.content.fr || "").toLowerCase()
+      const sectorText = (item.sector?.fr || "").toLowerCase()
+      const searchString = `${titleText} ${descText} ${contentText} ${sectorText}`
+      if (!searchString.includes(q)) return false
+    }
     
-    const titleText = item.title[language] || item.title.fr
-    const descText = item.desc[language] || item.desc.fr
-    const contentText = item.content[language] || item.content.fr
-    const sectorText = item.sector ? (item.sector[language] || item.sector.fr) : ""
-    
-    const searchString = `${titleText} ${descText} ${contentText} ${sectorText}`.toLowerCase()
-    const matchesSearch = searchString.includes(search.toLowerCase())
-    
-    return matchesFilter && matchesSearch
+    return true
   })
 
   const isSubPending = Boolean(
@@ -261,64 +338,134 @@ export function RessourcesClient() {
           )}
 
           {/* Controls Bar */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-y border-border/40 py-4 bg-card/10 backdrop-blur-md rounded-2xl px-4">
-            
-            {/* Categories Filters */}
-            <div className="flex flex-wrap gap-2 w-full md:w-auto">
-              <button
-                onClick={() => setActiveFilter('all')}
-                className={cn(
-                  "px-4 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border",
-                  activeFilter === 'all'
-                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                    : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
-                )}
-              >
-                {t("resourcesPage.filterAll")}
-              </button>
-              <button
-                onClick={() => setActiveFilter('prompt')}
-                className={cn(
-                  "px-4 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
-                  activeFilter === 'prompt'
-                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                    : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
-                )}
-              >
-                <Sparkles className="size-3.5" />
-                {t("resourcesPage.filterPrompts")}
-              </button>
-              <button
-                onClick={() => setActiveFilter('business-plan')}
-                className={cn(
-                  "px-4 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
-                  activeFilter === 'business-plan'
-                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
-                    : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
-                )}
-              >
-                <FileText className="size-3.5" />
-                {t("resourcesPage.filterPlans")}
-              </button>
-            </div>
-
-            {/* Search Box */}
-            <div className="relative w-full max-w-md">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-                <Search className="size-4 text-muted-foreground" />
+          <div className="space-y-3 border-y border-border/40 py-4 bg-card/10 backdrop-blur-md rounded-2xl px-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              {/* Format Filters */}
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                <button
+                  onClick={() => setFormatFilter('all')}
+                  className={cn(
+                    "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border",
+                    formatFilter === 'all'
+                      ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                  )}
+                >
+                  Tous ({currentResourcesMap.length})
+                </button>
+                <button
+                  onClick={() => setFormatFilter('prompt')}
+                  className={cn(
+                    "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
+                    formatFilter === 'prompt'
+                      ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20"
+                      : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                  )}
+                >
+                  <Sparkles className="size-3.5" />
+                  Prompts IA
+                </button>
+                <button
+                  onClick={() => setFormatFilter('file')}
+                  className={cn(
+                    "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
+                    formatFilter === 'file'
+                      ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20"
+                      : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                  )}
+                >
+                  <FileText className="size-3.5" />
+                  Fichiers &amp; Modèles
+                </button>
+                <button
+                  onClick={() => setFormatFilter('bundle')}
+                  className={cn(
+                    "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
+                    formatFilter === 'bundle'
+                      ? "bg-gradient-to-r from-purple-600 to-blue-600 border-purple-400 text-white shadow-lg shadow-purple-500/20"
+                      : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                  )}
+                >
+                  <Layers className="size-3.5" />
+                  Packs Complets
+                </button>
+                <button
+                  onClick={() => setFormatFilter('business-plan')}
+                  className={cn(
+                    "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
+                    formatFilter === 'business-plan'
+                      ? "bg-amber-500 border-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/20"
+                      : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
+                  )}
+                >
+                  <BookOpen className="size-3.5" />
+                  Business Plans
+                </button>
               </div>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("resourcesPage.searchPlaceholder")}
-                className="w-full rounded-xl border border-border/80 bg-card/40 py-2.5 pl-10 pr-4 text-xs text-foreground placeholder-muted-foreground outline-none transition-all focus:border-primary/50 focus:bg-card/60"
-              />
+
+              {/* Search Box */}
+              <div className="relative w-full md:max-w-xs">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                  <Search className="size-4 text-muted-foreground" />
+                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Rechercher par mot-clé, prompt..."
+                  className="w-full rounded-xl border border-border/80 bg-card/40 py-2 pl-10 pr-8 text-xs text-foreground placeholder-muted-foreground outline-none transition-all focus:border-primary/50 focus:bg-card/60"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs font-bold"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
 
+            {/* Category / Domain Filter Row */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2.5 border-t border-border/40 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-muted-foreground font-semibold flex items-center gap-1.5">
+                  <Filter className="size-3.5 text-primary" />
+                  Domaine :
+                </span>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="bg-card/60 border border-border/80 rounded-xl px-3 py-1.5 text-xs text-foreground outline-none focus:border-primary cursor-pointer font-medium max-w-[280px] truncate"
+                >
+                  <option value="all">Tous les domaines ({currentResourcesMap.length})</option>
+                  {RESOURCE_CATEGORIES.map(cat => {
+                    const count = currentResourcesMap.filter(r => (r.sector?.fr || "").toLowerCase() === cat.toLowerCase()).length
+                    return (
+                      <option key={cat} value={cat}>
+                        {cat} {count > 0 ? `(${count})` : ''}
+                      </option>
+                    )
+                  })}
+                </select>
+
+                {selectedCategory !== 'all' && (
+                  <button
+                    onClick={() => setSelectedCategory('all')}
+                    className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                  >
+                    Réinitialiser le domaine
+                  </button>
+                )}
+              </div>
+
+              <span className="text-[11px] text-muted-foreground font-medium">
+                {filteredResources.length} ressource{filteredResources.length > 1 ? 's' : ''} trouvée{filteredResources.length > 1 ? 's' : ''}
+              </span>
+            </div>
           </div>
 
-          {/* Grid of Prompts & Business Plan cards */}
+          {/* Grid of Prompts, Files & Bundles */}
           {loadingResources ? (
             <div className="grid gap-8 md:grid-cols-2 pt-2 animate-pulse">
               {[1, 2, 3, 4].map((i) => (
@@ -350,6 +497,9 @@ export function RessourcesClient() {
                 const desc = item.desc[language] || item.desc.fr
                 const content = item.content[language] || item.content.fr
                 const sector = item.sector ? (item.sector[language] || item.sector.fr) : null
+                const isFree = item.tier === "Gratuit" || (item.tier !== "Membre Premium" && item.tier !== "VIP")
+                const isAccessible = isFree || isUnlocked
+                const fileInfo = getFileInfo(item.fileUrl)
 
                 return (
                   <motion.div
@@ -362,25 +512,42 @@ export function RessourcesClient() {
                     className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card/30 p-6 md:p-8 backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:bg-card/50 shadow-xl text-left"
                   >
                     <div>
-                      {/* Header Badge */}
-                      <div className="flex items-center justify-between mb-4">
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider",
-                          item.type === 'prompt' 
-                            ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" 
-                            : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                        )}>
-                          {item.type === 'prompt' ? t("resourcesPage.filterPrompts") : t("resourcesPage.filterPlans")}
-                        </span>
-                        
+                      {/* Header Badges */}
+                      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border",
+                            item.hasText && item.hasFile
+                              ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                              : item.hasFile
+                              ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                              : "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                          )}>
+                            {item.hasText && item.hasFile 
+                              ? "📦 Pack Prompt + Fichier" 
+                              : item.hasFile 
+                              ? "📁 Document / Modèle" 
+                              : "📝 Prompt IA"}
+                          </span>
+
+                          <span className={cn(
+                            "px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border",
+                            isFree
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                              : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          )}>
+                            {isFree ? "Gratuit" : "Pass VIP"}
+                          </span>
+                        </div>
+
                         {sector && (
                           <span className="text-[10px] text-muted-foreground font-semibold bg-card/60 border border-border/60 rounded-full px-2.5 py-1">
-                            {t("resourcesPage.sector")} : {sector}
+                            {sector}
                           </span>
                         )}
                       </div>
 
-                      {/* Title & Desc */}
+                      {/* Title & Description */}
                       <h3 className="font-heading text-xl font-bold text-white mb-2 text-left">
                         {title}
                       </h3>
@@ -389,79 +556,155 @@ export function RessourcesClient() {
                         {desc}
                       </p>
 
-                      {/* Display content preview */}
-                      <div className="relative mb-6">
-                        {!isUnlocked ? (
-                          <div className="rounded-xl bg-slate-950 border border-primary/30 p-4 max-h-60 overflow-hidden text-xs md:text-sm leading-relaxed font-mono whitespace-pre-wrap select-none pointer-events-none text-left relative">
-                            {/* Teaser Header Badge */}
-                            <div className="text-[10px] font-extrabold uppercase tracking-widest text-primary mb-1.5 flex items-center gap-1">
-                              <Sparkles className="size-3 text-amber-400" />
-                              <span>Aperçu en clair (Avant-goût) :</span>
-                            </div>
-                            {/* Crystal Clear Unblurred Teaser Snippet */}
-                            <div className="text-white font-bold opacity-100 pb-1 leading-snug">
-                              {content.slice(0, 150)}...
-                            </div>
-                            {/* Blurred Rest of Prompt (Uncopyable) */}
-                            <div className="blur-[7px] opacity-30 select-none pointer-events-none text-slate-400 mt-1">
-                              {content.slice(150)}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="rounded-xl bg-slate-950/60 border border-border/60 p-4 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-300 font-mono whitespace-pre-wrap transition-all duration-300 scrollbar-thin text-left select-all">
-                            {content}
-                          </div>
-                        )}
+                      {/* Content Section: Prompt Text and/or File Box */}
+                      {item.hasText ? (
+                        <div className="space-y-3 mb-6">
+                          {/* Prompt preview container */}
+                          <div className="relative">
+                            {!isAccessible ? (
+                              <div className="rounded-xl bg-slate-950 border border-primary/30 p-4 max-h-60 overflow-hidden text-xs md:text-sm leading-relaxed font-mono whitespace-pre-wrap select-none pointer-events-none text-left relative">
+                                <div className="text-[10px] font-extrabold uppercase tracking-widest text-primary mb-1.5 flex items-center gap-1">
+                                  <Sparkles className="size-3 text-amber-400" />
+                                  <span>Aperçu en clair (Avant-goût) :</span>
+                                </div>
+                                <div className="text-white font-bold opacity-100 pb-1 leading-snug">
+                                  {content.slice(0, 150)}...
+                                </div>
+                                <div className="blur-[7px] opacity-30 select-none pointer-events-none text-slate-400 mt-1">
+                                  {content.slice(150)}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="rounded-xl bg-slate-950/60 border border-border/60 p-4 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-300 font-mono whitespace-pre-wrap transition-all duration-300 scrollbar-thin text-left select-all">
+                                {content}
+                              </div>
+                            )}
 
-                        {!isUnlocked && (
-                          <div
-                            onClick={() => handleAction(item, title, content)}
-                            className="absolute inset-0 flex flex-col items-center justify-end pb-4 px-3 rounded-xl bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent text-center cursor-pointer transition-colors group"
-                          >
-                            <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black px-4 sm:px-6 py-3 rounded-xl shadow-xl border border-white/20 group-hover:scale-[1.02] transition-transform text-center">
-                              {!currentUser ? (
+                            {!isAccessible && (
+                              <div
+                                onClick={() => {
+                                  if (!currentUser) router.push("/login?redirect=/ressources")
+                                  else setShowSubscriptionModal(true)
+                                }}
+                                className="absolute inset-0 flex flex-col items-center justify-end pb-4 px-3 rounded-xl bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent text-center cursor-pointer transition-colors group"
+                              >
+                                <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black px-4 sm:px-6 py-3 rounded-xl shadow-xl border border-white/20 group-hover:scale-[1.02] transition-transform text-center">
+                                  {!currentUser ? (
+                                    <>
+                                      <LogIn className="size-4 shrink-0" />
+                                      <span className="text-xs font-black">Se connecter pour débloquer tout le catalogue</span>
+                                    </>
+                                  ) : isSubPending ? (
+                                    <>
+                                      <div className="flex items-center gap-1.5 font-black">
+                                        <Clock className="size-4 shrink-0 animate-pulse" />
+                                        <span className="text-xs font-black">Abonnement VIP en cours de validation (2h-4h)</span>
+                                      </div>
+                                      <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Réf: {subscriptionInfo?.transactionRef || "Soumis"}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center gap-1.5 font-black">
+                                        <Crown className="size-4 shrink-0" />
+                                        <span className="text-xs font-black">Débloquer Tous les Prompts &amp; Replays</span>
+                                      </div>
+                                      <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès {subscriptionInfo?.pricing?.price3mDisplay || "9 000 FCFA"}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        /* File-Only Document Card (No empty prompt box) */
+                        <div className="relative rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 border border-blue-500/20 p-5 space-y-3 mb-6 overflow-hidden">
+                          <div className="flex items-start gap-3.5">
+                            <div className="size-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0 shadow-inner">
+                              <FileText className="size-6" />
+                            </div>
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                                  Document Prêt à l&apos;Emploi
+                                </span>
+                                <span className="text-[10px] font-mono font-bold text-blue-300 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">
+                                  {fileInfo.ext}
+                                </span>
+                              </div>
+                              <p className="text-sm font-bold text-white truncate">
+                                {fileInfo.name}
+                              </p>
+                              <p className="text-xs text-slate-400 leading-relaxed">
+                                Document complet vérifié par l&apos;équipe Le Guide IA, téléchargeable et personnalisable immédiatement.
+                              </p>
+                            </div>
+                          </div>
+
+                          {!isAccessible && (
+                            <div
+                              onClick={() => {
+                                if (!currentUser) router.push("/login?redirect=/ressources")
+                                else setShowSubscriptionModal(true)
+                              }}
+                              className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/85 backdrop-blur-[2px] cursor-pointer text-center group"
+                            >
+                              <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-lg group-hover:scale-105 transition-transform">
+                                <Lock className="size-3.5" />
+                                <span>{!currentUser ? "Se connecter pour télécharger" : "Débloquer le fichier"}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action buttons section */}
+                    {isAccessible && (
+                      <div className="pt-2">
+                        {item.hasText && item.hasFile ? (
+                          /* DUAL BUTTONS for Text + File */
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <button
+                              type="button"
+                              onClick={() => handleCopyPrompt(item, content)}
+                              className="w-full rounded-xl font-extrabold text-xs py-3 px-4 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 shadow-xs"
+                            >
+                              {copiedId === item.id ? (
                                 <>
-                                  <LogIn className="size-4 shrink-0" />
-                                  <span className="text-xs font-black">Se connecter pour débloquer tout le catalogue</span>
-                                </>
-                              ) : isSubPending ? (
-                                <>
-                                  <div className="flex items-center gap-1.5 font-black">
-                                    <Clock className="size-4 shrink-0 animate-pulse" />
-                                    <span className="text-xs font-black">Abonnement VIP en cours de validation (2h-4h)</span>
-                                  </div>
-                                  <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Réf: {subscriptionInfo?.transactionRef || "Soumis"}</span>
+                                  <Check className="size-4 text-emerald-400 stroke-[3]" />
+                                  <span className="text-emerald-400">{t("resourcesPage.copied")}</span>
                                 </>
                               ) : (
                                 <>
-                                  <div className="flex items-center gap-1.5 font-black">
-                                    <Crown className="size-4 shrink-0" />
-                                    <span className="text-xs font-black">Débloquer Tous les Prompts &amp; Replays</span>
-                                  </div>
-                                  <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès {subscriptionInfo?.pricing?.price3mDisplay || "9 000 FCFA"}</span>
+                                  <Copy className="size-4 text-purple-400" />
+                                  <span>{t("resourcesPage.copyPrompt")}</span>
                                 </>
                               )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                            </button>
 
-                    {/* Action button (Displayed ONLY when unlocked / connected) */}
-                    {isUnlocked && (
-                      <div>
-                        <button
-                          onClick={() => handleAction(item, title, content)}
-                          className={cn(
-                            buttonVariants({
-                              variant: copiedId === item.id ? "default" : item.type === 'prompt' ? "outline" : "default"
-                            }),
-                            "w-full rounded-xl font-extrabold text-xs py-3 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2",
-                            item.type !== 'prompt' && "glow-blue"
-                          )}
-                        >
-                          {item.type === 'prompt' ? (
-                            copiedId === item.id ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadFile(item)}
+                              className="w-full rounded-xl font-extrabold text-xs py-3 px-4 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20"
+                            >
+                              <Download className="size-4" />
+                              <span>Télécharger ({fileInfo.ext})</span>
+                            </button>
+                          </div>
+                        ) : item.hasText ? (
+                          /* SINGLE BUTTON: Prompt only */
+                          <button
+                            type="button"
+                            onClick={() => handleCopyPrompt(item, content)}
+                            className={cn(
+                              buttonVariants({
+                                variant: copiedId === item.id ? "default" : "outline"
+                              }),
+                              "w-full rounded-xl font-extrabold text-xs py-3 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
+                            )}
+                          >
+                            {copiedId === item.id ? (
                               <>
                                 <Check className="size-4 stroke-[3]" />
                                 <span>{t("resourcesPage.copied")}</span>
@@ -471,14 +714,19 @@ export function RessourcesClient() {
                                 <Copy className="size-4" />
                                 <span>{t("resourcesPage.copyPrompt")}</span>
                               </>
-                            )
-                          ) : (
-                            <>
-                              <Download className="size-4" />
-                              <span>{t("resourcesPage.downloadPlan")}</span>
-                            </>
-                          )}
-                        </button>
+                            )}
+                          </button>
+                        ) : (
+                          /* SINGLE BUTTON: File only */
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadFile(item)}
+                            className="w-full rounded-xl font-extrabold text-xs py-3 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20 glow-blue"
+                          >
+                            <Download className="size-4" />
+                            <span>Télécharger le modèle ({fileInfo.ext})</span>
+                          </button>
+                        )}
                       </div>
                     )}
                   </motion.div>

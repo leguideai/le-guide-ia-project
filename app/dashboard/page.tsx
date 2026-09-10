@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
-import { resourcesData, ResourceItem } from "@/lib/resources-data"
+import { resourcesData, ResourceItem, RESOURCE_CATEGORIES } from "@/lib/resources-data"
 import { 
   countries, Country, getCountryFlag, PHONE_RULES, 
   PRIORITY_COUNTRY_CODES, formatPhoneNumber, parsePhoneNumber,
@@ -64,6 +64,20 @@ import {
 import { BootcampCalendar, CalendarEvent } from "@/components/bootcamp-calendar"
 import { SubscriptionModal } from "@/components/subscription-modal"
 import { getAuthRedirect, clearAuthRedirect, isValidRedirectTarget } from "@/lib/auth-redirect"
+
+function getFileInfo(url?: string) {
+  if (!url) return { name: "Document joint", ext: "FICHIER" }
+  try {
+    const clean = url.split("?")[0]
+    const rawName = clean.split("/").pop() || "Document"
+    const parts = rawName.split(".")
+    const ext = parts.length > 1 ? parts.pop()?.toUpperCase() || "DOC" : "DOC"
+    const readableName = decodeURIComponent(parts.join(".")).replace(/^\d+[-_]/, "").replace(/[-_]/g, " ")
+    return { name: readableName || "Document prêt à l'emploi", ext }
+  } catch {
+    return { name: "Document joint", ext: "DOC" }
+  }
+}
 
 type TabType = "overview" | "courses" | "masterclasses" | "resources" | "subscription" | "certificates" | "invoices" | "profile"
 
@@ -169,6 +183,7 @@ export default function DashboardPage() {
   const [resourceSearch, setResourceSearch] = useState("")
   const [selectedBootcampFilter, setSelectedBootcampFilter] = useState<string>("all")
   const [selectedResourceTypeFilter, setSelectedResourceTypeFilter] = useState<string>("all")
+  const [selectedResourceCategory, setSelectedResourceCategory] = useState<string>("all")
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null)
   const [isCertModalOpen, setIsCertModalOpen] = useState(false)
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
@@ -858,8 +873,8 @@ export default function DashboardPage() {
     }
   }
 
-  const handleCopyPrompt = (id: string, text: string) => {
-    if (!subscriptionData?.isSubscribed) {
+  const handleCopyPrompt = (id: string, text: string, accessible: boolean = true) => {
+    if (!accessible) {
       setIsSubscriptionModalOpen(true)
       return
     }
@@ -867,6 +882,20 @@ export default function DashboardPage() {
       setCopiedPromptId(id)
       setTimeout(() => setCopiedPromptId(null), 2500)
     })
+  }
+
+  const handleDownloadFile = (item: any, accessible: boolean = true) => {
+    if (!accessible) {
+      setIsSubscriptionModalOpen(true)
+      return
+    }
+    if (item.fileUrl) {
+      window.open(item.fileUrl, "_blank", "noopener,noreferrer")
+    } else {
+      const title = item.title?.fr || item.title || "ressource"
+      const waUrl = `https://wa.me/22675757273?text=${encodeURIComponent("Bonjour Le Guide IA, je souhaite recevoir le document/modèle pour la ressource : " + title)}`
+      window.open(waUrl, "_blank", "noopener,noreferrer")
+    }
   }
 
   const handleLogout = async () => {
@@ -1113,29 +1142,48 @@ export default function DashboardPage() {
     })
     .map((r: any) => {
       const rawType = (r.type || "Prompt").toLowerCase()
-      const itemType: 'prompt' | 'business-plan' | 'exercise' = 
-        rawType.includes("plan") || rawType.includes("document")
-          ? "business-plan"
-          : rawType.includes("exercice") || rawType.includes("exercise")
-          ? "exercise"
-          : "prompt"
+      const promptText = (r.prompt_text || r.content || "").trim()
+      const rawFileUrl = (r.file_url || r.download_url || "").trim()
+      const hasText = promptText.length > 0
+      const hasFile = rawFileUrl.length > 0
+      const category = r.category || "Autre"
+      const catLower = category.toLowerCase()
+
+      let itemType: 'prompt' | 'business-plan' | 'file' | 'bundle' | 'exercise' = 'prompt'
+      if (rawType.includes("exercice") || rawType.includes("exercise")) {
+        itemType = "exercise"
+      } else if (catLower.includes("business plan") || catLower.includes("plan d'affaires")) {
+        itemType = "business-plan"
+      } else if (hasText && hasFile) {
+        itemType = "bundle"
+      } else if (!hasText && hasFile) {
+        itemType = "file"
+      } else {
+        itemType = "prompt"
+      }
+
+      const isFree = r.tier === "Gratuit" || r.is_free === true || (r.tier !== "Membre Premium" && r.tier !== "VIP")
 
       return {
         id: r.id,
         bootcampId: r.bootcamp_id || r.course_slug || null,
         bootcampName: r.bootcamp_name || null,
-        category: r.category || "Écosystème IA",
+        category: category,
         type: itemType,
         title: { fr: r.title, en: r.title },
-        desc: { fr: r.description || r.category || "Ressource certifiée Le Guide IA", en: r.description || r.category || "Ressource certifiée" },
-        content: { fr: r.prompt_text || r.content || "", en: r.prompt_text || r.content || "" },
-        fileUrl: r.file_url || r.download_url || undefined,
-        downloadUrl: r.download_url || r.file_url || undefined,
+        desc: { fr: r.description || category || "Ressource certifiée Le Guide IA", en: r.description || category || "Ressource certifiée" },
+        content: { fr: promptText, en: promptText },
+        fileUrl: rawFileUrl || undefined,
+        downloadUrl: rawFileUrl || undefined,
         videoUrl: undefined,
         exerciseType: r.exercise_type || undefined,
-        fileSize: r.file_size || "PDF / Fichier Supabase",
+        fileSize: r.file_size || (hasFile ? getFileInfo(rawFileUrl).ext : undefined),
         deadline: r.deadline || "Permanent",
-        tier: r.tier || r.access_level || ""
+        tier: r.tier || r.access_level || (isFree ? "Gratuit" : "Membre Premium"),
+        hasText,
+        hasFile,
+        isFree,
+        downloadsCount: r.download_count || r.downloads_count || 0
       }
     })
     .filter((r: any) => {
@@ -1147,10 +1195,30 @@ export default function DashboardPage() {
     })
 
   const filteredResources = allResources.filter((r) => {
-    const search = resourceSearch.toLowerCase()
-    const matchesSearch = r.title.fr.toLowerCase().includes(search) || r.desc.fr.toLowerCase().includes(search)
-    const matchesType = selectedResourceTypeFilter === "all" || r.type === selectedResourceTypeFilter
-    return matchesSearch && matchesType
+    // 1. Format filter
+    if (selectedResourceTypeFilter === "prompt" && (!r.hasText || r.hasFile)) return false
+    if (selectedResourceTypeFilter === "file" && (r.hasText || !r.hasFile)) return false
+    if (selectedResourceTypeFilter === "bundle" && (!r.hasText || !r.hasFile)) return false
+    if (selectedResourceTypeFilter === "business-plan" && r.type !== "business-plan") return false
+    if (selectedResourceTypeFilter === "exercise" && r.type !== "exercise") return false
+
+    // 2. Category filter
+    if (selectedResourceCategory !== "all") {
+      const itemCat = (r.category || "").toLowerCase()
+      if (itemCat !== selectedResourceCategory.toLowerCase()) return false
+    }
+
+    // 3. Search query
+    if (resourceSearch.trim()) {
+      const search = resourceSearch.toLowerCase()
+      const matchesSearch = r.title.fr.toLowerCase().includes(search) || 
+                            r.desc.fr.toLowerCase().includes(search) ||
+                            r.content.fr.toLowerCase().includes(search) ||
+                            (r.category && r.category.toLowerCase().includes(search))
+      if (!matchesSearch) return false
+    }
+
+    return true
   })
 
   // Map DB courses — keep dbId (uuid) separate, add isFree flag
@@ -2990,27 +3058,48 @@ export default function DashboardPage() {
             )}
 
             {/* Filter Controls Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-2xl shadow-xs">
-              <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
-                {[
-                  { id: "all", label: "Toutes les ressources" },
-                  { id: "prompt", label: "Prompts Métiers" },
-                  { id: "business-plan", label: "Business Plans" },
-                  { id: "exercise", label: "Exercices & Fichiers" },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setSelectedResourceTypeFilter(t.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      selectedResourceTypeFilter === t.id ? "bg-primary text-white shadow-xs" : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-2xl shadow-xs">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Format Filters */}
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { id: "all", label: "Toutes les ressources" },
+                    { id: "prompt", label: "📝 Prompts IA" },
+                    { id: "file", label: "📁 Documents & Fichiers" },
+                    { id: "bundle", label: "📦 Packs Complets" },
+                    { id: "business-plan", label: "💼 Business Plans" },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setSelectedResourceTypeFilter(t.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        selectedResourceTypeFilter === t.id
+                          ? "bg-primary text-white shadow-xs"
+                          : "bg-[#F4F6F8] border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Category dropdown */}
+                <select
+                  value={selectedResourceCategory}
+                  onChange={(e) => setSelectedResourceCategory(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-[#F4F6F8] px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-primary shadow-2xs cursor-pointer"
+                >
+                  <option value="all">Toutes les catégories</option>
+                  {RESOURCE_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <span className="text-xs text-slate-500 font-medium hidden sm:block">
+              <span className="text-xs text-slate-500 font-medium shrink-0">
                 {filteredResources.length} ressource{filteredResources.length > 1 ? "s" : ""} disponible{filteredResources.length > 1 ? "s" : ""}
               </span>
             </div>
@@ -3023,21 +3112,37 @@ export default function DashboardPage() {
             ) : (
               <div className="grid gap-6 md:grid-cols-2">
                 {filteredResources.map((item) => {
-                  const isLocked = !subscriptionData?.isSubscribed
+                  const isAccessible = item.isFree || Boolean(subscriptionData?.isSubscribed) || isAdmin
+                  const isLocked = !isAccessible
+                  const fileInfo = getFileInfo(item.fileUrl)
 
                   return (
                     <div key={item.id} className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 flex flex-col justify-between space-y-4 hover:border-primary/40 hover:shadow-md transition-all shadow-xs text-left">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <span className={`text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full border ${
-                            item.type === 'prompt'
-                              ? "bg-purple-50 text-purple-800 border-purple-200"
-                              : item.type === 'business-plan'
-                              ? "bg-blue-50 text-blue-800 border-blue-200"
-                              : "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          }`}>
-                            {item.type === 'prompt' ? "Prompt Métier" : item.type === 'business-plan' ? "Business Plan" : "Exercice & Fichier"}
-                          </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border ${
+                              item.hasText && item.hasFile
+                                ? "bg-purple-50 text-purple-800 border-purple-200"
+                                : item.hasFile
+                                ? "bg-blue-50 text-blue-800 border-blue-200"
+                                : "bg-purple-50 text-purple-800 border-purple-200"
+                            }`}>
+                              {item.hasText && item.hasFile 
+                                ? "📦 Pack Prompt + Fichier" 
+                                : item.hasFile 
+                                ? "📁 Document / Modèle" 
+                                : "📝 Prompt IA"}
+                            </span>
+
+                            <span className={`text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
+                              item.isFree
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : "bg-amber-50 text-amber-800 border-amber-300"
+                            }`}>
+                              {item.isFree ? "Gratuit" : "Pass VIP"}
+                            </span>
+                          </div>
 
                           {item.category && (
                             <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
@@ -3045,82 +3150,102 @@ export default function DashboardPage() {
                             </span>
                           )}
                         </div>
+
                         <h4 className="font-heading text-base font-bold text-slate-800">{item.title.fr}</h4>
                         <p className="text-xs text-slate-600 leading-relaxed">{item.desc.fr}</p>
                       </div>
 
                       <div className="space-y-3 pt-2 border-t border-slate-100">
-                        <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 bg-[#F4F6F8] p-3.5 text-left">
-                          {isLocked ? (
-                            <div className="relative max-h-36 overflow-hidden text-[11px] font-mono leading-relaxed select-none pointer-events-none">
-                              {/* Teaser Header Badge */}
-                              <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-700 mb-1">
-                                <Sparkles className="size-3 text-amber-500" />
-                                <span>Extrait en clair (Début du prompt) :</span>
-                              </div>
-                              
-                              {/* Crystal Clear Beginning Snippet */}
-                              <div className="text-slate-800 font-semibold opacity-100 pb-0.5 whitespace-pre-wrap">
-                                {item.content.fr.slice(0, 140)}...
-                              </div>
+                        {item.hasText ? (
+                          /* Prompt preview container */
+                          <div className="relative rounded-2xl overflow-hidden border border-slate-200/90 bg-[#F4F6F8] p-3.5 text-left">
+                            {isLocked ? (
+                              <div className="relative max-h-36 overflow-hidden text-[11px] font-mono leading-relaxed select-none pointer-events-none">
+                                {/* Teaser Header Badge */}
+                                <div className="flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-700 mb-1">
+                                  <Sparkles className="size-3 text-amber-500" />
+                                  <span>Extrait en clair (Début du prompt) :</span>
+                                </div>
+                                
+                                {/* Crystal Clear Beginning Snippet */}
+                                <div className="text-slate-800 font-semibold opacity-100 pb-0.5 whitespace-pre-wrap">
+                                  {item.content.fr.slice(0, 140)}...
+                                </div>
 
-                              {/* Blurred Rest of Prompt (Uncopyable) */}
-                              <div className="blur-[6px] opacity-25 select-none pointer-events-none text-slate-500 mt-1 whitespace-pre-wrap">
-                                {item.content.fr.slice(140, 320) || "Texte intégral du prompt métier avec consignes, variables de contexte et structure d'exécution..."}
-                              </div>
+                                {/* Blurred Rest of Prompt (Uncopyable) */}
+                                <div className="blur-[6px] opacity-25 select-none pointer-events-none text-slate-500 mt-1 whitespace-pre-wrap">
+                                  {item.content.fr.slice(140, 320) || "Texte intégral du prompt métier avec consignes, variables de contexte et structure d'exécution..."}
+                                </div>
 
-                              {/* Lock Gradient Overlay */}
-                              <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#F4F6F8] via-[#F4F6F8]/80 to-transparent flex items-end justify-center pb-0.5">
-                                <span className="text-[10px] font-bold text-amber-900 bg-amber-200/80 border border-amber-300 px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1">
-                                  <Lock className="size-3" />
-                                  <span>Suite du prompt &amp; variables réservées au Pass VIP</span>
-                                </span>
+                                {/* Lock Gradient Overlay with Single Unlock CTA Button */}
+                                <div
+                                  onClick={() => setIsSubscriptionModalOpen(true)}
+                                  className="absolute inset-0 flex flex-col items-center justify-end pb-2 px-3 bg-gradient-to-t from-[#F4F6F8] via-[#F4F6F8]/80 to-transparent text-center cursor-pointer pointer-events-auto group"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsSubscriptionModalOpen(true)}
+                                    className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black px-4 sm:px-5 py-2.5 rounded-xl shadow-md border border-white/20 group-hover:scale-[1.02] transition-transform text-center cursor-pointer"
+                                  >
+                                    <div className="flex items-center gap-1.5 font-black">
+                                      <Crown className="size-3.5 shrink-0" />
+                                      <span>Débloquer Tous les Prompts &amp; Replays</span>
+                                    </div>
+                                    <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">
+                                      Dès {subscriptionData?.pricing?.price3mDisplay || "9 000 FCFA"}
+                                    </span>
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <div className="max-h-36 overflow-y-auto text-[11px] font-mono text-slate-700 whitespace-pre-wrap scrollbar-thin select-all">
-                              {item.content.fr}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Action buttons (Unlocked vs Locked) - Responsive */}
-                        {isLocked ? (
-                          <button
-                            onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="w-full flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold py-2.5 px-3 text-xs shadow-sm transition-all cursor-pointer text-center"
-                          >
-                            <div className="flex items-center gap-1.5 font-black">
-                              <Crown className="size-3.5 shrink-0" />
-                              <span>Débloquer Tous les Prompts &amp; Replays</span>
-                            </div>
-                            <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès {subscriptionData?.pricing?.price3mDisplay || "9 000 FCFA"}</span>
-                          </button>
+                            ) : (
+                              <div className="max-h-36 overflow-y-auto text-[11px] font-mono text-slate-700 whitespace-pre-wrap scrollbar-thin select-all">
+                                {item.content.fr}
+                              </div>
+                            )}
+                          </div>
                         ) : (
+                          /* File-Only Document Card (No empty prompt box) */
+                          <div className="relative rounded-2xl bg-[#F4F6F8] border border-blue-200/80 p-4 space-y-2 overflow-hidden text-left">
+                            <div className="flex items-start gap-3">
+                              <div className="size-10 rounded-xl bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center shrink-0 shadow-2xs">
+                                <FileText className="size-5" />
+                              </div>
+                              <div className="space-y-0.5 min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded border border-blue-200">
+                                    Document Prêt à l&apos;Emploi
+                                  </span>
+                                  <span className="text-[10px] font-mono font-bold text-blue-800 bg-white px-2 py-0.5 rounded border border-blue-200">
+                                    {fileInfo.ext}
+                                  </span>
+                                </div>
+                                <p className="text-xs font-bold text-slate-800 truncate">
+                                  {fileInfo.name}
+                                </p>
+                                <p className="text-[11px] text-slate-500 leading-snug">
+                                  Modèle complet vérifié par l&apos;équipe Le Guide IA, téléchargeable et personnalisable.
+                                </p>
+                              </div>
+                            </div>
+
+                            {isLocked && (
+                              <div
+                                onClick={() => setIsSubscriptionModalOpen(true)}
+                                className="absolute inset-0 flex flex-col items-center justify-center p-3 bg-slate-900/60 backdrop-blur-[1px] cursor-pointer text-center group rounded-2xl"
+                              >
+                                <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black px-3.5 py-1.5 rounded-xl text-xs shadow-md group-hover:scale-105 transition-transform">
+                                  <Lock className="size-3.5" />
+                                  <span>Débloquer avec le Pass VIP</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Action buttons (only when unlocked) */}
+                        {isAccessible && (
                           <>
-                            {item.type === 'prompt' && (
-                              <button
-                                onClick={() => handleCopyPrompt(item.id, item.content.fr)}
-                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
-                              >
-                                {copiedPromptId === item.id ? <Check className="size-4 stroke-[3]" /> : <Copy className="size-4" />}
-                                <span>{copiedPromptId === item.id ? "Prompt Copié !" : "Copier le Prompt"}</span>
-                              </button>
-                            )}
-
-                            {item.type === 'business-plan' && (
-                              <a
-                                href={`https://wa.me/22675757273?text=Bonjour%20Le%20Guide%20IA%2C%20je%20suis%20membre%20et%20souhaite%20recevoir%20le%20modele%20de%20Business%20Plan%20complet%20pour%20:%20${encodeURIComponent(item.title.fr)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs shadow-xs transition-all"
-                              >
-                                <Download className="size-4" />
-                                <span>Télécharger le Business Plan (DOCX / PDF)</span>
-                              </a>
-                            )}
-
-                            {item.type === 'exercise' && (
+                            {item.type === 'exercise' ? (
                               <div className="space-y-2">
                                 {item.deadline && (
                                   <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-amber-900 bg-amber-50/80 px-3 py-1.5 rounded-xl border border-amber-200 gap-2">
@@ -3135,16 +3260,17 @@ export default function DashboardPage() {
                                 )}
 
                                 <div className="grid gap-2 sm:grid-cols-2">
-                                  <a
-                                    href={item.downloadUrl || "#"}
-                                    download
-                                    className="flex items-center justify-center gap-1.5 rounded-xl bg-[#F4F6F8] hover:bg-slate-200 text-slate-800 font-bold py-2.5 text-xs border border-slate-200 shadow-2xs transition-all"
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadFile(item, isAccessible)}
+                                    className="flex items-center justify-center gap-1.5 rounded-xl bg-[#F4F6F8] hover:bg-slate-200 text-slate-800 font-bold py-2.5 text-xs border border-slate-200 shadow-2xs transition-all cursor-pointer"
                                   >
                                     <Download className="size-3.5 text-primary" />
-                                    <span>Télécharger Sujet ({item.fileSize || "PDF"})</span>
-                                  </a>
+                                    <span>Télécharger Sujet ({fileInfo.ext})</span>
+                                  </button>
 
                                   <button
+                                    type="button"
                                     onClick={() => setSubmittingExercise({
                                       id: item.id,
                                       title: item.title.fr,
@@ -3157,6 +3283,47 @@ export default function DashboardPage() {
                                   </button>
                                 </div>
                               </div>
+                            ) : item.hasText && item.hasFile ? (
+                              /* DUAL BUTTONS for Pack Prompt + File */
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyPrompt(item.id, item.content.fr, isAccessible)}
+                                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-3 text-xs shadow-xs transition-all cursor-pointer"
+                                >
+                                  {copiedPromptId === item.id ? <Check className="size-4 text-emerald-400 stroke-[3]" /> : <Copy className="size-4 text-purple-300" />}
+                                  <span>{copiedPromptId === item.id ? "Prompt Copié !" : "Copier le Prompt"}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadFile(item, isAccessible)}
+                                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-3 text-xs shadow-xs transition-all cursor-pointer"
+                                >
+                                  <Download className="size-4" />
+                                  <span>Télécharger ({fileInfo.ext})</span>
+                                </button>
+                              </div>
+                            ) : item.hasText ? (
+                              /* SINGLE BUTTON: Prompt only */
+                              <button
+                                type="button"
+                                onClick={() => handleCopyPrompt(item.id, item.content.fr, isAccessible)}
+                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
+                              >
+                                {copiedPromptId === item.id ? <Check className="size-4 stroke-[3]" /> : <Copy className="size-4" />}
+                                <span>{copiedPromptId === item.id ? "Prompt Copié !" : "Copier le Prompt"}</span>
+                              </button>
+                            ) : (
+                              /* SINGLE BUTTON: File only */
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadFile(item, isAccessible)}
+                                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 text-xs shadow-xs transition-all cursor-pointer"
+                              >
+                                <Download className="size-4" />
+                                <span>Télécharger le modèle ({fileInfo.ext})</span>
+                              </button>
                             )}
                           </>
                         )}
