@@ -45,14 +45,14 @@ export function EcosystemHub() {
     {
       id: "b2b",
       title: "Espace Entreprises (B2B)",
-      subtitle: "Digitalisation, IA & E-Marketing",
-      desc: "Accompagnement sur-mesure pour les entreprises : construction/refonte web, Google Workspace/Gemini, Copilot et visibilité numérique.",
+      subtitle: "Développement Web/Mobile & IA",
+      desc: "Accompagnement sur-mesure pour les entreprises : création de sites web et applications mobiles, formation intra-entreprise IA et automatisation.",
       icon: Building2,
       href: "/entreprises",
       badge: "Offre B2B Sur-Mesure",
       color: "from-blue-900/20 via-slate-900 to-transparent",
       borderColor: "border-blue-500/30",
-      highlights: ["Diagnostic de maturité en 2 min", "Formation intra-entreprise sur-mesure", "Devis qualifié personnalisé"]
+      highlights: ["Sites web & apps mobiles sur-mesure", "Formation intra-entreprise sur-mesure", "Devis qualifié personnalisé"]
     }
   ]
 

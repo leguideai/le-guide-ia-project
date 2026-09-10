@@ -869,10 +869,10 @@ export function TarifsClient() {
             </div>
             <div>
               <h4 className="font-heading text-sm font-bold text-white">
-                Besoin d'une formation sur-mesure pour vos équipes ou votre entreprise ?
+                Besoin d'un développement Web/Mobile ou d'une formation sur-mesure pour votre entreprise ?
               </h4>
               <p className="text-xs text-muted-foreground">
-                Sessions intra-entreprise, diagnostic de maturité digitale et facturation avec devis proforma en 24h.
+                Création de sites &amp; applications, sessions intra-entreprise, diagnostic de maturité et devis proforma en 24h.
               </p>
             </div>
           </div>
