@@ -32,9 +32,9 @@ export interface SubscriptionPricing {
 }
 
 export const DEFAULT_SUBSCRIPTION_PRICING: SubscriptionPricing = {
-  price3m: 9000,
+  price3m: 12000,
   price1y: 29000,
-  price3mDisplay: "9 000 FCFA",
+  price3mDisplay: "12 000 FCFA",
   price1yDisplay: "29 000 FCFA"
 }
 

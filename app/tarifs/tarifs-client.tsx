@@ -61,7 +61,7 @@ export function TarifsClient() {
   // Pricing config
   const [subPricing, setSubPricing] = useState<SubscriptionPricing>(DEFAULT_SUBSCRIPTION_PRICING)
   
-  // Countdown timer for active promo
+  // Countdown timer for active promo (Bootcamp Carrière)
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
     days: 0,
     hours: 0,
@@ -69,6 +69,15 @@ export function TarifsClient() {
     seconds: 0
   })
   const [isOfferExpired, setIsOfferExpired] = useState(false)
+
+  // Dedicated countdown timer for Bootcamp Business
+  const [bizTimeLeft, setBizTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  })
+  const [isBizOfferExpired, setIsBizOfferExpired] = useState(false)
   
   // FAQ accordion state
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
@@ -124,7 +133,7 @@ export function TarifsClient() {
     loadInitialData()
   }, [])
 
-  // Timer countdown
+  // Timer countdown for Bootcamp Carrière
   useEffect(() => {
     const target = getOfferEndTimestamp(activeBootcamp?.offer_end_date)
     if (!target) {
@@ -153,6 +162,36 @@ export function TarifsClient() {
     const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
   }, [activeBootcamp?.offer_end_date])
+
+  // Timer countdown for Bootcamp Business
+  useEffect(() => {
+    const target = getOfferEndTimestamp(businessBootcamp?.offer_end_date)
+    if (!target) {
+      setIsBizOfferExpired(false)
+      return
+    }
+
+    const updateBizTimer = () => {
+      const now = Date.now()
+      const diff = target - now
+      if (diff <= 0) {
+        setIsBizOfferExpired(true)
+        setBizTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+      } else {
+        setIsBizOfferExpired(false)
+        setBizTimeLeft({
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((diff % (1000 * 60)) / 1000),
+        })
+      }
+    }
+
+    updateBizTimer()
+    const interval = setInterval(updateBizTimer, 1000)
+    return () => clearInterval(interval)
+  }, [businessBootcamp?.offer_end_date])
 
   const openSubscription = (plan: SubscriptionPlan) => {
     setSelectedSubPlan(plan)
@@ -199,6 +238,11 @@ export function TarifsClient() {
   const bizOriginalPrice = rawBizOriginal > rawBizPrice 
     ? rawBizOriginal 
     : (rawBizPrice > 150000 ? rawBizPrice : 199000)
+
+  // Cercle IA savings calculation for 1-year plan compared to 4 quarters
+  const subDiscountPercent = subPricing?.price3m && subPricing.price3m > 0
+    ? Math.max(10, Math.round((1 - (subPricing.price1y || 29000) / (subPricing.price3m * 4)) * 100))
+    : 20
 
   // Comparison matrix items grouped by domain (comparing 3 core paid offerings)
   const COMPARISON_SECTIONS = [
@@ -366,7 +410,7 @@ export function TarifsClient() {
           biz: "Déjà inclus",
         },
         {
-          name: "Abonnement VIP au Cercle IA offert (valeur 29 000 FCFA)",
+          name: `Abonnement VIP au Cercle IA offert (valeur ${subPricing.price1yDisplay})`,
           desc: "1 an d'accès complet à tous les replays et prompts offert sans surcoût",
           vip: "Offre standard",
           pro: "1 an offert",
@@ -386,19 +430,19 @@ export function TarifsClient() {
   const FAQ_ITEMS = [
     {
       q: "Comment fonctionnent les tarifs des Bootcamps (Offre Promo vs Tarif Standard) ?",
-      a: "Pour chaque cohorte, nous proposons deux niveaux de tarification transparents :\n• L'Offre Promo (avec compte à rebours) : Un tarif préférentiel temporaire (99 000 FCFA pour le Bootcamp Carrière et 149 000 FCFA pour le Bootcamp Business). Il ne s'agit pas d'un prix définitif : cette offre est soumise à une date limite stricte indiquée par le décompteur en temps réel sur la page.\n• Le Tarif Standard Officiel : C'est le prix régulier définitif de la formation (149 000 FCFA pour Carrière et 199 000 FCFA pour Business). Dès que le compte à rebours atteint zéro ou que les places allouées à la promo sont épuisées, les inscriptions basculent automatiquement et irréversiblement au tarif standard officiel."
+      a: `Pour chaque cohorte, nous proposons deux niveaux de tarification transparents :\n• L'Offre Promo (avec compte à rebours) : Un tarif préférentiel temporaire (${formatFCFA(proPromoPrice)} pour le Bootcamp Carrière et ${formatFCFA(bizPromoPrice)} pour le Bootcamp Business). Il ne s'agit pas d'un prix définitif : cette offre est soumise à une date limite stricte indiquée par le décompteur en temps réel sur la page.\n• Le Tarif Standard Officiel : C'est le prix régulier définitif de la formation (${formatFCFA(proOriginalPrice)} pour Carrière et ${formatFCFA(bizOriginalPrice)} pour Business). Dès que le compte à rebours atteint zéro ou que les places allouées à la promo sont épuisées, les inscriptions basculent automatiquement et irréversiblement au tarif standard officiel.`
     },
     {
       q: "Que se passe-t-il lorsque le compte à rebours de l'Offre Promo expire ?",
-      a: "Dès que le délai expire (chronomètre à 0j 0h 0m 0s), l'accès à la réduction de 50 000 FCFA est immédiatement clôturé. Le bouton de réservation bascule alors sur le Tarif Standard officiel (149 000 FCFA pour le Bootcamp Carrière et 199 000 FCFA pour le Bootcamp Business). Pour bénéficier du tarif préférentiel, il est indispensable de finaliser votre inscription avant l'échéance du décompte."
+      a: `Dès que le délai expire (chronomètre à 0j 0h 0m 0s), l'accès à la réduction est immédiatement clôturé. Le bouton de réservation bascule alors sur le Tarif Standard officiel (${formatFCFA(proOriginalPrice)} pour le Bootcamp Carrière et ${formatFCFA(bizOriginalPrice)} pour le Bootcamp Business). Pour bénéficier du tarif préférentiel, il est indispensable de finaliser votre inscription avant l'échéance du décompte.`
     },
     {
       q: "Quel Bootcamp choisir entre le parcours Carrière et le parcours Business ?",
-      a: "• Le Bootcamp IA & Carrière (actuellement à 99 000 FCFA en offre promo temporaire au lieu de 149 000 FCFA au tarif standard) s'adresse aux salariés, cadres, consultants et freelances souhaitant automatiser leurs tâches, gagner 2 à 3 heures par jour, maîtriser ChatGPT, Claude, Make, optimiser leur CV au format ATS et booster leur employabilité.\n• Le Bootcamp IA & Business (actuellement à 149 000 FCFA en offre promo temporaire au lieu de 199 000 FCFA au tarif standard) est conçu pour les entrepreneurs, fondateurs de startups et directeurs d'entreprises : il inclut la masterclass exécutive, l'audit de maturité IA de leur organisation, les business models IA, les workflows de prospection et un coaching stratégique personnalisé."
+      a: `• Le Bootcamp IA & Carrière (actuellement à ${formatFCFA(proPromoPrice)} en offre promo temporaire au lieu de ${formatFCFA(proOriginalPrice)} au tarif standard) s'adresse aux salariés, cadres, consultants et freelances souhaitant automatiser leurs tâches, gagner 2 à 3 heures par jour, maîtriser ChatGPT, Claude, Make, optimiser leur CV au format ATS et booster leur employabilité.\n• Le Bootcamp IA & Business (actuellement à ${formatFCFA(bizPromoPrice)} en offre promo temporaire au lieu de ${formatFCFA(bizOriginalPrice)} au tarif standard) est conçu pour les entrepreneurs, fondateurs de startups et directeurs d'entreprises : il inclut la masterclass exécutive, l'audit de maturité IA de leur organisation, les business models IA, les workflows de prospection et un coaching stratégique personnalisé.`
     },
     {
       q: "Comment fonctionne la déduction à 100% de l'Abonnement VIP sur le Bootcamp ?",
-      a: "C'est notre garantie sans risque : si vous souscrivez au Pass VIP Le Cercle IA (9 000 FCFA pour 3 mois ou 29 000 FCFA pour 1 an) et décidez ensuite de rejoindre un Bootcamp IA dans un délai de 6 mois, la totalité des sommes déjà versées pour votre abonnement est intégralement déduite du prix de votre inscription au Bootcamp (qu'elle soit en offre promo ou au tarif standard). Votre abonnement ne vous coûte donc rien !"
+      a: `C'est notre garantie sans risque : si vous souscrivez au Pass VIP Le Cercle IA (${subPricing.price3mDisplay} pour 3 mois ou ${subPricing.price1yDisplay} pour 1 an) et décidez ensuite de rejoindre un Bootcamp IA dans un délai de 6 mois, la totalité des sommes déjà versées pour votre abonnement est intégralement déduite du prix de votre inscription au Bootcamp (qu'elle soit en offre promo ou au tarif standard). Votre abonnement ne vous coûte donc rien !`
     },
     {
       q: "Quelle est la différence entre l'Abonnement Le Cercle IA et les Bootcamps certifiants ?",
@@ -494,7 +538,7 @@ export function TarifsClient() {
                   >
                     <span>1 An</span>
                     <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-amber-400 text-slate-950 font-black">
-                      -20%
+                      -{subDiscountPercent}%
                     </span>
                   </button>
                 </div>
@@ -504,7 +548,7 @@ export function TarifsClient() {
               <div className="space-y-1 text-left">
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-heading text-3xl sm:text-4xl font-black text-white">
-                    {subCycle === "3_months" ? "9 000 FCFA" : "29 000 FCFA"}
+                    {subCycle === "3_months" ? subPricing.price3mDisplay : subPricing.price1yDisplay}
                   </span>
                   <span className="text-xs text-purple-300 font-bold">
                     {subCycle === "3_months" ? "/ 3 mois" : "/ 1 an"}
@@ -557,7 +601,7 @@ export function TarifsClient() {
                 onClick={() => openSubscription(subCycle)}
                 className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-purple-600/30 cursor-pointer"
               >
-                <span>Souscrire au Pass ({subCycle === "3_months" ? "9 000 FCFA" : "29 000 FCFA"})</span>
+                <span>Souscrire au Pass ({subCycle === "3_months" ? subPricing.price3mDisplay : subPricing.price1yDisplay})</span>
                 <ArrowRight className="size-4" />
               </button>
             </div>
@@ -763,29 +807,29 @@ export function TarifsClient() {
                 <div className="flex items-baseline gap-2.5 flex-wrap">
                   <span className="font-heading text-3xl sm:text-4xl font-black text-white">
                     {bizBootcampTier === "offer"
-                      ? formatFCFA(isOfferExpired ? bizOriginalPrice : bizPromoPrice)
+                      ? formatFCFA(isBizOfferExpired ? bizOriginalPrice : bizPromoPrice)
                       : formatFCFA(bizOriginalPrice)}
                   </span>
-                  {bizBootcampTier === "offer" && !isOfferExpired && (
+                  {bizBootcampTier === "offer" && !isBizOfferExpired && (
                     <span className="text-sm line-through text-slate-400 font-bold">
                       {formatFCFA(bizOriginalPrice)}
                     </span>
                   )}
                   <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
-                    bizBootcampTier === "offer" && !isOfferExpired
+                    bizBootcampTier === "offer" && !isBizOfferExpired
                       ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#ECC86B]"
                       : "bg-slate-800 border-slate-700 text-slate-300"
                   }`}>
-                    {bizBootcampTier === "offer" && !isOfferExpired ? "Offre Promo Temporaire" : "Tarif Standard Officiel"}
+                    {bizBootcampTier === "offer" && !isBizOfferExpired ? "Offre Promo Temporaire" : "Tarif Standard Officiel"}
                   </span>
                 </div>
                 
                 {bizBootcampTier === "offer" ? (
-                  !isOfferExpired && timeLeft.days + timeLeft.hours + timeLeft.minutes + timeLeft.seconds > 0 ? (
+                  !isBizOfferExpired && bizTimeLeft.days + bizTimeLeft.hours + bizTimeLeft.minutes + bizTimeLeft.seconds > 0 ? (
                     <div className="space-y-1.5">
                       <div className="py-2.5 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F3E5AB] text-xs font-mono font-bold flex items-center gap-2">
                         <Clock className="size-4 animate-pulse text-[#D4AF37] shrink-0" />
-                        <span>Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong></span>
+                        <span>Fin de l'offre : <strong className="text-white">{bizTimeLeft.days}j {bizTimeLeft.hours}h {bizTimeLeft.minutes}m {bizTimeLeft.seconds}s</strong></span>
                       </div>
                     
                     </div>
@@ -845,12 +889,12 @@ export function TarifsClient() {
             <div className="pt-6">
               <Link
                 href={`/checkout/${businessBootcamp?.slug || "bootcamp-ia-business"}${
-                  bizBootcampTier === "fondateur" || isOfferExpired ? "?tier=standard" : "?tier=offer"
+                  bizBootcampTier === "fondateur" || isBizOfferExpired ? "?tier=standard" : "?tier=offer"
                 }`}
                 className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black text-xs sm:text-sm transition-all shadow-xl shadow-[#D4AF37]/25"
               >
                 <span>
-                  {bizBootcampTier === "offer" && !isOfferExpired
+                  {bizBootcampTier === "offer" && !isBizOfferExpired
                     ? `Profiter de l'Offre Promo (${formatFCFA(bizPromoPrice)})`
                     : `S'inscrire au Tarif Standard (${formatFCFA(bizOriginalPrice)})`}
                 </span>
@@ -914,15 +958,21 @@ export function TarifsClient() {
                     </th>
                     <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-purple-300 bg-purple-950/30">
                       <div>Pass Cercle IA</div>
-                      <div className="text-[10px] font-normal text-purple-300/80 mt-1">9 000 ou 29 000 FCFA</div>
+                      <div className="text-[10px] font-normal text-purple-300/80 mt-1">
+                        {subPricing.price3mDisplay} ou {subPricing.price1yDisplay}
+                      </div>
                     </th>
                     <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-primary bg-primary/10">
                       <div>Bootcamp Carrière</div>
-                      <div className="text-[10px] font-normal text-sky-300 mt-1">Promo: 99 000 · Std: 149 000 FCFA</div>
+                      <div className="text-[10px] font-normal text-sky-300 mt-1">
+                        Promo: {formatFCFA(proPromoPrice)} · Std: {formatFCFA(proOriginalPrice)}
+                      </div>
                     </th>
                     <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-[#ECC86B] bg-[#D4AF37]/10">
                       <div>Bootcamp Business</div>
-                      <div className="text-[10px] font-normal text-amber-300 mt-1">Promo: 149 000 · Std: 199 000 FCFA</div>
+                      <div className="text-[10px] font-normal text-amber-300 mt-1">
+                        Promo: {formatFCFA(bizPromoPrice)} · Std: {formatFCFA(bizOriginalPrice)}
+                      </div>
                     </th>
                   </tr>
                 </thead>
