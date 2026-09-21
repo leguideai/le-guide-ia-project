@@ -501,7 +501,7 @@ export async function PUT(req: Request) {
     if (method !== undefined) payUpdateData.method = method
     if (transaction_ref !== undefined) payUpdateData.transaction_ref = transaction_ref
     if (status !== undefined) payUpdateData.status = status
-    if (emailClean) payUpdateData.user_email = emailClean
+    // Note: user_email does NOT exist on 'payments' table — email is updated via 'registrations' below
 
     const { error: payErr } = await supabaseServer
       .from("payments")
