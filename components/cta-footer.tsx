@@ -84,7 +84,7 @@ function InlineCountdown({ targetEndDate }: { targetEndDate?: string }) {
   if (!mounted || !targetEndDate || expired) return null
 
   return (
-    <span className="text-[#ECC86B] font-bold ml-1">
+    <span className="text-[#8A6A1F] font-bold ml-1">
       · Expire dans {timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
     </span>
   )
@@ -167,7 +167,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
   const isEnrolled = isEnrolledInCourse(activeCourse)
 
   return (
-    <footer className="relative border-t border-border/60 bg-slate-950 overflow-hidden">
+    <footer className="relative border-t border-border bg-gradient-to-b from-[#EEF3FF] to-[#E4EBFA] overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:py-16 md:px-8">
         
         {/* Section de Clôture Premium */}
@@ -177,7 +177,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl bg-[#0D1B3E] border border-primary/20 p-6 sm:p-10 md:p-12 shadow-2xl"
+            className="relative overflow-hidden rounded-3xl bg-white border border-primary/25 p-6 sm:p-10 md:p-12 shadow-xs"
           >
             {/* Logo en haut à gauche */}
             <a href="/" className="flex items-center gap-2.5 z-20 hover:opacity-90 transition-opacity mb-6">
@@ -186,7 +186,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                 alt="Logo Le Guide IA"
                 className="size-7 sm:size-8 rounded-lg object-cover"
               />
-              <span className="font-heading text-sm sm:text-base font-extrabold tracking-tight text-white">
+              <span className="font-heading text-sm sm:text-base font-extrabold tracking-tight text-[#0E1E3F]">
                 LE GUIDE <span className="text-primary">IA</span>
               </span>
             </a>
@@ -194,11 +194,11 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
             <div className="grid gap-8 lg:grid-cols-12 items-center relative z-10">
               {/* Left Content */}
               <div className="lg:col-span-8 text-left space-y-4">
-                <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black leading-tight text-white max-w-2xl">
+                <h2 className="font-heading text-xl sm:text-2xl md:text-3xl font-black leading-tight text-[#0E1E3F] max-w-2xl">
                   "{t("ctaFooter.title")}"
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-                  L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le <strong className="text-white font-bold">{activeCourse?.title || "Bootcamp IA"}</strong> pour maîtriser les outils indispensables à votre réussite.
+                <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
+                  L'IA ne va pas attendre que vous soyez prêt. Mais vous pouvez décider aujourd'hui de vous y former sérieusement. Rejoignez le <strong className="text-[#0E1E3F] font-bold">{activeCourse?.title || "Bootcamp IA"}</strong> pour maîtriser les outils indispensables à votre réussite.
                 </p>
                 
                 <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -208,7 +208,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                       {isEnrolledInCourse(activeCourse) ? (
                         <Link
                           href="/dashboard"
-                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
+                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
                         >
                           <CheckCircle2 className="size-5" />
                           <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
@@ -216,7 +216,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                       ) : isPendingInCourse(activeCourse) ? (
                         <Link
                           href="/dashboard"
-                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
+                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center"
                         >
                           <CheckCircle2 className="size-5" />
                           <span>⏳ Inscription en cours de validation · Espace Membre</span>
@@ -224,28 +224,28 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                       ) : (
                         <a
                           href={`/bootcamp?course=${activeCourse?.slug || "bootcamp-ia-carriere"}`}
-                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-xl active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
+                          className="w-full sm:w-auto min-h-[48px] py-3.5 px-5 sm:px-8 text-xs sm:text-base font-black rounded-xl sm:rounded-2xl bg-primary hover:opacity-90 text-slate-950 shadow-sm active:scale-95 transition-transform inline-flex items-center justify-center gap-2 text-center whitespace-normal break-words"
                         >
                           S'inscrire au {activeCourse?.title || "Bootcamp IA"} ({formattedPrice})
                         </a>
                       )}
                     </div>
                   
-                    <div className="text-xs text-slate-300 flex flex-wrap gap-2 items-center mt-3">
+                    <div className="text-xs text-slate-600 flex flex-wrap gap-2 items-center mt-3">
                       {isEnrolledInCourse(activeCourse) ? (
-                        <span className="font-bold text-emerald-400 flex items-center gap-1.5">
+                        <span className="font-bold text-emerald-600 flex items-center gap-1.5">
                           <CheckCircle2 className="size-3.5" />
                           Accès complet activé à votre nom
                         </span>
                       ) : isPendingInCourse(activeCourse) ? (
-                        <span className="font-bold text-amber-300 flex items-center gap-1.5">
-                          <CheckCircle2 className="size-3.5 text-amber-400" />
+                        <span className="font-bold text-amber-700 flex items-center gap-1.5">
+                          <CheckCircle2 className="size-3.5 text-amber-700" />
                           Paiement Mobile Money en cours de vérification sous 24h
                         </span>
                       ) : (
                         <>
                           {!isOfferExpired && activeCourse?.original_price && (
-                            <span className="font-bold text-white line-through opacity-75">{activeCourse.original_price} FCFA {activeCourse?.offer_badge_text ? `• Offre Standard` : ""}</span>
+                            <span className="font-bold text-[#0E1E3F] line-through opacity-75">{activeCourse.original_price} FCFA {activeCourse?.offer_badge_text ? `• Offre Standard` : ""}</span>
                           )}
                           {!isOfferExpired && activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
                         </>
@@ -254,17 +254,17 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   </div>
 
                   {/* Checklist Badges */}
-                  <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-4 text-xs font-semibold text-slate-200">
+                  <div className="pt-2 flex flex-col sm:flex-row flex-wrap gap-2.5 sm:gap-4 text-xs font-semibold text-slate-700">
                     <span className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
+                      <CheckCircle2 className="size-4 text-blue-600 shrink-0" />
                       <span>Garantie satisfait ou remboursé</span>
                     </span>
                     <span className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
+                      <CheckCircle2 className="size-4 text-blue-600 shrink-0" />
                       <span>Accès immédiat au groupe WhatsApp</span>
                     </span>
                     <span className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
+                      <CheckCircle2 className="size-4 text-blue-600 shrink-0" />
                       <span>Certificat officiel LE GUIDE IA</span>
                     </span>
                   </div>
@@ -277,7 +277,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   href="https://www.linkedin.com/in/alfreddah/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative block overflow-hidden rounded-2xl border border-primary/20 glow-blue bg-slate-950/20 max-w-[280px] ml-auto group cursor-pointer"
+                  className="relative block overflow-hidden rounded-2xl border border-primary/20 glow-blue bg-[#F7F9FC] max-w-[280px] ml-auto group cursor-pointer"
                   title="Profil LinkedIn d'Alfred Dah"
                 >
                   <img
@@ -285,7 +285,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                     alt="Alfred Dah - Expert IA & Fondateur de Le Guide IA"
                     className="w-full object-cover aspect-[4/5] object-top grayscale group-hover:grayscale-0 transition-all duration-500"
                   />
-                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-950/90 border border-sky-500/40 px-2.5 py-1 text-[11px] font-bold text-sky-400 backdrop-blur-md group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-white border border-sky-500/40 px-2.5 py-1 text-[11px] font-bold text-sky-700 backdrop-blur-md group-hover:bg-sky-600 group-hover:text-white transition-colors">
                     <svg viewBox="0 0 24 24" className="size-3.5 fill-current">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                     </svg>
@@ -307,7 +307,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                 alt="Logo Le Guide IA"
                 className="size-9 rounded-lg object-cover"
               />
-              <span className="font-heading text-lg font-extrabold tracking-tight text-white">
+              <span className="font-heading text-lg font-extrabold tracking-tight text-[#0E1E3F]">
                 LE GUIDE <span className="text-primary">IA</span>
               </span>
             </a>
@@ -319,7 +319,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
 
           {/* Column 2 - Navigation Links */}
           <div className="flex flex-col items-center sm:items-start gap-4">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
               Navigation
             </span>
             <ul className="flex flex-col items-center sm:items-start gap-3.5 text-xs font-bold uppercase tracking-wider">
@@ -334,7 +334,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                         "transition-all duration-200 flex items-center gap-1.5",
                         isActive
                           ? "text-primary font-black scale-105"
-                          : "text-muted-foreground hover:text-white font-semibold"
+                          : "text-muted-foreground hover:text-[#0E1E3F] font-semibold"
                       )}
                     >
                       {isActive && <span className="size-1.5 rounded-full bg-primary animate-pulse" />}
@@ -345,7 +345,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
               })}
               <li>
                 <a
-                 href="/masterclass" className="flex items-center gap-2.5 rounded-xl text-xs font-bold hover:bg-secondary text-rose-300"
+                 href="/masterclass" className="flex items-center gap-2.5 rounded-xl text-xs font-bold hover:bg-secondary text-rose-700"
                 >
                   <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
                   <span>Masterclasses (Live)</span>
@@ -357,13 +357,13 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
 
           {/* Column 3 - Contact & Socials */}
           <div className="flex flex-col items-center sm:items-start gap-4 text-sm text-muted-foreground">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
               Contact & Réseaux
             </span>
             <div className="flex flex-col items-center sm:items-start gap-3">
               <a
                 href="mailto:alfred@leguideai.com"
-                className="inline-flex items-center gap-2 transition-colors hover:text-white text-xs font-semibold"
+                className="inline-flex items-center gap-2 transition-colors hover:text-[#0E1E3F] text-xs font-semibold"
               >
                 <Mail className="size-4 text-primary" />
                 alfred@leguideai.com
@@ -405,7 +405,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="Votre email pro..."
                   disabled={newsletterStatus === "loading" || newsletterStatus === "success"}
-                  className="w-full bg-slate-900/90 border border-border/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-24 transition-all"
+                  className="w-full bg-white border border-border rounded-xl px-3.5 py-2.5 text-xs text-[#0E1E3F] placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary pr-24 transition-all"
                 />
                 <button
                   type="submit"
@@ -417,14 +417,14 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
               </div>
 
               {newsletterStatus === "success" && (
-                <p className="text-[11px] text-emerald-400 font-bold flex items-center gap-1">
+                <p className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
                   <CheckCircle2 className="size-3 shrink-0" />
                   <span>{newsletterMessage}</span>
                 </p>
               )}
 
               {newsletterStatus === "error" && (
-                <p className="text-[11px] text-rose-400 font-bold">
+                <p className="text-[11px] text-rose-600 font-bold">
                   {newsletterMessage}
                 </p>
               )}
@@ -433,17 +433,17 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
             {/* Legal links */}
             <ul className="flex flex-col items-center sm:items-start gap-1.5 text-xs font-semibold mt-2 pt-2 border-t border-border/30 w-full">
               <li>
-                <a href="/mentions-legales" className="text-muted-foreground transition-colors hover:text-white text-[11px]">
+                <a href="/mentions-legales" className="text-muted-foreground transition-colors hover:text-[#0E1E3F] text-[11px]">
                   Mentions légales
                 </a>
               </li>
               <li>
-                <a href="/politique-confidentialite" className="text-muted-foreground transition-colors hover:text-white text-[11px]">
+                <a href="/politique-confidentialite" className="text-muted-foreground transition-colors hover:text-[#0E1E3F] text-[11px]">
                   Politique de confidentialité
                 </a>
               </li>
               {/* <li>
-                <a href="/conditions-generales" className="text-muted-foreground transition-colors hover:text-white text-[11px]">
+                <a href="/conditions-generales" className="text-muted-foreground transition-colors hover:text-[#0E1E3F] text-[11px]">
                   Conditions générales de vente
                 </a>
               </li> */}

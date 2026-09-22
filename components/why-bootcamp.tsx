@@ -54,9 +54,9 @@ export function WhyBootcamp() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-6 md:p-8 relative glow-blue shadow-xl"
+            className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-6 md:p-8 relative glow-blue shadow-sm"
           >
-            <div className="absolute -top-3.5 right-6 rounded-full bg-primary px-3.5 py-1 text-[10px] font-extrabold text-primary-foreground uppercase tracking-wider shadow-md">
+            <div className="absolute -top-3.5 right-6 rounded-full bg-primary px-3.5 py-1 text-[10px] font-extrabold text-primary-foreground uppercase tracking-wider shadow-xs">
               Recommandé
             </div>
             

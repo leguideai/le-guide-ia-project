@@ -139,27 +139,27 @@ function BootcampContent() {
 
   const theme = isBusiness
     ? {
-        border: "border-2 border-[#D4AF37] glow-gold bg-slate-950/90 shadow-2xl",
+        border: "border-2 border-[#D4AF37] glow-gold bg-white shadow-xs",
         priceBox: "bg-[#D4AF37]/10 border border-[#D4AF37]/30",
-        priceText: "text-[#ECC86B]",
-        badgeText: "text-[#F3E5AB] font-black uppercase tracking-wider text-[10px]",
-        iconSession: "text-[#D4AF37]",
-        iconOnline: "text-[#ECC86B]",
-        iconCert: "text-[#D4AF37]",
-        checkIcon: "text-[#D4AF37]",
-        btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-xl shadow-[#D4AF37]/25",
+        priceText: "text-[#8A6A1F]",
+        badgeText: "text-[#8A6A1F] font-black uppercase tracking-wider text-[10px]",
+        iconSession: "text-[#8A6A1F]",
+        iconOnline: "text-[#8A6A1F]",
+        iconCert: "text-[#8A6A1F]",
+        checkIcon: "text-[#8A6A1F]",
+        btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-sm shadow-[#D4AF37]/25",
         posterBorder: "border-[#D4AF37]/40 glow-gold",
       }
     : {
-        border: "border-2 border-blue-500/50 glow-blue bg-card/80 shadow-2xl",
+        border: "border-2 border-blue-500/50 glow-blue bg-card/80 shadow-xs",
         priceBox: "bg-blue-500/10 border border-blue-500/20",
-        priceText: "text-blue-400",
-        badgeText: "text-blue-200 font-bold uppercase tracking-wider text-[10px]",
-        iconSession: "text-blue-400",
-        iconOnline: "text-blue-300",
-        iconCert: "text-[#D4AF37]",
-        checkIcon: "text-blue-400",
-        btn: "bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-xl shadow-blue-500/25",
+        priceText: "text-blue-600",
+        badgeText: "text-blue-700 font-bold uppercase tracking-wider text-[10px]",
+        iconSession: "text-blue-600",
+        iconOnline: "text-blue-700",
+        iconCert: "text-[#8A6A1F]",
+        checkIcon: "text-blue-600",
+        btn: "bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-sm shadow-blue-500/25",
         posterBorder: "border-blue-500/30",
       }
 
@@ -169,7 +169,7 @@ function BootcampContent() {
       <Header />
 
       {/* Hero Section Adaptée aux Formules de Bootcamp */}
-      <section className="py-14 bg-slate-950/80 border-b border-border/60">
+      <section className="py-14 bg-white border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
           
           {/* Header Left-Aligned */}
@@ -179,9 +179,9 @@ function BootcampContent() {
               CATALOGUE OFFICIEL DES BOOTCAMPS LE GUIDE IA
             </span>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-white leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-[#0E1E3F] leading-tight">
               Bootcamp Intelligence Artificielle :{" "}
-              <span className="bg-gradient-to-r from-primary via-sky-400 to-blue-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#0E1E3F] via-primary to-sky-600 bg-clip-text text-transparent">
                 Formations Intensives &amp; Certifiantes
               </span>
             </h1>
@@ -195,31 +195,31 @@ function BootcampContent() {
           {loading ? (
             <div className="space-y-6">
               <div className="flex items-center gap-2 border-b border-border/70 pb-3">
-                <div className="h-10 w-48 bg-white/10 rounded-xl animate-pulse" />
-                <div className="h-10 w-48 bg-white/10 rounded-xl animate-pulse" />
+                <div className="h-10 w-48 bg-[#EEF3FF] rounded-xl animate-pulse" />
+                <div className="h-10 w-48 bg-[#EEF3FF] rounded-xl animate-pulse" />
               </div>
 
-              <div className="rounded-3xl border border-white/10 bg-card/60 backdrop-blur-2xl p-6 md:p-10 animate-pulse">
+              <div className="rounded-3xl border border-slate-200 bg-card/60 backdrop-blur-2xl p-6 md:p-10 animate-pulse">
                 <div className="grid gap-8 lg:grid-cols-12 items-stretch">
                   <div className="order-2 lg:order-1 lg:col-span-7 flex flex-col justify-between space-y-6">
                     <div className="space-y-4">
-                      <div className="h-7 w-40 bg-white/10 rounded-xl" />
+                      <div className="h-7 w-40 bg-[#EEF3FF] rounded-xl" />
                       <div className="space-y-2">
-                        <div className="h-10 w-full bg-white/10 rounded-2xl" />
-                        <div className="h-6 w-3/4 bg-white/5 rounded-xl" />
+                        <div className="h-10 w-full bg-[#EEF3FF] rounded-2xl" />
+                        <div className="h-6 w-3/4 bg-[#F5F8FF] rounded-xl" />
                       </div>
-                      <div className="h-24 bg-white/5 rounded-2xl border border-white/5" />
+                      <div className="h-24 bg-[#F5F8FF] rounded-2xl border border-slate-200/70" />
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <div className="h-16 bg-white/5 rounded-2xl" />
-                        <div className="h-16 bg-white/5 rounded-2xl" />
-                        <div className="h-16 bg-white/5 rounded-2xl col-span-2 sm:col-span-1" />
+                        <div className="h-16 bg-[#F5F8FF] rounded-2xl" />
+                        <div className="h-16 bg-[#F5F8FF] rounded-2xl" />
+                        <div className="h-16 bg-[#F5F8FF] rounded-2xl col-span-2 sm:col-span-1" />
                       </div>
                     </div>
-                    <div className="h-12 w-full bg-white/15 rounded-2xl mt-4" />
+                    <div className="h-12 w-full bg-[#E6EDFC] rounded-2xl mt-4" />
                   </div>
                   <div className="order-1 lg:order-2 lg:col-span-5 flex items-center justify-center">
-                    <div className="w-full max-w-[340px] aspect-[3/4] rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                      <GraduationCap className="size-12 text-white/20 animate-pulse" />
+                    <div className="w-full max-w-[340px] aspect-[3/4] rounded-2xl bg-[#F5F8FF] border border-slate-200 flex items-center justify-center">
+                      <GraduationCap className="size-12 text-slate-300 animate-pulse" />
                     </div>
                   </div>
                 </div>
@@ -241,8 +241,8 @@ function BootcampContent() {
                       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap border shrink-0 ${
                         isCurActive
                           ? isCurBusiness
-                            ? "bg-[#D4AF37] text-slate-950 border-[#F3E5AB] shadow-lg shadow-[#D4AF37]/30 scale-[1.02] font-black"
-                            : "bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-500/30 scale-[1.02] font-bold"
+                            ? "bg-[#D4AF37] text-slate-950 border-[#F3E5AB] shadow-sm shadow-[#D4AF37]/30 scale-[1.02] font-black"
+                            : "bg-blue-600 text-white border-blue-400 shadow-sm shadow-blue-500/30 scale-[1.02] font-bold"
                           : "bg-card/40 border-border/60 text-muted-foreground hover:bg-card/80 hover:text-foreground font-semibold"
                       }`}
                     >
@@ -271,8 +271,8 @@ function BootcampContent() {
                   <div className="space-y-4">
                     {/* Already Enrolled Banner */}
                     {isEnrolledInCourse(active) && (
-                      <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2.5">
-                        <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
+                      <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 text-xs flex items-center gap-2.5">
+                        <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
                         <div>
                           <strong>Inscription confirmée :</strong> Vous êtes déjà inscrit(e) à ce Bootcamp. Vos replays et salons d'entraide sont disponibles dans votre espace membre.
                         </div>
@@ -281,8 +281,8 @@ function BootcampContent() {
 
                     {/* Pending Verification Banner */}
                     {isPendingInCourse(active) && (
-                      <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2.5">
-                        <Clock className="size-4 shrink-0 text-amber-400 animate-pulse" />
+                      <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-700 text-xs flex items-center gap-2.5">
+                        <Clock className="size-4 shrink-0 text-amber-700 animate-pulse" />
                         <div>
                           <strong>Demande d'inscription reçue :</strong> Votre virement Mobile Money est en cours de vérification sous moins de 24h. Vous pouvez suivre l'état d'activation sur votre espace membre.
                         </div>
@@ -291,8 +291,8 @@ function BootcampContent() {
 
                     {/* Expired / Closed Notice if viewed directly and not enrolled */}
                     {!isEnrolledInCourse(active) && !isPendingInCourse(active) && !isCourseOpenForPublic(active) && (
-                      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2.5">
-                        <Sparkles className="size-4 shrink-0 text-amber-400" />
+                      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 text-xs flex items-center gap-2.5">
+                        <Sparkles className="size-4 shrink-0 text-amber-700" />
                         <div>
                           <strong>Session clôturée :</strong> Les inscriptions pour cette cohorte sont terminées. Les membres inscrits peuvent accéder aux replays et ressources directement sur leur espace membre.
                         </div>
@@ -355,7 +355,7 @@ function BootcampContent() {
                   {isEnrolledInCourse(active) ? (
                     <Link
                       href="/dashboard"
-                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-600/25 active:scale-95 transition-all cursor-pointer"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/25 active:scale-95 transition-all cursor-pointer"
                     >
                       <CheckCircle2 className="size-4" />
                       <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
@@ -364,7 +364,7 @@ function BootcampContent() {
                   ) : isPendingInCourse(active) ? (
                     <Link
                       href="/dashboard"
-                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-black bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xl shadow-amber-500/25 active:scale-95 transition-all cursor-pointer"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-black bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm shadow-amber-500/25 active:scale-95 transition-all cursor-pointer"
                     >
                       <Clock className="size-4 animate-pulse" />
                       <span>⏳ Inscription en cours de traitement · Espace Membre</span>
@@ -381,7 +381,7 @@ function BootcampContent() {
                   ) : (
                     <Link
                       href="/dashboard"
-                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-bold bg-primary text-slate-950 hover:opacity-90 transition-all cursor-pointer shadow-lg"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-bold bg-primary text-slate-950 hover:opacity-90 transition-all cursor-pointer shadow-sm"
                     >
                       <span>Accéder à l'Espace Membre (Replays)</span>
                       <ArrowRight className="size-4" />
@@ -403,8 +403,8 @@ function BootcampContent() {
 
               {/* Right Column: Official Poster Display (Order 1 on mobile, Order 2 on desktop) */}
               <div className="order-1 lg:order-2 lg:col-span-5 flex justify-center items-center">
-                <div className={`rounded-2xl bg-slate-950 p-3 shadow-2xl backdrop-blur-xl w-full max-w-[340px] sm:max-w-[380px] lg:max-w-[340px] border ${theme.posterBorder}`}>
-                  <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-border/40 shadow-xl bg-slate-950 group">
+                <div className={`rounded-2xl bg-white p-3 shadow-xs backdrop-blur-xl w-full max-w-[340px] sm:max-w-[380px] lg:max-w-[340px] border ${theme.posterBorder}`}>
+                  <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border border-border/40 shadow-sm bg-[#F7F9FC] group">
                     <img
                       src={active?.poster || active?.thumbnail || "/images/bootcamp_pro_poster.jpg"}
                       alt={`Affiche Officielle ${active?.title || "Bootcamp"}`}
@@ -445,28 +445,28 @@ function BootcampContent() {
 
 function BootcampPageSkeleton() {
   return (
-    <main className="relative min-h-screen bg-[#090d16] text-white selection:bg-primary selection:text-slate-950 font-sans overflow-x-hidden">
+    <main className="relative min-h-screen bg-white text-[#0E1E3F] selection:bg-primary selection:text-white font-sans overflow-x-hidden">
       <Header />
-      <section className="py-14 bg-slate-950/80 border-b border-border/60">
+      <section className="py-14 bg-white border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8 animate-pulse">
           <div className="space-y-3">
-            <div className="h-6 w-48 bg-white/10 rounded-full" />
-            <div className="h-9 w-96 bg-white/10 rounded-2xl" />
+            <div className="h-6 w-48 bg-[#EEF3FF] rounded-full" />
+            <div className="h-9 w-96 bg-[#EEF3FF] rounded-2xl" />
           </div>
           <div className="flex items-center gap-2 border-b border-border/70 pb-3">
-            <div className="h-10 w-48 bg-white/10 rounded-xl" />
-            <div className="h-10 w-48 bg-white/10 rounded-xl" />
+            <div className="h-10 w-48 bg-[#EEF3FF] rounded-xl" />
+            <div className="h-10 w-48 bg-[#EEF3FF] rounded-xl" />
           </div>
-          <div className="rounded-3xl border border-white/10 bg-card/60 p-6 md:p-10">
+          <div className="rounded-3xl border border-slate-200 bg-card/60 p-6 md:p-10">
             <div className="grid gap-8 lg:grid-cols-12 items-stretch">
               <div className="lg:col-span-7 space-y-6">
-                <div className="h-7 w-40 bg-white/10 rounded-xl" />
-                <div className="h-10 w-full bg-white/10 rounded-2xl" />
-                <div className="h-24 bg-white/5 rounded-2xl" />
-                <div className="h-12 w-full bg-white/15 rounded-2xl mt-4" />
+                <div className="h-7 w-40 bg-[#EEF3FF] rounded-xl" />
+                <div className="h-10 w-full bg-[#EEF3FF] rounded-2xl" />
+                <div className="h-24 bg-[#F5F8FF] rounded-2xl" />
+                <div className="h-12 w-full bg-[#E6EDFC] rounded-2xl mt-4" />
               </div>
               <div className="lg:col-span-5 flex items-center justify-center">
-                <div className="w-full max-w-[340px] aspect-[3/4] rounded-2xl bg-white/5 border border-white/10" />
+                <div className="w-full max-w-[340px] aspect-[3/4] rounded-2xl bg-[#F5F8FF] border border-slate-200" />
               </div>
             </div>
           </div>

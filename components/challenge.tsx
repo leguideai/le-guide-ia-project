@@ -302,13 +302,13 @@ function SignupForm({ perks }: { perks: string[] }) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="relative overflow-hidden rounded-3xl border border-primary/40 bg-card p-8 text-center shadow-2xl glow-blue"
+        className="relative overflow-hidden rounded-3xl border border-primary/40 bg-card p-8 text-center shadow-xs glow-blue"
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-1/2 top-0 h-40 w-40 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
         </div>
         <div className="relative">
-          <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_0_28px] shadow-primary/50">
+          <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm shadow-primary/30">
             <PartyPopper className="size-8" />
           </span>
           <h3 className="mt-6 font-heading text-2xl font-extrabold">{t("challenge.success.title")}</h3>
@@ -349,7 +349,7 @@ function SignupForm({ perks }: { perks: string[] }) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-card p-8 shadow-2xl glow-blue">
+    <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-card p-8 shadow-xs glow-blue">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-20 animate-scan bg-gradient-to-b from-primary/15 to-transparent" />
       </div>
@@ -478,7 +478,7 @@ function SignupForm({ perks }: { perks: string[] }) {
               </button>
 
               {isCountryDropdownOpen && (
-                <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-card p-2 text-foreground shadow-2xl backdrop-blur-md">
+                <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-card p-2 text-foreground shadow-xs backdrop-blur-md">
                   <div className="sticky top-0 bg-card pb-2 z-10">
                     <input
                       type="text"

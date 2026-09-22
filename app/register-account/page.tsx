@@ -122,10 +122,10 @@ export default function RegisterAccountPage() {
   const isPasswordStrong = strengthScore >= 4 && passwordChecks.minLength
 
   const getStrengthLabel = () => {
-    if (strengthScore <= 1) return { label: "Trop faible", color: "bg-rose-500", text: "text-rose-400", width: "w-1/4" }
-    if (strengthScore === 2) return { label: "Faible", color: "bg-orange-500", text: "text-orange-400", width: "w-2/4" }
-    if (strengthScore === 3 || strengthScore === 4) return { label: "Bon", color: "bg-amber-400", text: "text-amber-400", width: "w-3/4" }
-    return { label: "Très robuste", color: "bg-emerald-500", text: "text-emerald-400", width: "w-full" }
+    if (strengthScore <= 1) return { label: "Trop faible", color: "bg-rose-500", text: "text-rose-600", width: "w-1/4" }
+    if (strengthScore === 2) return { label: "Faible", color: "bg-orange-500", text: "text-orange-700", width: "w-2/4" }
+    if (strengthScore === 3 || strengthScore === 4) return { label: "Bon", color: "bg-amber-400", text: "text-amber-700", width: "w-3/4" }
+    return { label: "Très robuste", color: "bg-emerald-500", text: "text-emerald-600", width: "w-full" }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -219,7 +219,7 @@ export default function RegisterAccountPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-foreground flex items-center justify-center p-4 relative overflow-hidden">
+    <main className="min-h-screen bg-white text-foreground flex items-center justify-center p-4 relative overflow-hidden">
       {/* Subtle Background Glows */}
       <div className="absolute -top-40 -left-40 size-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 size-96 rounded-full bg-blue-600/10 blur-3xl pointer-events-none" />
@@ -236,7 +236,7 @@ export default function RegisterAccountPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-border/80 bg-slate-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl space-y-6">
+        <div className="rounded-3xl border border-border/80 bg-[#F5F8FF] p-6 sm:p-8 shadow-xs backdrop-blur-2xl space-y-6">
           <div className="text-center space-y-2">
             <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary">
               <ShieldCheck className="size-6" />
@@ -246,7 +246,7 @@ export default function RegisterAccountPage() {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-400 animate-in fade-in duration-200">
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-600 animate-in fade-in duration-200">
               <AlertCircle className="size-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -254,7 +254,7 @@ export default function RegisterAccountPage() {
 
           {success ? (
             <div className="text-center space-y-4 py-4 animate-in fade-in zoom-in-95 duration-200">
-              <div className="inline-flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className="inline-flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                 <CheckCircle2 className="size-7" />
               </div>
               <h3 className="font-heading text-lg font-bold text-foreground">Compte créé avec succès !</h3>
@@ -263,7 +263,7 @@ export default function RegisterAccountPage() {
               </p>
               <Link
                 href={`/login${redirectTarget !== "/dashboard" ? `?redirect=${encodeURIComponent(redirectTarget)}` : ""}`}
-                className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-primary text-slate-950 font-black py-3 text-xs shadow-lg shadow-primary/20 hover:opacity-90 transition-all mt-4 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-primary text-slate-950 font-black py-3 text-xs shadow-sm shadow-primary/20 hover:opacity-90 transition-all mt-4 cursor-pointer"
               >
                 Aller à la connexion
               </Link>
@@ -286,7 +286,7 @@ export default function RegisterAccountPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Ex: Samba Koné"
-                    className="w-full rounded-xl border border-border bg-slate-950/70 pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                    className="w-full rounded-xl border border-border bg-[#F7F9FC] pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                   />
                 </div>
               </div>
@@ -307,7 +307,7 @@ export default function RegisterAccountPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="vous@exemple.com"
-                    className="w-full rounded-xl border border-border bg-slate-950/70 pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                    className="w-full rounded-xl border border-border bg-[#F7F9FC] pl-9 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                   />
                 </div>
               </div>
@@ -328,11 +328,11 @@ export default function RegisterAccountPage() {
                   <button
                     type="button"
                     onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-l-xl border border-r-0 border-border bg-slate-950/90 text-xs font-bold text-foreground hover:bg-slate-800 transition-all cursor-pointer shrink-0 z-10"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-l-xl border border-r-0 border-border bg-white text-xs font-bold text-foreground hover:bg-[#EEF3FF] transition-all cursor-pointer shrink-0 z-10"
                     title={`Changer de pays (${selectedCountry.name})`}
                   >
                     <span className="text-base leading-none">{getCountryFlag(selectedCountry.code)}</span>
-                    <span className="font-mono text-slate-300">{selectedCountry.dial}</span>
+                    <span className="font-mono text-slate-600">{selectedCountry.dial}</span>
                     <ChevronDown className={`size-3.5 text-muted-foreground transition-transform duration-200 ${isCountryDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
 
@@ -346,7 +346,7 @@ export default function RegisterAccountPage() {
                     value={phoneNumber}
                     onChange={(e) => handlePhoneChange(e.target.value)}
                     placeholder={currentPhoneRule?.placeholder || "70 12 34 56"}
-                    className={`w-full rounded-r-xl border bg-slate-950/70 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${
+                    className={`w-full rounded-r-xl border bg-white px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${
                       rawPhoneDigits.length > 0 && isPhoneValid
                         ? "border-emerald-500/60 focus:ring-1 focus:ring-emerald-500"
                         : rawPhoneDigits.length > 0 && !isPhoneValid
@@ -357,9 +357,9 @@ export default function RegisterAccountPage() {
 
                   {/* Country Selection Dropdown Modal */}
                   {isCountryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-slate-950 border border-slate-700 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-[#F7F9FC] border border-slate-300 rounded-2xl shadow-xs z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
                       {/* Search in countries */}
-                      <div className="p-2 border-b border-slate-800 sticky top-0 bg-slate-950">
+                      <div className="p-2 border-b border-slate-200 sticky top-0 bg-white">
                         <div className="relative">
                           <Search className="size-3.5 text-muted-foreground absolute left-2.5 top-2.5" />
                           <input
@@ -368,14 +368,14 @@ export default function RegisterAccountPage() {
                             value={countrySearch}
                             onChange={(e) => setCountrySearch(e.target.value)}
                             placeholder="Rechercher un pays ou indicatif..."
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                            className="w-full bg-[#F5F8FF] border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#0E1E3F] placeholder:text-muted-foreground focus:outline-none focus:border-primary"
                             autoFocus
                           />
                         </div>
                       </div>
 
                       {/* Country List */}
-                      <div className="overflow-y-auto divide-y divide-slate-800/40 text-left">
+                      <div className="overflow-y-auto divide-y divide-slate-200/40 text-left">
                         {filteredCountries.map((c) => {
                           const isSelected = c.code === selectedCountry.code
                           const rule = PHONE_RULES[c.code]
@@ -392,15 +392,15 @@ export default function RegisterAccountPage() {
                                   setPhoneNumber(formatPhoneNumber(phoneNumber, c.code))
                                 }
                               }}
-                              className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-900 transition-colors cursor-pointer text-left ${
-                                isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-300"
+                              className={`w-full px-3 py-2 text-xs flex items-center justify-between hover:bg-[#F5F8FF] transition-colors cursor-pointer text-left ${
+                                isSelected ? "bg-primary/10 text-primary font-bold" : "text-slate-600"
                               }`}
                             >
                               <span className="flex items-center gap-2 truncate">
                                 <span className="text-base">{getCountryFlag(c.code)}</span>
                                 <span className="truncate">{c.name}</span>
                               </span>
-                              <span className="font-mono text-slate-400 font-bold ml-2 shrink-0">
+                              <span className="font-mono text-slate-500 font-bold ml-2 shrink-0">
                                 {c.dial}
                               </span>
                             </button>
@@ -415,11 +415,11 @@ export default function RegisterAccountPage() {
                 <div className="flex items-center justify-between text-[10px] pt-0.5">
                   {rawPhoneDigits.length > 0 ? (
                     isPhoneValid ? (
-                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <span className="text-emerald-600 font-bold flex items-center gap-1">
                         <Check className="size-3" /> Numéro valide pour {selectedCountry.name}
                       </span>
                     ) : (
-                      <span className="text-amber-400 flex items-center gap-1 font-semibold">
+                      <span className="text-amber-700 flex items-center gap-1 font-semibold">
                         <AlertCircle className="size-3" /> {currentPhoneRule ? `Format : ${currentPhoneRule.formatExample} (${rawPhoneDigits.length}/${Array.isArray(currentPhoneRule.expectedLength) ? currentPhoneRule.expectedLength.join(' ou ') : currentPhoneRule.expectedLength})` : "Format incomplet"}
                       </span>
                     )
@@ -452,7 +452,7 @@ export default function RegisterAccountPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="8+ car., majuscule, chiffre, symbole"
-                    className="w-full rounded-xl border border-border bg-slate-950/70 pl-9 pr-10 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                    className="w-full rounded-xl border border-border bg-[#F7F9FC] pl-9 pr-10 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                   />
                   <button
                     type="button"
@@ -466,7 +466,7 @@ export default function RegisterAccountPage() {
                 {/* Password Strength Progress Bar */}
                 {password && (
                   <div className="space-y-2 pt-1">
-                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-[#EEF3FF] rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all duration-300 ${getStrengthLabel().color} ${getStrengthLabel().width}`}
                       />
@@ -474,19 +474,19 @@ export default function RegisterAccountPage() {
 
                     {/* Criteria Checklist */}
                     <div className="grid grid-cols-2 gap-1 text-[10px] text-muted-foreground pt-0.5">
-                      <span className={`flex items-center gap-1 ${passwordChecks.minLength ? "text-emerald-400 font-bold" : ""}`}>
+                      <span className={`flex items-center gap-1 ${passwordChecks.minLength ? "text-emerald-600 font-bold" : ""}`}>
                         {passwordChecks.minLength ? <Check className="size-3" /> : <X className="size-3 text-slate-600" />}
                         8 caractères min.
                       </span>
-                      <span className={`flex items-center gap-1 ${passwordChecks.hasUpper && passwordChecks.hasLower ? "text-emerald-400 font-bold" : ""}`}>
+                      <span className={`flex items-center gap-1 ${passwordChecks.hasUpper && passwordChecks.hasLower ? "text-emerald-600 font-bold" : ""}`}>
                         {passwordChecks.hasUpper && passwordChecks.hasLower ? <Check className="size-3" /> : <X className="size-3 text-slate-600" />}
                         Majuscule & minuscule
                       </span>
-                      <span className={`flex items-center gap-1 ${passwordChecks.hasNumber ? "text-emerald-400 font-bold" : ""}`}>
+                      <span className={`flex items-center gap-1 ${passwordChecks.hasNumber ? "text-emerald-600 font-bold" : ""}`}>
                         {passwordChecks.hasNumber ? <Check className="size-3" /> : <X className="size-3 text-slate-600" />}
                         Au moins 1 chiffre
                       </span>
-                      <span className={`flex items-center gap-1 ${passwordChecks.hasSpecial ? "text-emerald-400 font-bold" : ""}`}>
+                      <span className={`flex items-center gap-1 ${passwordChecks.hasSpecial ? "text-emerald-600 font-bold" : ""}`}>
                         {passwordChecks.hasSpecial ? <Check className="size-3" /> : <X className="size-3 text-slate-600" />}
                         1 symbole (!@#$...)
                       </span>
@@ -509,7 +509,7 @@ export default function RegisterAccountPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Répétez votre mot de passe"
-                    className={`w-full rounded-xl border bg-slate-950/70 pl-9 pr-10 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${
+                    className={`w-full rounded-xl border bg-[#F7F9FC] pl-9 pr-10 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none transition-all ${
                       passwordsMatch === true
                         ? "border-emerald-500/60 focus:ring-1 focus:ring-emerald-500"
                         : passwordsMatch === false
@@ -527,12 +527,12 @@ export default function RegisterAccountPage() {
                 </div>
 
                 {passwordsMatch === false && (
-                  <p className="text-[10px] font-bold text-rose-400 flex items-center gap-1">
+                  <p className="text-[10px] font-bold text-rose-600 flex items-center gap-1">
                     <X className="size-3" /> Les mots de passe ne correspondent pas
                   </p>
                 )}
                 {passwordsMatch === true && confirmPassword.length > 0 && (
-                  <p className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                  <p className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
                     <Check className="size-3" /> Mots de passe identiques
                   </p>
                 )}
@@ -541,7 +541,7 @@ export default function RegisterAccountPage() {
               <button
                 type="submit"
                 disabled={loading || !isPasswordStrong || passwordsMatch === false || !isPhoneValid}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black py-3 text-xs shadow-lg shadow-primary/20 disabled:opacity-50 transition-all cursor-pointer mt-2"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black py-3 text-xs shadow-sm shadow-primary/20 disabled:opacity-50 transition-all cursor-pointer mt-2"
               >
                 <UserPlus className="size-4" />
                 {loading ? "Création du compte..." : "Créer mon compte"}

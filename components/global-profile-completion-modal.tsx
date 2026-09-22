@@ -439,20 +439,20 @@ export function GlobalProfileCompletionModal() {
   return (
     <div 
       onClick={handleDismiss}
-      className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] bg-white backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden w-full max-w-xl my-auto animate-in fade-in zoom-in-95 duration-200 text-slate-900 relative"
+        className="bg-[#F7F9FC] rounded-3xl border border-slate-200 shadow-xs overflow-hidden w-full max-w-xl my-auto animate-in fade-in zoom-in-95 duration-200 text-slate-900 relative"
       >
         
         {/* Modal Header */}
-        <div className="bg-slate-900 text-white p-5 sm:p-6 relative overflow-hidden">
+        <div className="bg-[#F5F8FF] text-[#0E1E3F] p-5 sm:p-6 relative overflow-hidden">
           {/* Close Button X */}
           <button
             type="button"
             onClick={handleDismiss}
-            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
+            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-[#EEF3FF] hover:bg-[#E6EDFC] text-slate-600 hover:text-[#0E1E3F] transition-colors cursor-pointer"
             title="Ignorer pour le moment"
             aria-label="Fermer"
           >
@@ -465,21 +465,21 @@ export function GlobalProfileCompletionModal() {
               <Sparkles className="size-3.5" />
               <span>Personnalisation du Profil • Optionnel</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold font-heading text-white flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold font-heading text-[#0E1E3F] flex items-center gap-2">
               <span>Complétez votre profil apprenant</span>
               <span className="text-2xl">🎓</span>
             </h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Ces informations facultatives nous permettent d&apos;adapter vos formations, de vous intégrer à votre <strong>groupe WhatsApp</strong> et d&apos;émettre vos <strong>certificats officiels</strong>. Vous pouvez aussi le faire plus tard.
             </p>
 
             {/* Progress Bar */}
-            <div className="mt-3 pt-3 border-t border-white/10 space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-300">
+            <div className="mt-3 pt-3 border-t border-slate-200 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600">
                 <span>Progression du profil</span>
                 <span className="text-primary font-bold">{profileCompletionStats.percentage}% ({profileCompletionStats.completedCount}/{profileCompletionStats.total} complétés)</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+              <div className="w-full h-2 rounded-full bg-[#EEF3FF] overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-300 rounded-full"
                   style={{ width: `${profileCompletionStats.percentage}%` }}
@@ -510,7 +510,7 @@ export function GlobalProfileCompletionModal() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Ex: Jean-Marc Kouassi"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
+              className="w-full rounded-xl border border-slate-200 bg-[#F7F9FC] px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
             />
           </div>
 
@@ -529,7 +529,7 @@ export function GlobalProfileCompletionModal() {
               >
                 <span className="text-base leading-none">{getCountryFlag(profileCountry.code)}</span>
                 <span className="font-mono text-slate-700">{profileCountry.dial}</span>
-                <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isPhoneCountryOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`size-3.5 text-slate-500 transition-transform duration-200 ${isPhoneCountryOpen ? "rotate-180" : ""}`} />
               </button>
 
               <input
@@ -541,7 +541,7 @@ export function GlobalProfileCompletionModal() {
                   setProfilePhone(formatted)
                 }}
                 placeholder={currentProfilePhoneRule ? currentProfilePhoneRule.formatExample : "01 02 03 04 05"}
-                className={`w-full rounded-r-xl border bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 font-mono shadow-2xs ${
+                className={`w-full rounded-r-xl border bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-500 focus:outline-none focus:ring-1 font-mono shadow-2xs ${
                   rawProfilePhoneDigits.length > 0 && !isProfilePhoneValid
                     ? "border-amber-300 focus:ring-amber-500 bg-amber-50/20"
                     : "border-slate-200 focus:ring-primary"
@@ -550,16 +550,16 @@ export function GlobalProfileCompletionModal() {
 
               {/* Popover Sélecteur d'Indicatif */}
               {isPhoneCountryOpen && (
-                <div className="absolute top-full left-0 mt-1 w-72 max-h-60 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full left-0 mt-1 w-72 max-h-60 bg-[#F7F9FC] border border-slate-200 rounded-2xl shadow-xs z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
                   <div className="p-2 border-b border-slate-100 sticky top-0 bg-white z-10">
                     <div className="relative">
-                      <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                      <Search className="size-3.5 text-slate-500 absolute left-2.5 top-2.5" />
                       <input
                         type="text"
                         value={phoneCountrySearch}
                         onChange={(e) => setPhoneCountrySearch(e.target.value)}
                         placeholder="Rechercher un pays ou indicatif..."
-                        className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
+                        className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-500 focus:outline-none focus:border-primary"
                         autoFocus
                       />
                     </div>
@@ -593,7 +593,7 @@ export function GlobalProfileCompletionModal() {
                             <span className="text-base">{getCountryFlag(c.code)}</span>
                             <span className="truncate">{c.name}</span>
                           </span>
-                          <span className="font-mono text-slate-400 text-[11px] shrink-0">{c.dial}</span>
+                          <span className="font-mono text-slate-500 text-[11px] shrink-0">{c.dial}</span>
                         </button>
                       )
                     })}
@@ -612,7 +612,7 @@ export function GlobalProfileCompletionModal() {
                 <button
                   type="button"
                   onClick={() => setIsResidenceCountryOpen(!isResidenceCountryOpen)}
-                  className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
+                  className="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-[#F7F9FC] px-3.5 py-2.5 text-xs text-slate-800 hover:bg-slate-50 transition-all cursor-pointer text-left shadow-2xs"
                 >
                   <span className="truncate font-semibold text-slate-800">
                     {country ? (
@@ -621,23 +621,23 @@ export function GlobalProfileCompletionModal() {
                         <span>{country}</span>
                       </span>
                     ) : (
-                      <span className="text-slate-400 font-normal">Sélectionnez votre pays...</span>
+                      <span className="text-slate-500 font-normal">Sélectionnez votre pays...</span>
                     )}
                   </span>
-                  <ChevronDown className={`size-3.5 text-slate-400 transition-transform duration-200 ${isResidenceCountryOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`size-3.5 text-slate-500 transition-transform duration-200 ${isResidenceCountryOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {isResidenceCountryOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute top-full left-0 mt-1 w-full max-h-60 bg-[#F7F9FC] border border-slate-200 rounded-2xl shadow-xs z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
                     <div className="p-2 border-b border-slate-100 sticky top-0 bg-white z-10">
                       <div className="relative">
-                        <Search className="size-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                        <Search className="size-3.5 text-slate-500 absolute left-2.5 top-2.5" />
                         <input
                           type="text"
                           value={residenceCountrySearch}
                           onChange={(e) => setResidenceCountrySearch(e.target.value)}
                           placeholder="Rechercher un pays..."
-                          className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
+                          className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-500 focus:outline-none focus:border-primary"
                           autoFocus
                         />
                       </div>
@@ -687,7 +687,7 @@ export function GlobalProfileCompletionModal() {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="Ouagadougou, Abidjan..."
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
+                className="w-full rounded-xl border border-slate-200 bg-[#F7F9FC] px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-primary shadow-2xs font-medium"
               />
             </div>
           </div>
@@ -732,8 +732,8 @@ export function GlobalProfileCompletionModal() {
                     onClick={() => setSector(item.id)}
                     className={`p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between relative space-y-1.5 ${
                       isSelected
-                        ? "border-primary bg-primary/10 shadow-md ring-2 ring-primary/40 text-slate-900"
-                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-600"
+                        ? "border-primary bg-primary/10 shadow-xs ring-2 ring-primary/40 text-slate-900"
+                        : "border-slate-200 bg-[#F7F9FC] hover:border-slate-300 hover:bg-slate-50 text-slate-600"
                     }`}
                   >
                     {isSelected && (
@@ -767,7 +767,7 @@ export function GlobalProfileCompletionModal() {
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="flex-1 py-3 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="flex-1 py-3 px-5 rounded-2xl bg-primary hover:bg-primary/90 text-slate-950 font-bold text-xs shadow-sm shadow-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {savingProfile ? (
                   <>
@@ -791,7 +791,7 @@ export function GlobalProfileCompletionModal() {
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="text-slate-400 hover:text-slate-700 hover:underline text-[11px] cursor-pointer"
+                className="text-slate-500 hover:text-slate-700 hover:underline text-[11px] cursor-pointer"
               >
                 Ignorer pour le moment
               </button>

@@ -264,7 +264,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-slate-950/95 border-b border-border/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full bg-white border-b border-border/80 backdrop-blur-xl">
       
       {/* Top Announcement Bar - 100% Responsive Mobile & Desktop */}
       <Link 
@@ -272,12 +272,12 @@ export function Header() {
         className="block bg-gradient-to-r from-primary via-blue-600 to-[#D4AF37] text-white text-[11px] font-extrabold py-2 px-3 text-center transition-all hover:opacity-95 shadow-xs group"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-1.5 sm:gap-2 leading-tight flex-wrap sm:flex-nowrap">
-          <Sparkles className="size-3.5 shrink-0 animate-pulse text-[#F3E5AB] hidden xs:inline-block" />
+          <Sparkles className="size-3.5 shrink-0 animate-pulse text-[#8A6A1F] hidden xs:inline-block" />
           
           {/* Version Mobile : Date clairement visible + Effet Promo avec prix barré */}
           <div className="inline sm:hidden text-[10.5px] xs:text-[11px] font-bold tracking-tight">
             <span>🔥 {courseTitle} • </span>
-            <span className="text-[#F3E5AB] font-black underline decoration-amber-300/60 underline-offset-2">
+            <span className="text-[#8A6A1F] font-black underline decoration-amber-300/60 underline-offset-2">
               {announcementMobileText}
             </span>
           </div>
@@ -286,12 +286,12 @@ export function Header() {
           <div className="hidden sm:inline-flex items-center gap-2">
             <span>{courseTitle} — Direct Live {courseDatesText}.</span>
             {isPromoActiveState && discountPercentState ? (
-              <span className="inline-flex items-center gap-1.5 bg-black/30 px-2.5 py-0.5 rounded-full border border-white/10">
+              <span className="inline-flex items-center gap-1.5 bg-black/30 px-2.5 py-0.5 rounded-full border border-slate-200">
                 
-                <span className="line-through text-slate-300/80 text-[10px]">
+                <span className="line-through text-slate-500 text-[10px]">
                   {originalPriceDisplay}
                 </span>
-                <span className="text-[#F3E5AB] font-black text-xs">
+                <span className="text-[#8A6A1F] font-black text-xs">
                   {promoPriceDisplay}
                 </span>
               </span>
@@ -301,11 +301,11 @@ export function Header() {
           </div>
 
           {/* Badge CTA Mobile & Desktop */}
-          <span className="inline-flex items-center gap-1.5 font-black bg-slate-950/40 sm:bg-slate-950/30 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#F3E5AB]/30 shrink-0 text-[10px] sm:text-[11px] group-hover:bg-[#F3E5AB] group-hover:text-slate-950 transition-all text-[#F3E5AB]">
+          <span className="inline-flex items-center gap-1.5 font-black bg-white sm:bg-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#F3E5AB]/30 shrink-0 text-[10px] sm:text-[11px] group-hover:bg-[#F3E5AB] group-hover:text-slate-950 transition-all text-[#8A6A1F]">
             {/* Sur Mobile : prix barré + prix promo si actif */}
             <span className="inline sm:hidden flex items-center gap-1">
               {isPromoActiveState && originalPriceDisplay && (
-                <span className="line-through text-slate-300/80 text-[9px] font-normal">
+                <span className="line-through text-slate-500 text-[9px] font-normal">
                   {originalPriceDisplay.replace(" FCFA", "")}
                 </span>
               )}
@@ -324,7 +324,7 @@ export function Header() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity">
           <img src="/Logo%20avatar.png" alt="Logo Le Guide IA" className="size-8 rounded-lg object-cover" />
-          <span className="font-heading text-lg font-black tracking-tight text-white">
+          <span className="font-heading text-lg font-black tracking-tight text-[#0E1E3F]">
             LE GUIDE <span className="text-primary">IA</span>
           </span>
         </Link>
@@ -337,7 +337,7 @@ export function Header() {
         >
           <button
             onClick={() => setCategoriesOpen(!categoriesOpen)}
-            className="flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-secondary/60 transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#0E1E3F] px-3 py-2 rounded-lg hover:bg-secondary/60 transition-colors"
           >
             <span>Catégories</span>
             <ChevronDown className="size-3.5 text-muted-foreground group-hover:rotate-180 transition-transform" />
@@ -345,7 +345,7 @@ export function Header() {
 
           {categoriesOpen && (
             <div className="absolute top-full left-0 pt-2 w-64 z-50">
-              <div className="rounded-2xl border border-border bg-card p-3 shadow-2xl space-y-1 backdrop-blur-2xl">
+              <div className="rounded-2xl border border-border bg-card p-3 shadow-xs space-y-1 backdrop-blur-2xl">
                
                 <Link 
                   href="/bootcamp" 
@@ -366,7 +366,7 @@ export function Header() {
                       : "hover:bg-secondary text-foreground font-semibold"
                   }`}
                 >
-                  <BookOpen className="size-4 text-[#D4AF37]" />
+                  <BookOpen className="size-4 text-[#8A6A1F]" />
                   <span>Bibliothèque de Prompts</span>
                 </Link>
                 <Link 
@@ -377,7 +377,7 @@ export function Header() {
                       : "hover:bg-secondary text-foreground font-semibold"
                   }`}
                 >
-                  <Building2 className="size-4 text-blue-400" />
+                  <Building2 className="size-4 text-blue-600" />
                   <span>Espace Entreprises (B2B)</span>
                 </Link>
                 <Link 
@@ -388,15 +388,15 @@ export function Header() {
                       : "hover:bg-secondary text-foreground font-semibold"
                   }`}
                 >
-                  <CreditCard className="size-4 text-emerald-400" />
+                  <CreditCard className="size-4 text-emerald-600" />
                   <span>Grille Tarifaire & Abonnements</span>
                 </Link>
                 <Link 
                   href="/masterclass" 
                   className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-bold transition-colors ${
                     isMasterclassActive 
-                      ? "bg-rose-500/20 text-rose-300 font-black border border-rose-500/40" 
-                      : "hover:bg-secondary text-rose-300"
+                      ? "bg-rose-500/20 text-rose-700 font-black border border-rose-500/40" 
+                      : "hover:bg-secondary text-rose-700"
                   }`}
                 >
                   <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
@@ -414,13 +414,13 @@ export function Header() {
             href="/masterclass" 
             className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-xl transition-all shadow-xs ${
               isMasterclassActive 
-                ? "bg-rose-500/25 text-white border-2 border-rose-500 shadow-rose-500/30 ring-2 ring-rose-500/30" 
-                : "bg-slate-900/90 border border-rose-500/40 hover:border-rose-500 text-rose-300"
+                ? "bg-rose-500/25 text-[#0E1E3F] border-2 border-rose-500 shadow-rose-500/30 ring-2 ring-rose-500/30" 
+                : "bg-[#F5F8FF] border border-rose-500/40 hover:border-rose-500 text-rose-700"
             }`}
           >
             <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
             <span>Masterclasses</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-rose-500/20 text-rose-300 font-extrabold uppercase">Gratuit</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-rose-500/20 text-rose-700 font-extrabold uppercase">Gratuit</span>
           </Link>
 
 
@@ -429,7 +429,7 @@ export function Header() {
             className={`hidden md:inline-block text-xs transition-all px-3 py-1.5 rounded-xl ${
               isBootcampActive 
                 ? "text-primary font-black bg-primary/15 border border-primary/40 shadow-xs" 
-                : "text-slate-300 font-bold hover:text-white hover:bg-white/5"
+                : "text-slate-600 font-bold hover:text-[#1E4FD8] hover:bg-[#F5F8FF]"
             }`}
           >
             Bootcamps
@@ -440,7 +440,7 @@ export function Header() {
             className={`hidden md:inline-block text-xs transition-all px-3 py-1.5 rounded-xl ${
               isRessourcesActive 
                 ? "text-primary font-black bg-primary/15 border border-primary/40 shadow-xs" 
-                : "text-slate-300 font-bold hover:text-white hover:bg-white/5"
+                : "text-slate-600 font-bold hover:text-[#1E4FD8] hover:bg-[#F5F8FF]"
             }`}
           >
             Prompts
@@ -451,7 +451,7 @@ export function Header() {
             className={`hidden md:inline-block text-xs transition-all px-3 py-1.5 rounded-xl ${
               isTarifsActive 
                 ? "text-primary font-black bg-primary/15 border border-primary/40 shadow-xs" 
-                : "text-slate-300 font-bold hover:text-white hover:bg-white/5"
+                : "text-slate-600 font-bold hover:text-[#1E4FD8] hover:bg-[#F5F8FF]"
             }`}
           >
             Tarifs
@@ -464,7 +464,7 @@ export function Header() {
             className={`hidden lg:inline-block text-xs transition-all px-3 py-1.5 rounded-xl ${
               isEntreprisesActive 
                 ? "text-primary font-black bg-primary/15 border border-primary/40 shadow-xs" 
-                : "text-slate-300 font-bold hover:text-white hover:bg-white/5"
+                : "text-slate-600 font-bold hover:text-[#1E4FD8] hover:bg-[#F5F8FF]"
             }`}
           >
             Espace Entreprises
@@ -474,7 +474,7 @@ export function Header() {
             <div className="flex items-center gap-2">
               <Link
                 href={spaceHref}
-                className={`inline-flex items-center gap-1.5 text-xs font-black px-3.5 py-2 rounded-xl shadow-md transition-all ${
+                className={`inline-flex items-center gap-1.5 text-xs font-black px-3.5 py-2 rounded-xl shadow-xs transition-all ${
                   (isAdmin ? isAdminActive : isDashboardActive)
                     ? "bg-primary text-slate-950 ring-2 ring-primary/50 shadow-primary/20" 
                     : "bg-primary/90 hover:bg-primary text-slate-950"
@@ -486,7 +486,7 @@ export function Header() {
 
               <button
                 onClick={handleLogout}
-                className="text-xs font-bold text-rose-400 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white px-2.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1"
+                className="text-xs font-bold text-rose-600 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white px-2.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1"
                 title="Déconnexion"
               >
                 <LogOut className="size-3.5" />
@@ -501,7 +501,7 @@ export function Header() {
                   setAuthRedirect(pathname)
                 }
               }}
-              className="text-xs font-bold text-slate-950 bg-primary hover:opacity-90 px-4 py-2 rounded-xl shadow-md transition-all inline-flex items-center gap-1.5"
+              className="text-xs font-bold text-slate-950 bg-primary hover:opacity-90 px-4 py-2 rounded-xl shadow-xs transition-all inline-flex items-center gap-1.5"
             >
               <User className="size-3.5" />
               <span>Connexion</span>
@@ -511,7 +511,7 @@ export function Header() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden text-slate-300 hover:text-white p-2 rounded-lg hover:bg-secondary transition-colors"
+            className="md:hidden text-slate-600 hover:text-[#0E1E3F] p-2 rounded-lg hover:bg-secondary transition-colors"
             aria-label="Menu"
           >
             {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
@@ -523,7 +523,7 @@ export function Header() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-slate-950/98 px-5 py-6 space-y-5 shadow-2xl backdrop-blur-2xl">
+        <div className="md:hidden border-t border-border bg-white px-5 py-6 space-y-5 shadow-xs backdrop-blur-2xl">
           <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="size-4 text-muted-foreground absolute left-3.5 top-2.5" />
             <input
@@ -542,13 +542,13 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-3 p-3 rounded-xl text-xs font-black transition-all ${
                 isMasterclassActive 
-                  ? "text-white bg-rose-500/25 border-2 border-rose-500 shadow-md shadow-rose-500/20" 
-                  : "text-rose-300 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/15"
+                  ? "text-white bg-rose-500/25 border-2 border-rose-500 shadow-xs shadow-rose-500/20" 
+                  : "text-rose-700 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/15"
               }`}
             >
               <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
               <span>Masterclasses (Live)</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-extrabold ml-auto">Gratuit</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-700 font-extrabold ml-auto">Gratuit</span>
             </Link>
             
             <Link
@@ -573,7 +573,7 @@ export function Header() {
                   : "text-foreground font-bold hover:bg-secondary"
               }`}
             >
-              <BookOpen className="size-4 text-purple-400" />
+              <BookOpen className="size-4 text-purple-600" />
               <span>Bibliothèque de Prompts</span>
             </Link>
             
@@ -586,7 +586,7 @@ export function Header() {
                   : "text-foreground font-bold hover:bg-secondary"
               }`}
             >
-              <Building2 className="size-4 text-blue-400" />
+              <Building2 className="size-4 text-blue-600" />
               <span>Espace Entreprises (B2B)</span>
             </Link>
 
@@ -599,7 +599,7 @@ export function Header() {
                   : "text-foreground font-bold hover:bg-secondary"
               }`}
             >
-              <CreditCard className="size-4 text-emerald-400" />
+              <CreditCard className="size-4 text-emerald-600" />
               <span>Tarifs & Abonnements</span>
             </Link>
           </div>
@@ -610,7 +610,7 @@ export function Header() {
                 <Link
                   href={spaceHref}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-lg"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-sm"
                 >
                   {isAdmin ? <ShieldCheck className="size-4" /> : <User className="size-4" />}
                   <span>{isAdmin ? "Accéder au Portail Admin" : "Accéder à Mon Espace"}</span>
@@ -620,7 +620,7 @@ export function Header() {
                     setMobileMenuOpen(false)
                     handleLogout()
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 font-bold text-xs"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 font-bold text-xs"
                 >
                   <LogOut className="size-3.5" />
                   <span>Déconnexion</span>
@@ -635,7 +635,7 @@ export function Header() {
                     setAuthRedirect(pathname)
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-lg"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-slate-950 font-black text-xs shadow-sm"
               >
                 <User className="size-4" />
                 <span>Connexion</span>

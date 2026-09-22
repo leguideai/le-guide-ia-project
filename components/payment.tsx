@@ -186,7 +186,7 @@ export function Payment() {
                   key={m.id}
                   className="rounded-2xl border border-border bg-card/45 p-6 flex flex-col sm:flex-row gap-4 items-start backdrop-blur-sm hover:border-primary/20 transition-colors"
                 >
-                  <span className="flex h-12 w-20 items-center justify-center rounded-xl bg-white p-1.5 shrink-0 border border-border/80">
+                  <span className="flex h-12 w-20 items-center justify-center rounded-xl bg-[#F7F9FC] p-1.5 shrink-0 border border-border/80">
                     <img src={m.logo} alt={m.title} className="h-full w-full object-contain" />
                   </span>
                   
@@ -235,7 +235,7 @@ export function Payment() {
               initial={{ opacity: 0, scale: 0.98 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="rounded-3xl border border-primary/25 bg-card/45 p-6 md:p-8 shadow-2xl backdrop-blur-sm relative overflow-hidden"
+              className="rounded-3xl border border-primary/25 bg-card/45 p-6 md:p-8 shadow-xs backdrop-blur-sm relative overflow-hidden"
             >
               {status === "success" ? (
                 <div className="text-center py-8">
@@ -252,7 +252,7 @@ export function Payment() {
                     href={`https://wa.me/22605050577?text=${encodeURIComponent("Bonjour Alfred, je viens d'envoyer ma confirmation de paiement pour le Bootcamp IA & Carrière.\nNom: " + form.name + "\nMoyen: " + form.method)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-6 py-3 text-xs transition-transform active:scale-95 shadow-md"
+                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold px-6 py-3 text-xs transition-transform active:scale-95 shadow-xs"
                   >
                     Contacter Alfred sur WhatsApp
                   </a>
@@ -381,7 +381,7 @@ export function Payment() {
                       </button>
 
                       {isCountryDropdownOpen && (
-                        <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-card p-2 text-foreground shadow-2xl backdrop-blur-md">
+                        <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-card p-2 text-foreground shadow-xs backdrop-blur-md">
                           <div className="sticky top-0 bg-card pb-2 z-10">
                             <input
                               type="text"
@@ -453,7 +453,7 @@ export function Payment() {
                   <button
                     type="submit"
                     disabled={status === "loading"}
-                    className="w-full flex h-10 items-center justify-center gap-2 rounded-lg bg-primary hover:opacity-90 text-primary-foreground font-bold px-4 text-xs shadow-md disabled:opacity-50 active:scale-98 transition-all cursor-pointer mt-2"
+                    className="w-full flex h-10 items-center justify-center gap-2 rounded-lg bg-primary hover:opacity-90 text-primary-foreground font-bold px-4 text-xs shadow-xs disabled:opacity-50 active:scale-98 transition-all cursor-pointer mt-2"
                   >
                     <Send className="size-3.5" />
                     {status === "loading" ? t("payment.form.loading") : t("payment.form.cta")}

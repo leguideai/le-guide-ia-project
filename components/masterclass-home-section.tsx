@@ -76,16 +76,16 @@ export function MasterclassHomeSection() {
   }, [sessionData?.scheduledAt, sessionData?.is_active])
 
   return (
-    <section className="relative py-14 px-4 sm:px-6 lg:px-8 border-y border-border bg-[#090d16]">
+    <section className="relative py-14 px-4 sm:px-6 lg:px-8 border-y border-border bg-white">
       <div className="max-w-6xl mx-auto">
-        <div className="rounded-2xl bg-card border border-border p-6 sm:p-10 shadow-xl">
+        <div className="rounded-2xl bg-card border border-border p-6 sm:p-10 shadow-sm">
           
           <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
             
             {/* Left Content */}
             <div className="lg:col-span-7 space-y-5 text-left">
               
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-600 text-xs font-bold uppercase tracking-wider">
                 {sessionData.is_active ? (
                   <>
                     <span className="size-2 rounded-full bg-rose-500 animate-pulse" />
@@ -100,7 +100,7 @@ export function MasterclassHomeSection() {
                 )}
               </div>
 
-              <h2 className="text-2xl sm:text-4xl font-heading font-black text-white leading-tight">
+              <h2 className="text-2xl sm:text-4xl font-heading font-black text-[#0E1E3F] leading-tight">
                 {sessionData.is_active ? (
                   <>
                     Masterclass IA Gratuite <br />
@@ -116,21 +116,21 @@ export function MasterclassHomeSection() {
                 )}
               </h2>
 
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xl">
                 {sessionData.description || "Rejoignez Alfred Dah pour 1h30 de formation intensive et interactive. Cas pratiques concrets, prompts avancés, démonstrations d'outils et session de questions/réponses en direct."}
               </p>
 
               {/* Badges Reassurance */}
               <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-1">
-                <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                  <ShieldCheck className="size-4 text-emerald-400" />
+                <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                  <ShieldCheck className="size-4 text-emerald-600" />
                   <span>100% Gratuit</span>
                 </div>
-                <div className="flex items-center gap-1.5 font-medium text-slate-200">
+                <div className="flex items-center gap-1.5 font-medium text-slate-700">
                   <Video className="size-4 text-primary" />
                   <span>Google Meet Live & Groupe WhatsApp</span>
                 </div>
-                <div className="flex items-center gap-1.5 font-medium text-slate-200">
+                <div className="flex items-center gap-1.5 font-medium text-slate-700">
                   <Play className="size-4 text-primary" />
                   <span>Replays HD Disponibles</span>
                 </div>
@@ -140,7 +140,7 @@ export function MasterclassHomeSection() {
               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Link
                   href="/masterclass"
-                  className={`inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-black text-xs shadow-md active:scale-95 transition-all ${
+                  className={`inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-black text-xs shadow-xs active:scale-95 transition-all ${
                     isRegistered
                       ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-900/30"
                       : "bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -148,7 +148,7 @@ export function MasterclassHomeSection() {
                 >
                   {isRegistered ? (
                     <>
-                      <CheckCircle2 className="size-4 text-white" />
+                      <CheckCircle2 className="size-4 text-[#0E1E3F]" />
                       <span>✓ Déjà inscrit (Accéder au direct)</span>
                     </>
                   ) : (
@@ -173,11 +173,11 @@ export function MasterclassHomeSection() {
 
             {/* Right Countdown Box */}
             <div className="lg:col-span-5">
-              <div className="rounded-xl bg-[#090d16] border border-border p-6 sm:p-7 text-center space-y-4 shadow-inner">
+              <div className="rounded-xl bg-[#F7F9FC] border border-border p-6 sm:p-7 text-center space-y-4 shadow-inner">
                 
                 {/* Affiche Officielle Uploader */}
                 {sessionData.thumbnailUrl && (
-                  <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-black/60 shadow-md">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-black/60 shadow-xs">
                     <img
                       src={sessionData.thumbnailUrl}
                       alt={sessionData.title}
@@ -196,7 +196,7 @@ export function MasterclassHomeSection() {
                   <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
                     {sessionData.is_active ? "Compte à Rebours du Direct" : "Accès Immédiat"}
                   </span>
-                  <p className="text-xs font-semibold text-slate-300">
+                  <p className="text-xs font-semibold text-slate-600">
                     {sessionData.is_active ? (sessionData.dateDisplay || "Prochaine Session") : "Replays Disponibles 24h/24"}
                   </p>
                 </div>
@@ -204,21 +204,21 @@ export function MasterclassHomeSection() {
                 {sessionData.is_active && timeLeft ? (
                   <div className="grid grid-cols-4 gap-2 text-center">
                     <div className="rounded-lg bg-card border border-border p-2.5">
-                      <span className="text-xl sm:text-2xl font-black text-white font-mono block">
+                      <span className="text-xl sm:text-2xl font-black text-[#0E1E3F] font-mono block">
                         {String(timeLeft.days).padStart(2, "0")}
                       </span>
                       <span className="text-[9px] uppercase font-bold text-muted-foreground">Jours</span>
                     </div>
 
                     <div className="rounded-lg bg-card border border-border p-2.5">
-                      <span className="text-xl sm:text-2xl font-black text-white font-mono block">
+                      <span className="text-xl sm:text-2xl font-black text-[#0E1E3F] font-mono block">
                         {String(timeLeft.hours).padStart(2, "0")}
                       </span>
                       <span className="text-[9px] uppercase font-bold text-muted-foreground">Heures</span>
                     </div>
 
                     <div className="rounded-lg bg-card border border-border p-2.5">
-                      <span className="text-xl sm:text-2xl font-black text-white font-mono block">
+                      <span className="text-xl sm:text-2xl font-black text-[#0E1E3F] font-mono block">
                         {String(timeLeft.minutes).padStart(2, "0")}
                       </span>
                       <span className="text-[9px] uppercase font-bold text-muted-foreground">Min</span>
@@ -242,7 +242,7 @@ export function MasterclassHomeSection() {
 
                 <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                   <span>Animé par <strong>Alfred Dah</strong></span>
-                  <span className="text-emerald-400 font-bold">100% Gratuit</span>
+                  <span className="text-emerald-600 font-bold">100% Gratuit</span>
                 </div>
               </div>
             </div>

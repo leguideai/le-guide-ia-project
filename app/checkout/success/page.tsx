@@ -45,24 +45,24 @@ function SuccessContent() {
           <span className="font-heading text-lg font-extrabold tracking-tight">LE GUIDE <span className="text-primary">IA</span></span>
         </div>
 
-        <div className="rounded-3xl border border-primary/30 bg-card/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl text-center space-y-6">
+        <div className="rounded-3xl border border-primary/30 bg-card/80 p-6 sm:p-8 shadow-xs backdrop-blur-xl text-center space-y-6">
           
           {isMobileDirect ? (
             /* MOBILE MONEY DIRECT : VERIFICATION SOUS 24H */
             <>
-              <div className="inline-flex size-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 shadow-inner">
+              <div className="inline-flex size-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/30 shadow-inner">
                 <Clock className="size-9 animate-pulse" />
               </div>
 
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[11px] font-black uppercase text-amber-400">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[11px] font-black uppercase text-amber-700">
                   <Clock className="size-3" />
                   <span>Vérification administrative sous 24h</span>
                 </div>
                 <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
                   Demande d'Inscription Reçue !
                 </h1>
-                <p className="text-xs md:text-sm text-amber-400 font-semibold">
+                <p className="text-xs md:text-sm text-amber-700 font-semibold">
                   Votre transfert Mobile Money a bien été soumis à notre équipe.
                 </p>
               </div>
@@ -106,7 +106,7 @@ function SuccessContent() {
               <div className="pt-2 space-y-2.5">
                 <Link
                   href="/dashboard"
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-xl transition-all cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-sm transition-all cursor-pointer"
                 >
                   <LayoutDashboard className="size-4" />
                   <span>Suivre sur mon Espace Membre</span>
@@ -117,7 +117,7 @@ function SuccessContent() {
                   href={`https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens d'effectuer mon inscription Mobile Money avec la référence ${ref || "soumise"}. Pouvez-vous vérifier ma transaction ? Merci !`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold py-2.5 text-xs transition-all shadow-md active:scale-95"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-[#0E1E3F] font-bold py-2.5 text-xs transition-all shadow-xs active:scale-95"
                 >
                   <MessageCircle className="size-4" />
                   <span>Accélérer la validation sur WhatsApp</span>
@@ -127,19 +127,19 @@ function SuccessContent() {
           ) : (
             /* STRIPE / CARTE : ACCÈS IMMÉDIAT */
             <>
-              <div className="inline-flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-inner">
+              <div className="inline-flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shadow-inner">
                 <CheckCircle2 className="size-9" />
               </div>
 
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-black uppercase text-emerald-400">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-black uppercase text-emerald-600">
                   <CheckCircle2 className="size-3" />
                   <span>{isSubscription ? "Pass VIP Activé" : "Accès Débloqué"}</span>
                 </div>
                 <h1 className="font-heading text-2xl font-extrabold text-foreground sm:text-3xl">
                   {isSubscription ? "Félicitations & Bienvenue VIP !" : "Félicitations & Bienvenue !"}
                 </h1>
-                <p className="text-xs md:text-sm text-emerald-400 font-semibold">
+                <p className="text-xs md:text-sm text-emerald-600 font-semibold">
                   Votre paiement par carte via Stripe a été validé avec succès.
                 </p>
               </div>
@@ -175,7 +175,7 @@ function SuccessContent() {
               <div className="pt-2 space-y-3">
                 <Link
                   href={isSubscription ? "/dashboard?tab=resources" : "/dashboard"}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-xl transition-all cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-sm transition-all cursor-pointer"
                 >
                   <LayoutDashboard className="size-4" />
                   <span>{isSubscription ? "Découvrir mes Ressources VIP" : "Accéder à mon Espace Membre"}</span>

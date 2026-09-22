@@ -85,7 +85,7 @@ function CountdownTimer() {
 
   if (expired) {
     return (
-      <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-center font-heading text-xs font-bold text-rose-400">
+      <div className="mt-6 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-center font-heading text-xs font-bold text-rose-600">
         L'offre promotionnelle a expiré. Les inscriptions se poursuivent au tarif standard.
       </div>
     )
@@ -146,7 +146,7 @@ export function Hero() {
         rel="noopener noreferrer"
         className={cn(
           buttonVariants({ size: "lg" }),
-          "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform text-center justify-center"
+          "h-12 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-none px-8 text-base shadow-sm shadow-amber-500/10 active:scale-95 transition-transform text-center justify-center"
         )}
       >
         Je rejoins le Bootcamp IA & Carrière
@@ -227,7 +227,7 @@ export function Hero() {
               href="/checkout/bootcamp-ia-pro"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "h-12 bg-primary hover:opacity-90 text-primary-foreground font-bold border-none px-8 text-base shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
+                "h-12 bg-primary hover:opacity-90 text-primary-foreground font-bold border-none px-8 text-base shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-2"
               )}
             >
               <span>S'inscrire au Bootcamp IA Pro (99 000 FCFA)</span>

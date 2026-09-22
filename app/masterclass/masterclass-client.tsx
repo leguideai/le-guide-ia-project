@@ -403,7 +403,7 @@ export function MasterclassClient() {
 
   // Composant du bloc d'action (Boutons de réservation ou Liens direct débloqués)
   const renderActionBox = () => (
-    <div className="masterclass-action-box p-5 sm:p-6 rounded-2xl border border-border bg-card space-y-4 text-left shadow-lg">
+    <div className="masterclass-action-box p-5 sm:p-6 rounded-2xl border border-border bg-card space-y-4 text-left shadow-sm">
       {authChecking ? (
         <div className="py-3 text-center text-xs text-muted-foreground animate-pulse">
           Vérification de votre statut d'inscription...
@@ -412,29 +412,29 @@ export function MasterclassClient() {
         /* État : DÉJÀ INSCRIT */
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
-            <div className="flex items-center gap-2.5 text-emerald-400 font-bold text-sm">
-              <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
+            <div className="flex items-center gap-2.5 text-emerald-600 font-bold text-sm">
+              <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
               <span>Vous êtes déjà inscrit à cette Masterclass !</span>
             </div>
-            <p className="text-xs text-slate-300 pl-7 leading-relaxed">
+            <p className="text-xs text-slate-600 pl-7 leading-relaxed">
               Votre place est confirmée et réservée. Accédez directement au direct et au groupe d'échange des apprenants ci-dessous.
             </p>
           </div>
 
           {/* GROUPE WHATSAPP CARD / BUTTON PROÉMINENT */}
           <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/60 to-emerald-900/30 border border-emerald-500/30 space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-              <MessageCircle className="size-4 text-emerald-400" />
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600">
+              <MessageCircle className="size-4 text-emerald-600" />
               <span>GROUPE WHATSAPP</span>
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Intégrez le groupe WhatsApp officiel pour échanger avec Alfred Dah et tous les participants.
             </p>
             <a
               href={upcomingSession?.whatsappGroupUrl || ""}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-emerald-600/30 cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-xs hover:shadow-emerald-600/30 cursor-pointer"
             >
               <MessageCircle className="size-4" />
               <span>Rejoindre le Groupe WhatsApp</span>
@@ -447,7 +447,7 @@ export function MasterclassClient() {
             href={upcomingSession?.youtubeLiveUrl || "https://meet.google.com"}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-blue-600/30 cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-xs hover:shadow-blue-600/30 cursor-pointer"
           >
             <Video className="size-4" />
             <span>Rejoindre la Session sur Google Meet</span>
@@ -455,22 +455,22 @@ export function MasterclassClient() {
           </a>
 
           <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Inscrit avec le compte : <strong className="text-white">{currentUser?.email}</strong></span>
+            <span>Inscrit avec le compte : <strong className="text-[#0E1E3F]">{currentUser?.email}</strong></span>
           </div>
         </div>
       ) : currentUser ? (
         /* État : Utilisateur connecté mais pas encore inscrit */
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground bg-card/60 border border-border p-3 rounded-xl">
-            <UserCheck className="size-4 text-emerald-400 shrink-0" />
-            <span className="truncate">Connecté en tant que <strong className="text-white">{currentUser.email}</strong></span>
+            <UserCheck className="size-4 text-emerald-600 shrink-0" />
+            <span className="truncate">Connecté en tant que <strong className="text-[#0E1E3F]">{currentUser.email}</strong></span>
           </div>
 
           <button
             type="button"
             disabled={registering}
             onClick={() => handleRegister()}
-            className="w-full py-3.5 px-6 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-50"
+            className="w-full py-3.5 px-6 rounded-xl bg-primary text-slate-950 font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm shadow-primary/20 cursor-pointer disabled:opacity-50"
           >
             {registering ? (
               <span>Réservation en cours...</span>
@@ -493,7 +493,7 @@ export function MasterclassClient() {
               <Lock className="size-3.5" />
               <span>Connexion Requise</span>
             </div>
-            <h4 className="text-sm font-bold text-white">
+            <h4 className="text-sm font-bold text-[#0E1E3F]">
               Connectez-vous pour réserver votre place
             </h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -508,7 +508,7 @@ export function MasterclassClient() {
                 setPendingMasterclassRegistration(upcomingSession?.id)
                 setAuthRedirect("/masterclass?action=auto_register")
               }}
-              className="flex-1 py-3 px-4 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+              className="flex-1 py-3 px-4 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-bold text-xs text-center flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
             >
               <LogIn className="size-4" />
               <span>Se connecter</span>
@@ -525,12 +525,12 @@ export function MasterclassClient() {
       {feedbackMsg && (
         <div className={`p-3.5 rounded-xl border text-xs font-semibold flex items-start gap-2.5 animate-in fade-in duration-300 ${
           feedbackMsg.includes("🎉")
-            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-md shadow-emerald-500/10"
+            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-700 shadow-xs shadow-emerald-500/10"
             : feedbackMsg.includes("ℹ️")
-            ? "bg-blue-500/15 border-blue-500/40 text-blue-300"
-            : "bg-rose-500/15 border-rose-500/40 text-rose-300"
+            ? "bg-blue-500/15 border-blue-500/40 text-blue-700"
+            : "bg-rose-500/15 border-rose-500/40 text-rose-700"
         }`}>
-          <Sparkles className="size-4 shrink-0 mt-0.5 text-emerald-400" />
+          <Sparkles className="size-4 shrink-0 mt-0.5 text-emerald-600" />
           <span className="leading-relaxed">{feedbackMsg}</span>
         </div>
       )}
@@ -538,7 +538,7 @@ export function MasterclassClient() {
   )
 
   return (
-    <main className="min-h-screen bg-[#090d16] text-white selection:bg-primary selection:text-slate-950 font-sans">
+    <main className="min-h-screen bg-white text-[#0E1E3F] selection:bg-primary selection:text-white font-sans">
       
       {/* 1. Header Global du Site */}
       <Header />
@@ -549,38 +549,38 @@ export function MasterclassClient() {
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             {/* Colonne gauche Skeleton */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <div className="h-6 w-44 bg-white/10 rounded-full" />
+              <div className="h-6 w-44 bg-[#EEF3FF] rounded-full" />
               <div className="space-y-2.5">
-                <div className="h-9 sm:h-11 w-full bg-white/10 rounded-2xl" />
-                <div className="h-9 sm:h-11 w-4/5 bg-white/10 rounded-2xl" />
+                <div className="h-9 sm:h-11 w-full bg-[#EEF3FF] rounded-2xl" />
+                <div className="h-9 sm:h-11 w-4/5 bg-[#EEF3FF] rounded-2xl" />
               </div>
               <div className="space-y-2">
-                <div className="h-4 w-full bg-white/5 rounded-lg" />
-                <div className="h-4 w-3/4 bg-white/5 rounded-lg" />
+                <div className="h-4 w-full bg-[#F5F8FF] rounded-lg" />
+                <div className="h-4 w-3/4 bg-[#F5F8FF] rounded-lg" />
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="h-20 bg-white/5 rounded-2xl border border-white/5" />
-                <div className="h-20 bg-white/5 rounded-2xl border border-white/5" />
-                <div className="h-20 bg-white/5 rounded-2xl border border-white/5 col-span-2 sm:col-span-1" />
+                <div className="h-20 bg-[#F5F8FF] rounded-2xl border border-slate-200/70" />
+                <div className="h-20 bg-[#F5F8FF] rounded-2xl border border-slate-200/70" />
+                <div className="h-20 bg-[#F5F8FF] rounded-2xl border border-slate-200/70 col-span-2 sm:col-span-1" />
               </div>
-              <div className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-3">
-                <div className="h-4 w-1/3 bg-white/10 rounded" />
-                <div className="h-12 w-full bg-white/15 rounded-xl" />
+              <div className="p-6 rounded-2xl border border-slate-200 bg-[#F5F8FF] space-y-3">
+                <div className="h-4 w-1/3 bg-[#EEF3FF] rounded" />
+                <div className="h-12 w-full bg-[#E6EDFC] rounded-xl" />
               </div>
             </div>
 
             {/* Colonne droite Skeleton */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="w-full aspect-[4/3] rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
-                <div className="size-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <Radio className="size-6 text-white/20 animate-pulse" />
+              <div className="w-full aspect-[4/3] rounded-3xl bg-[#F5F8FF] border border-slate-200 flex items-center justify-center">
+                <div className="size-12 rounded-full bg-[#EEF3FF] flex items-center justify-center">
+                  <Radio className="size-6 text-slate-600 animate-pulse" />
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-2">
-                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
-                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
-                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
-                <div className="h-16 bg-white/5 rounded-xl border border-white/5" />
+                <div className="h-16 bg-[#F5F8FF] rounded-xl border border-slate-200/70" />
+                <div className="h-16 bg-[#F5F8FF] rounded-xl border border-slate-200/70" />
+                <div className="h-16 bg-[#F5F8FF] rounded-xl border border-slate-200/70" />
+                <div className="h-16 bg-[#F5F8FF] rounded-xl border border-slate-200/70" />
               </div>
             </div>
           </div>
@@ -597,22 +597,22 @@ export function MasterclassClient() {
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold">
                 <Radio className="size-3.5 text-rose-500 animate-pulse" />
-                <span className="text-white">
+                <span className="text-[#0E1E3F]">
                   {upcomingSession.dateDisplay ? `DIRECT : ${upcomingSession.dateDisplay.toUpperCase()}` : "PROCHAINE SESSION EN DIRECT"}
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight font-heading">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#0E1E3F] leading-tight font-heading">
                 {upcomingSession.title}
               </h1>
             </div>
 
             {/* BLOC AFFICHE + BOUTON D'INSCRIPTION EN BAS DE L'AFFICHE (Mobile First) */}
-            <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-2xl space-y-4 text-center">
+            <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-xs space-y-4 text-center">
               
               {/* Miniature / Affiche Officielle (Affichage Intégral Sans Rognage) */}
               {upcomingSession.thumbnailUrl && (
-                <div className="relative rounded-2xl overflow-hidden border border-border bg-[#090d16]/90 shadow-2xl flex items-center justify-center min-h-[220px] max-h-[360px]">
+                <div className="relative rounded-2xl overflow-hidden border border-border bg-white/90 shadow-xs flex items-center justify-center min-h-[220px] max-h-[360px]">
                   {/* Flou d'ambiance d'arrière-plan */}
                   <div
                     className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
@@ -622,9 +622,9 @@ export function MasterclassClient() {
                   <img
                     src={upcomingSession.thumbnailUrl}
                     alt={upcomingSession.title}
-                    className="relative z-10 w-full h-auto max-h-[360px] object-contain mx-auto rounded-xl drop-shadow-md"
+                    className="relative z-10 w-full h-auto max-h-[360px] object-contain mx-auto rounded-xl drop-shadow-xs"
                   />
-                  <span className="absolute top-2.5 left-2.5 z-20 px-2.5 py-0.5 rounded-full bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-rose-400/30">
+                  <span className="absolute top-2.5 left-2.5 z-20 px-2.5 py-0.5 rounded-full bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs border border-rose-400/30">
                     <span className="size-1.5 rounded-full bg-white animate-ping" />
                     Session en Direct
                   </span>
@@ -633,25 +633,25 @@ export function MasterclassClient() {
 
               {/* Date & Compte à Rebours Mobile */}
               <div className="space-y-2">
-                <h3 className="text-base sm:text-lg font-bold text-white font-heading">
+                <h3 className="text-base sm:text-lg font-bold text-[#0E1E3F] font-heading">
                   {upcomingSession.dateDisplay || "En Direct Prochainement"}
                 </h3>
 
                 {timeLeft && (
                   <div className="grid grid-cols-4 gap-1.5 py-1">
-                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
-                      <span className="text-xl font-black text-white font-mono">{timeLeft.days}</span>
+                    <div className="p-2 rounded-xl border border-border bg-[#F7F9FC] space-y-0.5">
+                      <span className="text-xl font-black text-[#0E1E3F] font-mono">{timeLeft.days}</span>
                       <span className="block text-[9px] text-muted-foreground uppercase font-bold">Jours</span>
                     </div>
-                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
-                      <span className="text-xl font-black text-white font-mono">{timeLeft.hours}</span>
+                    <div className="p-2 rounded-xl border border-border bg-[#F7F9FC] space-y-0.5">
+                      <span className="text-xl font-black text-[#0E1E3F] font-mono">{timeLeft.hours}</span>
                       <span className="block text-[9px] text-muted-foreground uppercase font-bold">Heures</span>
                     </div>
-                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
-                      <span className="text-xl font-black text-white font-mono">{timeLeft.minutes}</span>
+                    <div className="p-2 rounded-xl border border-border bg-[#F7F9FC] space-y-0.5">
+                      <span className="text-xl font-black text-[#0E1E3F] font-mono">{timeLeft.minutes}</span>
                       <span className="block text-[9px] text-muted-foreground uppercase font-bold">Min</span>
                     </div>
-                    <div className="p-2 rounded-xl border border-border bg-[#090d16] space-y-0.5">
+                    <div className="p-2 rounded-xl border border-border bg-[#F7F9FC] space-y-0.5">
                       <span className="text-xl font-black text-primary font-mono">{timeLeft.seconds}</span>
                       <span className="block text-[9px] text-muted-foreground uppercase font-bold">Sec</span>
                     </div>
@@ -676,23 +676,23 @@ export function MasterclassClient() {
                 <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
                   <Clock className="size-4 text-primary mx-auto" />
                   <span className="block text-[10px] text-muted-foreground font-bold uppercase">Durée</span>
-                  <p className="text-[11px] text-white font-bold">{upcomingSession.duration}</p>
+                  <p className="text-[11px] text-[#0E1E3F] font-bold">{upcomingSession.duration}</p>
                 </div>
                 <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
                   <Video className="size-4 text-primary mx-auto" />
                   <span className="block text-[10px] text-muted-foreground font-bold uppercase">Plateforme</span>
-                  <p className="text-[11px] text-white font-bold">Google Meet (Direct)</p>
+                  <p className="text-[11px] text-[#0E1E3F] font-bold">Google Meet (Direct)</p>
                 </div>
                 <div className="p-3 rounded-xl border border-border bg-card/80 space-y-0.5 text-center">
-                  <ShieldCheck className="size-4 text-emerald-400 mx-auto" />
+                  <ShieldCheck className="size-4 text-emerald-600 mx-auto" />
                   <span className="block text-[10px] text-muted-foreground font-bold uppercase">Tarif</span>
-                  <p className="text-[11px] text-emerald-400 font-bold">100% Gratuit</p>
+                  <p className="text-[11px] text-emerald-600 font-bold">100% Gratuit</p>
                 </div>
               </div>
 
               {/* Formateur Mobile */}
               <div className="p-4 rounded-2xl border border-border bg-card flex items-center gap-3">
-                <div className="size-11 rounded-full overflow-hidden border border-border shrink-0 bg-slate-800">
+                <div className="size-11 rounded-full overflow-hidden border border-border shrink-0 bg-[#EEF3FF]">
                   <img
                     src="/Logo avatar.png"
                     alt={upcomingSession.instructor}
@@ -700,7 +700,7 @@ export function MasterclassClient() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-bold text-xs text-white truncate">{upcomingSession.instructor}</p>
+                  <p className="font-bold text-xs text-[#0E1E3F] truncate">{upcomingSession.instructor}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{upcomingSession.instructorRole}</p>
                 </div>
               </div>
@@ -718,12 +718,12 @@ export function MasterclassClient() {
               
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold">
                 <Radio className="size-3.5 text-rose-500 animate-pulse" />
-                <span className="text-white">
+                <span className="text-[#0E1E3F]">
                   {upcomingSession.dateDisplay ? `DIRECT : ${upcomingSession.dateDisplay.toUpperCase()}` : "PROCHAINE SESSION EN DIRECT"}
                 </span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight font-heading">
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#0E1E3F] leading-tight font-heading">
                 {upcomingSession.title}
               </h1>
 
@@ -738,7 +738,7 @@ export function MasterclassClient() {
                     <Clock className="size-4" />
                     <span className="font-bold text-xs">Durée & Format</span>
                   </div>
-                  <p className="text-xs text-white font-semibold">{upcomingSession.duration} en direct</p>
+                  <p className="text-xs text-[#0E1E3F] font-semibold">{upcomingSession.duration} en direct</p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-border bg-card/80 space-y-1">
@@ -746,7 +746,7 @@ export function MasterclassClient() {
                     <Video className="size-4" />
                     <span className="font-bold text-xs">Plateforme</span>
                   </div>
-                  <p className="text-xs text-white font-semibold">Google Meet (En Direct)</p>
+                  <p className="text-xs text-[#0E1E3F] font-semibold">Google Meet (En Direct)</p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-border bg-card/80 space-y-1">
@@ -754,7 +754,7 @@ export function MasterclassClient() {
                     <ShieldCheck className="size-4" />
                     <span className="font-bold text-xs">Tarif d'Accès</span>
                   </div>
-                  <p className="text-xs text-white font-semibold">100% Gratuit</p>
+                  <p className="text-xs text-[#0E1E3F] font-semibold">100% Gratuit</p>
                 </div>
               </div>
 
@@ -765,11 +765,11 @@ export function MasterclassClient() {
 
             {/* Colonne Droite: Affiche & Compte à Rebours Desktop */}
             <div className="lg:col-span-5">
-              <div className="p-6 sm:p-8 rounded-3xl border border-border bg-card shadow-2xl space-y-6 text-center">
+              <div className="p-6 sm:p-8 rounded-3xl border border-border bg-card shadow-xs space-y-6 text-center">
                 
                 {/* Miniature / Affiche Officielle (Affichage Intégral Sans Rognage) */}
                 {upcomingSession.thumbnailUrl && (
-                  <div className="relative rounded-2xl overflow-hidden border border-border bg-[#090d16]/90 shadow-2xl flex items-center justify-center min-h-[260px] max-h-[420px]">
+                  <div className="relative rounded-2xl overflow-hidden border border-border bg-white/90 shadow-xs flex items-center justify-center min-h-[260px] max-h-[420px]">
                     {/* Flou d'ambiance d'arrière-plan */}
                     <div
                       className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
@@ -779,9 +779,9 @@ export function MasterclassClient() {
                     <img
                       src={upcomingSession.thumbnailUrl}
                       alt={upcomingSession.title}
-                      className="relative z-10 w-full h-auto max-h-[420px] object-contain mx-auto rounded-xl drop-shadow-md"
+                      className="relative z-10 w-full h-auto max-h-[420px] object-contain mx-auto rounded-xl drop-shadow-xs"
                     />
-                    <span className="absolute top-3 left-3 z-20 px-2.5 py-0.5 rounded-full bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md border border-rose-400/30">
+                    <span className="absolute top-3 left-3 z-20 px-2.5 py-0.5 rounded-full bg-rose-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs border border-rose-400/30">
                       <span className="size-1.5 rounded-full bg-white animate-ping" />
                       Session en Direct
                     </span>
@@ -789,7 +789,7 @@ export function MasterclassClient() {
                 )}
 
                 <div className="space-y-1">
-                  <h3 className="text-xl font-bold text-white font-heading">
+                  <h3 className="text-xl font-bold text-[#0E1E3F] font-heading">
                     {upcomingSession.dateDisplay || "En Direct Prochainement"}
                   </h3>
                 </div>
@@ -797,19 +797,19 @@ export function MasterclassClient() {
                 {/* Compte à rebours */}
                 {timeLeft && (
                   <div className="grid grid-cols-4 gap-2 py-2">
-                    <div className="p-3 rounded-xl border border-border bg-[#090d16] space-y-1">
-                      <span className="text-2xl sm:text-3xl font-black text-white font-mono">{timeLeft.days}</span>
+                    <div className="p-3 rounded-xl border border-border bg-[#F7F9FC] space-y-1">
+                      <span className="text-2xl sm:text-3xl font-black text-[#0E1E3F] font-mono">{timeLeft.days}</span>
                       <span className="block text-[10px] text-muted-foreground uppercase font-bold">Jours</span>
                     </div>
-                    <div className="p-3 rounded-xl border border-border bg-[#090d16] space-y-1">
-                      <span className="text-2xl sm:text-3xl font-black text-white font-mono">{timeLeft.hours}</span>
+                    <div className="p-3 rounded-xl border border-border bg-[#F7F9FC] space-y-1">
+                      <span className="text-2xl sm:text-3xl font-black text-[#0E1E3F] font-mono">{timeLeft.hours}</span>
                       <span className="block text-[10px] text-muted-foreground uppercase font-bold">Heures</span>
                     </div>
-                    <div className="p-3 rounded-xl border border-border bg-[#090d16] space-y-1">
-                      <span className="text-2xl sm:text-3xl font-black text-white font-mono">{timeLeft.minutes}</span>
+                    <div className="p-3 rounded-xl border border-border bg-[#F7F9FC] space-y-1">
+                      <span className="text-2xl sm:text-3xl font-black text-[#0E1E3F] font-mono">{timeLeft.minutes}</span>
                       <span className="block text-[10px] text-muted-foreground uppercase font-bold">Min</span>
                     </div>
-                    <div className="p-3 rounded-xl border border-border bg-[#090d16] space-y-1">
+                    <div className="p-3 rounded-xl border border-border bg-[#F7F9FC] space-y-1">
                       <span className="text-2xl sm:text-3xl font-black text-primary font-mono">{timeLeft.seconds}</span>
                       <span className="block text-[10px] text-muted-foreground uppercase font-bold">Sec</span>
                     </div>
@@ -817,8 +817,8 @@ export function MasterclassClient() {
                 )}
 
                 {/* Formateur */}
-                <div className="p-4 rounded-2xl border border-border bg-[#090d16] flex items-center gap-3 text-left">
-                  <div className="size-12 rounded-full overflow-hidden border border-border shrink-0 bg-slate-800">
+                <div className="p-4 rounded-2xl border border-border bg-[#F7F9FC] flex items-center gap-3 text-left">
+                  <div className="size-12 rounded-full overflow-hidden border border-border shrink-0 bg-[#EEF3FF]">
                     <img
                       src="/Logo avatar.png"
                       alt={upcomingSession.instructor}
@@ -826,7 +826,7 @@ export function MasterclassClient() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-bold text-xs text-white truncate">{upcomingSession.instructor}</p>
+                    <p className="font-bold text-xs text-[#0E1E3F] truncate">{upcomingSession.instructor}</p>
                     <p className="text-[11px] text-muted-foreground truncate">{upcomingSession.instructorRole}</p>
                   </div>
                 </div>
@@ -845,7 +845,7 @@ export function MasterclassClient() {
             <span>{replays.length > 0 ? "VIDÉOTHÈQUE DES MASTERCLASSES" : "MASTERCLASSES LE GUIDE IA"}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight font-heading max-w-3xl mx-auto">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#0E1E3F] leading-tight font-heading max-w-3xl mx-auto">
             {replays.length > 0 ? "Masterclasses IA : Replays & Sessions Pratiques" : "Les Masterclasses IA Arrivent Bientôt !"}
           </h1>
 
@@ -859,15 +859,15 @@ export function MasterclassClient() {
 
           {/* Badges d'Accès */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs pt-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-slate-200">
-              <ShieldCheck className="size-4 text-emerald-400" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-slate-700">
+              <ShieldCheck className="size-4 text-emerald-600" />
               <span>100% Gratuit & Accès Libre</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-slate-200">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-slate-700">
               <Tv className="size-4 text-primary" />
               <span>Directs & Replays HD</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-slate-200">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border border-border text-slate-700">
               <Zap className="size-4 text-primary" />
               <span>Cas Pratiques Concrets</span>
             </div>
@@ -876,7 +876,7 @@ export function MasterclassClient() {
           {/* Call to Actions */}
           <div className="max-w-2xl mx-auto p-5 rounded-2xl border border-border bg-card/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
             <div className="space-y-0.5 text-center sm:text-left">
-              <p className="text-xs font-bold text-white">
+              <p className="text-xs font-bold text-[#0E1E3F]">
                 {replays.length > 0 ? "💡 Prochaine session en direct en préparation" : "🚀 Envie d'accélérer dès maintenant ?"}
               </p>
               <p className="text-[11px] text-muted-foreground">
@@ -907,7 +907,7 @@ export function MasterclassClient() {
                 <Calendar className="size-3 text-primary" />
                 <span>CALENDRIER DES MASTERCLASSES</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold font-heading text-white">
+              <h2 className="text-xl sm:text-2xl font-bold font-heading text-[#0E1E3F]">
                 Prochaines Sessions en Direct au Programme
               </h2>
               <p className="text-xs text-muted-foreground">
@@ -924,8 +924,8 @@ export function MasterclassClient() {
                   key={s.id || idx}
                   className={`p-5 rounded-2xl border transition-all text-left flex flex-col justify-between space-y-4 ${
                     isSelected
-                      ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                      : "border-border bg-card/60 hover:border-slate-700"
+                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/10"
+                      : "border-border bg-card/60 hover:border-slate-300"
                   }`}
                 >
                   <div className="space-y-3">
@@ -938,21 +938,21 @@ export function MasterclassClient() {
                       </span>
                     </div>
 
-                    <h3 className="font-bold text-sm text-white line-clamp-2">
+                    <h3 className="font-bold text-sm text-[#0E1E3F] line-clamp-2">
                       {s.title}
                     </h3>
                     <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                       {s.description || "Session interactive animée par Alfred Dah."}
                     </p>
 
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-300 pt-1">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 pt-1">
                       <Calendar className="size-3.5 text-primary shrink-0" />
                       <span>{s.dateDisplay || (s.scheduledAt ? new Date(s.scheduledAt).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Date à venir")}</span>
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-border flex items-center justify-between">
-                    <span className="text-[11px] text-emerald-400 font-bold">
+                    <span className="text-[11px] text-emerald-600 font-bold">
                       ✓ 100% Gratuit
                     </span>
                     <button
@@ -961,7 +961,7 @@ export function MasterclassClient() {
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isSelected
                           ? "bg-primary text-slate-950 font-extrabold"
-                          : "bg-white/5 hover:bg-white/10 text-white border border-border"
+                          : "bg-[#F5F8FF] hover:bg-[#EEF3FF] text-[#0E1E3F] border border-border"
                       }`}
                     >
                       {isSelected ? "Session Sélectionnée" : "Participer à ce direct"}
@@ -984,7 +984,7 @@ export function MasterclassClient() {
                 <Play className="size-3 fill-primary" />
                 <span>VIDÉOTHÈQUE DES REPLAYS MASTERCLASSES</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white">
+              <h2 className="text-xl sm:text-2xl font-black text-[#0E1E3F]">
                 Rediffusions &amp; Formations Pratiques
               </h2>
               <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
@@ -1003,32 +1003,32 @@ export function MasterclassClient() {
               )
 
               return (
-                <div className="p-4 rounded-2xl border bg-[#0b0f19] border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-xl">
+                <div className="p-4 rounded-2xl border bg-[#F5F8FF] border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 max-w-xl">
                   <div className="space-y-1 text-left">
                     <div className="flex items-center gap-2">
                       {isSubscribed ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 text-[10px] font-black uppercase">
                           <CheckCircle2 className="size-3" />
                           <span>Accès VIP Actif</span>
                         </span>
                       ) : isSubPending ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/30 text-[10px] font-black uppercase">
                           <Clock className="size-3 animate-pulse" />
                           <span>⏳ Validation VIP en cours</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/30 text-[10px] font-black uppercase">
                           <Crown className="size-3" />
                           <span>Pass VIP Replays &amp; Prompts</span>
                         </span>
                       )}
                       {subscriptionInfo?.daysRemaining > 0 && (
-                        <span className="text-[11px] text-slate-400 font-medium">
+                        <span className="text-[11px] text-slate-500 font-medium">
                           ({subscriptionInfo.daysRemaining} jours restants)
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-300">
+                    <p className="text-xs text-slate-600">
                       {isSubscribed 
                         ? "Tous les replays HD et la bibliothèque de prompts sont débloqués sur votre compte." 
                         : isSubPending
@@ -1041,9 +1041,9 @@ export function MasterclassClient() {
                     <button
                       type="button"
                       onClick={() => setShowSubscriptionModal(true)}
-                      className={`px-4 py-2.5 rounded-xl font-black text-xs transition-all shadow-md shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      className={`px-4 py-2.5 rounded-xl font-black text-xs transition-all shadow-xs shrink-0 cursor-pointer flex items-center gap-1.5 ${
                         isSubPending
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30"
+                          ? "bg-amber-500/20 text-amber-700 border border-amber-500/40 hover:bg-amber-500/30"
                           : "bg-gradient-to-r from-primary via-primary to-amber-500 text-slate-950 hover:opacity-95"
                       }`}
                     >
@@ -1065,7 +1065,7 @@ export function MasterclassClient() {
                 className={`px-4 py-2 rounded-xl text-xs font-semibold shrink-0 transition-colors cursor-pointer ${
                   selectedCategory === cat
                     ? "bg-primary text-slate-950"
-                    : "bg-card border border-border text-muted-foreground hover:text-white hover:border-white/20"
+                    : "bg-card border border-border text-muted-foreground hover:text-white hover:border-slate-300"
                 }`}
               >
                 {cat}
@@ -1087,7 +1087,7 @@ export function MasterclassClient() {
               return (
                 <div
                   key={replay.id}
-                  className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between group hover:border-primary/50 transition-all text-left shadow-lg"
+                  className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between group hover:border-primary/50 transition-all text-left shadow-sm"
                 >
                   {/* Miniature & Déclencheur Vidéo */}
                   <div 
@@ -1109,16 +1109,16 @@ export function MasterclassClient() {
                     
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/30 transition-colors">
                       {isSubscribed ? (
-                        <div className="size-12 rounded-full bg-primary/90 text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
+                        <div className="size-12 rounded-full bg-primary/90 text-slate-950 flex items-center justify-center pl-0.5 shadow-sm group-hover:scale-110 transition-transform">
                           <Play className="size-5 fill-slate-950" />
                         </div>
                       ) : isSubPending ? (
-                        <div className="size-12 rounded-full bg-slate-950/90 border border-amber-400 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <Clock className="size-5 text-amber-400 animate-pulse" />
+                        <div className="size-12 rounded-full bg-white border border-amber-400 text-amber-700 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                          <Clock className="size-5 text-amber-700 animate-pulse" />
                         </div>
                       ) : (
-                        <div className="size-12 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <Lock className="size-5 text-amber-400" />
+                        <div className="size-12 rounded-full bg-[#F5F8FF] border border-amber-500/50 text-amber-700 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                          <Lock className="size-5 text-amber-700" />
                         </div>
                       )}
                     </div>
@@ -1147,7 +1147,7 @@ export function MasterclassClient() {
                   {/* Contenu de la Carte */}
                   <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
-                      <h3 className="font-heading font-bold text-base text-white group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="font-heading font-bold text-base text-[#0E1E3F] group-hover:text-primary transition-colors line-clamp-2">
                         {replay.title}
                       </h3>
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
@@ -1156,7 +1156,7 @@ export function MasterclassClient() {
                     </div>
 
                     <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="font-medium text-slate-300">{replay.instructor}</span>
+                      <span className="font-medium text-slate-600">{replay.instructor}</span>
                       <span>{replay.date}</span>
                     </div>
 
@@ -1170,7 +1170,7 @@ export function MasterclassClient() {
                       }}
                       className={`w-full py-2.5 px-4 rounded-xl border font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
                         isSubscribed
-                          ? "border-border bg-[#090d16] hover:bg-primary hover:text-slate-950 hover:border-primary text-white"
+                          ? "border-border bg-[#F7F9FC] hover:bg-primary hover:text-white hover:border-primary text-[#0E1E3F]"
                           : isSubPending
                           ? "border-amber-500/50 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300"
                           : "border-amber-500/40 bg-amber-500/10 hover:bg-amber-500 hover:text-slate-950 text-amber-300"
@@ -1205,16 +1205,16 @@ export function MasterclassClient() {
       {/* 5. Modal Lecteur Vidéo HD */}
       {activeVideoModal && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl space-y-4">
+          <div className="bg-card border border-border rounded-3xl max-w-4xl w-full overflow-hidden shadow-xs space-y-4">
             
             <div className="p-4 border-b border-border flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-white truncate max-w-[80%]">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#0E1E3F] truncate max-w-[80%]">
                 <Play className="size-4 text-primary fill-primary" />
                 <span className="truncate">{activeVideoModal.title}</span>
               </div>
               <button
                 onClick={() => setActiveVideoModal(null)}
-                className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-[#0E1E3F] hover:bg-[#EEF3FF] transition-colors cursor-pointer"
               >
                 <X className="size-4" />
               </button>
@@ -1234,8 +1234,8 @@ export function MasterclassClient() {
 
             <div className="p-5 pt-1 text-left space-y-2">
               <p className="text-xs text-muted-foreground leading-relaxed">{activeVideoModal.description}</p>
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-border">
-                <span>Formateur : <strong className="text-white">{activeVideoModal.instructor}</strong></span>
+              <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-border">
+                <span>Formateur : <strong className="text-[#0E1E3F]">{activeVideoModal.instructor}</strong></span>
                 <span>Date : {activeVideoModal.date}</span>
               </div>
             </div>

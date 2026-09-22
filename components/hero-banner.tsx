@@ -82,12 +82,12 @@ export function HeroBanner() {
   const isPending = isPendingInCourse(activeCourseObj)
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 py-4 md:py-6 lg:py-8">
+    <section className="relative overflow-hidden bg-white py-4 md:py-6 lg:py-8">
       
       <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6">
         
         {/* Main Banner Frame with Diagonal Glow */}
-        <div className="relative rounded-3xl border border-border/80 bg-gradient-to-r from-slate-900 via-[#0d1b3e] to-slate-900 overflow-hidden shadow-2xl p-3 sm:p-5 md:p-7">
+        <div className="relative rounded-3xl border border-border/80 bg-gradient-to-r from-[#F5F8FF] via-[#E6EDFC] to-[#F5F8FF] overflow-hidden shadow-xs p-3 sm:p-5 md:p-7">
           
           <div className="grid gap-6 lg:grid-cols-12 items-stretch relative z-10">
             
@@ -96,7 +96,7 @@ export function HeroBanner() {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="hidden lg:flex lg:col-span-6 rounded-3xl border border-primary/30 bg-card/90 p-5 md:p-7 shadow-2xl backdrop-blur-2xl flex-col justify-between space-y-4 lg:space-y-6"
+              className="hidden lg:flex lg:col-span-6 rounded-3xl border border-primary/30 bg-card/90 p-5 md:p-7 shadow-xs backdrop-blur-2xl flex-col justify-between space-y-4 lg:space-y-6"
             >
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
@@ -134,7 +134,7 @@ export function HeroBanner() {
                 {isEnrolled ? (
                   <Link
                     href="/dashboard"
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-emerald-600/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-3.5 text-xs md:text-sm shadow-sm shadow-emerald-600/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
                   >
                     <CheckCircle2 className="size-4" />
                     <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
@@ -143,7 +143,7 @@ export function HeroBanner() {
                 ) : isPending ? (
                   <Link
                     href="/dashboard"
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-sm shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
                   >
                     <Sparkles className="size-4 animate-pulse text-slate-950" />
                     <span>⏳ Inscription en cours de validation · Espace Membre</span>
@@ -152,7 +152,7 @@ export function HeroBanner() {
                 ) : (
                   <Link
                     href="/checkout/bootcamp-ia-pro"
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-xl shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs md:text-sm shadow-sm shadow-amber-500/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
                   >
                     <span>Rejoindre le Bootcamp</span>
                     <ArrowRight className="size-4" />
@@ -178,8 +178,8 @@ export function HeroBanner() {
               transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
               className="lg:col-span-6 relative flex flex-col justify-center items-center h-full space-y-4"
             >
-              <div className="rounded-3xl border border-primary/30 bg-card/90 p-3 sm:p-5 md:p-6 shadow-2xl backdrop-blur-2xl flex items-center justify-center w-full max-w-[440px]">
-                <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-border/40 shadow-xl bg-slate-900 group">
+              <div className="rounded-3xl border border-primary/30 bg-card/90 p-3 sm:p-5 md:p-6 shadow-xs backdrop-blur-2xl flex items-center justify-center w-full max-w-[440px]">
+                <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden border border-border/40 shadow-sm bg-[#F5F8FF] group">
                   <img
                     src={posterUrl || "/hero_bootcamp.jpg"}
                     alt="Affiche Officielle Le Guide IA - Bootcamp PRO 2"
@@ -193,7 +193,7 @@ export function HeroBanner() {
                 {isEnrolled ? (
                   <Link
                     href="/dashboard"
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-3.5 text-xs shadow-xl shadow-emerald-600/20 transition-all active:scale-95 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-3.5 text-xs shadow-sm shadow-emerald-600/20 transition-all active:scale-95 cursor-pointer"
                   >
                     <CheckCircle2 className="size-4" />
                     <span>Vous êtes déjà inscrit(e) · Espace Membre</span>
@@ -202,7 +202,7 @@ export function HeroBanner() {
                 ) : isPending ? (
                   <Link
                     href="/dashboard"
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-xl shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-sm shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
                   >
                     <Sparkles className="size-4 animate-pulse text-slate-950" />
                     <span>⏳ Inscription en cours de validation</span>
@@ -211,7 +211,7 @@ export function HeroBanner() {
                 ) : (
                   <Link
                     href="/checkout/bootcamp-ia-pro"
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-xl shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-6 py-3.5 text-xs shadow-sm shadow-amber-500/20 transition-all active:scale-95 cursor-pointer"
                   >
                     <span>Rejoindre le Bootcamp</span>
                     <ArrowRight className="size-4" />

@@ -38,8 +38,8 @@ export function EcosystemHub() {
       icon: BookOpen,
       href: "/formations",
       badge: "Catalogue Autonome",
-      color: "from-slate-800/40 via-slate-900/60 to-transparent",
-      borderColor: "border-slate-700/60",
+      color: "from-[#EEF3FF]/40 via-[#F5F8FF]/60 to-transparent",
+      borderColor: "border-slate-300",
       highlights: ["Vidéos explicatives avec accès à vie", "Prompts métiers prêts à l'emploi", "Mises à jour régulières"]
     },
     {
@@ -50,7 +50,7 @@ export function EcosystemHub() {
       icon: Building2,
       href: "/entreprises",
       badge: "Offre B2B Sur-Mesure",
-      color: "from-blue-900/20 via-slate-900 to-transparent",
+      color: "from-blue-900/20 via-[#F5F8FF] to-transparent",
       borderColor: "border-blue-500/30",
       highlights: ["Sites web & apps mobiles sur-mesure", "Formation intra-entreprise sur-mesure", "Devis qualifié personnalisé"]
     }
@@ -85,7 +85,7 @@ export function EcosystemHub() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 * idx }}
-                className={`rounded-3xl border ${p.borderColor} bg-gradient-to-br ${p.color} bg-card/70 p-8 flex flex-col justify-between space-y-8 backdrop-blur-xl shadow-xl group hover:border-foreground/30 transition-all`}
+                className={`rounded-3xl border ${p.borderColor} bg-gradient-to-br ${p.color} bg-card/70 p-8 flex flex-col justify-between space-y-8 backdrop-blur-xl shadow-sm group hover:border-foreground/30 transition-all`}
               >
                 <div className="space-y-6">
                   <div className="flex items-center justify-between gap-4">
@@ -113,7 +113,7 @@ export function EcosystemHub() {
                   <ul className="space-y-2.5 pt-2">
                     {p.highlights.map((h, i) => (
                       <li key={i} className="flex items-center gap-2.5 text-xs text-foreground/90 font-medium">
-                        <CheckCircle2 className={`size-4 shrink-0 ${p.id === "bootcamp-business" ? "text-[#D4AF37]" : "text-primary"}`} />
+                        <CheckCircle2 className={`size-4 shrink-0 ${p.id === "bootcamp-business" ? "text-[#8A6A1F]" : "text-primary"}`} />
                         <span>{h}</span>
                       </li>
                     ))}

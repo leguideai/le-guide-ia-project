@@ -274,14 +274,14 @@ export function RessourcesClient() {
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
           {/* Header Left-Aligned */}
           <div className="space-y-4 text-left">
-            <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-3.5 py-1.5 rounded-full border border-purple-500/20">
-              <Sparkles className="size-3.5 text-purple-400" />
+            <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-purple-600 bg-purple-500/10 px-3.5 py-1.5 rounded-full border border-purple-500/20">
+              <Sparkles className="size-3.5 text-purple-600" />
               BIBLIOTHÈQUE DE RESSOURCES IA &amp; BUSINESS PLANS
             </span>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-white leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-[#0E1E3F] leading-tight">
               Prompts IA Optimisés &amp;{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-purple-700 via-pink-600 to-amber-600 bg-clip-text text-transparent">
                 Modèles de Business Plans
               </span>
             </h1>
@@ -299,21 +299,21 @@ export function RessourcesClient() {
                 : "bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-primary/15 border-amber-400/50"
             }`}>
               <div className="flex items-start sm:items-center gap-3.5">
-                <div className="size-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-black shadow-md">
+                <div className="size-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-black shadow-xs">
                   {isSubPending ? <Clock className="size-6 text-slate-950 animate-pulse" /> : <Crown className="size-6 text-slate-950" />}
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-heading font-black text-white">
+                    <h3 className="text-sm sm:text-base font-heading font-black text-[#0E1E3F]">
                       {isSubPending
                         ? `Validation de votre Abonnement VIP en cours (${subscriptionInfo?.planLabel || "Pass VIP"})`
                         : "Pass VIP  — Accès à Tout le Catalogue"}
                     </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 border border-amber-400/40">
                       {isSubPending ? "⏳ Vérification sous 2h à 4h" : "1 Pass VIP Débloqué"}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-600 leading-relaxed">
                     {isSubPending
                       ? `Votre justificatif de paiement (Réf: ${subscriptionInfo?.transactionRef || "Reçu soumis"}) a été reçu. Vos accès à l'ensemble des prompts (+100) et replays s'activeront dès confirmation.`
                       : "Un seul abonnement débloque automatiquement l'ensemble de la bibliothèque de prompts (+100), tous les business plans et tous les replays de masterclasses."}
@@ -325,9 +325,9 @@ export function RessourcesClient() {
                   if (!currentUser) router.push("/login?redirect=/ressources")
                   else setShowSubscriptionModal(true)
                 }}
-                className={`w-full md:w-auto px-6 py-3 rounded-xl font-black text-xs shrink-0 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer whitespace-nowrap ${
+                className={`w-full md:w-auto px-6 py-3 rounded-xl font-black text-xs shrink-0 flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer whitespace-nowrap ${
                   isSubPending
-                    ? "bg-amber-500/30 text-amber-200 border border-amber-400/60 hover:bg-amber-500/40"
+                    ? "bg-amber-500/30 text-amber-800 border border-amber-400/60 hover:bg-amber-500/40"
                     : "bg-amber-500 hover:bg-amber-400 text-slate-950"
                 }`}
               >
@@ -347,7 +347,7 @@ export function RessourcesClient() {
                   className={cn(
                     "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border",
                     formatFilter === 'all'
-                      ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      ? "bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/20"
                       : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
                   )}
                 >
@@ -358,7 +358,7 @@ export function RessourcesClient() {
                   className={cn(
                     "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
                     formatFilter === 'prompt'
-                      ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-500/20"
+                      ? "bg-purple-600 border-purple-500 text-white shadow-sm shadow-purple-500/20"
                       : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
                   )}
                 >
@@ -370,7 +370,7 @@ export function RessourcesClient() {
                   className={cn(
                     "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
                     formatFilter === 'file'
-                      ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20"
+                      ? "bg-blue-600 border-blue-500 text-white shadow-sm shadow-blue-500/20"
                       : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
                   )}
                 >
@@ -382,7 +382,7 @@ export function RessourcesClient() {
                   className={cn(
                     "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
                     formatFilter === 'bundle'
-                      ? "bg-gradient-to-r from-purple-600 to-blue-600 border-purple-400 text-white shadow-lg shadow-purple-500/20"
+                      ? "bg-gradient-to-r from-purple-600 to-blue-600 border-purple-400 text-white shadow-sm shadow-purple-500/20"
                       : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
                   )}
                 >
@@ -394,7 +394,7 @@ export function RessourcesClient() {
                   className={cn(
                     "px-3.5 py-2 text-xs font-extrabold rounded-xl uppercase tracking-wider transition-all cursor-pointer border flex items-center gap-1.5",
                     formatFilter === 'business-plan'
-                      ? "bg-amber-500 border-amber-400 text-slate-950 font-black shadow-lg shadow-amber-500/20"
+                      ? "bg-amber-500 border-amber-400 text-slate-950 font-black shadow-sm shadow-amber-500/20"
                       : "bg-card/40 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card/60"
                   )}
                 >
@@ -471,18 +471,18 @@ export function RessourcesClient() {
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="flex flex-col justify-between rounded-3xl border border-white/10 bg-card/30 p-6 md:p-8 space-y-5 text-left"
+                  className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-card/30 p-6 md:p-8 space-y-5 text-left"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="h-5 w-24 bg-white/10 rounded-full" />
-                      <div className="h-5 w-28 bg-white/5 rounded-full" />
+                      <div className="h-5 w-24 bg-slate-200 rounded-full" />
+                      <div className="h-5 w-28 bg-slate-100 rounded-full" />
                     </div>
-                    <div className="h-6 w-3/4 bg-white/10 rounded-lg" />
-                    <div className="h-4 w-full bg-white/5 rounded" />
-                    <div className="h-28 bg-white/5 rounded-2xl border border-white/5" />
+                    <div className="h-6 w-3/4 bg-slate-200 rounded-lg" />
+                    <div className="h-4 w-full bg-slate-100 rounded" />
+                    <div className="h-28 bg-[#F5F8FF] rounded-2xl border border-slate-200/70" />
                   </div>
-                  <div className="h-11 w-full bg-white/10 rounded-xl" />
+                  <div className="h-11 w-full bg-slate-200 rounded-xl" />
                 </div>
               ))}
             </div>
@@ -509,7 +509,7 @@ export function RessourcesClient() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3 }}
                     key={item.id}
-                    className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card/30 p-6 md:p-8 backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:bg-card/50 shadow-xl text-left"
+                    className="flex flex-col justify-between rounded-3xl border border-border/80 bg-card/30 p-6 md:p-8 backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:bg-card/50 shadow-sm text-left"
                   >
                     <div>
                       {/* Header Badges */}
@@ -518,10 +518,10 @@ export function RessourcesClient() {
                           <span className={cn(
                             "px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border",
                             item.hasText && item.hasFile
-                              ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                              ? "bg-purple-500/10 text-purple-700 border-purple-500/30"
                               : item.hasFile
-                              ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
-                              : "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                              ? "bg-blue-500/10 text-blue-600 border-blue-500/30"
+                              : "bg-purple-500/10 text-purple-600 border-purple-500/20"
                           )}>
                             {item.hasText && item.hasFile 
                               ? "📦 Pack Prompt + Fichier" 
@@ -533,8 +533,8 @@ export function RessourcesClient() {
                           <span className={cn(
                             "px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border",
                             isFree
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                              ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                              : "bg-amber-500/10 text-amber-700 border-amber-500/20"
                           )}>
                             {isFree ? "Gratuit" : "Pass VIP"}
                           </span>
@@ -548,7 +548,7 @@ export function RessourcesClient() {
                       </div>
 
                       {/* Title & Description */}
-                      <h3 className="font-heading text-xl font-bold text-white mb-2 text-left">
+                      <h3 className="font-heading text-xl font-bold text-[#0E1E3F] mb-2 text-left">
                         {title}
                       </h3>
                       
@@ -562,20 +562,20 @@ export function RessourcesClient() {
                           {/* Prompt preview container */}
                           <div className="relative">
                             {!isAccessible ? (
-                              <div className="rounded-xl bg-slate-950 border border-primary/30 p-4 max-h-60 overflow-hidden text-xs md:text-sm leading-relaxed font-mono whitespace-pre-wrap select-none pointer-events-none text-left relative">
+                              <div className="rounded-xl bg-[#F7F9FC] border border-primary/30 p-4 max-h-60 overflow-hidden text-xs md:text-sm leading-relaxed font-mono whitespace-pre-wrap select-none pointer-events-none text-left relative">
                                 <div className="text-[10px] font-extrabold uppercase tracking-widest text-primary mb-1.5 flex items-center gap-1">
-                                  <Sparkles className="size-3 text-amber-400" />
+                                  <Sparkles className="size-3 text-amber-700" />
                                   <span>Aperçu en clair (Avant-goût) :</span>
                                 </div>
-                                <div className="text-white font-bold opacity-100 pb-1 leading-snug">
+                                <div className="text-[#0E1E3F] font-bold opacity-100 pb-1 leading-snug">
                                   {content.slice(0, 150)}...
                                 </div>
-                                <div className="blur-[7px] opacity-30 select-none pointer-events-none text-slate-400 mt-1">
+                                <div className="blur-[7px] opacity-30 select-none pointer-events-none text-slate-500 mt-1">
                                   {content.slice(150)}
                                 </div>
                               </div>
                             ) : (
-                              <div className="rounded-xl bg-slate-950/60 border border-border/60 p-4 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-300 font-mono whitespace-pre-wrap transition-all duration-300 scrollbar-thin text-left select-all">
+                              <div className="rounded-xl bg-[#F7F9FC] border border-border/60 p-4 max-h-56 overflow-y-auto text-xs leading-relaxed text-slate-600 font-mono whitespace-pre-wrap transition-all duration-300 scrollbar-thin text-left select-all">
                                 {content}
                               </div>
                             )}
@@ -586,9 +586,9 @@ export function RessourcesClient() {
                                   if (!currentUser) router.push("/login?redirect=/ressources")
                                   else setShowSubscriptionModal(true)
                                 }}
-                                className="absolute inset-0 flex flex-col items-center justify-end pb-4 px-3 rounded-xl bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent text-center cursor-pointer transition-colors group"
+                                className="absolute inset-0 flex flex-col items-center justify-end pb-4 px-3 rounded-xl bg-gradient-to-t from-white via-white/80 to-transparent text-center cursor-pointer transition-colors group"
                               >
-                                <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black px-4 sm:px-6 py-3 rounded-xl shadow-xl border border-white/20 group-hover:scale-[1.02] transition-transform text-center">
+                                <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black px-4 sm:px-6 py-3 rounded-xl shadow-sm border border-slate-300 group-hover:scale-[1.02] transition-transform text-center">
                                   {!currentUser ? (
                                     <>
                                       <LogIn className="size-4 shrink-0" />
@@ -600,7 +600,7 @@ export function RessourcesClient() {
                                         <Clock className="size-4 shrink-0 animate-pulse" />
                                         <span className="text-xs font-black">Abonnement VIP en cours de validation (2h-4h)</span>
                                       </div>
-                                      <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Réf: {subscriptionInfo?.transactionRef || "Soumis"}</span>
+                                      <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-300 sm:pl-2">Réf: {subscriptionInfo?.transactionRef || "Soumis"}</span>
                                     </>
                                   ) : (
                                     <>
@@ -608,7 +608,7 @@ export function RessourcesClient() {
                                         <Crown className="size-4 shrink-0" />
                                         <span className="text-xs font-black">Débloquer Tous les Prompts &amp; Replays</span>
                                       </div>
-                                      <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-950/20 sm:pl-2">Dès {subscriptionInfo?.pricing?.price3mDisplay || "9 000 FCFA"}</span>
+                                      <span className="text-[10px] opacity-80 sm:border-l sm:border-slate-300 sm:pl-2">Dès {subscriptionInfo?.pricing?.price3mDisplay || "9 000 FCFA"}</span>
                                     </>
                                   )}
                                 </div>
@@ -618,24 +618,24 @@ export function RessourcesClient() {
                         </div>
                       ) : (
                         /* File-Only Document Card (No empty prompt box) */
-                        <div className="relative rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 border border-blue-500/20 p-5 space-y-3 mb-6 overflow-hidden">
+                        <div className="relative rounded-2xl bg-gradient-to-br from-white to-[#F5F8FF] border border-blue-500/20 p-5 space-y-3 mb-6 overflow-hidden">
                           <div className="flex items-start gap-3.5">
-                            <div className="size-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0 shadow-inner">
+                            <div className="size-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 text-blue-600 flex items-center justify-center shrink-0 shadow-inner">
                               <FileText className="size-6" />
                             </div>
                             <div className="space-y-1 min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
                                   Document Prêt à l&apos;Emploi
                                 </span>
-                                <span className="text-[10px] font-mono font-bold text-blue-300 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">
+                                <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/40">
                                   {fileInfo.ext}
                                 </span>
                               </div>
-                              <p className="text-sm font-bold text-white truncate">
+                              <p className="text-sm font-bold text-[#0E1E3F] truncate">
                                 {fileInfo.name}
                               </p>
-                              <p className="text-xs text-slate-400 leading-relaxed">
+                              <p className="text-xs text-slate-500 leading-relaxed">
                                 Document complet vérifié par l&apos;équipe Le Guide IA, téléchargeable et personnalisable immédiatement.
                               </p>
                             </div>
@@ -647,9 +647,9 @@ export function RessourcesClient() {
                                 if (!currentUser) router.push("/login?redirect=/ressources")
                                 else setShowSubscriptionModal(true)
                               }}
-                              className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-slate-950/85 backdrop-blur-[2px] cursor-pointer text-center group"
+                              className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white backdrop-blur-[2px] cursor-pointer text-center group"
                             >
-                              <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-lg group-hover:scale-105 transition-transform">
+                              <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-sm group-hover:scale-105 transition-transform">
                                 <Lock className="size-3.5" />
                                 <span>{!currentUser ? "Se connecter pour télécharger" : "Débloquer le fichier"}</span>
                               </div>
@@ -668,16 +668,16 @@ export function RessourcesClient() {
                             <button
                               type="button"
                               onClick={() => handleCopyPrompt(item, content)}
-                              className="w-full rounded-xl font-extrabold text-xs py-3 px-4 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 bg-slate-900/90 hover:bg-slate-800 text-white border border-slate-700 shadow-xs"
+                              className="w-full rounded-xl font-extrabold text-xs py-3 px-4 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 bg-[#F5F8FF] hover:bg-[#EEF3FF] text-[#0E1E3F] border border-slate-300 shadow-xs"
                             >
                               {copiedId === item.id ? (
                                 <>
-                                  <Check className="size-4 text-emerald-400 stroke-[3]" />
-                                  <span className="text-emerald-400">{t("resourcesPage.copied")}</span>
+                                  <Check className="size-4 text-emerald-600 stroke-[3]" />
+                                  <span className="text-emerald-600">{t("resourcesPage.copied")}</span>
                                 </>
                               ) : (
                                 <>
-                                  <Copy className="size-4 text-purple-400" />
+                                  <Copy className="size-4 text-purple-600" />
                                   <span>{t("resourcesPage.copyPrompt")}</span>
                                 </>
                               )}
@@ -686,7 +686,7 @@ export function RessourcesClient() {
                             <button
                               type="button"
                               onClick={() => handleDownloadFile(item)}
-                              className="w-full rounded-xl font-extrabold text-xs py-3 px-4 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20"
+                              className="w-full rounded-xl font-extrabold text-xs py-3 px-4 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/20"
                             >
                               <Download className="size-4" />
                               <span>Télécharger ({fileInfo.ext})</span>
@@ -721,7 +721,7 @@ export function RessourcesClient() {
                           <button
                             type="button"
                             onClick={() => handleDownloadFile(item)}
-                            className="w-full rounded-xl font-extrabold text-xs py-3 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/20 glow-blue"
+                            className="w-full rounded-xl font-extrabold text-xs py-3 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-blue-500/20 glow-blue"
                           >
                             <Download className="size-4" />
                             <span>Télécharger le modèle ({fileInfo.ext})</span>

@@ -83,21 +83,21 @@ export function EntreprisesClient() {
       <Header />
 
       {/* 1. Hero Section B2B (Style 2 colonnes aligné à gauche) */}
-      <section className="py-14 bg-slate-950/80 border-b border-border/60">
+      <section className="py-14 bg-white border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-8">
           
           <div className="grid gap-12 lg:grid-cols-12 items-center">
             
             {/* Left Info Column */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/10 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/30">
-                <Building2 className="size-3.5 text-[#D4AF37]" />
+              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#8A6A1F] bg-[#D4AF37]/10 px-3.5 py-1.5 rounded-full border border-[#D4AF37]/30">
+                <Building2 className="size-3.5 text-[#8A6A1F]" />
                 SOLUTIONS ENTREPRISES &amp; INSTITUTIONS
               </span>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-heading tracking-tight text-[#0E1E3F] leading-tight">
                 Solutions Digitales, Développement Web &amp; Mobile et IA pour{" "}
-                <span className="bg-gradient-to-r from-[#D4AF37] via-amber-300 to-yellow-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#8A6A1F] via-[#B38728] to-[#D4AF37] bg-clip-text text-transparent">
                   Entreprises &amp; Dirigeants
                 </span>
               </h1>
@@ -109,11 +109,11 @@ export function EntreprisesClient() {
               {/* Key Metrics Pill Badges */}
               <div className="flex flex-wrap items-center gap-2.5 pt-1 text-xs font-semibold text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
-                  <MonitorSmartphone className="size-3.5 text-emerald-400" />
+                  <MonitorSmartphone className="size-3.5 text-emerald-600" />
                   Sites Web &amp; Apps Mobiles
                 </span>
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
-                  <Sparkles className="size-3.5 text-[#D4AF37]" />
+                  <Sparkles className="size-3.5 text-[#8A6A1F]" />
                   +40% de Productivité IA
                 </span>
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
@@ -121,7 +121,7 @@ export function EntreprisesClient() {
                   Audit &amp; Sécurité
                 </span>
                 <span className="inline-flex items-center gap-1.5 bg-card/60 border border-border/80 rounded-xl px-3.5 py-2 text-foreground/90">
-                  <Award className="size-3.5 text-[#D4AF37]" />
+                  <Award className="size-3.5 text-[#8A6A1F]" />
                   Accompagnement Clé en Main
                 </span>
               </div>
@@ -130,7 +130,7 @@ export function EntreprisesClient() {
               <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={scrollToForm}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black px-7 py-3.5 text-xs md:text-sm shadow-xl shadow-[#D4AF37]/25 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black px-7 py-3.5 text-xs md:text-sm shadow-sm shadow-[#D4AF37]/25 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer"
                 >
                   <span>Demander un Devis B2B</span>
                   <ArrowRight className="size-4" />
@@ -142,7 +142,7 @@ export function EntreprisesClient() {
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/40 hover:bg-card text-foreground font-bold px-6 py-3.5 text-xs text-muted-foreground hover:text-foreground transition-all hover:scale-[1.01]"
                 >
-                  <PhoneCall className="size-4 text-[#D4AF37]" />
+                  <PhoneCall className="size-4 text-[#8A6A1F]" />
                   <span>Contacter par WhatsApp</span>
                 </a>
               </div>
@@ -150,8 +150,8 @@ export function EntreprisesClient() {
 
             {/* Right Media Display */}
             <div className="lg:col-span-5 flex justify-center items-center">
-              <div className="relative rounded-3xl border border-[#D4AF37]/40 bg-slate-950 p-3.5 shadow-2xl glow-gold backdrop-blur-xl w-full max-w-[420px] group">
-                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-border/40 shadow-xl bg-slate-900">
+              <div className="relative rounded-3xl border border-[#D4AF37]/40 bg-white p-3.5 shadow-xs glow-gold backdrop-blur-xl w-full max-w-[420px] group">
+                <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-border/40 shadow-sm bg-[#F5F8FF]">
                   <img
                     src="/images/b2b_enterprise_thumb.jpg"
                     alt="Transformation IA B2B Le Guide IA"
@@ -160,12 +160,12 @@ export function EntreprisesClient() {
                 </div>
                 
                 {/* Floating Badge */}
-                <div className="absolute -bottom-4 -left-4 rounded-2xl bg-slate-900/90 border border-[#D4AF37]/40 p-3 shadow-2xl backdrop-blur-md flex items-center gap-3">
-                  <div className="size-10 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center text-[#D4AF37]">
+                <div className="absolute -bottom-4 -left-4 rounded-2xl bg-[#F5F8FF] border border-[#D4AF37]/40 p-3 shadow-xs backdrop-blur-md flex items-center gap-3">
+                  <div className="size-10 rounded-xl bg-[#D4AF37]/20 flex items-center justify-center text-[#8A6A1F]">
                     <Award className="size-5" />
                   </div>
                   <div className="text-left">
-                    <div className="text-xs font-black text-white">98% de Satisfaction</div>
+                    <div className="text-xs font-black text-[#0E1E3F]">98% de Satisfaction</div>
                     <div className="text-[10px] text-muted-foreground">Apprenants &amp; Entreprises</div>
                   </div>
                 </div>
@@ -193,9 +193,9 @@ export function EntreprisesClient() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 items-stretch">
             
             {/* Card 1 : Développement Web & Mobile */}
-            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-emerald-500/50 transition-colors">
+            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-sm flex flex-col justify-between hover:border-emerald-500/50 transition-colors">
               <div className="space-y-4 text-left">
-                <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+                <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 flex items-center justify-center">
                   <MonitorSmartphone className="size-6" />
                 </div>
                 <h3 className="font-heading text-lg font-bold text-foreground">Développement Web &amp; Mobile</h3>
@@ -204,31 +204,31 @@ export function EntreprisesClient() {
                 </p>
                 <ul className="space-y-2 pt-2 text-xs text-foreground/90">
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-emerald-400 shrink-0" />
+                    <Check className="size-3.5 text-emerald-600 shrink-0" />
                     <span>Sites web vitrines &amp; plateformes SaaS</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-emerald-400 shrink-0" />
+                    <Check className="size-3.5 text-emerald-600 shrink-0" />
                     <span>Applications mobiles iOS &amp; Android</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-emerald-400 shrink-0" />
+                    <Check className="size-3.5 text-emerald-600 shrink-0" />
                     <span>Intégration IA &amp; Mobile Money</span>
                   </li>
                 </ul>
               </div>
               <button 
                 onClick={() => selectServiceAndScroll("Développement de Sites Web & Applications Mobiles")} 
-                className="w-full py-2.5 rounded-xl border border-border hover:border-emerald-500 hover:text-emerald-400 text-xs font-bold text-foreground transition-all cursor-pointer"
+                className="w-full py-2.5 rounded-xl border border-border hover:border-emerald-500 hover:text-emerald-600 text-xs font-bold text-foreground transition-all cursor-pointer"
               >
                 Demander un devis dev →
               </button>
             </div>
 
             {/* Card 2 : Formations d'Équipe Sur-Mesure */}
-            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-[#D4AF37]/50 transition-colors">
+            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-sm flex flex-col justify-between hover:border-[#D4AF37]/50 transition-colors">
               <div className="space-y-4 text-left">
-                <div className="size-12 rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center">
+                <div className="size-12 rounded-2xl bg-[#D4AF37]/10 text-[#8A6A1F] border border-[#D4AF37]/30 flex items-center justify-center">
                   <Users className="size-6" />
                 </div>
                 <h3 className="font-heading text-lg font-bold text-foreground">Formations d'Équipe Sur-Mesure</h3>
@@ -237,26 +237,26 @@ export function EntreprisesClient() {
                 </p>
                 <ul className="space-y-2 pt-2 text-xs text-foreground/90">
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-[#D4AF37] shrink-0" />
+                    <Check className="size-3.5 text-[#8A6A1F] shrink-0" />
                     <span>Programme adapté aux cas d'usage réels</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-[#D4AF37] shrink-0" />
+                    <Check className="size-3.5 text-[#8A6A1F] shrink-0" />
                     <span>Prise en main ChatGPT, Claude &amp; Gemini</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-[#D4AF37] shrink-0" />
+                    <Check className="size-3.5 text-[#8A6A1F] shrink-0" />
                     <span>Attestation de formation d'équipe</span>
                   </li>
                 </ul>
               </div>
-              <button onClick={() => selectServiceAndScroll("Formations d'Équipe Sur-Mesure")} className="w-full py-2.5 rounded-xl border border-border hover:border-[#D4AF37] hover:text-[#ECC86B] text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={() => selectServiceAndScroll("Formations d'Équipe Sur-Mesure")} className="w-full py-2.5 rounded-xl border border-border hover:border-[#D4AF37] hover:text-[#8A6A1F] text-xs font-bold text-foreground transition-all cursor-pointer">
                 Demander cette formation →
               </button>
             </div>
 
             {/* Card 3 : Audit & Gouvernance IA */}
-            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-primary/50 transition-colors">
+            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-sm flex flex-col justify-between hover:border-primary/50 transition-colors">
               <div className="space-y-4 text-left">
                 <div className="size-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
                   <ShieldCheck className="size-6" />
@@ -286,9 +286,9 @@ export function EntreprisesClient() {
             </div>
 
             {/* Card 4 : Accompagnement Stratégique & Automatisation */}
-            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-blue-500/50 transition-colors">
+            <div className="rounded-3xl border border-border/80 bg-card/40 p-6 md:p-7 space-y-6 backdrop-blur-xl shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition-colors">
               <div className="space-y-4 text-left">
-                <div className="size-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center">
+                <div className="size-12 rounded-2xl bg-blue-500/10 text-blue-600 border border-blue-500/20 flex items-center justify-center">
                   <Building2 className="size-6" />
                 </div>
                 <h3 className="font-heading text-lg font-bold text-foreground">Accompagnement Stratégique</h3>
@@ -297,20 +297,20 @@ export function EntreprisesClient() {
                 </p>
                 <ul className="space-y-2 pt-2 text-xs text-foreground/90">
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-blue-400 shrink-0" />
+                    <Check className="size-3.5 text-blue-600 shrink-0" />
                     <span>Workflows d'automatisation Make &amp; n8n</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-blue-400 shrink-0" />
+                    <Check className="size-3.5 text-blue-600 shrink-0" />
                     <span>Création d'assistants sur-mesure</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="size-3.5 text-blue-400 shrink-0" />
+                    <Check className="size-3.5 text-blue-600 shrink-0" />
                     <span>Suivi de projet et ROI mesurable</span>
                   </li>
                 </ul>
               </div>
-              <button onClick={() => selectServiceAndScroll("Accompagnement Stratégique & Automatisation")} className="w-full py-2.5 rounded-xl border border-border hover:border-blue-500 hover:text-blue-400 text-xs font-bold text-foreground transition-all cursor-pointer">
+              <button onClick={() => selectServiceAndScroll("Accompagnement Stratégique & Automatisation")} className="w-full py-2.5 rounded-xl border border-border hover:border-blue-500 hover:text-blue-600 text-xs font-bold text-foreground transition-all cursor-pointer">
                 Planifier un entretien →
               </button>
             </div>
@@ -321,22 +321,22 @@ export function EntreprisesClient() {
       </section>
 
       {/* 2bis. Pôle Ingénierie & Développement Web & Mobile */}
-      <section className="py-20 bg-slate-950/90 border-b border-border/60 relative overflow-hidden">
+      <section className="py-20 bg-white border-b border-border/60 relative overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 md:px-8 space-y-12">
 
           {/* Callout Action Banner */}
-          <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-950 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-[#F5F8FF] to-white p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-1.5 text-center md:text-left">
-              <div className="font-heading text-lg sm:text-xl font-bold text-white">
+              <div className="font-heading text-lg sm:text-xl font-bold text-[#0E1E3F]">
                 Vous avez un projet de création ou de refonte Web / Mobile ?
               </div>
-              <p className="text-xs sm:text-sm text-slate-300">
+              <p className="text-xs sm:text-sm text-slate-600">
                 Nos ingénieurs et chefs de projets vous accompagnent du cadrage fonctionnel à la livraison clé en main.
               </p>
             </div>
             <button
               onClick={() => selectServiceAndScroll("Développement de Sites Web & Applications Mobiles")}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-7 py-3.5 text-xs shadow-xl shadow-emerald-500/20 transition-all shrink-0 cursor-pointer"
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-7 py-3.5 text-xs shadow-sm shadow-emerald-500/20 transition-all shrink-0 cursor-pointer"
             >
               <span>Estimer mon projet Web / Mobile</span>
               <ArrowRight className="size-4" />
@@ -347,14 +347,14 @@ export function EntreprisesClient() {
       </section>
 
       {/* 3. Formulaire de Demande de Devis B2B (2 Colonnes) */}
-      <section className="py-16 bg-slate-950/60" id="devis-form">
+      <section className="py-16 bg-white" id="devis-form">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           
           <div className="grid gap-12 lg:grid-cols-12 items-start">
             
             {/* Left Info Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
-              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
+              <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#8A6A1F] bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/30">
                 DEVIS QUALIFIÉ SOUS 24H
               </span>
 
@@ -364,7 +364,7 @@ export function EntreprisesClient() {
 
               <div className="space-y-4 pt-2">
                 <div className="flex items-start gap-3 text-xs text-muted-foreground">
-                  <Mail className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                  <Mail className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
                   <div>
                     <div className="font-bold text-foreground">Contact Direct B2B</div>
                     <div>alfred@leguideai.com</div>
@@ -372,7 +372,7 @@ export function EntreprisesClient() {
                 </div>
 
                 <div className="flex items-start gap-3 text-xs text-muted-foreground">
-                  <PhoneCall className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
+                  <PhoneCall className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
                   <div>
                     <div className="font-bold text-foreground">Ligne WhatsApp Officielle</div>
                     <div>+226 0505 0577</div>
@@ -383,11 +383,11 @@ export function EntreprisesClient() {
 
             {/* Right Form Card Column */}
             <div className="lg:col-span-7">
-              <div className="rounded-3xl border border-border/80 bg-card/60 p-6 md:p-10 shadow-2xl backdrop-blur-xl space-y-6">
+              <div className="rounded-3xl border border-border/80 bg-card/60 p-6 md:p-10 shadow-xs backdrop-blur-xl space-y-6">
                 
                 {status === "success" ? (
                   <div className="text-center space-y-4 py-8">
-                    <div className="inline-flex size-14 items-center justify-center rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30">
+                    <div className="inline-flex size-14 items-center justify-center rounded-full bg-[#D4AF37]/10 text-[#8A6A1F] border border-[#D4AF37]/30">
                       <CheckCircle2 className="size-8" />
                     </div>
                     <h3 className="font-heading text-lg font-bold text-foreground">Demande envoyée avec succès !</h3>
@@ -396,7 +396,7 @@ export function EntreprisesClient() {
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-4 text-left">
                     {status === "error" && (
-                      <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-center gap-2.5 text-xs text-rose-400">
+                      <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-center gap-2.5 text-xs text-rose-600">
                         <AlertCircle className="size-4 shrink-0" />
                         <span>{errorMsg}</span>
                       </div>
@@ -458,7 +458,7 @@ export function EntreprisesClient() {
                         <select
                           value={form.serviceType}
                           onChange={(e) => setForm({ ...form, serviceType: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-slate-900 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                          className="w-full rounded-xl border border-border bg-[#F5F8FF] px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                         >
                           <option value="Développement de Sites Web & Applications Mobiles">Développement de Sites Web &amp; Applications Mobiles</option>
                           <option value="Formations d'Équipe Sur-Mesure">Formations d'Équipe Sur-Mesure</option>
@@ -473,7 +473,7 @@ export function EntreprisesClient() {
                         <select
                           value={form.companySize}
                           onChange={(e) => setForm({ ...form, companySize: e.target.value })}
-                          className="w-full rounded-xl border border-border bg-slate-900 px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                          className="w-full rounded-xl border border-border bg-[#F5F8FF] px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                         >
                           <option value="1 à 10 personnes">1 à 10 personnes</option>
                           <option value="10 à 50 personnes">10 à 50 personnes</option>
@@ -497,7 +497,7 @@ export function EntreprisesClient() {
                     <button
                       type="submit"
                       disabled={status === "loading"}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black py-3.5 text-xs shadow-xl shadow-[#D4AF37]/25 disabled:opacity-50 transition-all cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black py-3.5 text-xs shadow-sm shadow-[#D4AF37]/25 disabled:opacity-50 transition-all cursor-pointer"
                     >
                       <Send className="size-4" />
                       {status === "loading" ? "Envoi en cours..." : "Envoyer la demande de devis B2B"}

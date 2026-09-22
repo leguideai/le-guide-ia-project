@@ -88,7 +88,7 @@ export function FAQ() {
                 className={cn(
                   "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border whitespace-nowrap shrink-0",
                   isActive
-                    ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 scale-[1.02]"
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs shadow-primary/20 scale-[1.02]"
                     : "bg-card/40 border-border/80 text-muted-foreground hover:bg-card/70 hover:text-foreground"
                 )}
               >

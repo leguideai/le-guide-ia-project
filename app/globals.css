@@ -49,38 +49,61 @@
 }
 
 :root {
-  --background: oklch(0.16 0.035 262);
-  --foreground: oklch(0.97 0.01 250);
-  --card: oklch(0.2 0.04 262);
-  --card-foreground: oklch(0.97 0.01 250);
-  --popover: oklch(0.2 0.04 262);
-  --popover-foreground: oklch(0.97 0.01 250);
-  --primary: oklch(0.62 0.21 252);
-  --primary-foreground: oklch(0.99 0.005 250);
-  --secondary: oklch(0.26 0.04 262);
-  --secondary-foreground: oklch(0.97 0.01 250);
-  --muted: oklch(0.26 0.04 262);
-  --muted-foreground: oklch(0.72 0.03 255);
-  --accent: oklch(0.72 0.16 240);
-  --accent-foreground: oklch(0.16 0.04 262);
-  --destructive: oklch(0.62 0.22 25);
-  --border: oklch(0.32 0.045 260);
-  --input: oklch(0.28 0.04 262);
-  --ring: oklch(0.62 0.21 252);
-  --chart-1: oklch(0.62 0.21 252);
-  --chart-2: oklch(0.72 0.16 240);
-  --chart-3: oklch(0.78 0.12 230);
-  --chart-4: oklch(0.55 0.18 258);
-  --chart-5: oklch(0.85 0.14 200);
+  /* ===== PALETTE CLAIRE — LE GUIDE IA =====
+     Dérivée du logo : bleu royal + navy profond, sur base blanche,
+     avec l'or de la marque en accent premium. */
+
+  --background: oklch(1 0 0);                  /* blanc pur */
+  --foreground: oklch(0.255 0.055 264);        /* navy #0E1E3F — texte principal */
+
+  --card: oklch(0.984 0.006 258);              /* #F7F9FC — teinte proche du blanc, pour détacher les cartes du fond */
+  --card-foreground: oklch(0.255 0.055 264);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.255 0.055 264);
+
+  --primary: oklch(0.53 0.215 262);            /* bleu royal du logo #1E4FD8 */
+  --primary-foreground: oklch(0.99 0.005 250); /* blanc sur le bleu */
+
+  --secondary: oklch(0.968 0.012 258);         /* surface bleutée très claire #F2F5FD */
+  --secondary-foreground: oklch(0.29 0.055 264);
+
+  --muted: oklch(0.968 0.012 258);
+  --muted-foreground: oklch(0.525 0.035 260);  /* gris-bleu lisible #5A6685 */
+
+  --accent: oklch(0.935 0.035 255);            /* bleu pâle pour les surlignages */
+  --accent-foreground: oklch(0.29 0.06 264);
+
+  --destructive: oklch(0.575 0.22 25);
+
+  --border: oklch(0.898 0.018 258);            /* #D8E0F0 — un peu plus présente, elle remplace l'ombre */
+  --input: oklch(0.94 0.014 258);
+  --ring: oklch(0.53 0.215 262);
+
+  --chart-1: oklch(0.53 0.215 262);
+  --chart-2: oklch(0.62 0.16 240);
+  --chart-3: oklch(0.72 0.13 228);
+  --chart-4: oklch(0.42 0.16 266);
+  --chart-5: oklch(0.72 0.14 85);
+
   --radius: 0.85rem;
-  --sidebar: oklch(0.16 0.035 262);
-  --sidebar-foreground: oklch(0.97 0.01 250);
-  --sidebar-primary: oklch(0.62 0.21 252);
+
+  --sidebar: oklch(0.985 0.006 258);
+  --sidebar-foreground: oklch(0.255 0.055 264);
+  --sidebar-primary: oklch(0.53 0.215 262);
   --sidebar-primary-foreground: oklch(0.99 0.005 250);
-  --sidebar-accent: oklch(0.26 0.04 262);
-  --sidebar-accent-foreground: oklch(0.97 0.01 250);
-  --sidebar-border: oklch(0.32 0.045 260);
-  --sidebar-ring: oklch(0.62 0.21 252);
+  --sidebar-accent: oklch(0.955 0.015 258);
+  --sidebar-accent-foreground: oklch(0.29 0.055 264);
+  --sidebar-border: oklch(0.912 0.016 258);
+  --sidebar-ring: oklch(0.53 0.215 262);
+
+  /* Couleurs de marque réutilisables */
+  --brand-navy: #0E1E3F;
+  --brand-blue: #1E4FD8;
+  --brand-blue-soft: #F2F5FD;
+  --brand-gold: #D4AF37;
+  --brand-gold-ink: #8A6A1F;
+  --brand-card: #F7F9FC;      /* fond des cartes */
+  --brand-footer: #EEF3FF;    /* fond du pied de page */
 }
 
 .dark {
@@ -132,25 +155,25 @@
 @layer utilities {
   .grid-bg {
     background-image:
-      linear-gradient(to right, oklch(0.62 0.21 252 / 0.08) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(0.62 0.21 252 / 0.08) 1px, transparent 1px);
+      linear-gradient(to right, oklch(0.53 0.215 262 / 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.53 0.215 262 / 0.055) 1px, transparent 1px);
     background-size: 48px 48px;
   }
 
   .glow-blue {
-    box-shadow: 0 0 0 1px oklch(0.62 0.21 252 / 0.3), 0 0 40px -8px oklch(0.62 0.21 252 / 0.55);
+    box-shadow: 0 0 0 1px oklch(0.53 0.215 262 / 0.18), 0 18px 40px -18px oklch(0.53 0.215 262 / 0.45);
   }
 
   .glow-gold {
-    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4), 0 0 40px -8px rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.45), 0 18px 40px -18px rgba(170, 124, 17, 0.4);
   }
 
   .text-gold {
-    color: #ECC86B;
+    color: #8A6A1F;
   }
 
   .text-gold-pure {
-    color: #D4AF37;
+    color: #A9822A;
   }
 
   .bg-gold {
@@ -158,11 +181,11 @@
   }
 
   .bg-gold-subtle {
-    background-color: rgba(212, 175, 55, 0.12);
+    background-color: rgba(212, 175, 55, 0.14);
   }
 
   .border-gold {
-    border-color: rgba(212, 175, 55, 0.4);
+    border-color: rgba(170, 124, 17, 0.38);
   }
 
   .gradient-gold {
@@ -170,17 +193,24 @@
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, #F5D77F 0%, #FFFFFF 25%, #D4AF37 60%, #B38728 100%);
+    background: linear-gradient(135deg, #B38728 0%, #D4AF37 35%, #8A6A1F 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Dégradé bleu de marque, pour les titres à fort impact sur blanc */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #0E1E3F 0%, #1E4FD8 55%, #3B82F6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
   .text-glow {
-    text-shadow: 0 0 28px oklch(0.62 0.21 252 / 0.55);
+    text-shadow: none;
   }
 
   .radial-fade {
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.62 0.21 252 / 0.18), transparent 70%);
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.53 0.215 262 / 0.07), transparent 70%);
   }
 
   @keyframes float-slow {

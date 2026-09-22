@@ -49,10 +49,10 @@ function LinkedinIcon({ className }: { className?: string }) {
 
 function getBadgeClasses(badge: string | undefined) {
   const b = badge?.toLowerCase() || ""
-  if (b.includes("demande")) return "bg-rose-500/20 text-rose-300 border-rose-500/40"
-  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
-  if (b.includes("nouveau")) return "bg-blue-500/20 text-blue-300 border-blue-500/40"
-  if (b.includes("prospect")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
+  if (b.includes("demande")) return "bg-rose-500/20 text-rose-700 border-rose-500/40"
+  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-[#D4AF37]/20 text-[#8A6A1F] border border-[#D4AF37]/40"
+  if (b.includes("nouveau")) return "bg-blue-500/20 text-blue-700 border-blue-500/40"
+  if (b.includes("prospect")) return "bg-[#D4AF37]/20 text-[#8A6A1F] border border-[#D4AF37]/40"
   return "bg-primary/20 text-primary border-primary/40"
 }
 
@@ -307,13 +307,13 @@ function FormationsContent() {
   const displayedFormations = filteredFormations.length > 0 ? filteredFormations : formations
 
   return (
-    <main className="relative min-h-screen text-foreground overflow-x-hidden bg-[#090d16]">
+    <main className="relative min-h-screen text-foreground overflow-x-hidden bg-white">
       
       {/* 1. Header Global  Style */}
       <Header />
 
       {/* 2. Hero Section : Alignement Propre & Harmonisé avec le reste du site */}
-      <section className="relative py-12 sm:py-16 md:py-20 border-b border-border/50 bg-slate-950/70 overflow-hidden">
+      <section className="relative py-12 sm:py-16 md:py-20 border-b border-border/50 bg-white overflow-hidden">
         
         {/* Glow Subtle Background */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[350px] bg-primary/5 blur-[140px] pointer-events-none rounded-full" />
@@ -322,49 +322,49 @@ function FormationsContent() {
           
           <div className="space-y-3 w-full">
             <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20 shadow-sm">
-              <Sparkles className="size-3.5 text-amber-400" />
+              <Sparkles className="size-3.5 text-amber-700" />
               FORMATIONS VIDÉOS &amp; MASTERCLASSES À LA DEMANDE
             </span>
 
-            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight w-full">
+            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-black text-[#0E1E3F] tracking-tight leading-tight w-full">
               Maîtrisez les meilleurs outils d'IA à votre rythme
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-4xl">
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-4xl">
               Des masterclasses vidéo autonomes, étape par étape, avec accès à vie 24h/24 et boîtes à outils de prompts prêtes à l'emploi.
             </p>
           </div>
 
           {/* Social Proof Badges */}
-          <div className="flex items-center gap-3 sm:gap-6 flex-wrap text-xs sm:text-sm font-bold text-slate-300 pt-2">
-            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md">
-              <CheckCircle2 className="size-4 text-blue-400 shrink-0" />
-              <span><strong className="text-white">13 000+</strong> professionnels formés</span>
+          <div className="flex items-center gap-3 sm:gap-6 flex-wrap text-xs sm:text-sm font-bold text-slate-600 pt-2">
+            <div className="flex items-center gap-2 bg-[#F5F8FF] border border-slate-200 px-3.5 py-2 rounded-xl backdrop-blur-md">
+              <CheckCircle2 className="size-4 text-blue-600 shrink-0" />
+              <span><strong className="text-[#0E1E3F]">13 000+</strong> professionnels formés</span>
             </div>
-            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md">
-              <div className="flex text-[#D4AF37]">
+            <div className="flex items-center gap-2 bg-[#F5F8FF] border border-slate-200 px-3.5 py-2 rounded-xl backdrop-blur-md">
+              <div className="flex text-[#8A6A1F]">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="size-3.5 fill-[#D4AF37] text-[#D4AF37]" />
+                  <Star key={i} className="size-3.5 fill-[#D4AF37] text-[#8A6A1F]" />
                 ))}
               </div>
-              <span><strong className="text-white">4.9/5</strong> avis vérifiés</span>
+              <span><strong className="text-[#0E1E3F]">4.9/5</strong> avis vérifiés</span>
             </div>
-            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl backdrop-blur-md">
+            <div className="flex items-center gap-2 bg-[#F5F8FF] border border-slate-200 px-3.5 py-2 rounded-xl backdrop-blur-md">
               <InfinityIcon className="size-4 text-primary shrink-0" />
-              <span><strong className="text-white">Accès à vie</strong> &amp; Replays HD</span>
+              <span><strong className="text-[#0E1E3F]">Accès à vie</strong> &amp; Replays HD</span>
             </div>
           </div>
 
           {/* 3. Onglets de Filtrage par Catégorie / Outil */}
-          <div className="pt-4 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <div className="pt-4 border-t border-slate-200 flex items-center gap-2 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer border shrink-0 ${
                   activeTab === tab.id
-                    ? "bg-primary text-slate-950 border-primary font-black shadow-lg shadow-primary/20 scale-[1.02]"
-                    : "bg-slate-900/60 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white"
+                    ? "bg-primary text-slate-950 border-primary font-black shadow-sm shadow-primary/20 scale-[1.02]"
+                    : "bg-[#F5F8FF] border-slate-200 text-slate-500 hover:bg-[#EEF3FF] hover:text-[#0E1E3F]"
                 }`}
               >
                 {tab.label}
@@ -382,28 +382,28 @@ function FormationsContent() {
           [1, 2].map((i) => (
             <div
               key={i}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pb-16 md:pb-24 border-b border-slate-800/80 animate-pulse"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pb-16 md:pb-24 border-b border-slate-200 animate-pulse"
             >
               <div className="space-y-6 lg:col-span-7">
                 <div className="flex items-center gap-3">
-                  <div className="h-6 w-28 bg-white/10 rounded-full" />
-                  <div className="h-6 w-20 bg-white/5 rounded-full" />
-                  <div className="h-6 w-20 bg-white/5 rounded-full" />
+                  <div className="h-6 w-28 bg-slate-200 rounded-full" />
+                  <div className="h-6 w-20 bg-slate-100 rounded-full" />
+                  <div className="h-6 w-20 bg-slate-100 rounded-full" />
                 </div>
                 <div className="space-y-2">
-                  <div className="h-9 w-full bg-white/10 rounded-2xl" />
-                  <div className="h-6 w-2/3 bg-white/5 rounded-xl" />
+                  <div className="h-9 w-full bg-slate-200 rounded-2xl" />
+                  <div className="h-6 w-2/3 bg-slate-100 rounded-xl" />
                 </div>
-                <div className="h-16 w-full bg-white/5 rounded-xl" />
+                <div className="h-16 w-full bg-slate-100 rounded-xl" />
                 <div className="space-y-2">
-                  <div className="h-4 w-32 bg-white/10 rounded" />
-                  <div className="h-5 w-3/4 bg-white/5 rounded" />
-                  <div className="h-5 w-2/3 bg-white/5 rounded" />
+                  <div className="h-4 w-32 bg-slate-200 rounded" />
+                  <div className="h-5 w-3/4 bg-slate-100 rounded" />
+                  <div className="h-5 w-2/3 bg-slate-100 rounded" />
                 </div>
-                <div className="h-20 bg-white/5 rounded-2xl border border-white/5" />
+                <div className="h-20 bg-[#F5F8FF] rounded-2xl border border-slate-200/70" />
               </div>
               <div className="lg:col-span-5 flex items-center justify-center">
-                <div className="w-full max-w-[380px] aspect-[4/3] rounded-3xl bg-white/5 border border-white/10" />
+                <div className="w-full max-w-[380px] aspect-[4/3] rounded-3xl bg-[#F5F8FF] border border-slate-200" />
               </div>
             </div>
           ))
@@ -420,7 +420,7 @@ function FormationsContent() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
               className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pb-16 md:pb-24 ${
-                idx !== displayedFormations.length - 1 ? "border-b border-slate-800/80" : ""
+                idx !== displayedFormations.length - 1 ? "border-b border-slate-200" : ""
               }`}
             >
               
@@ -432,23 +432,23 @@ function FormationsContent() {
                   <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider border shadow-sm ${getBadgeClasses(f.badge)}`}>
                     {f.badge || "Formation Complète"}
                   </span>
-                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5 bg-slate-900/90 px-3 py-1 rounded-full border border-slate-800">
+                  <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 bg-[#F5F8FF] px-3 py-1 rounded-full border border-slate-200">
                     <Clock className="size-3.5 text-primary" />
                     <span>{f.duration}</span>
                   </span>
-                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5 bg-slate-900/90 px-3 py-1 rounded-full border border-slate-800">
-                    <BookOpen className="size-3.5 text-cyan-400" />
+                  <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 bg-[#F5F8FF] px-3 py-1 rounded-full border border-slate-200">
+                    <BookOpen className="size-3.5 text-cyan-600" />
                     <span>{f.modules_count}</span>
                   </span>
-                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5 bg-slate-900/90 px-3 py-1 rounded-full border border-slate-800">
-                    <Zap className="size-3.5 text-amber-400" />
+                  <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5 bg-[#F5F8FF] px-3 py-1 rounded-full border border-slate-200">
+                    <Zap className="size-3.5 text-amber-700" />
                     <span>{f.prompts_count}</span>
                   </span>
                 </div>
 
                 {/* Titre & Tagline */}
                 <div className="space-y-2">
-                  <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
+                  <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-[#0E1E3F] tracking-tight leading-tight">
                     {f.title}
                   </h2>
                   <p className="text-base sm:text-lg font-bold text-primary">
@@ -457,19 +457,19 @@ function FormationsContent() {
                 </div>
 
                 {/* Description */}
-                <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                   {f.description}
                 </p>
 
                 {/* Points forts du programme */}
                 <div className="space-y-2.5 pt-2">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">
                     Au programme de cette masterclass :
                   </h3>
                   <div className="grid gap-2.5">
                     {f.features.map((feat, i) => (
-                      <div key={i} className="flex items-start gap-3 text-xs sm:text-sm text-slate-200">
-                        <CheckCircle2 className="size-4 sm:size-5 text-blue-400 shrink-0 mt-0.5" />
+                      <div key={i} className="flex items-start gap-3 text-xs sm:text-sm text-slate-700">
+                        <CheckCircle2 className="size-4 sm:size-5 text-blue-600 shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </div>
                     ))}
@@ -477,13 +477,13 @@ function FormationsContent() {
                 </div>
 
                 {/* Bloc Prix & Bouton d'Achat */}
-                <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+                <div className="p-5 rounded-2xl bg-gradient-to-r from-[#F5F8FF] via-[#F5F8FF]/90 to-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
                   <div>
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
                       Tarif d'accès complet à vie
                     </span>
                     <div className="flex items-baseline gap-2.5 mt-0.5">
-                      <span className="font-heading text-2xl sm:text-3xl font-black text-white">
+                      <span className="font-heading text-2xl sm:text-3xl font-black text-[#0E1E3F]">
                         {formatPriceNum(f.price)}
                       </span>
                       {f.original_price && (
@@ -498,7 +498,7 @@ function FormationsContent() {
                     {isEnrolled ? (
                       <Link
                         href="/dashboard"
-                        className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all hover:scale-[1.02]"
+                        className="px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm shadow-blue-600/20 transition-all hover:scale-[1.02]"
                       >
                         <Play className="size-4" />
                         <span>Accéder à ma Formation</span>
@@ -506,7 +506,7 @@ function FormationsContent() {
                     ) : (
                       <button
                         onClick={() => handleBuyClick(f)}
-                        className="px-6 py-3.5 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] cursor-pointer"
+                        className="px-6 py-3.5 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm shadow-primary/20 transition-all hover:scale-[1.02] cursor-pointer"
                       >
                         <ShoppingBag className="size-4" />
                         <span>Débloquer la formation</span>
@@ -521,28 +521,28 @@ function FormationsContent() {
               <div className={`space-y-6 lg:col-span-5 ${isReverse ? "lg:order-1" : "lg:order-2"}`}>
                 
                 {/* 1. Miniature / Poster 16/9 Haute Définition */}
-                <div className="relative aspect-video w-full rounded-3xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl group">
+                <div className="relative aspect-video w-full rounded-3xl overflow-hidden border border-slate-200 bg-[#F7F9FC] shadow-xs group">
                   <img
                     src={f.thumbnail || "/images/formation_claude_thumb.jpg"}
                     alt={f.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent" />
                   
                   {/* Badge & Statut Incrusté */}
                   <div className="absolute top-3 left-3 flex items-center gap-2">
-                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border backdrop-blur-md shadow-md ${getBadgeClasses(f.badge)}`}>
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border backdrop-blur-md shadow-xs ${getBadgeClasses(f.badge)}`}>
                       {f.badge || "Formation IA"}
                     </span>
                   </div>
 
                   {/* Formateur & Note Incrustés en bas */}
                   <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs">
-                    <div className="bg-slate-950/90 backdrop-blur-md border border-white/10 px-3 py-1 rounded-lg text-slate-200 font-bold">
+                    <div className="bg-white backdrop-blur-md border border-slate-200 px-3 py-1 rounded-lg text-slate-700 font-bold">
                       {f.instructor || "Alfred Dah · Expert IA"}
                     </div>
-                    <div className="bg-slate-950/90 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-lg text-amber-400 font-black flex items-center gap-1 shadow-md">
-                      <Star className="size-3 fill-amber-400 text-amber-400" />
+                    <div className="bg-white backdrop-blur-md border border-slate-200 px-2.5 py-1 rounded-lg text-amber-700 font-black flex items-center gap-1 shadow-xs">
+                      <Star className="size-3 fill-amber-400 text-amber-700" />
                       <span>4.9</span>
                     </div>
                   </div>
@@ -551,33 +551,33 @@ function FormationsContent() {
                 {/* 2. Statistiques Rapides */}
                 <div className="grid grid-cols-3 gap-3">
                   {f.stats.map((st, i) => (
-                    <div key={i} className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 text-center space-y-0.5">
-                      <div className="font-heading text-xl font-black text-white">{st.value}</div>
-                      <div className="text-[10px] text-slate-400 font-semibold">{st.label}</div>
+                    <div key={i} className="p-3.5 rounded-2xl bg-[#F5F8FF] border border-slate-200 text-center space-y-0.5">
+                      <div className="font-heading text-xl font-black text-[#0E1E3F]">{st.value}</div>
+                      <div className="text-[10px] text-slate-500 font-semibold">{st.label}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* 3. Témoignage Vérifié */}
                 {f.testimonial && (
-                  <div className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800/60 space-y-3 backdrop-blur-md">
+                  <div className="p-4 rounded-2xl bg-[#F5F8FF] border border-slate-200 space-y-3 backdrop-blur-md">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <div className="size-8 rounded-full bg-primary/20 text-primary border border-primary/30 font-black text-xs flex items-center justify-center">
                           {f.testimonial.avatar_initials || "EL"}
                         </div>
                         <div>
-                          <div className="text-xs font-bold text-white">{f.testimonial.author_name}</div>
-                          <div className="text-[10px] text-slate-400">{f.testimonial.author_role || "Apprenant Vérifié"}</div>
+                          <div className="text-xs font-bold text-[#0E1E3F]">{f.testimonial.author_name}</div>
+                          <div className="text-[10px] text-slate-500">{f.testimonial.author_role || "Apprenant Vérifié"}</div>
                         </div>
                       </div>
-                      <div className="flex text-amber-400">
+                      <div className="flex text-amber-700">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="size-3 fill-amber-400 text-amber-400" />
+                          <Star key={i} className="size-3 fill-amber-400 text-amber-700" />
                         ))}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-300 italic leading-relaxed">
+                    <p className="text-xs text-slate-600 italic leading-relaxed">
                       "{f.testimonial.quote}"
                     </p>
                   </div>
@@ -592,35 +592,35 @@ function FormationsContent() {
       </section>
 
       {/* 5. Bannière Garantie & Réassurance */}
-      <section className="py-12 bg-slate-900/40 border-y border-slate-800">
+      <section className="py-12 bg-[#F5F8FF] border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="flex items-start gap-4">
             <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
               <InfinityIcon className="size-6" />
             </div>
             <div className="space-y-1 text-left">
-              <h4 className="font-heading text-sm font-bold text-white">Accès à vie 24h/24</h4>
-              <p className="text-xs text-slate-400">Consultez vos leçons et vos prompts à votre rythme, sans limite de temps.</p>
+              <h4 className="font-heading text-sm font-bold text-[#0E1E3F]">Accès à vie 24h/24</h4>
+              <p className="text-xs text-slate-500">Consultez vos leçons et vos prompts à votre rythme, sans limite de temps.</p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="size-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] shrink-0">
+            <div className="size-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#8A6A1F] shrink-0">
               <ShieldCheck className="size-6" />
             </div>
             <div className="space-y-1 text-left">
-              <h4 className="font-heading text-sm font-bold text-white">Paiements 100% Sécurisés</h4>
-              <p className="text-xs text-slate-400">Wave, Orange Money, Carte Bancaire et Stripe.</p>
+              <h4 className="font-heading text-sm font-bold text-[#0E1E3F]">Paiements 100% Sécurisés</h4>
+              <p className="text-xs text-slate-500">Wave, Orange Money, Carte Bancaire et Stripe.</p>
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="size-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+            <div className="size-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 shrink-0">
               <MessageSquare className="size-6" />
             </div>
             <div className="space-y-1 text-left">
-              <h4 className="font-heading text-sm font-bold text-white">Support & Mises à Jour</h4>
-              <p className="text-xs text-slate-400">Mises à jour incluses lors des sorties des nouvelles versions d'IA.</p>
+              <h4 className="font-heading text-sm font-bold text-[#0E1E3F]">Support & Mises à Jour</h4>
+              <p className="text-xs text-slate-500">Mises à jour incluses lors des sorties des nouvelles versions d'IA.</p>
             </div>
           </div>
         </div>
@@ -634,7 +634,7 @@ function FormationsContent() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl relative max-h-[92vh] overflow-y-auto"
+              className="bg-[#F5F8FF] border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-xs relative max-h-[92vh] overflow-y-auto"
             >
               
               {/* Close Button */}
@@ -644,52 +644,52 @@ function FormationsContent() {
                   setPaymentSuccess(false)
                   setErrorMessage("")
                 }}
-                className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="absolute top-5 right-5 p-2 rounded-xl text-slate-500 hover:text-[#0E1E3F] hover:bg-[#EEF3FF] transition-colors cursor-pointer"
               >
                 <X className="size-5" />
               </button>
 
               {paymentSuccess ? (
                 <div className="text-center space-y-4 py-3">
-                  <div className="size-16 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
+                  <div className="size-16 rounded-full bg-amber-500/20 text-amber-700 border border-amber-500/40 flex items-center justify-center mx-auto shadow-sm shadow-amber-500/20">
                     <Clock className="size-8 animate-pulse" />
                   </div>
                   
                   <div className="space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
                       Validation sous moins de 24h
                     </span>
-                    <h3 className="font-heading text-xl font-black text-white pt-1">
+                    <h3 className="font-heading text-xl font-black text-[#0E1E3F] pt-1">
                       Demande d'Accès Enregistrée !
                     </h3>
                   </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed max-w-md mx-auto">
+                  <p className="text-xs text-slate-600 leading-relaxed max-w-md mx-auto">
                     Votre déclaration de paiement Mobile Money pour la formation <strong>{selectedFormation.title}</strong> a bien été transmise à notre équipe administrative.
                   </p>
 
                   {/* Récapitulatif de la transaction */}
-                  <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-left space-y-2 text-xs">
-                    <div className="flex justify-between text-slate-400">
+                  <div className="p-4 rounded-2xl bg-[#F7F9FC] border border-slate-200 text-left space-y-2 text-xs">
+                    <div className="flex justify-between text-slate-500">
                       <span>Formation :</span>
-                      <strong className="text-white">{selectedFormation.title}</strong>
+                      <strong className="text-[#0E1E3F]">{selectedFormation.title}</strong>
                     </div>
-                    <div className="flex justify-between text-slate-400">
+                    <div className="flex justify-between text-slate-500">
                       <span>Montant à vérifier :</span>
-                      <strong className="text-white">{formatPriceNum(selectedFormation.price)}</strong>
+                      <strong className="text-[#0E1E3F]">{formatPriceNum(selectedFormation.price)}</strong>
                     </div>
-                    <div className="flex justify-between text-slate-400">
+                    <div className="flex justify-between text-slate-500">
                       <span>Référence de transaction :</span>
                       <strong className="text-primary font-mono">{transactionRef || "N/A"}</strong>
                     </div>
-                    <div className="flex justify-between text-slate-400 border-t border-slate-800/80 pt-2">
+                    <div className="flex justify-between text-slate-500 border-t border-slate-200 pt-2">
                       <span>Délai d'activation :</span>
-                      <strong className="text-amber-400 font-bold">Moins de 24h ouvrées</strong>
+                      <strong className="text-amber-700 font-bold">Moins de 24h ouvrées</strong>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 text-left text-xs text-slate-400 space-y-1">
-                    <p className="text-[11px] text-slate-300">
+                  <div className="p-3.5 rounded-2xl bg-[#F7F9FC] border border-slate-200 text-left text-xs text-slate-500 space-y-1">
+                    <p className="text-[11px] text-slate-600">
                       📧 Un email de confirmation a été envoyé à votre adresse. Dès vérification du dépôt, votre formation sera automatiquement débloquée dans votre Espace Membre.
                     </p>
                   </div>
@@ -699,7 +699,7 @@ function FormationsContent() {
                       href={`https://wa.me/22605050577?text=${encodeURIComponent(`Bonjour Alfred, je viens d'effectuer le virement Mobile Money pour la formation "${selectedFormation.title}" (${formatPriceNum(selectedFormation.price)}) avec la référence : ${transactionRef}. Pouvez-vous valider mon accès ? Merci !`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black text-xs sm:text-sm transition-all shadow-lg shadow-[#25D366]/20 cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-black text-xs sm:text-sm transition-all shadow-sm shadow-[#25D366]/20 cursor-pointer"
                     >
                       <MessageSquare className="size-4" />
                       <span>Accélérer ma validation sur WhatsApp</span>
@@ -707,7 +707,7 @@ function FormationsContent() {
 
                     <Link
                       href="/dashboard"
-                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all"
+                      className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#EEF3FF] hover:bg-slate-700 text-slate-700 font-bold text-xs transition-all"
                     >
                       <Play className="size-3.5" />
                       <span>Voir mon Espace Membre</span>
@@ -722,19 +722,19 @@ function FormationsContent() {
                     <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
                       Déblocage Immédiat
                     </span>
-                    <h3 className="font-heading text-lg sm:text-xl font-bold text-white pt-1">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-[#0E1E3F] pt-1">
                       {selectedFormation.title}
                     </h3>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       Paiement unique pour un accès à vie et support continu.
                     </p>
                   </div>
 
                   {/* Récapitulatif Tarif */}
-                  <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                    <span className="text-xs text-slate-400 font-bold">Montant à régler :</span>
+                  <div className="p-4 rounded-2xl bg-[#F7F9FC] border border-slate-200 flex items-center justify-between">
+                    <span className="text-xs text-slate-500 font-bold">Montant à régler :</span>
                     <div className="flex items-baseline gap-2">
-                      <span className="font-heading text-xl font-black text-white">
+                      <span className="font-heading text-xl font-black text-[#0E1E3F]">
                         {formatPriceNum(selectedFormation.price)}
                       </span>
                       {selectedFormation.original_price && (
@@ -747,7 +747,7 @@ function FormationsContent() {
 
                   {/* Choix du Moyen de Paiement */}
                   <div className="space-y-2 text-xs">
-                    <label className="font-bold text-slate-300 block">Choisissez votre moyen de paiement :</label>
+                    <label className="font-bold text-slate-600 block">Choisissez votre moyen de paiement :</label>
                     <div className="grid grid-cols-2 gap-2.5">
                       
                       {/* Wave */}
@@ -756,18 +756,18 @@ function FormationsContent() {
                         onClick={() => setPaymentMethod("wave")}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           paymentMethod === "wave"
-                            ? "bg-sky-500/10 border-sky-400 text-white shadow-md ring-1 ring-sky-400"
-                            : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
+                            ? "bg-sky-500/10 border-sky-400 text-[#0E1E3F] shadow-xs ring-1 ring-sky-400"
+                            : "bg-[#F7F9FC] border-slate-200 text-slate-500 hover:text-[#0E1E3F] hover:border-slate-300"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <img src="/wave.png" alt="Wave" className="h-5 w-auto max-w-[65px] object-contain shrink-0 rounded-xs" />
-                            <span className="font-bold text-xs text-white">Wave</span>
+                            <span className="font-bold text-xs text-[#0E1E3F]">Wave</span>
                           </div>
-                          {paymentMethod === "wave" && <CheckCircle2 className="size-4 text-sky-400" />}
+                          {paymentMethod === "wave" && <CheckCircle2 className="size-4 text-sky-600" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-1.5">Mobile Money Direct</span>
+                        <span className="text-[10px] text-slate-500 mt-1.5">Mobile Money Direct</span>
                       </button>
 
                       {/* Orange Money */}
@@ -776,18 +776,18 @@ function FormationsContent() {
                         onClick={() => setPaymentMethod("orange_money")}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           paymentMethod === "orange_money"
-                            ? "bg-orange-500/10 border-orange-400 text-white shadow-md ring-1 ring-orange-400"
-                            : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
+                            ? "bg-orange-500/10 border-orange-400 text-[#0E1E3F] shadow-xs ring-1 ring-orange-400"
+                            : "bg-[#F7F9FC] border-slate-200 text-slate-500 hover:text-[#0E1E3F] hover:border-slate-300"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <img src="/orange_money.png" alt="Orange Money" className="h-5 w-auto max-w-[65px] object-contain shrink-0 rounded-xs" />
-                            <span className="font-bold text-xs text-white">Orange Money</span>
+                            <span className="font-bold text-xs text-[#0E1E3F]">Orange Money</span>
                           </div>
-                          {paymentMethod === "orange_money" && <CheckCircle2 className="size-4 text-orange-400" />}
+                          {paymentMethod === "orange_money" && <CheckCircle2 className="size-4 text-orange-700" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-1.5">Mobile Money Direct</span>
+                        <span className="text-[10px] text-slate-500 mt-1.5">Mobile Money Direct</span>
                       </button>
 
                       {/* Carte Bancaire / Stripe (Commenté) */}
@@ -797,15 +797,15 @@ function FormationsContent() {
                         onClick={() => setPaymentMethod("stripe")}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           paymentMethod === "stripe"
-                            ? "bg-primary/10 border-primary text-white shadow-md ring-1 ring-primary"
-                            : "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
+                            ? "bg-primary/10 border-primary text-[#0E1E3F] shadow-xs ring-1 ring-primary"
+                            : "bg-[#F7F9FC] border-slate-200 text-slate-500 hover:text-[#0E1E3F] hover:border-slate-300"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
-                          <span className="font-bold text-xs text-white">Carte Bancaire</span>
+                          <span className="font-bold text-xs text-[#0E1E3F]">Carte Bancaire</span>
                           {paymentMethod === "stripe" && <CheckCircle2 className="size-4 text-primary" />}
                         </div>
-                        <span className="text-[10px] text-slate-400 mt-1">Stripe / Visa / Master</span>
+                        <span className="text-[10px] text-slate-500 mt-1">Stripe / Visa / Master</span>
                       </button>
                       */}
 
@@ -814,9 +814,9 @@ function FormationsContent() {
 
                   {/* 1. PANNEAU D'INSTRUCTIONS MOBILE MONEY (WAVE / ORANGE MONEY) */}
                   {paymentMethod !== "stripe" && (
-                    <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
+                    <div className="rounded-2xl border border-slate-200 bg-[#F7F9FC] p-4 space-y-3">
                       <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                        <h4 className="text-xs font-bold text-[#0E1E3F] flex items-center gap-2">
                           <img 
                             src={paymentMethod === "wave" ? "/wave.png" : "/orange_money.png"} 
                             alt={paymentMethod === "wave" ? "Wave" : "Orange Money"} 
@@ -824,20 +824,20 @@ function FormationsContent() {
                           />
                           <span>Instructions de transfert ({paymentMethod === "wave" ? "Wave" : "Orange Money"}) :</span>
                         </h4>
-                        <p className="text-[11px] text-slate-300 leading-relaxed">
-                          Effectuez le transfert de <strong className="text-white font-extrabold">{formatPriceNum(selectedFormation.price)}</strong> sur le numéro officiel ci-dessous :
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          Effectuez le transfert de <strong className="text-[#0E1E3F] font-extrabold">{formatPriceNum(selectedFormation.price)}</strong> sur le numéro officiel ci-dessous :
                         </p>
                       </div>
 
                       {/* Encadré Numéro Officiel */}
-                      <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm">
+                      <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#F5F8FF] border border-slate-200 shadow-sm">
                         <div>
-                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Numéro de paiement officiel :</span>
+                          <span className="text-[10px] uppercase font-bold text-slate-500 block">Numéro de paiement officiel :</span>
                           <div className="font-mono text-base sm:text-lg text-primary font-black tracking-wider">
                             +226 75 75 72 73
                           </div>
-                          <div className="text-[11px] text-slate-300 font-medium">
-                            Nom du compte : <strong className="text-white">Sanson Alfred Tanguy Dah</strong>
+                          <div className="text-[11px] text-slate-600 font-medium">
+                            Nom du compte : <strong className="text-[#0E1E3F]">Sanson Alfred Tanguy Dah</strong>
                           </div>
                         </div>
 
@@ -863,7 +863,7 @@ function FormationsContent() {
 
                       {/* Champ Référence de transaction */}
                       <div className="space-y-1.5 pt-1">
-                        <label className="text-xs font-bold text-slate-200 block">
+                        <label className="text-xs font-bold text-slate-700 block">
                           ID de Transaction / N° de téléphone expéditeur *
                         </label>
                         <input
@@ -872,7 +872,7 @@ function FormationsContent() {
                           value={transactionRef}
                           onChange={(e) => setTransactionRef(e.target.value)}
                           placeholder="Ex: REF-WAVE-8921 ou votre N° de téléphone"
-                          className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-mono"
+                          className="w-full rounded-xl border border-slate-200 bg-[#F5F8FF] px-3.5 py-2.5 text-xs text-[#0E1E3F] placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-mono"
                         />
                       </div>
                     </div>
@@ -880,26 +880,26 @@ function FormationsContent() {
 
                   {/* 2. PANNEAU STRIPE / CARTE BANCAIRE */}
                   {paymentMethod === "stripe" && (
-                    <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 space-y-3">
-                      <div className="flex items-center gap-2 text-white font-bold text-xs">
+                    <div className="rounded-2xl border border-slate-200 bg-[#F7F9FC] p-4 space-y-3">
+                      <div className="flex items-center gap-2 text-[#0E1E3F] font-bold text-xs">
                         <CreditCard className="size-4 text-primary" />
                         <span>Paiement sécurisé par Carte Bancaire (Stripe)</span>
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed">
+                      <p className="text-xs text-slate-600 leading-relaxed">
                         Vous allez être redirigé vers la passerelle sécurisée <strong>Stripe</strong> pour régler par carte bancaire internationale (Visa, Mastercard, Apple Pay, Google Pay).
                       </p>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-300 flex-wrap pt-1">
-                        <span className="bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">💳 Visa</span>
-                        <span className="bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">💳 Mastercard</span>
-                        <span className="bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800 font-semibold">🔒 Chiffrement SSL 256-bit</span>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-600 flex-wrap pt-1">
+                        <span className="bg-[#F5F8FF] px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">💳 Visa</span>
+                        <span className="bg-[#F5F8FF] px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">💳 Mastercard</span>
+                        <span className="bg-[#F5F8FF] px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">🔒 Chiffrement SSL 256-bit</span>
                       </div>
                     </div>
                   )}
 
                   {/* Coordonnées Client si non connecté */}
                   {!user && (
-                    <div className="space-y-3 pt-1 border-t border-slate-800">
-                      <span className="text-xs font-bold text-slate-300 block">Vos coordonnées pour l'accès :</span>
+                    <div className="space-y-3 pt-1 border-t border-slate-200">
+                      <span className="text-xs font-bold text-slate-600 block">Vos coordonnées pour l'accès :</span>
                       <div className="grid gap-2 sm:grid-cols-2">
                         <input
                           type="text"
@@ -907,7 +907,7 @@ function FormationsContent() {
                           placeholder="Votre Nom & Prénom *"
                           value={buyerForm.fullName}
                           onChange={e => setBuyerForm({ ...buyerForm, fullName: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary"
+                          className="w-full bg-[#F7F9FC] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#0E1E3F] outline-none focus:border-primary"
                         />
                         <input
                           type="email"
@@ -915,7 +915,7 @@ function FormationsContent() {
                           placeholder="Votre Adresse Email *"
                           value={buyerForm.email}
                           onChange={e => setBuyerForm({ ...buyerForm, email: e.target.value })}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-primary"
+                          className="w-full bg-[#F7F9FC] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#0E1E3F] outline-none focus:border-primary"
                         />
                       </div>
                     </div>
@@ -923,7 +923,7 @@ function FormationsContent() {
 
                   {/* Message d'erreur éventuel */}
                   {errorMessage && (
-                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 text-xs flex items-center gap-2">
                       <AlertCircle className="size-4 shrink-0" />
                       <span>{errorMessage}</span>
                     </div>
@@ -934,7 +934,7 @@ function FormationsContent() {
                     <button
                       type="submit"
                       disabled={processingPayment}
-                      className="w-full py-3.5 rounded-xl bg-primary text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 disabled:opacity-50 cursor-pointer"
+                      className="w-full py-3.5 rounded-xl bg-primary text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm shadow-primary/20 hover:opacity-90 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       {processingPayment ? (
                         <>
@@ -975,7 +975,7 @@ function FormationsContent() {
 export function FormationsClient() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#090d16] flex items-center justify-center text-primary font-bold text-sm">
+      <div className="min-h-screen bg-white flex items-center justify-center text-primary font-bold text-sm">
         Chargement des formations...
       </div>
     }>

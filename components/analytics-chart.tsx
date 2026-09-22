@@ -116,7 +116,7 @@ export function AnalyticsChart() {
   const activePoint = hoveredIdx !== null && pointsPageviews[hoveredIdx] ? pointsPageviews[hoveredIdx] : null
 
   return (
-    <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-xs space-y-6 text-left">
+    <div className="rounded-3xl border border-slate-200/90 bg-[#F7F9FC] p-5 sm:p-7 shadow-xs space-y-6 text-left">
       {/* Top Header & Period Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div className="space-y-1">
@@ -211,7 +211,7 @@ export function AnalyticsChart() {
             </div>
           </div>
 
-          <div className="text-[11px] text-slate-400 font-medium hidden sm:block">
+          <div className="text-[11px] text-slate-500 font-medium hidden sm:block">
             Survolez la courbe pour afficher le détail
           </div>
         </div>
@@ -367,22 +367,22 @@ export function AnalyticsChart() {
               {/* Dynamic Interactive Tooltip */}
               {hoveredIdx !== null && series[hoveredIdx] && activePoint && (
                 <div
-                  className="absolute z-20 pointer-events-none bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs space-y-1.5 transform -translate-x-1/2 -translate-y-full mb-2"
+                  className="absolute z-20 pointer-events-none bg-[#F5F8FF] text-[#0E1E3F] p-3 rounded-xl shadow-sm text-xs space-y-1.5 transform -translate-x-1/2 -translate-y-full mb-2"
                   style={{
                     left: `${(activePoint.x / chartWidth) * 100}%`,
                     top: `${(activePoint.y / chartHeight) * 100}%`
                   }}
                 >
-                  <div className="font-bold text-[11px] text-slate-300 border-b border-slate-700 pb-1">
+                  <div className="font-bold text-[11px] text-slate-600 border-b border-slate-300 pb-1">
                     📅 {series[hoveredIdx].label}
                   </div>
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-primary font-semibold">Pages Vues :</span>
-                    <strong className="text-white font-mono">{series[hoveredIdx].pageviews}</strong>
+                    <strong className="text-[#0E1E3F] font-mono">{series[hoveredIdx].pageviews}</strong>
                   </div>
                   <div className="flex items-center justify-between gap-4">
-                    <span className="text-emerald-400 font-semibold">Visiteurs Uniques :</span>
-                    <strong className="text-white font-mono">{series[hoveredIdx].visitors}</strong>
+                    <span className="text-emerald-600 font-semibold">Visiteurs Uniques :</span>
+                    <strong className="text-[#0E1E3F] font-mono">{series[hoveredIdx].visitors}</strong>
                   </div>
                 </div>
               )}

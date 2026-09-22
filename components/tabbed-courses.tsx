@@ -7,10 +7,10 @@ import { FormationItem, FormationCategory, DEFAULT_FORMATIONS, DEFAULT_FORMATION
 
 function getBadgeClasses(badge: string | undefined) {
   const b = badge?.toLowerCase() || ""
-  if (b.includes("demande")) return "bg-rose-500/20 text-rose-300 border-rose-500/40"
-  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
-  if (b.includes("nouveau")) return "bg-blue-500/20 text-blue-300 border-blue-500/40"
-  if (b.includes("prospect")) return "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/40"
+  if (b.includes("demande")) return "bg-rose-500/20 text-rose-700 border-rose-500/40"
+  if (b.includes("seller") || b.includes("vente") || b.includes("populaire")) return "bg-[#D4AF37]/20 text-[#8A6A1F] border border-[#D4AF37]/40"
+  if (b.includes("nouveau")) return "bg-blue-500/20 text-blue-700 border-blue-500/40"
+  if (b.includes("prospect")) return "bg-[#D4AF37]/20 text-[#8A6A1F] border border-[#D4AF37]/40"
   return "bg-primary/20 text-primary border-primary/40"
 }
 
@@ -66,7 +66,7 @@ export function TabbedCourses() {
   }
 
   return (
-    <section className="py-12 md:py-16 bg-slate-950/70 border-t border-border/50 relative overflow-hidden" id="formations-videos">
+    <section className="py-12 md:py-16 bg-white border-t border-border/50 relative overflow-hidden" id="formations-videos">
       
       {/* Subtle Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[350px] bg-primary/5 blur-[140px] pointer-events-none rounded-full" />
@@ -77,10 +77,10 @@ export function TabbedCourses() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-left">
           <div className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20">
-              <Sparkles className="size-3.5 text-[#D4AF37]" />
+              <Sparkles className="size-3.5 text-[#8A6A1F]" />
              NOS FORMATIONS
             </span>
-            <p className="text-xs md:text-sm text-slate-400 max-w-2xl">
+            <p className="text-xs md:text-sm text-slate-500 max-w-2xl">
               Des formations vidéo autonomes avec accès immédiat 24h/24, à vie, et des prompts prêts à l'emploi.
             </p>
           </div>
@@ -105,8 +105,8 @@ export function TabbedCourses() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer border shrink-0 ${
                 activeTab === tab.id
-                  ? "bg-primary text-slate-950 border-primary font-black shadow-lg shadow-primary/20 scale-[1.02]"
-                  : "bg-card/40 border-border/60 text-slate-400 hover:bg-card/80 hover:text-white"
+                  ? "bg-primary text-slate-950 border-primary font-black shadow-sm shadow-primary/20 scale-[1.02]"
+                  : "bg-card/40 border-border/60 text-slate-500 hover:bg-card/80 hover:text-white"
               }`}
             >
               {tab.label}
@@ -123,27 +123,27 @@ export function TabbedCourses() {
             <Link
               key={f.id || f.slug}
               href={`/formations?buy=${f.slug}`}
-              className="w-[300px] sm:w-[320px] md:w-auto shrink-0 snap-start rounded-2xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900/90 overflow-hidden flex flex-col justify-between hover:border-primary/50 transition-all duration-300 shadow-xl backdrop-blur-xl group cursor-pointer"
+              className="w-[300px] sm:w-[320px] md:w-auto shrink-0 snap-start rounded-2xl border border-slate-200 bg-[#F5F8FF] hover:bg-[#F5F8FF] overflow-hidden flex flex-col justify-between hover:border-primary/50 transition-all duration-300 shadow-sm backdrop-blur-xl group cursor-pointer"
             >
               <div>
                 {/* 1. Miniature / Poster 16/9 */}
-                <div className="relative aspect-video w-full overflow-hidden bg-slate-950 border-b border-slate-800/80">
+                <div className="relative aspect-video w-full overflow-hidden bg-white border-b border-slate-200">
                   <img
                     src={f.thumbnail || "/images/formation_claude_thumb.jpg"}
                     alt={f.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-80" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-transparent opacity-80" />
 
                   {/* Badge de statut incrusté */}
                   <div className="absolute top-2.5 left-2.5">
-                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border backdrop-blur-md shadow-md ${getBadgeClasses(f.badge)}`}>
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border backdrop-blur-md shadow-xs ${getBadgeClasses(f.badge)}`}>
                       {f.badge || "Formation IA"}
                     </span>
                   </div>
 
                   {/* Durée incrustée */}
-                  <div className="absolute bottom-2.5 right-2.5 bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-md px-2 py-0.5 text-[10px] font-bold text-white flex items-center gap-1 shadow-md">
+                  <div className="absolute bottom-2.5 right-2.5 bg-white backdrop-blur-md border border-slate-200 rounded-md px-2 py-0.5 text-[10px] font-bold text-[#0E1E3F] flex items-center gap-1 shadow-xs">
                     <Clock className="size-3 text-primary" />
                     <span>{f.duration}</span>
                   </div>
@@ -152,21 +152,21 @@ export function TabbedCourses() {
                 {/* 2. Détails & Typographie Style  */}
                 <div className="p-4 sm:p-5 pb-0 mb-0 space-y-3">
                   {/* Titre */}
-                  <h3 className="font-heading text-sm sm:text-base font-bold text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                  <h3 className="font-heading text-sm sm:text-base font-bold text-[#0E1E3F] group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                     {f.title}
                   </h3>
 
                   {/* Formateur */}
-                  <p className="text-xs text-slate-400 line-clamp-1">
+                  <p className="text-xs text-slate-500 line-clamp-1">
                     {f.instructor || "Alfred Dah · Expert IA & Productivité"}
                   </p>
 
                   {/* Note & Avis */}
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="font-black text-amber-400">4.9</span>
-                    <div className="flex text-amber-400">
+                    <span className="font-black text-amber-700">4.9</span>
+                    <div className="flex text-amber-700">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="size-3 fill-amber-400 text-amber-400" />
+                        <Star key={i} className="size-3 fill-amber-400 text-amber-700" />
                       ))}
                     </div>
                     <span className="text-[11px] text-slate-500 font-medium">
@@ -175,11 +175,11 @@ export function TabbedCourses() {
                   </div>
 
                   {/* Badges de Contenu */}
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 font-medium">
-                    <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                    <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
                       {f.modules_count}
                     </span>
-                    <span className="bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                    <span className="bg-white px-2 py-0.5 rounded border border-slate-200">
                       {f.prompts_count}
                     </span>
                   </div>
@@ -187,10 +187,10 @@ export function TabbedCourses() {
               </div>
 
               {/* 3. Bloc Prix & Action */}
-              <div className="p-4 sm:p-5 sm:pt-0 pt-0 border-t border-slate-800/60 mt-0">
+              <div className="p-4 sm:p-5 sm:pt-0 pt-0 border-t border-slate-200 mt-0">
                 <div className="flex items-baseline justify-between pt-3">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-heading text-lg sm:text-xl font-black text-white">
+                    <span className="font-heading text-lg sm:text-xl font-black text-[#0E1E3F]">
                       {formatPriceNum(f.price)}
                     </span>
                     {f.original_price && (

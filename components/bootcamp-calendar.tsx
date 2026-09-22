@@ -188,7 +188,7 @@ export function BootcampCalendar({
     <div className="space-y-6">
       
       {/* 1. Header Toolbar (Filter, Month Switcher, Action Button) */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200/90 rounded-2xl p-4 shadow-xs">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#F7F9FC] border border-slate-200/90 rounded-2xl p-4 shadow-xs">
         
         {/* Left: Filter by course & Type */}
         <div className="flex flex-wrap items-center gap-3">
@@ -208,7 +208,7 @@ export function BootcampCalendar({
             </select>
           </div>
 
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 text-[11px] font-bold shadow-sm">
+          <div className="flex items-center bg-[#F7F9FC] border border-slate-200 rounded-xl p-0.5 text-[11px] font-bold shadow-sm">
             <button
               onClick={() => setSelectedTypeFilter("all")}
               className={`px-2.5 py-1.5 rounded-lg transition-all ${
@@ -240,7 +240,7 @@ export function BootcampCalendar({
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={handlePrevMonth}
-            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all cursor-pointer shadow-sm"
+            className="p-2 rounded-xl border border-slate-200 bg-[#F7F9FC] hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all cursor-pointer shadow-sm"
             title="Mois précédent"
           >
             <ChevronLeft className="size-4" />
@@ -254,7 +254,7 @@ export function BootcampCalendar({
 
           <button
             onClick={handleNextMonth}
-            className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all cursor-pointer shadow-sm"
+            className="p-2 rounded-xl border border-slate-200 bg-[#F7F9FC] hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all cursor-pointer shadow-sm"
             title="Mois suivant"
           >
             <ChevronRight className="size-4" />
@@ -275,7 +275,7 @@ export function BootcampCalendar({
               {onAddEvent && (
                 <button
                   onClick={() => onAddEvent()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-white font-black text-xs hover:opacity-90 transition-all shadow-md shadow-primary/20 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-white font-black text-xs hover:opacity-90 transition-all shadow-xs shadow-primary/20 cursor-pointer"
                 >
                   <Plus className="size-3.5" />
                   <span>Nouvelle Session</span>
@@ -302,7 +302,7 @@ export function BootcampCalendar({
       </div>
 
       {/* 2. Full-Width Monthly Calendar Grid */}
-      <div className="w-full rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm overflow-hidden">
+      <div className="w-full rounded-3xl border border-slate-200 bg-[#F7F9FC] p-4 sm:p-6 shadow-sm overflow-hidden">
         
         {/* Day Headers (Lun, Mar, Mer, Jeu, Ven, Sam, Dim) */}
         <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
@@ -340,7 +340,7 @@ export function BootcampCalendar({
                 }}
                 className={`min-h-[95px] sm:min-h-[120px] rounded-2xl p-2 sm:p-2.5 flex flex-col justify-between border transition-all cursor-pointer group relative ${
                   dayItem.isCurrentMonth
-                    ? "bg-white border-slate-200 hover:border-primary/60 hover:bg-slate-50/80 shadow-xs"
+                    ? "bg-[#F7F9FC] border-slate-200 hover:border-primary/60 hover:bg-slate-50/80 shadow-xs"
                     : "bg-slate-50/50 border-transparent opacity-30 hover:opacity-70"
                 } ${isToday ? "border-primary bg-primary/5 ring-2 ring-primary/20" : ""} ${
                   hasEvents ? "border-slate-300 shadow-xs" : ""
@@ -351,10 +351,10 @@ export function BootcampCalendar({
                   <span
                     className={`text-xs font-bold size-6 flex items-center justify-center rounded-lg ${
                       isToday
-                        ? "bg-primary text-white font-black shadow-md shadow-primary/30"
+                        ? "bg-primary text-white font-black shadow-xs shadow-primary/30"
                         : dayItem.isCurrentMonth
                         ? "text-slate-800"
-                        : "text-slate-400"
+                        : "text-slate-500"
                     }`}
                   >
                     {dayItem.dayNum}
@@ -442,12 +442,12 @@ export function BootcampCalendar({
 
       {/* 3. Modal: Single Event Details View */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-lg w-full space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 text-left">
+        <div className="fixed inset-0 z-50 bg-[#F5F8FF] backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#F7F9FC] border border-slate-200 rounded-3xl p-6 md:p-8 max-w-lg w-full space-y-6 shadow-xs relative animate-in fade-in zoom-in-95 duration-200 text-left">
             
             <button
               onClick={() => setSelectedEvent(null)}
-              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="size-5" />
             </button>
@@ -549,7 +549,7 @@ export function BootcampCalendar({
                     </a>
                   ) : !selectedEvent.recordingUrl ? (
                     <div className="w-full py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium text-center flex items-center justify-center gap-2">
-                      <Video className="size-4 text-slate-400" />
+                      <Video className="size-4 text-slate-500" />
                       <span>Lien Google Meet disponible avant le direct</span>
                     </div>
                   ) : null}
@@ -606,11 +606,11 @@ export function BootcampCalendar({
 
       {/* 4. Modal: Multiple Events on Same Day Selection */}
       {selectedDayEvents && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-[#F5F8FF] backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#F7F9FC] border border-slate-200 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xs relative animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setSelectedDayEvents(null)}
-              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             >
               <X className="size-5" />
             </button>

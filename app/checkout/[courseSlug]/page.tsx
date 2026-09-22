@@ -665,7 +665,7 @@ function CheckoutContent({ params }: PageProps) {
         <div className="grid gap-8 md:grid-cols-12 items-start">
           
           {/* Order Form (7 Cols) */}
-          <div className="md:col-span-7 rounded-3xl border border-border bg-card/70 p-6 md:p-8 shadow-2xl backdrop-blur-xl space-y-6">
+          <div className="md:col-span-7 rounded-3xl border border-border bg-card/70 p-6 md:p-8 shadow-xs backdrop-blur-xl space-y-6">
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
                 Commande Sécurisée
@@ -679,19 +679,19 @@ function CheckoutContent({ params }: PageProps) {
             </div>
 
             {isEnrolled && (
-              <div className="rounded-2xl border-2 border-emerald-500/60 bg-emerald-500/15 p-5 space-y-3 shadow-xl">
+              <div className="rounded-2xl border-2 border-emerald-500/60 bg-emerald-500/15 p-5 space-y-3 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="size-6 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="size-6 text-emerald-600 shrink-0" />
                   <div>
-                    <h3 className="font-bold text-white text-sm sm:text-base">Vous êtes déjà inscrit(e) à ce Bootcamp !</h3>
-                    <p className="text-xs text-emerald-200 mt-0.5">
+                    <h3 className="font-bold text-[#0E1E3F] text-sm sm:text-base">Vous êtes déjà inscrit(e) à ce Bootcamp !</h3>
+                    <p className="text-xs text-emerald-700 mt-0.5">
                       Votre compte possède déjà l'accès actif à cette cohorte. Vous n'avez pas besoin de renouveler votre paiement.
                     </p>
                   </div>
                 </div>
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-xl active:scale-95 transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 w-full py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-sm active:scale-95 transition-all cursor-pointer"
                 >
                   <span>Accéder directement à mon Espace Membre</span>
                   <ArrowRight className="size-4" />
@@ -700,8 +700,8 @@ function CheckoutContent({ params }: PageProps) {
             )}
 
             {isLoggedIn && !isEnrolled && (
-              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center gap-3 text-xs text-emerald-300 shadow-lg shadow-emerald-500/5">
-                <CheckCircle2 className="size-5 shrink-0 text-emerald-400" />
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center gap-3 text-xs text-emerald-700 shadow-sm shadow-emerald-500/5">
+                <CheckCircle2 className="size-5 shrink-0 text-emerald-600" />
                 <div>
                   <span className="font-extrabold block text-foreground">Compte connecté : {fullName || email}</span>
                   <span className="text-[11px] text-muted-foreground">Vos coordonnées sont automatiquement récupérées. Vous n'avez rien à ressaisir !</span>
@@ -710,7 +710,7 @@ function CheckoutContent({ params }: PageProps) {
             )}
 
             {error && (
-              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-400">
+              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-600">
                 <AlertCircle className="size-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -784,9 +784,9 @@ function CheckoutContent({ params }: PageProps) {
                       {rawWhatsappDigits.length > 0 && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                           {isWhatsappValid ? (
-                            <CheckCircle2 className="size-4 text-emerald-400" />
+                            <CheckCircle2 className="size-4 text-emerald-600" />
                           ) : (
-                            <AlertCircle className="size-4 text-amber-400" />
+                            <AlertCircle className="size-4 text-amber-700" />
                           )}
                         </div>
                       )}
@@ -794,7 +794,7 @@ function CheckoutContent({ params }: PageProps) {
 
                     {/* Popover Sélecteur d'Indicatif WhatsApp */}
                     {isWhatsappDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1.5 w-72 max-w-[90vw] max-h-64 bg-card border border-border/90 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute top-full left-0 mt-1.5 w-72 max-w-[90vw] max-h-64 bg-card border border-border/90 rounded-2xl shadow-xs z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
                         <div className="p-2.5 border-b border-border/80 sticky top-0 bg-card z-10">
                           <div className="relative">
                             <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -861,11 +861,11 @@ function CheckoutContent({ params }: PageProps) {
                   <div className="flex items-center justify-between text-[10px] pt-0.5">
                     {rawWhatsappDigits.length > 0 ? (
                       isWhatsappValid ? (
-                        <span className="text-emerald-400 font-bold flex items-center gap-1">
+                        <span className="text-emerald-600 font-bold flex items-center gap-1">
                           <Check className="size-3" /> Numéro valide pour {selectedWhatsappCountry.name}
                         </span>
                       ) : (
-                        <span className="text-amber-400 flex items-center gap-1 font-semibold">
+                        <span className="text-amber-700 flex items-center gap-1 font-semibold">
                           <AlertCircle className="size-3" /> {currentWhatsappRule ? `Format : ${currentWhatsappRule.formatExample} (${rawWhatsappDigits.length}/${Array.isArray(currentWhatsappRule.expectedLength) ? currentWhatsappRule.expectedLength.join(' ou ') : currentWhatsappRule.expectedLength})` : "Format incomplet"}
                         </span>
                       )
@@ -901,7 +901,7 @@ function CheckoutContent({ params }: PageProps) {
 
                   {/* Popover Liste des Pays */}
                   {isCountryDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1.5 w-full max-h-64 bg-card border border-border/90 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute top-full left-0 mt-1.5 w-full max-h-64 bg-card border border-border/90 rounded-2xl shadow-xs z-50 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
                       <div className="p-2.5 border-b border-border/80 sticky top-0 bg-card z-10">
                         <div className="relative">
                           <Search className="size-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -967,18 +967,18 @@ function CheckoutContent({ params }: PageProps) {
 
               {/* VIP Subscription Deduction Banner */}
               {hasSubscriptionCredit && (
-                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 flex items-start gap-3.5 shadow-md shadow-emerald-500/5 animate-in fade-in duration-300">
-                  <div className="size-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Crown className="size-5 text-amber-400" />
+                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 flex items-start gap-3.5 shadow-xs shadow-emerald-500/5 animate-in fade-in duration-300">
+                  <div className="size-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-600 shrink-0">
+                    <Crown className="size-5 text-amber-700" />
                   </div>
                   <div className="space-y-1 text-xs">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-bold text-emerald-400 text-sm">Avantage Membre VIP Appliqué !</h4>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-300 font-extrabold text-[10px] uppercase tracking-wider border border-emerald-500/30">
+                      <h4 className="font-bold text-emerald-600 text-sm">Avantage Membre VIP Appliqué !</h4>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/25 text-emerald-700 font-extrabold text-[10px] uppercase tracking-wider border border-emerald-500/30">
                         -{subscriptionCredit.toLocaleString("fr-FR")} FCFA Déduit
                       </span>
                     </div>
-                    <p className="text-emerald-300/90 leading-relaxed text-xs">
+                    <p className="text-emerald-700/90 leading-relaxed text-xs">
                       En tant que membre VIP abonné (<strong>{userSubscription.planLabel || "Pass VIP"}</strong>), le montant de votre abonnement en cours de <strong>{subscriptionCredit.toLocaleString("fr-FR")} FCFA</strong> est automatiquement déduit du prix du Bootcamp.
                     </p>
                   </div>
@@ -986,18 +986,18 @@ function CheckoutContent({ params }: PageProps) {
               )}
 
               {pendingSubscription && (
-                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3 text-amber-300">
-                  <div className="size-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3 text-amber-700">
+                  <div className="size-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
                     <Clock className="size-4 animate-pulse" />
                   </div>
                   <div className="space-y-1 text-xs text-left">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-bold text-amber-200 text-sm">Abonnement VIP en cours de validation</h4>
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold text-[10px] uppercase tracking-wider border border-amber-500/30">
+                      <h4 className="font-bold text-amber-800 text-sm">Abonnement VIP en cours de validation</h4>
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 font-extrabold text-[10px] uppercase tracking-wider border border-amber-500/30">
                         Vérification sous 2h-4h
                       </span>
                     </div>
-                    <p className="text-amber-300/90 leading-relaxed text-xs">
+                    <p className="text-amber-700/90 leading-relaxed text-xs">
                       Une demande d'abonnement <strong>{pendingSubscription.planLabel || "Pass VIP"}</strong> (Réf: <code className="font-mono bg-black/40 px-1.5 py-0.5 rounded">{pendingSubscription.transactionRef || "Reçu soumis"}</code>) a été enregistrée avec cet email. Dès validation de votre virement par l'équipe, votre avantage sera immédiatement crédité.
                     </p>
                   </div>
@@ -1014,16 +1014,16 @@ function CheckoutContent({ params }: PageProps) {
                     onClick={() => setPaymentMethod("mobile_direct")}
                     className={`flex flex-col items-start gap-2 p-3.5 rounded-2xl border text-left transition-all ${
                       paymentMethod === "mobile_direct"
-                        ? "border-primary bg-primary/10 shadow-md ring-1 ring-primary"
+                        ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary"
                         : "border-border bg-card/50 hover:bg-secondary/60"
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
-                        <div className="size-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                        <div className="size-8 rounded-lg bg-emerald-500/20 text-emerald-600 flex items-center justify-center">
                           <Smartphone className="size-4" />
                         </div>
-                        <div className="flex items-center gap-1.5 bg-slate-900/60 border border-slate-800 px-2 py-1 rounded-lg">
+                        <div className="flex items-center gap-1.5 bg-[#F5F8FF] border border-slate-200 px-2 py-1 rounded-lg">
                           <img src="/wave.png" alt="Wave" className="h-4 w-auto max-w-[50px] object-contain" />
                           <span className="text-slate-600 text-xs font-mono">•</span>
                           <img src="/orange_money.png" alt="Orange Money" className="h-4 w-auto max-w-[50px] object-contain" />
@@ -1061,7 +1061,7 @@ function CheckoutContent({ params }: PageProps) {
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-primary/30 shadow-md">
+                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-card border border-primary/30 shadow-xs">
                     <div>
                       <div className="font-mono text-base text-primary font-extrabold tracking-wider mt-0.5">+226 75 75 72 73</div>
                       <div className="text-[11px] text-muted-foreground font-medium">Nom du destinataire : Sanson Alfred Dah</div>
@@ -1113,7 +1113,7 @@ function CheckoutContent({ params }: PageProps) {
                         <ImageIcon className="size-3.5 text-primary" />
                         <span>Capture d'écran du paiement</span>
                       </label>
-                      <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      <span className="text-[10px] text-emerald-600 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                         Recommandé
                       </span>
                     </div>
@@ -1137,8 +1137,8 @@ function CheckoutContent({ params }: PageProps) {
                         />
                       </label>
                     ) : (
-                      <div className="relative rounded-2xl border border-primary/40 bg-card p-3 flex items-center gap-3 shadow-md">
-                        <div className="size-16 rounded-xl overflow-hidden bg-slate-900 border border-primary/30 shrink-0">
+                      <div className="relative rounded-2xl border border-primary/40 bg-card p-3 flex items-center gap-3 shadow-xs">
+                        <div className="size-16 rounded-xl overflow-hidden bg-[#F5F8FF] border border-primary/30 shrink-0">
                           <img
                             src={receiptPreview}
                             alt="Aperçu reçu"
@@ -1146,7 +1146,7 @@ function CheckoutContent({ params }: PageProps) {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                          <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-bold">
                             <CheckCircle2 className="size-3.5" />
                             <span>Capture prête à être envoyée</span>
                           </div>
@@ -1160,7 +1160,7 @@ function CheckoutContent({ params }: PageProps) {
                         <button
                           type="button"
                           onClick={handleRemoveReceipt}
-                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors"
+                          className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 hover:text-red-700 transition-colors"
                           title="Supprimer cette capture"
                         >
                           <X className="size-4" />
@@ -1175,7 +1175,7 @@ function CheckoutContent({ params }: PageProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-xl disabled:opacity-50 transition-all cursor-pointer mt-4"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-3 text-xs md:text-sm shadow-sm disabled:opacity-50 transition-all cursor-pointer mt-4"
               >
                 <Lock className="size-4" />
                 <span>
@@ -1197,12 +1197,12 @@ function CheckoutContent({ params }: PageProps) {
           </div>
 
           {/* Summary Card (5 Cols) */}
-          <div className="md:col-span-5 rounded-3xl border border-border bg-card/80 p-6 shadow-xl backdrop-blur-xl space-y-5 text-left">
+          <div className="md:col-span-5 rounded-3xl border border-border bg-card/80 p-6 shadow-sm backdrop-blur-xl space-y-5 text-left">
             <div className="space-y-3 pb-4 border-b border-border">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                   {isBusiness ? (
-                    <UserCheck className="size-5 text-[#D4AF37]" />
+                    <UserCheck className="size-5 text-[#8A6A1F]" />
                   ) : (
                     <GraduationCap className="size-5 text-primary" />
                   )}
@@ -1210,12 +1210,12 @@ function CheckoutContent({ params }: PageProps) {
                 </div>
 
                 {!isStandardTier ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 border border-emerald-500/30">
                     <Sparkles className="size-3" />
                     {courseData?.offer_badge_text || (isBusiness ? "Offre Exclusive" : "Offre Spéciale Fondateur")}
                   </span>
                 ) : isOfferExpired ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EEF3FF] text-slate-500 border border-slate-300">
                     <Clock className="size-3" />
                     Tarif Standard (Offre terminée)
                   </span>
@@ -1256,11 +1256,11 @@ function CheckoutContent({ params }: PageProps) {
               {/* Ligne Déduction Abonnement VIP */}
               {hasSubscriptionCredit && (
                 <div className="flex justify-between py-1.5 px-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 items-center">
-                  <span className="text-emerald-400 font-bold flex items-center gap-1.5 text-[11px]">
-                    <Crown className="size-3.5 text-amber-400 shrink-0" />
+                  <span className="text-emerald-600 font-bold flex items-center gap-1.5 text-[11px]">
+                    <Crown className="size-3.5 text-amber-700 shrink-0" />
                     <span>Déduction VIP ({userSubscription.planLabel || "Pass VIP"})</span>
                   </span>
-                  <span className="font-mono font-black text-emerald-400 text-xs">
+                  <span className="font-mono font-black text-emerald-600 text-xs">
                     -{subscriptionCredit.toLocaleString("fr-FR")} FCFA
                   </span>
                 </div>
@@ -1268,13 +1268,13 @@ function CheckoutContent({ params }: PageProps) {
 
               {/* Notification contextuelle sur l'offre */}
               {!isStandardTier && formattedOfferEndDate && (
-                <p className="text-[11px] text-amber-300/90 pt-1 leading-relaxed">
+                <p className="text-[11px] text-amber-700/90 pt-1 leading-relaxed">
                   ✨ <strong>Offre garantie :</strong> Tarif promotionnel appliqué jusqu'au {formattedOfferEndDate}.
                 </p>
               )}
 
               {isOfferExpired && (
-                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] leading-relaxed">
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 text-[11px] leading-relaxed">
                   ⏱️ <em>La période de promotion s'étant achevée, le tarif régulier officiel ({rawStandardPrice.toLocaleString("fr-FR")} FCFA) est appliqué.</em>
                 </div>
               )}
@@ -1286,7 +1286,7 @@ function CheckoutContent({ params }: PageProps) {
                   <span className="text-[10px] text-muted-foreground">TVA et accès complets inclus</span>
                 </div>
                 <div className="text-right">
-                  <div className={`text-xl font-black ${isBusiness ? "text-[#ECC86B]" : "text-primary"}`}>
+                  <div className={`text-xl font-black ${isBusiness ? "text-[#8A6A1F]" : "text-primary"}`}>
                     {coursePriceFcfa}
                   </div>
                   <div className="text-[10px] text-muted-foreground">≈ {coursePriceUsd}</div>
@@ -1297,15 +1297,15 @@ function CheckoutContent({ params }: PageProps) {
             {/* Inclusions garanties */}
             <div className="pt-2 border-t border-border/60 space-y-1.5 text-[11px] text-muted-foreground">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0" />
                 <span>Accès direct aux 6 sessions + Replays HD illimités</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0" />
                 <span>Templates, prompts professionnels &amp; support direct</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-3.5 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0" />
                 <span>Certificat Officiel nominatif LE GUIDE IA</span>
               </div>
             </div>
@@ -1320,48 +1320,48 @@ function CheckoutContent({ params }: PageProps) {
 
 function CheckoutSkeleton() {
   return (
-    <main className="min-h-screen bg-[#090d16] text-white selection:bg-primary selection:text-slate-950 font-sans pb-20">
+    <main className="min-h-screen bg-white text-[#0E1E3F] selection:bg-primary selection:text-white font-sans pb-20">
       <Header />
       <div className="max-w-6xl mx-auto px-4 pt-8 pb-16 animate-pulse">
         {/* Breadcrumb skeleton */}
-        <div className="h-5 w-48 bg-white/10 rounded-lg mb-8" />
+        <div className="h-5 w-48 bg-[#EEF3FF] rounded-lg mb-8" />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Form skeleton */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 space-y-6">
-              <div className="h-7 w-48 bg-white/10 rounded-xl" />
+            <div className="rounded-3xl border border-slate-200 bg-[#F5F8FF] p-6 sm:p-8 space-y-6">
+              <div className="h-7 w-48 bg-[#EEF3FF] rounded-xl" />
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <div className="h-4 w-28 bg-white/10 rounded" />
-                  <div className="h-12 w-full bg-white/10 rounded-xl" />
+                  <div className="h-4 w-28 bg-[#EEF3FF] rounded" />
+                  <div className="h-12 w-full bg-[#EEF3FF] rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <div className="h-4 w-28 bg-white/10 rounded" />
-                  <div className="h-12 w-full bg-white/10 rounded-xl" />
+                  <div className="h-4 w-28 bg-[#EEF3FF] rounded" />
+                  <div className="h-12 w-full bg-[#EEF3FF] rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <div className="h-4 w-28 bg-white/10 rounded" />
-                  <div className="h-12 w-full bg-white/10 rounded-xl" />
+                  <div className="h-4 w-28 bg-[#EEF3FF] rounded" />
+                  <div className="h-12 w-full bg-[#EEF3FF] rounded-xl" />
                 </div>
               </div>
-              <div className="h-14 w-full bg-white/15 rounded-2xl mt-6" />
+              <div className="h-14 w-full bg-[#E6EDFC] rounded-2xl mt-6" />
             </div>
           </div>
 
           {/* Right Column: Order Summary skeleton */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 space-y-6">
-              <div className="h-6 w-40 bg-white/10 rounded-xl" />
-              <div className="w-full aspect-[4/3] rounded-2xl bg-white/5 border border-white/5" />
-              <div className="space-y-3 pt-4 border-t border-white/10">
+            <div className="rounded-3xl border border-slate-200 bg-[#F5F8FF] p-6 sm:p-8 space-y-6">
+              <div className="h-6 w-40 bg-[#EEF3FF] rounded-xl" />
+              <div className="w-full aspect-[4/3] rounded-2xl bg-[#F5F8FF] border border-slate-200/70" />
+              <div className="space-y-3 pt-4 border-t border-slate-200">
                 <div className="flex justify-between">
-                  <div className="h-4 w-24 bg-white/10 rounded" />
-                  <div className="h-4 w-20 bg-white/10 rounded" />
+                  <div className="h-4 w-24 bg-[#EEF3FF] rounded" />
+                  <div className="h-4 w-20 bg-[#EEF3FF] rounded" />
                 </div>
                 <div className="flex justify-between">
-                  <div className="h-6 w-20 bg-white/10 rounded" />
-                  <div className="h-6 w-28 bg-white/10 rounded" />
+                  <div className="h-6 w-20 bg-[#EEF3FF] rounded" />
+                  <div className="h-6 w-28 bg-[#EEF3FF] rounded" />
                 </div>
               </div>
             </div>

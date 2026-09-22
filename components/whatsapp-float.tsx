@@ -38,7 +38,7 @@ export function WhatsAppFloat() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Discuter avec nous sur WhatsApp"
-      className={`fixed bottom-5 right-5 z-50 flex items-center gap-1 group transition-all duration-300 cursor-pointer drop-shadow-2xl ${
+      className={`fixed bottom-5 right-5 z-50 flex items-center gap-1 group transition-all duration-300 cursor-pointer drop-shadow-xs ${
         isVisible 
           ? "opacity-100 translate-y-0 scale-100" 
           : "opacity-40 hover:opacity-100 translate-y-2 scale-90 sm:opacity-100 sm:translate-y-0 sm:scale-100"
@@ -52,7 +52,7 @@ export function WhatsAppFloat() {
             : "opacity-0 scale-75 max-w-0 pointer-events-none hidden sm:block sm:opacity-90 sm:scale-95 sm:max-w-[200px]"
         }`}
       >
-        <div className="bg-[#25D366] text-white px-3.5 py-2 rounded-2xl font-bold text-xs text-center leading-snug shadow-xl border border-white/20 whitespace-nowrap">
+        <div className="bg-[#25D366] text-white px-3.5 py-2 rounded-2xl font-bold text-xs text-center leading-snug shadow-sm border border-slate-300 whitespace-nowrap">
           <span>Discuter avec nous sur</span>
           <span className="block font-black">WhatsApp</span>
         </div>
@@ -66,7 +66,7 @@ export function WhatsAppFloat() {
       />
 
       {/* Circle Icon Button (Discret en bas à droite) */}
-      <div className="relative size-11 md:size-13 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl border border-white/20 shrink-0 group-hover:scale-105 transition-transform">
+      <div className="relative size-11 md:size-13 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-sm border border-slate-300 shrink-0 group-hover:scale-105 transition-transform">
         <span className={`absolute inset-0 rounded-full bg-[#25D366]/30 ${isAtTop ? "animate-ping" : ""}`} aria-hidden="true" />
         <img src="/whatsapp_logo.png" alt="WhatsApp Support" className="size-5.5 md:size-6.5 object-contain" />
       </div>
@@ -97,7 +97,7 @@ export function ScrollToTop() {
       type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       aria-label={t("scrollToTop.ariaLabel")}
-      className="fixed bottom-24 right-6 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg shadow-black/20 hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
+      className="fixed bottom-24 right-6 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm shadow-black/20 hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer"
     >
       <ArrowUp className="size-4" />
     </button>

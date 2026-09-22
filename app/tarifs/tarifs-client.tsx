@@ -463,7 +463,7 @@ export function TarifsClient() {
   ]
 
   return (
-    <main className="relative min-h-screen text-foreground overflow-x-hidden bg-[#090d16]">
+    <main className="relative min-h-screen text-foreground overflow-x-hidden bg-white">
       <GridBackground />
       <Header />
 
@@ -475,15 +475,15 @@ export function TarifsClient() {
         <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-5 relative z-10">
           
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
-            <Sparkles className="size-3.5 animate-pulse text-amber-300" />
+            <Sparkles className="size-3.5 animate-pulse text-amber-700" />
             <span>GRILLE TARIFAIRE OFFICIELLE · 3 FORMULES CLAIRES</span>
           </div>
 
-          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.15] w-full text-center">
-            Investissez dans vos compétences IA avec une <span className="bg-gradient-to-r from-primary via-purple-300 to-[#D4AF37] bg-clip-text text-transparent">transparence absolue</span>
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-[#0E1E3F] leading-[1.15] w-full text-center">
+            Investissez dans vos compétences IA avec une <span className="bg-gradient-to-r from-primary via-purple-700 to-[#8A6A1F] bg-clip-text text-transparent">transparence absolue</span>
           </h1>
 
-          <p className="text-sm sm:text-base md:text-sm text-slate-300 w-full text-center max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base md:text-sm text-slate-600 w-full text-center max-w-2xl mx-auto leading-relaxed">
             Choisissez la formule adaptée à vos objectifs : boîte à outils continue avec l'abonnement VIP, ou formation intensive certifiante en direct live avec tarif promotionnel temporaire ou tarif standard.
           </p>
 
@@ -497,7 +497,7 @@ export function TarifsClient() {
         <div className="grid gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 items-stretch">
           
           {/* CARD 1: Abonnement « Le Cercle IA » avec Toggle des prix intégré */}
-          <div className="rounded-3xl border-2 border-purple-500 bg-slate-950 p-6 sm:p-8 flex flex-col justify-between shadow-2xl shadow-purple-950/40 relative overflow-hidden">
+          <div className="rounded-3xl border-2 border-purple-500 bg-[#F7F9FC] p-6 sm:p-8 flex flex-col justify-between shadow-xs shadow-purple-950/40 relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-wider py-1.5 px-3.5 rounded-bl-xl shadow-sm">
               BOÎTE À OUTILS CONTINUE
             </div>
@@ -506,24 +506,24 @@ export function TarifsClient() {
               
               {/* Card Header */}
               <div className="space-y-2 text-left">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-300 bg-purple-500/20 px-2.5 py-1 rounded-md border border-purple-500/40">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-700 bg-purple-500/20 px-2.5 py-1 rounded-md border border-purple-500/40">
                   PASS REPLAYS & PROMPTS
                 </span>
-                <h3 className="font-heading text-2xl font-black text-white">Le Cercle IA</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <h3 className="font-heading text-2xl font-black text-[#0E1E3F]">Le Cercle IA</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Tous les replays HD des masterclasses + plus de 100 prompts et matrices prêts à l'emploi en accès illimité.
                 </p>
               </div>
 
               {/* Price Toggle Switcher on the Card */}
-              <div className="bg-slate-900/90 border border-purple-500/40 p-1.5 rounded-2xl space-y-2">
+              <div className="bg-[#F5F8FF] border border-purple-500/40 p-1.5 rounded-2xl space-y-2">
                 <div className="grid grid-cols-2 gap-1">
                   <button
                     onClick={() => setSubCycle("3_months")}
                     className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${
                       subCycle === "3_months"
-                        ? "bg-purple-600 text-white shadow-md font-black"
-                        : "text-slate-300 hover:text-white"
+                        ? "bg-purple-600 text-white shadow-xs font-black"
+                        : "text-slate-600 hover:text-[#1E4FD8]"
                     }`}
                   >
                     <span>3 Mois</span>
@@ -532,8 +532,8 @@ export function TarifsClient() {
                     onClick={() => setSubCycle("1_year")}
                     className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1 ${
                       subCycle === "1_year"
-                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md font-black"
-                        : "text-slate-300 hover:text-white"
+                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs font-black"
+                        : "text-slate-600 hover:text-[#1E4FD8]"
                     }`}
                   >
                     <span>1 An</span>
@@ -547,45 +547,45 @@ export function TarifsClient() {
               {/* Dynamic Price Display */}
               <div className="space-y-1 text-left">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="font-heading text-3xl sm:text-4xl font-black text-white">
+                  <span className="font-heading text-3xl sm:text-4xl font-black text-[#0E1E3F]">
                     {subCycle === "3_months" ? subPricing.price3mDisplay : subPricing.price1yDisplay}
                   </span>
-                  <span className="text-xs text-purple-300 font-bold">
+                  <span className="text-xs text-purple-700 font-bold">
                     {subCycle === "3_months" ? "/ 3 mois" : "/ 1 an"}
                   </span>
                 </div>
               </div>
 
               {/* Feature List */}
-              <div className="border-t border-border/60 pt-5 space-y-3 text-xs text-slate-200 text-left">
+              <div className="border-t border-border/60 pt-5 space-y-3 text-xs text-slate-700 text-left">
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-purple-400 shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Accès illimité à TOUS les Replays HD</strong> des masterclasses passées et futures</span>
+                  <CheckCircle2 className="size-4 text-purple-600 shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Accès illimité à TOUS les Replays HD</strong> des masterclasses passées et futures</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-purple-400 shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Bibliothèque complète +100 Prompts</strong> métiers opérationnels</span>
+                  <CheckCircle2 className="size-4 text-purple-600 shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Bibliothèque complète +100 Prompts</strong> métiers opérationnels</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-purple-400 shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Modèles complets de Business Plans</strong> adaptés au contexte africain</span>
+                  <CheckCircle2 className="size-4 text-purple-600 shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Modèles complets de Business Plans</strong> adaptés au contexte africain</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-purple-400 shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Prolongation Membres 1h en direct</strong> avec Alfred Dah (dernier dimanche du mois)</span>
+                  <CheckCircle2 className="size-4 text-purple-600 shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Prolongation Membres 1h en direct</strong> avec Alfred Dah (dernier dimanche du mois)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-purple-400 shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Veille IA stratégique</strong> envoyée chaque lundi</span>
+                  <CheckCircle2 className="size-4 text-purple-600 shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Veille IA stratégique</strong> envoyée chaque lundi</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-purple-400 shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Groupe privé WhatsApp</strong> restreint (max 30 membres)</span>
+                  <CheckCircle2 className="size-4 text-purple-600 shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Groupe privé WhatsApp</strong> restreint (max 30 membres)</span>
                 </div>
                 
                 {/* Deduction Guarantee Highlight */}
-                <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-[11px] text-amber-200 font-semibold space-y-1 mt-3">
-                  <div className="flex items-center gap-1 font-extrabold text-amber-300">
+                <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-[11px] text-amber-800 font-semibold space-y-1 mt-3">
+                  <div className="flex items-center gap-1 font-extrabold text-amber-700">
                     <Sparkles className="size-3.5" />
                     <span>100% DÉDUCTIBLE DU BOOTCAMP</span>
                   </div>
@@ -599,7 +599,7 @@ export function TarifsClient() {
             <div className="pt-6">
               <button
                 onClick={() => openSubscription(subCycle)}
-                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-xs sm:text-sm transition-all shadow-lg shadow-purple-600/30 cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-black text-xs sm:text-sm transition-all shadow-sm shadow-purple-600/30 cursor-pointer"
               >
                 <span>Souscrire au Pass ({subCycle === "3_months" ? subPricing.price3mDisplay : subPricing.price1yDisplay})</span>
                 <ArrowRight className="size-4" />
@@ -608,7 +608,7 @@ export function TarifsClient() {
           </div>
 
           {/* CARD 2: Bootcamp IA & Carrière (Certifiant Pro) */}
-          <div className="rounded-3xl border-2 border-primary glow-blue bg-slate-950 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          <div className="rounded-3xl border-2 border-primary glow-blue bg-[#F7F9FC] p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-xs">
             <div className="absolute top-0 right-0 bg-primary text-slate-950 text-[10px] font-black uppercase tracking-wider py-1.5 px-3.5 rounded-bl-xl shadow-sm">
               LE PROGRAMME INTENSIF
             </div>
@@ -620,21 +620,21 @@ export function TarifsClient() {
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/20 px-2.5 py-1 rounded-md border border-primary/40">
                   FORMATION INTENSIVE EN DIRECT
                 </span>
-                <h3 className="font-heading text-2xl font-black text-white">Bootcamp IA & Carrière</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <h3 className="font-heading text-2xl font-black text-[#0E1E3F]">Bootcamp IA & Carrière</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   14h de formation live sur 6 sessions interactives pour automatiser vos tâches et propulser votre carrière.
                 </p>
               </div>
 
               {/* Price Toggle Switcher for Bootcamp Pro */}
-              <div className="bg-slate-900/90 border border-primary/40 p-1.5 rounded-2xl">
+              <div className="bg-[#F5F8FF] border border-primary/40 p-1.5 rounded-2xl">
                 <div className="grid grid-cols-2 gap-1">
                   <button
                     onClick={() => setProBootcampTier("offer")}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
                       proBootcampTier === "offer"
-                        ? "bg-primary text-slate-950 shadow-md font-black"
-                        : "text-slate-300 hover:text-white"
+                        ? "bg-primary text-slate-950 shadow-xs font-black"
+                        : "text-slate-600 hover:text-[#1E4FD8]"
                     }`}
                   >
                     <Clock className="size-3.5 shrink-0" />
@@ -644,8 +644,8 @@ export function TarifsClient() {
                     onClick={() => setProBootcampTier("fondateur")}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
                       proBootcampTier === "fondateur"
-                        ? "bg-slate-800 text-white border border-white/20 shadow-md font-black"
-                        : "text-slate-300 hover:text-white"
+                        ? "bg-[#EEF3FF] text-[#0E1E3F] border border-slate-300 shadow-xs font-black"
+                        : "text-slate-600 hover:text-[#0E1E3F]"
                     }`}
                   >
                     <ShieldCheck className="size-3.5 shrink-0" />
@@ -657,20 +657,20 @@ export function TarifsClient() {
               {/* Price Display */}
               <div className="space-y-2 text-left pt-1">
                 <div className="flex items-baseline gap-2.5 flex-wrap">
-                  <span className="font-heading text-3xl sm:text-4xl font-black text-white">
+                  <span className="font-heading text-3xl sm:text-4xl font-black text-[#0E1E3F]">
                     {proBootcampTier === "offer"
                       ? formatFCFA(isOfferExpired ? proOriginalPrice : proPromoPrice)
                       : formatFCFA(proOriginalPrice)}
                   </span>
                   {proBootcampTier === "offer" && !isOfferExpired && (
-                    <span className="text-sm line-through text-slate-400 font-bold">
+                    <span className="text-sm line-through text-slate-500 font-bold">
                       {formatFCFA(proOriginalPrice)}
                     </span>
                   )}
                   <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
                     proBootcampTier === "offer" && !isOfferExpired
-                      ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
-                      : "bg-slate-800 border-slate-700 text-slate-300"
+                      ? "bg-amber-400/10 border-amber-400/30 text-amber-700"
+                      : "bg-[#EEF3FF] border-slate-300 text-slate-600"
                   }`}>
                     {proBootcampTier === "offer" && !isOfferExpired ? "Offre Promo Temporaire" : "Tarif Standard Officiel"}
                   </span>
@@ -679,15 +679,15 @@ export function TarifsClient() {
                 {proBootcampTier === "offer" ? (
                   !isOfferExpired && timeLeft.days + timeLeft.hours + timeLeft.minutes + timeLeft.seconds > 0 ? (
                     <div className="space-y-1.5">
-                      <div className="py-2.5 px-3 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-mono font-bold flex items-center gap-2">
-                        <Clock className="size-4 animate-pulse text-amber-400 shrink-0" />
-                        <span>Fin de l'offre : <strong className="text-white">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong></span>
+                      <div className="py-2.5 px-3 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-700 text-xs font-mono font-bold flex items-center gap-2">
+                        <Clock className="size-4 animate-pulse text-amber-700 shrink-0" />
+                        <span>Fin de l'offre : <strong className="text-[#0E1E3F]">{timeLeft.days}j {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s</strong></span>
                       </div>
                      
                     </div>
                   ) : (
-                    <div className="py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium flex items-center gap-2">
-                      <AlertCircle className="size-4 text-amber-400 shrink-0" />
+                    <div className="py-2.5 px-3 rounded-xl bg-[#F5F8FF] border border-slate-200 text-slate-600 text-xs font-medium flex items-center gap-2">
+                      <AlertCircle className="size-4 text-amber-700 shrink-0" />
                       <span>Offre promo échue — Le tarif standard officiel de {formatFCFA(proOriginalPrice)} s'applique désormais.</span>
                     </div>
                   )
@@ -697,38 +697,38 @@ export function TarifsClient() {
               </div>
 
               {/* Feature List */}
-              <div className="border-t border-border/60 pt-5 space-y-3 text-xs text-slate-200 text-left">
+              <div className="border-t border-border/60 pt-5 space-y-3 text-xs text-slate-700 text-left">
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">14h de formation en direct live</strong> (6 sessions interactives)</span>
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">14h de formation en direct live</strong> (6 sessions interactives)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Cas pratiques sur cas réels</strong> : ChatGPT, Claude, Gemini, Canva IA</span>
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Cas pratiques sur cas réels</strong> : ChatGPT, Claude, Gemini, Canva IA</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Automatisation de tâches</strong> avec Make / n8n sans coder</span>
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Automatisation de tâches</strong> avec Make / n8n sans coder</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Accompagnement & corrections directes</strong> par Alfred Dah</span>
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Accompagnement & corrections directes</strong> par Alfred Dah</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Replays HD accessibles à vie</strong> dans votre espace membre</span>
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Replays HD accessibles à vie</strong> dans votre espace membre</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Optimisation de votre CV format ATS</strong> et profil LinkedIn IA</span>
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Optimisation de votre CV format ATS</strong> et profil LinkedIn IA</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="size-4 text-primary shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Certificat Officiel vérifiable</strong> Le Guide IA</span>
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Certificat Officiel vérifiable</strong> Le Guide IA</span>
                 </div>
 
                 {/* VIP bonus box */}
-                <div className="rounded-xl border border-primary/40 bg-primary/10 p-3 text-[11px] text-sky-200 font-semibold space-y-1 mt-3">
+                <div className="rounded-xl border border-primary/40 bg-primary/10 p-3 text-[11px] text-sky-700 font-semibold space-y-1 mt-3">
                   <div className="flex items-center gap-1 font-extrabold text-primary">
                     <Gift className="size-3.5" />
                     <span>CADEAU INCLUS (VALEUR 29 000 FCFA)</span>
@@ -743,7 +743,7 @@ export function TarifsClient() {
                 href={`/checkout/${activeBootcamp?.slug || "bootcamp-ia-pro"}${
                   proBootcampTier === "fondateur" || isOfferExpired ? "?tier=standard" : "?tier=offer"
                 }`}
-                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black text-xs sm:text-sm transition-all shadow-xl shadow-primary/25"
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-primary hover:opacity-90 text-slate-950 font-black text-xs sm:text-sm transition-all shadow-sm shadow-primary/25"
               >
                 <span>
                   {proBootcampTier === "offer" && !isOfferExpired
@@ -756,7 +756,7 @@ export function TarifsClient() {
           </div>
 
           {/* CARD 3: Bootcamp IA & Business / Dirigeants */}
-          <div className="rounded-3xl border-2 border-[#D4AF37] glow-gold bg-slate-950 p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-2xl">
+          <div className="rounded-3xl border-2 border-[#D4AF37] glow-gold bg-[#F7F9FC] p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden shadow-xs">
             <div className="absolute top-0 right-0 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-slate-950 text-[10px] font-black uppercase tracking-wider py-1.5 px-3.5 rounded-bl-xl shadow-sm">
               EXCLUSIVE MANAGERS & DIRIGEANTS
             </div>
@@ -765,24 +765,24 @@ export function TarifsClient() {
               
               {/* Card Header */}
               <div className="space-y-2 text-left">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#ECC86B] bg-[#D4AF37]/20 px-2.5 py-1 rounded-md border border-[#D4AF37]/40">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#8A6A1F] bg-[#D4AF37]/20 px-2.5 py-1 rounded-md border border-[#D4AF37]/40">
                   LEADERSHIP & ENTREPRENEURIAT
                 </span>
-                <h3 className="font-heading text-2xl font-black text-white">Bootcamp IA & Business</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <h3 className="font-heading text-2xl font-black text-[#0E1E3F]">Bootcamp IA & Business</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Pour chefs d'entreprise, fondateurs et dirigeants : intégrez l'IA au cœur de vos opérations et créez un avantage compétitif durable.
                 </p>
               </div>
 
               {/* Price Toggle Switcher for Bootcamp Business */}
-              <div className="bg-slate-900/90 border border-[#D4AF37]/40 p-1.5 rounded-2xl">
+              <div className="bg-[#F5F8FF] border border-[#D4AF37]/40 p-1.5 rounded-2xl">
                 <div className="grid grid-cols-2 gap-1">
                   <button
                     onClick={() => setBizBootcampTier("offer")}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
                       bizBootcampTier === "offer"
-                        ? "bg-[#D4AF37] text-slate-950 shadow-md font-black"
-                        : "text-slate-300 hover:text-white"
+                        ? "bg-[#D4AF37] text-slate-950 shadow-xs font-black"
+                        : "text-slate-600 hover:text-[#1E4FD8]"
                     }`}
                   >
                     <Clock className="size-3.5 shrink-0" />
@@ -792,8 +792,8 @@ export function TarifsClient() {
                     onClick={() => setBizBootcampTier("fondateur")}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 ${
                       bizBootcampTier === "fondateur"
-                        ? "bg-slate-800 text-white border border-white/20 shadow-md font-black"
-                        : "text-slate-300 hover:text-white"
+                        ? "bg-[#EEF3FF] text-[#0E1E3F] border border-slate-300 shadow-xs font-black"
+                        : "text-slate-600 hover:text-[#0E1E3F]"
                     }`}
                   >
                     <ShieldCheck className="size-3.5 shrink-0" />
@@ -805,20 +805,20 @@ export function TarifsClient() {
               {/* Price Display */}
               <div className="space-y-2 text-left pt-1">
                 <div className="flex items-baseline gap-2.5 flex-wrap">
-                  <span className="font-heading text-3xl sm:text-4xl font-black text-white">
+                  <span className="font-heading text-3xl sm:text-4xl font-black text-[#0E1E3F]">
                     {bizBootcampTier === "offer"
                       ? formatFCFA(isBizOfferExpired ? bizOriginalPrice : bizPromoPrice)
                       : formatFCFA(bizOriginalPrice)}
                   </span>
                   {bizBootcampTier === "offer" && !isBizOfferExpired && (
-                    <span className="text-sm line-through text-slate-400 font-bold">
+                    <span className="text-sm line-through text-slate-500 font-bold">
                       {formatFCFA(bizOriginalPrice)}
                     </span>
                   )}
                   <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md border ${
                     bizBootcampTier === "offer" && !isBizOfferExpired
-                      ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#ECC86B]"
-                      : "bg-slate-800 border-slate-700 text-slate-300"
+                      ? "bg-[#D4AF37]/15 border-[#D4AF37]/40 text-[#8A6A1F]"
+                      : "bg-[#EEF3FF] border-slate-300 text-slate-600"
                   }`}>
                     {bizBootcampTier === "offer" && !isBizOfferExpired ? "Offre Promo Temporaire" : "Tarif Standard Officiel"}
                   </span>
@@ -827,15 +827,15 @@ export function TarifsClient() {
                 {bizBootcampTier === "offer" ? (
                   !isBizOfferExpired && bizTimeLeft.days + bizTimeLeft.hours + bizTimeLeft.minutes + bizTimeLeft.seconds > 0 ? (
                     <div className="space-y-1.5">
-                      <div className="py-2.5 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F3E5AB] text-xs font-mono font-bold flex items-center gap-2">
-                        <Clock className="size-4 animate-pulse text-[#D4AF37] shrink-0" />
-                        <span>Fin de l'offre : <strong className="text-white">{bizTimeLeft.days}j {bizTimeLeft.hours}h {bizTimeLeft.minutes}m {bizTimeLeft.seconds}s</strong></span>
+                      <div className="py-2.5 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#8A6A1F] text-xs font-mono font-bold flex items-center gap-2">
+                        <Clock className="size-4 animate-pulse text-[#8A6A1F] shrink-0" />
+                        <span>Fin de l'offre : <strong className="text-[#0E1E3F]">{bizTimeLeft.days}j {bizTimeLeft.hours}h {bizTimeLeft.minutes}m {bizTimeLeft.seconds}s</strong></span>
                       </div>
                     
                     </div>
                   ) : (
-                    <div className="py-2.5 px-3 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium flex items-center gap-2">
-                      <AlertCircle className="size-4 text-[#D4AF37] shrink-0" />
+                    <div className="py-2.5 px-3 rounded-xl bg-[#F5F8FF] border border-slate-200 text-slate-600 text-xs font-medium flex items-center gap-2">
+                      <AlertCircle className="size-4 text-[#8A6A1F] shrink-0" />
                       <span>Offre promo échue — Le tarif standard officiel de {formatFCFA(bizOriginalPrice)} s'applique désormais.</span>
                     </div>
                   )
@@ -845,39 +845,39 @@ export function TarifsClient() {
               </div>
 
               {/* Feature List */}
-              <div className="border-t border-border/60 pt-5 space-y-3 text-xs text-slate-200 text-left">
+              <div className="border-t border-border/60 pt-5 space-y-3 text-xs text-slate-700 text-left">
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Tout le programme Carrière inclus</strong> (14h de sessions live)</span>
+                  <CheckCircle2 className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Tout le programme Carrière inclus</strong> (14h de sessions live)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Masterclass Exécutive Dirigeants</strong> & Stratégie d'Entreprise</span>
+                  <CheckCircle2 className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Masterclass Exécutive Dirigeants</strong> & Stratégie d'Entreprise</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Audit de maturité IA</strong> et diagnostic sur vos processus métiers</span>
+                  <CheckCircle2 className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Audit de maturité IA</strong> et diagnostic sur vos processus métiers</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Workflows de prospection & CRM</strong> Make / n8n / Agents IA</span>
+                  <CheckCircle2 className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Workflows de prospection & CRM</strong> Make / n8n / Agents IA</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Modèles de Business Plans investisseurs</strong> & pitch decks IA</span>
+                  <CheckCircle2 className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Modèles de Business Plans investisseurs</strong> & pitch decks IA</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Revue de gouvernance & sécurité</strong> des données sensibles</span>
+                  <CheckCircle2 className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Revue de gouvernance & sécurité</strong> des données sensibles</span>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="size-4 text-[#D4AF37] shrink-0 mt-0.5" />
-                  <span className="font-medium"><strong className="text-white">Certificat Exécutif Dirigeant</strong> officiel Le Guide IA</span>
+                  <CheckCircle2 className="size-4 text-[#8A6A1F] shrink-0 mt-0.5" />
+                  <span className="font-medium"><strong className="text-[#0E1E3F]">Certificat Exécutif Dirigeant</strong> officiel Le Guide IA</span>
                 </div>
 
                 {/* Gold bonus box */}
-                <div className="rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 p-3 text-[11px] text-[#F3E5AB] font-semibold space-y-1 mt-3">
-                  <div className="flex items-center gap-1 font-extrabold text-[#D4AF37]">
+                <div className="rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 p-3 text-[11px] text-[#8A6A1F] font-semibold space-y-1 mt-3">
+                  <div className="flex items-center gap-1 font-extrabold text-[#8A6A1F]">
                     <Award className="size-3.5" />
                     <span>COACHING & 1 AN VIP INCLUS</span>
                   </div>
@@ -891,7 +891,7 @@ export function TarifsClient() {
                 href={`/checkout/${businessBootcamp?.slug || "bootcamp-ia-business"}${
                   bizBootcampTier === "fondateur" || isBizOfferExpired ? "?tier=standard" : "?tier=offer"
                 }`}
-                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black text-xs sm:text-sm transition-all shadow-xl shadow-[#D4AF37]/25"
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black text-xs sm:text-sm transition-all shadow-sm shadow-[#D4AF37]/25"
               >
                 <span>
                   {bizBootcampTier === "offer" && !isBizOfferExpired
@@ -906,13 +906,13 @@ export function TarifsClient() {
         </div>
 
         {/* Discrete B2B Banner underneath the 3 cards */}
-        <div className="rounded-2xl border border-border/80 bg-slate-900/60 p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-md text-center sm:text-left">
+        <div className="rounded-2xl border border-border/80 bg-[#F5F8FF] p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-md text-center sm:text-left">
           <div className="flex items-center gap-3.5">
-            <div className="size-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+            <div className="size-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-600 shrink-0">
               <Building2 className="size-5" />
             </div>
             <div>
-              <h4 className="font-heading text-sm font-bold text-white">
+              <h4 className="font-heading text-sm font-bold text-[#0E1E3F]">
                 Besoin d'un développement Web/Mobile ou d'une formation sur-mesure pour votre entreprise ?
               </h4>
               <p className="text-xs text-muted-foreground">
@@ -922,7 +922,7 @@ export function TarifsClient() {
           </div>
           <Link
             href="/entreprises"
-            className="px-5 py-2.5 rounded-xl border border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 font-bold text-xs transition-all shrink-0 inline-flex items-center gap-1.5"
+            className="px-5 py-2.5 rounded-xl border border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 font-bold text-xs transition-all shrink-0 inline-flex items-center gap-1.5"
           >
             <span>Espace Entreprises (B2B)</span>
             <ArrowRight className="size-3.5" />
@@ -932,45 +932,45 @@ export function TarifsClient() {
       </section>
 
       {/* Feature Comparison Matrix (Domain by Domain comparing the 3 cards) */}
-      <section className="py-10 sm:py-12 md:py-14 px-4 sm:px-6 md:px-8 bg-slate-950/70 border-t border-border/60">
+      <section className="py-10 sm:py-12 md:py-14 px-4 sm:px-6 md:px-8 bg-white border-t border-border/60">
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
           
           <div className="space-y-2 text-center w-full">
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3.5 py-1 rounded-full border border-primary/20 inline-flex">
               TABLEAU COMPARATIF DÉTAILLÉ
             </span>
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-black text-white w-full text-center">
+            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-black text-[#0E1E3F] w-full text-center">
               Que recevez-vous concrètement selon votre formule ?
             </h2>
-            <p className="text-sm sm:text-base text-slate-300 w-full text-center max-w-3xl mx-auto">
+            <p className="text-sm sm:text-base text-slate-600 w-full text-center max-w-3xl mx-auto">
               Comparez les services inclus par domaine d'expertise entre l'Abonnement Le Cercle IA et nos deux Bootcamps intensifs (Offre Promo temporaire vs Tarif Standard officiel).
             </p>
           </div>
 
           {/* Desktop Matrix Table */}
-          <div className="rounded-3xl border border-border/80 bg-card/30 overflow-hidden shadow-2xl backdrop-blur-xl">
+          <div className="rounded-3xl border border-border/80 bg-card/30 overflow-hidden shadow-xs backdrop-blur-xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[720px]">
                 <thead>
-                  <tr className="border-b border-border/80 bg-slate-900/90 text-white">
+                  <tr className="border-b border-border/80 bg-[#F5F8FF] text-[#0E1E3F]">
                     <th className="p-5 text-xs font-extrabold uppercase tracking-wider w-2/5">
                       Services & Livrables Inclus
                     </th>
-                    <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-purple-300 bg-purple-950/30">
+                    <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-purple-700 bg-purple-950/30">
                       <div>Pass Cercle IA</div>
-                      <div className="text-[10px] font-normal text-purple-300/80 mt-1">
+                      <div className="text-[10px] font-normal text-purple-700/80 mt-1">
                         {subPricing.price3mDisplay} ou {subPricing.price1yDisplay}
                       </div>
                     </th>
                     <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-primary bg-primary/10">
                       <div>Bootcamp Carrière</div>
-                      <div className="text-[10px] font-normal text-sky-300 mt-1">
+                      <div className="text-[10px] font-normal text-sky-700 mt-1">
                         Promo: {formatFCFA(proPromoPrice)} · Std: {formatFCFA(proOriginalPrice)}
                       </div>
                     </th>
-                    <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-[#ECC86B] bg-[#D4AF37]/10">
+                    <th className="p-5 text-center text-xs font-extrabold uppercase tracking-wider w-1/5 text-[#8A6A1F] bg-[#D4AF37]/10">
                       <div>Bootcamp Business</div>
-                      <div className="text-[10px] font-normal text-amber-300 mt-1">
+                      <div className="text-[10px] font-normal text-amber-700 mt-1">
                         Promo: {formatFCFA(bizPromoPrice)} · Std: {formatFCFA(bizOriginalPrice)}
                       </div>
                     </th>
@@ -980,8 +980,8 @@ export function TarifsClient() {
                   {COMPARISON_SECTIONS.map((section, sIdx) => (
                     <React.Fragment key={sIdx}>
                       {/* Section Header Row */}
-                      <tr className="bg-slate-900/60">
-                        <td colSpan={4} className="py-3 px-5 text-xs font-black uppercase tracking-wider text-slate-300 bg-white/5">
+                      <tr className="bg-[#F5F8FF]">
+                        <td colSpan={4} className="py-3 px-5 text-xs font-black uppercase tracking-wider text-slate-600 bg-[#F5F8FF]">
                           {section.domain}
                         </td>
                       </tr>
@@ -990,7 +990,7 @@ export function TarifsClient() {
                       {section.features.map((feat, fIdx) => (
                         <tr key={fIdx} className="hover:bg-white/[0.02] transition-colors">
                           <td className="p-4 sm:px-5">
-                            <p className="font-bold text-slate-100">{feat.name}</p>
+                            <p className="font-bold text-slate-800">{feat.name}</p>
                             <p className="text-[11px] text-muted-foreground mt-0.5">{feat.desc}</p>
                           </td>
 
@@ -998,12 +998,12 @@ export function TarifsClient() {
                           <td className="p-4 text-center bg-purple-950/15">
                             {typeof feat.vip === "boolean" ? (
                               feat.vip ? (
-                                <CheckCircle2 className="size-4 text-purple-400 mx-auto" />
+                                <CheckCircle2 className="size-4 text-purple-600 mx-auto" />
                               ) : (
                                 <span className="text-slate-600">—</span>
                               )
                             ) : (
-                              <span className="font-bold text-purple-300">{feat.vip}</span>
+                              <span className="font-bold text-purple-700">{feat.vip}</span>
                             )}
                           </td>
 
@@ -1024,12 +1024,12 @@ export function TarifsClient() {
                           <td className="p-4 text-center bg-[#D4AF37]/5">
                             {typeof feat.biz === "boolean" ? (
                               feat.biz ? (
-                                <CheckCircle2 className="size-4 text-[#D4AF37] mx-auto" />
+                                <CheckCircle2 className="size-4 text-[#8A6A1F] mx-auto" />
                               ) : (
                                 <span className="text-slate-600">—</span>
                               )
                             ) : (
-                              <span className="font-bold text-[#ECC86B]">{feat.biz}</span>
+                              <span className="font-bold text-[#8A6A1F]">{feat.biz}</span>
                             )}
                           </td>
                         </tr>
@@ -1052,10 +1052,10 @@ export function TarifsClient() {
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 inline-flex">
               QUESTIONS FRÉQUENTES & MODALITÉS
             </span>
-            <h2 className="font-heading text-2xl sm:text-3xl font-black text-white w-full text-center">
+            <h2 className="font-heading text-2xl sm:text-3xl font-black text-[#0E1E3F] w-full text-center">
               Tout ce que vous devez savoir sur nos tarifs & offres promotionnelles
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 w-full text-center max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 w-full text-center max-w-2xl mx-auto leading-relaxed">
               Clarifications détaillées sur les offres promo à durée limitée avec compte à rebours, les tarifs standards officiels et nos garanties.
             </p>
           </div>
@@ -1070,7 +1070,7 @@ export function TarifsClient() {
                 >
                   <button
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-heading text-sm font-bold text-white hover:text-primary transition-colors cursor-pointer"
+                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-heading text-sm font-bold text-[#0E1E3F] hover:text-primary transition-colors cursor-pointer"
                   >
                     <span>{item.q}</span>
                     <ChevronDown
@@ -1088,7 +1088,7 @@ export function TarifsClient() {
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-border/40 pt-3 whitespace-pre-line">
+                        <div className="px-5 pb-5 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-border/40 pt-3 whitespace-pre-line">
                           {item.a}
                         </div>
                       </motion.div>
@@ -1100,7 +1100,7 @@ export function TarifsClient() {
           </div>
 
           <div className="p-6 rounded-2xl border border-primary/30 bg-primary/5 text-center space-y-3">
-            <h4 className="font-heading text-sm font-bold text-white">
+            <h4 className="font-heading text-sm font-bold text-[#0E1E3F]">
               Une question spécifique sur les tarifs ou votre mode de paiement ?
             </h4>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
@@ -1110,7 +1110,7 @@ export function TarifsClient() {
               href="https://wa.me/22675757273?text=Bonjour%20Alfred,%20j'ai%20une%20question%20sur%20les%20tarifs%20et%20le%20paiement"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-lg transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs shadow-sm transition-all"
             >
               <span>Discuter avec l'équipe sur WhatsApp</span>
               <ArrowUpRight className="size-4" />

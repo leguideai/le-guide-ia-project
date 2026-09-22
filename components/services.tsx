@@ -71,7 +71,7 @@ export function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="group flex flex-col justify-between rounded-2xl border border-border/80 bg-card/20 p-8 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card/40 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5"
+                className="group flex flex-col justify-between rounded-2xl border border-border/80 bg-card/20 p-8 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card/40 hover:-translate-y-1 hover:shadow-sm hover:shadow-primary/5"
               >
                 <div>
                   {/* Service Icon Box */}

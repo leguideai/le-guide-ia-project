@@ -18,7 +18,7 @@ export function SkillsBar({ activeCategory, onSelectCategory }: SkillsBarProps) 
   ]
 
   return (
-    <section className="w-full border-y border-border/70 bg-slate-950/60 backdrop-blur-xl sticky top-16 z-30 py-3.5 shadow-2xl">
+    <section className="w-full border-y border-border/70 bg-white backdrop-blur-xl sticky top-16 z-30 py-3.5 shadow-xs">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="flex items-center justify-between gap-4">
           
@@ -32,7 +32,7 @@ export function SkillsBar({ activeCategory, onSelectCategory }: SkillsBarProps) 
                   onClick={() => onSelectCategory(cat.id)}
                   className={`flex items-center gap-2.5 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-2 ring-primary/40 scale-[1.02]"
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 ring-2 ring-primary/40 scale-[1.02]"
                       : "bg-secondary/40 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/40 hover:border-border"
                   }`}
                 >
@@ -49,7 +49,7 @@ export function SkillsBar({ activeCategory, onSelectCategory }: SkillsBarProps) 
           </div>
 
           <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground bg-card/40 border border-border/40 px-3.5 py-2 rounded-xl shrink-0">
-            <Zap className="size-3.5 text-amber-400 animate-pulse" />
+            <Zap className="size-3.5 text-amber-700 animate-pulse" />
             <span>Accès immédiat dès inscription</span>
           </div>
 

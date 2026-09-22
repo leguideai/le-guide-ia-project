@@ -13,7 +13,7 @@ import { ScrollToTop, WhatsAppFloat } from "@/components/whatsapp-float"
 
 export default function Page() {
   return (
-    <main className="relative min-h-screen text-foreground overflow-x-hidden bg-[#090d16]">
+    <main className="relative min-h-screen text-foreground overflow-x-hidden bg-white">
       <GridBackground />
       
       {/* 1. Header Global  Style */}

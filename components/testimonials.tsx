@@ -70,7 +70,7 @@ export function Testimonials() {
 
   return (
     <section 
-      className="py-24 bg-slate-950/80 relative overflow-hidden border-t border-border/40" 
+      className="py-24 bg-white relative overflow-hidden border-t border-border/40" 
       id="temoignages"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -104,7 +104,7 @@ export function Testimonials() {
 
             <button
               onClick={() => scrollTo("prev")}
-              className="size-11 rounded-2xl bg-card border border-border/80 hover:border-primary/60 text-foreground hover:text-primary flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer"
+              className="size-11 rounded-2xl bg-card border border-border/80 hover:border-primary/60 text-foreground hover:text-primary flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
               aria-label="Témoignage précédent"
             >
               <ChevronLeft className="size-5" />
@@ -112,7 +112,7 @@ export function Testimonials() {
 
             <button
               onClick={() => scrollTo("next")}
-              className="size-11 rounded-2xl bg-primary text-slate-950 font-bold flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+              className="size-11 rounded-2xl bg-primary text-slate-950 font-bold flex items-center justify-center hover:opacity-90 transition-all shadow-sm shadow-primary/20 active:scale-95 cursor-pointer"
               aria-label="Témoignage suivant"
             >
               <ChevronRight className="size-5" />
@@ -139,7 +139,7 @@ export function Testimonials() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: (i % 4) * 0.08 }}
                 whileHover={{ y: -6 }}
-                className="w-[300px] sm:w-[380px] md:w-[420px] shrink-0 snap-start rounded-3xl border border-border/80 bg-card/70 p-6 md:p-7 backdrop-blur-xl shadow-xl flex flex-col justify-between hover:border-primary/50 transition-all space-y-6 relative overflow-hidden group select-none"
+                className="w-[300px] sm:w-[380px] md:w-[420px] shrink-0 snap-start rounded-3xl border border-border/80 bg-card/70 p-6 md:p-7 backdrop-blur-xl shadow-sm flex flex-col justify-between hover:border-primary/50 transition-all space-y-6 relative overflow-hidden group select-none"
               >
                 {/* Decorative Quote mark */}
                 <Quote className="size-12 text-primary/10 absolute top-5 right-5 group-hover:text-primary/20 transition-colors pointer-events-none" />
@@ -147,12 +147,12 @@ export function Testimonials() {
                 {/* Stars & Body Quote */}
                 <div className="space-y-3.5 relative z-10">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-amber-400">
+                    <div className="flex items-center gap-1 text-amber-700">
                       {[...Array(5)].map((_, idx) => (
-                        <Star key={idx} className="size-3.5 fill-amber-400 text-amber-400" />
+                        <Star key={idx} className="size-3.5 fill-amber-400 text-amber-700" />
                       ))}
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                       <CheckCircle2 className="size-3" /> Recommandation
                     </span>
                   </div>
@@ -168,7 +168,7 @@ export function Testimonials() {
                     <img
                       src={avatar}
                       alt={item.name}
-                      className="size-12 rounded-full object-cover border-2 border-primary/40 shadow-md shrink-0 bg-slate-900"
+                      className="size-12 rounded-full object-cover border-2 border-primary/40 shadow-xs shrink-0 bg-[#F5F8FF]"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = "none"
                       }}

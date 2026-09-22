@@ -51,7 +51,7 @@ export function Program() {
                   className="relative pl-14 md:grid md:grid-cols-2 md:gap-x-12 md:pl-0"
                 >
                   {/* node on the track */}
-                  <span className="absolute left-6 top-5 z-10 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-primary/40 bg-background text-primary shadow-[0_0_15px] shadow-primary/20 md:left-1/2">
+                  <span className="absolute left-6 top-5 z-10 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-primary/40 bg-background text-primary shadow-xs md:left-1/2">
                     <Calendar className="size-4" />
                   </span>
 
@@ -109,7 +109,7 @@ export function Program() {
         >
           <a
             href="#tarifs"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 text-base shadow-lg shadow-amber-500/10 active:scale-95 transition-transform"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-8 text-base shadow-sm shadow-amber-500/10 active:scale-95 transition-transform"
           >
             Je rejoins le Bootcamp IA & Carrière
           </a>

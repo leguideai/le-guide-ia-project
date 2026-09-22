@@ -170,21 +170,21 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card/60 p-8 shadow-2xl backdrop-blur-xl space-y-6">
+        <div className="rounded-3xl border border-border bg-card/60 p-8 shadow-xs backdrop-blur-xl space-y-6">
           <div className="text-center space-y-2">
             <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">Espace Membre</h1>
             <p className="text-xs text-muted-foreground">Connectez-vous pour accéder à vos formations et ressources</p>
           </div>
 
           {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-400">
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3.5 flex items-start gap-3 text-xs text-rose-600">
               <AlertCircle className="size-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {message && (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex items-start gap-3 text-xs text-emerald-400">
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex items-start gap-3 text-xs text-emerald-600">
               <AlertCircle className="size-4 shrink-0 mt-0.5" />
               <span>{message}</span>
             </div>
@@ -256,7 +256,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-md disabled:opacity-50 transition-all cursor-pointer mt-2"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-primary-foreground font-bold py-2.5 text-xs shadow-xs disabled:opacity-50 transition-all cursor-pointer mt-2"
             >
               <LogIn className="size-4" />
               {loading ? "Connexion..." : isMagicLink ? "Recevoir un lien magique" : "Se connecter"}

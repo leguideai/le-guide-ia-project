@@ -225,23 +225,23 @@ export function SkillPathways() {
       return {
         accentColor: "gold",
         border: "border-[#D4AF37]/50 hover:border-[#D4AF37]",
-        badge: "bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-slate-950 border border-[#F3E5AB]/80 font-black shadow-lg shadow-[#D4AF37]/30",
-        btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-lg shadow-[#D4AF37]/25",
+        badge: "bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-slate-950 border border-[#F3E5AB]/80 font-black shadow-sm shadow-[#D4AF37]/30",
+        btn: "bg-[#D4AF37] hover:bg-[#c49f2c] text-slate-950 font-black shadow-sm shadow-[#D4AF37]/25",
         glow: "shadow-[#D4AF37]/15",
-        price: "text-[#ECC86B]",
-        tag: "text-[#ECC86B] bg-[#D4AF37]/15 border border-[#D4AF37]/35",
-        iconColor: "text-[#D4AF37]"
+        price: "text-[#8A6A1F]",
+        tag: "text-[#8A6A1F] bg-[#D4AF37]/15 border border-[#D4AF37]/35",
+        iconColor: "text-[#8A6A1F]"
       }
     }
     return {
       accentColor: "blue",
       border: "border-blue-500/50 hover:border-blue-400/80",
-      badge: "bg-blue-600 text-white border border-blue-400/60 font-black shadow-lg shadow-blue-500/30",
+      badge: "bg-blue-600 text-white border border-blue-400/60 font-black shadow-sm shadow-blue-500/30",
       btn: "bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-blue-500/20",
       glow: "shadow-blue-500/10",
-      price: "text-blue-400",
-      tag: "text-blue-300 bg-blue-500/15 border-blue-500/30",
-      iconColor: "text-blue-400"
+      price: "text-blue-600",
+      tag: "text-blue-700 bg-blue-500/15 border-blue-500/30",
+      iconColor: "text-blue-600"
     }
   }
 
@@ -268,30 +268,30 @@ export function SkillPathways() {
                 className="relative rounded-3xl border border-border/80 bg-card/50 overflow-hidden flex flex-col backdrop-blur-xl animate-pulse"
               >
                 {/* Image Placeholder */}
-                <div className="relative w-full aspect-video bg-slate-900 flex items-center justify-center">
-                  <div className="size-12 rounded-2xl bg-white/10 flex items-center justify-center">
-                    <GraduationCap className="size-6 text-white/20" />
+                <div className="relative w-full aspect-video bg-[#F5F8FF] flex items-center justify-center">
+                  <div className="size-12 rounded-2xl bg-[#EEF3FF] flex items-center justify-center">
+                    <GraduationCap className="size-6 text-slate-300" />
                   </div>
-                  <div className="absolute top-3.5 left-3.5 h-6 w-36 rounded-xl bg-white/10" />
+                  <div className="absolute top-3.5 left-3.5 h-6 w-36 rounded-xl bg-slate-200" />
                 </div>
 
                 {/* Body Placeholder */}
                 <div className="p-4 sm:p-6 flex flex-col gap-5 flex-1 justify-between">
                   <div className="space-y-4">
                     <div className="space-y-2.5">
-                      <div className="h-6 w-3/4 bg-white/10 rounded-lg" />
-                      <div className="h-4 w-full bg-white/5 rounded" />
+                      <div className="h-6 w-3/4 bg-slate-200 rounded-lg" />
+                      <div className="h-4 w-full bg-slate-100 rounded" />
                     </div>
 
                     {/* Price box */}
-                    <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-2">
-                      <div className="h-6 w-36 bg-white/10 rounded-lg" />
-                      <div className="h-4 w-48 bg-white/5 rounded" />
+                    <div className="bg-[#F7F9FC] p-4 rounded-2xl border border-slate-200 space-y-2">
+                      <div className="h-6 w-36 bg-slate-200 rounded-lg" />
+                      <div className="h-4 w-48 bg-slate-100 rounded" />
                     </div>
                   </div>
 
                   {/* Button */}
-                  <div className="h-12 w-full bg-white/15 rounded-xl mt-4" />
+                  <div className="h-12 w-full bg-slate-200 rounded-xl mt-4" />
                 </div>
               </div>
             ))
@@ -307,17 +307,17 @@ export function SkillPathways() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: idx * 0.12 }}
                 whileHover={{ y: -5 }}
-                className={`relative rounded-3xl border ${accent.border} bg-card/70 overflow-hidden flex flex-col group backdrop-blur-xl shadow-2xl ${accent.glow} transition-all duration-300 hover:shadow-lg`}
+                className={`relative rounded-3xl border ${accent.border} bg-card/70 overflow-hidden flex flex-col group backdrop-blur-xl shadow-xs ${accent.glow} transition-all duration-300 hover:shadow-sm`}
               >
                 {/* Image */}
-                <div className="relative w-full aspect-video overflow-hidden bg-slate-950">
+                <div className="relative w-full aspect-video overflow-hidden bg-white">
                   <img
                     src={item.image}
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   {/* Subtle Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent pointer-events-none" />
                   
                   {/* Badge top-left (High Contrast Vibrant Pill) */}
                   <div className={`absolute top-3.5 left-3.5 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider ${accent.badge}`}>
@@ -336,7 +336,7 @@ export function SkillPathways() {
                       </div>
 
                       {/* Dynamic Price & Founder Offer Validity Box */}
-                      <div className="bg-slate-950/80 p-3 sm:p-4 rounded-2xl border border-slate-800/80 space-y-2.5">
+                      <div className="bg-[#F7F9FC] p-3 sm:p-4 rounded-2xl border border-slate-200 space-y-2.5">
                         {/* Top Row: Price + Offer Badge */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex items-baseline gap-2 flex-wrap">
@@ -350,12 +350,12 @@ export function SkillPathways() {
 
                         {/* Date de début et fin de l'offre */}
                         {item.offer && item.offer.periodLabel && (
-                          <div className="flex flex-wrap items-center  gap-1 text-[11px] pt-2 border-t border-border/40 text-slate-300">
-                            <span className="text-slate-400 flex items-center gap-1.5 font-medium">
-                              <Clock className="size-3.5 text-[#D4AF37] shrink-0" />
+                          <div className="flex flex-wrap items-center  gap-1 text-[11px] pt-2 border-t border-border/40 text-slate-600">
+                            <span className="text-slate-500 flex items-center gap-1.5 font-medium">
+                              <Clock className="size-3.5 text-[#8A6A1F] shrink-0" />
                               <span>Offre valable jusqu'au </span>
                             </span>
-                            <span className="font-bold text-[#ECC86B]">
+                            <span className="font-bold text-[#8A6A1F]">
                               {item.offer.periodLabel} 2026
                             </span>
                           </div>
@@ -374,7 +374,7 @@ export function SkillPathways() {
                           <Calendar className={`size-4 shrink-0 ${accent.iconColor}`} />
                           <span>Session : <strong>{item.dates}</strong></span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-200 bg-slate-900 border border-slate-700 px-3 py-1.5 sm:py-2 rounded-xl">
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 bg-[#F5F8FF] border border-slate-300 px-3 py-1.5 sm:py-2 rounded-xl">
                           <span className={`size-2 rounded-full ${accent.accentColor === "gold" ? "bg-[#D4AF37]" : "bg-blue-400"} animate-pulse`} />
                           <span>{item.format}</span>
                         </div>
@@ -387,7 +387,7 @@ export function SkillPathways() {
                   <div className="pt-4 border-t border-border/60 flex flex-col sm:flex-row items-center gap-2.5">
                     <Link
                       href={item.href}
-                      className={`w-full sm:flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-black transition-all shadow-xl hover:scale-[1.02] active:scale-95 cursor-pointer ${accent.btn}`}
+                      className={`w-full sm:flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-black transition-all shadow-sm hover:scale-[1.02] active:scale-95 cursor-pointer ${accent.btn}`}
                     >
                       <span>Découvrir la formule</span>
                       <ArrowRight className="size-4" />
@@ -397,7 +397,7 @@ export function SkillPathways() {
                         href={item.pdfUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900/90 hover:bg-slate-800 text-slate-200 font-bold px-3.5 py-3 text-xs transition-all shrink-0 hover:text-white"
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-[#F5F8FF] hover:bg-[#EEF3FF] text-slate-700 font-bold px-3.5 py-3 text-xs transition-all shrink-0 hover:text-[#0E1E3F]"
                         title="Télécharger le programme officiel (PDF)"
                       >
                         <span className="hidden sm:inline">Voir Programme</span>

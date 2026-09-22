@@ -136,7 +136,7 @@ export function SiteNav() {
           {user ? (
             <a
               href={userRole === "admin" || userRole === "super_admin" ? "/admin" : "/dashboard"}
-              className="flex items-center gap-2 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl transition-all shadow-md"
+              className="flex items-center gap-2 text-xs font-bold text-primary-foreground bg-primary hover:opacity-90 px-4 py-2 rounded-xl transition-all shadow-xs"
             >
               <LayoutDashboard className="size-3.5" />
               <span>{userRole === "admin" || userRole === "super_admin" ? "Portail Admin" : "Mon Dashboard"}</span>
@@ -157,7 +157,7 @@ export function SiteNav() {
 
           <a
             href="/checkout/bootcamp-ia-pro"
-            className={cn(buttonVariants({ size: "lg" }), "font-semibold shadow-md")}
+            className={cn(buttonVariants({ size: "lg" }), "font-semibold shadow-xs")}
           >
             S'inscrire au Bootcamp
           </a>

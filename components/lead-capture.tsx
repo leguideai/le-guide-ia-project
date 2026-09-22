@@ -119,7 +119,7 @@ export function LeadCapture() {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-2xl"
+            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-xs"
           >
             {/* Close Button */}
             <button
@@ -241,7 +241,7 @@ export function LeadCapture() {
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="w-full flex h-10 items-center justify-center gap-2 rounded-lg bg-primary hover:opacity-90 text-primary-foreground font-bold px-4 text-xs shadow-md disabled:opacity-50 active:scale-98 transition-all cursor-pointer"
+                  className="w-full flex h-10 items-center justify-center gap-2 rounded-lg bg-primary hover:opacity-90 text-primary-foreground font-bold px-4 text-xs shadow-xs disabled:opacity-50 active:scale-98 transition-all cursor-pointer"
                 >
                   <Send className="size-3.5" />
                   {status === "loading" ? "Envoi..." : "Recevoir le programme + bonus"}

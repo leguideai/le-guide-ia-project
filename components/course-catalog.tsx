@@ -38,7 +38,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
     reviewsCount: "Avis apprenants certifiés",
     studentsCount: "Apprenants inscrits",
     badge: c.badge,
-    badgeColor: c.price >= 140000 ? "bg-[#D4AF37]/20 text-[#ECC86B] border border-[#D4AF37]/30" : "bg-blue-600/20 text-blue-300 border border-blue-500/30",
+    badgeColor: c.price >= 140000 ? "bg-[#D4AF37]/20 text-[#8A6A1F] border border-[#D4AF37]/30" : "bg-blue-600/20 text-blue-700 border border-blue-500/30",
     hours: c.price === 0 ? "Accès Libre" : "Session Intensive Live",
     schedule: c.dates || "19h00 GMT",
     oldPriceFcfa: c.price > 0 ? `${(c.price * 1.5).toLocaleString("fr-FR")} ${c.currency || "FCFA"}` : "",
@@ -81,14 +81,14 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
           {filteredCourses.map((course) => (
             <div
               key={course.id}
-              className={`rounded-3xl border bg-card/60 backdrop-blur-xl p-6 flex flex-col justify-between hover:border-primary/50 transition-all group hover:shadow-2xl hover:shadow-primary/5 ${
+              className={`rounded-3xl border bg-card/60 backdrop-blur-xl p-6 flex flex-col justify-between hover:border-primary/50 transition-all group hover:shadow-xs hover:shadow-primary/5 ${
                 course.isEnrolled ? "border-emerald-500/50 shadow-emerald-500/5" : "border-border/80"
               }`}
             >
               <div className="space-y-6">
                 
                 {/* Poster / Thumbnail Preview */}
-                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-900 border border-border/60">
+                <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-[#F5F8FF] border border-border/60">
                   <img
                     src={course.image}
                     alt={course.title}
@@ -101,7 +101,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
                   </div>
                   {course.isEnrolled && (
                     <div className="absolute top-3 right-3">
-                      <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg bg-emerald-600 text-white shadow-lg flex items-center gap-1">
+                      <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg bg-emerald-600 text-white shadow-sm flex items-center gap-1">
                         <CheckCircle2 className="size-3" />
                         Inscrit
                       </span>
@@ -130,9 +130,9 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
                   <div className="flex items-center gap-2 pt-1">
                     <div className="flex items-center gap-1 text-xs font-bold text-foreground">
                       <span>{course.rating}</span>
-                      <div className="flex items-center text-amber-400">
+                      <div className="flex items-center text-amber-700">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="size-3 fill-amber-400 text-amber-400" />
+                          <Star key={i} className="size-3 fill-amber-400 text-amber-700" />
                         ))}
                       </div>
                     </div>
@@ -155,7 +155,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
                     {course.isEnrolled ? (
                       <Link
                         href="/dashboard"
-                        className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black transition-all shadow-lg cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-95"
+                        className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black transition-all shadow-sm cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20 active:scale-95"
                       >
                         <CheckCircle2 className="size-3.5" />
                         <span>Déjà Inscrit(e)</span>
@@ -163,7 +163,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
                     ) : course.isPending ? (
                       <Link
                         href="/dashboard"
-                        className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black transition-all shadow-lg cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20 active:scale-95"
+                        className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black transition-all shadow-sm cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20 active:scale-95"
                       >
                         <Clock className="size-3.5 animate-pulse" />
                         <span>⏳ En validation...</span>
@@ -171,7 +171,7 @@ export function CourseCatalog({ activeCategory }: CourseCatalogProps) {
                     ) : (
                       <Link
                         href={course.href}
-                        className={`flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold transition-all shadow-lg cursor-pointer ${
+                        className={`flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold transition-all shadow-sm cursor-pointer ${
                           course.isFree
                             ? "bg-secondary hover:bg-secondary/80 text-foreground border border-border"
                             : "bg-primary hover:opacity-90 text-primary-foreground shadow-primary/20"

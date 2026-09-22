@@ -147,7 +147,7 @@ export function ResourceOptinModal({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-primary/30 bg-card p-6 md:p-8 shadow-2xl glow-blue"
+            className="relative w-full max-w-md overflow-hidden rounded-3xl border border-primary/30 bg-card p-6 md:p-8 shadow-xs glow-blue"
           >
             <button
               onClick={onClose}
@@ -299,7 +299,7 @@ export function ResourceOptinModal({
                     </button>
 
                     {isCountryDropdownOpen && (
-                      <div className="absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-card p-2 text-foreground shadow-2xl backdrop-blur-md">
+                      <div className="absolute left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-card p-2 text-foreground shadow-xs backdrop-blur-md">
                         <div className="sticky top-0 bg-card pb-2 z-10">
                           <input
                             type="text"
@@ -359,7 +359,7 @@ export function ResourceOptinModal({
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="w-full flex h-10 items-center justify-center gap-2 rounded-lg bg-primary hover:opacity-90 text-primary-foreground font-bold px-4 text-xs shadow-md disabled:opacity-50 active:scale-98 transition-all cursor-pointer mt-2"
+                  className="w-full flex h-10 items-center justify-center gap-2 rounded-lg bg-primary hover:opacity-90 text-primary-foreground font-bold px-4 text-xs shadow-xs disabled:opacity-50 active:scale-98 transition-all cursor-pointer mt-2"
                 >
                   <Send className="size-3.5" />
                   {status === "loading" ? "Déblocage en cours..." : "Débloquer toutes les ressources"}
