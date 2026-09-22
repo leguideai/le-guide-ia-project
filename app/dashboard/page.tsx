@@ -79,6 +79,38 @@ function getFileInfo(url?: string) {
   }
 }
 
+// Normalise une URL de replay en URL embarquable. Renvoie null si aucune URL exploitable.
+function toEmbedUrl(rawUrl?: string | null): string | null {
+  const url = String(rawUrl || "").trim()
+  if (!url || !/^https?:\/\//i.test(url)) return null
+
+  try {
+    const u = new URL(url)
+    const host = u.hostname.replace(/^www\./, "").toLowerCase()
+
+    if (host === "youtu.be") {
+      const id = u.pathname.split("/").filter(Boolean)[0]
+      return id ? `https://www.youtube.com/embed/${id}?rel=0` : null
+    }
+
+    if (host.endsWith("youtube.com") || host.endsWith("youtube-nocookie.com")) {
+      if (u.pathname.startsWith("/embed/")) return url
+      const id = u.searchParams.get("v") || (u.pathname.startsWith("/shorts/") ? u.pathname.split("/")[2] : "")
+      return id ? `https://www.youtube.com/embed/${id}?rel=0` : null
+    }
+
+    if (host.endsWith("vimeo.com")) {
+      if (u.pathname.startsWith("/video/") || host.startsWith("player.")) return url
+      const id = u.pathname.split("/").filter(Boolean)[0]
+      return id && /^\d+$/.test(id) ? `https://player.vimeo.com/video/${id}` : null
+    }
+
+    return url
+  } catch {
+    return null
+  }
+}
+
 type TabType = "overview" | "courses" | "masterclasses" | "resources" | "subscription" | "certificates" | "invoices" | "profile"
 
 interface ExerciseDetails {
@@ -1242,7 +1274,8 @@ export default function DashboardPage() {
       )
       const sourceList = courseSessions.length > 0 ? courseSessions : dbLessons.filter((l: any) => l.course_id === c.id)
       return sourceList.map((s: any, idx: number) => {
-        const hasRecording = Boolean((s.recording_url || s.video_url) && (s.recording_url || s.video_url).trim() !== "")
+        // Un replay ne compte que si l'URL est réellement exploitable dans un lecteur
+        const hasRecording = Boolean(toEmbedUrl(s.recording_url || s.video_url))
         
         // Calcul automatique du statut
         const now = Date.now()
@@ -2290,16 +2323,41 @@ export default function DashboardPage() {
                               })()}
                             </div>
                           ) : (
-                            /* Completed/Replay Video Player (iframe) */
-                            <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
-                              <iframe
-                                src={`${activeLesson?.videoUrl || ""}?autoplay=0`}
-                                title={activeLesson?.title || "Session"}
-                                className="w-full h-full border-none"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            </div>
+                            /* Completed : lecteur de replay, ou message d'attente si aucune vidéo n'est encore publiée */
+                            (() => {
+                              const embedUrl = toEmbedUrl(activeLesson?.videoUrl)
+
+                              if (!embedUrl) {
+                                return (
+                                  <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md flex items-center justify-center p-6">
+                                    <div className="text-center space-y-3 max-w-md">
+                                      <div className="size-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto">
+                                        <Video className="size-7 text-amber-400" />
+                                      </div>
+                                      <h3 className="font-heading text-base sm:text-lg font-bold text-white">
+                                        Replay en cours de préparation
+                                      </h3>
+                                      <p className="text-xs text-slate-400 leading-relaxed">
+                                        La session s'est terminée. L'enregistrement est en cours de montage et sera
+                                        disponible ici sous peu — vous serez notifié par email dès sa publication.
+                                      </p>
+                                    </div>
+                                  </div>
+                                )
+                              }
+
+                              return (
+                                <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
+                                  <iframe
+                                    src={embedUrl}
+                                    title={activeLesson?.title || "Session"}
+                                    className="w-full h-full border-none"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                  />
+                                </div>
+                              )
+                            })()
                           )}
 
                           <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 space-y-4 shadow-xs">
@@ -2327,9 +2385,17 @@ export default function DashboardPage() {
                                     ? "bg-red-50 text-red-700 border-red-200 animate-pulse"
                                     : activeLesson?.isUpcoming
                                     ? "bg-amber-50 text-amber-800 border-amber-200"
-                                    : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                    : activeLesson?.hasRecording
+                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                    : "bg-slate-100 text-slate-600 border-slate-200"
                                 }`}>
-                                  {activeLesson?.isLive ? "🟢 En Direct Maintenant" : activeLesson?.isUpcoming ? "🕒 Session à venir" : "🎬 Replay Disponible"}
+                                  {activeLesson?.isLive
+                                    ? "🟢 En Direct Maintenant"
+                                    : activeLesson?.isUpcoming
+                                    ? "🕒 Session à venir"
+                                    : activeLesson?.hasRecording
+                                    ? "🎬 Replay Disponible"
+                                    : "⏳ Replay bientôt disponible"}
                                 </span>
 
                                 {(activeLesson?.isUpcoming || activeLesson?.isLive) && (
@@ -2486,8 +2552,22 @@ export default function DashboardPage() {
                                       <Clock className="size-3" />
                                       <span>{lesson.duration}</span>
                                       <span>·</span>
-                                      <span className={lesson.isLive ? "text-red-600 font-bold animate-pulse" : lesson.isUpcoming ? "text-amber-700 font-bold" : "text-emerald-700 font-bold"}>
-                                        {lesson.isLive ? "En Direct" : lesson.isUpcoming ? "À venir" : "Replay HD"}
+                                      <span className={
+                                        lesson.isLive
+                                          ? "text-red-600 font-bold animate-pulse"
+                                          : lesson.isUpcoming
+                                          ? "text-amber-700 font-bold"
+                                          : lesson.hasRecording
+                                          ? "text-emerald-700 font-bold"
+                                          : "text-slate-500 font-bold"
+                                      }>
+                                        {lesson.isLive
+                                          ? "En Direct"
+                                          : lesson.isUpcoming
+                                          ? "À venir"
+                                          : lesson.hasRecording
+                                          ? "Replay HD"
+                                          : "Replay à venir"}
                                       </span>
                                     </div>
                                     {lesson.scheduledDate && (
