@@ -184,7 +184,7 @@ interface TestimonialItem {
 }
 
 export default function SuperAdminDashboard() {
-  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "masterclasses" | "masterclasses_past" | "masterclass_participants" | "masterclass_replays" | "subscriptions" | "newsletter" | "testimonials" | "payments" | "users" | "submissions" | "b2b" | "export" | "settings">("kpi")
+  const [activeTab, setActiveTab] = useState<"kpi" | "courses" | "formations" | "resources" | "lives" | "masterclasses" | "masterclasses_past" | "masterclass_participants" | "masterclass_replays" | "subscriptions" | "newsletter" | "testimonials" | "payments" | "users" | "submissions" | "b2b" | "aitools" | "export" | "settings">("kpi")
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [userRole, setUserRole] = useState<string>("super_admin")
@@ -456,6 +456,18 @@ export default function SuperAdminDashboard() {
   const [formations, setFormations] = useState<FormationItem[]>([])
   const [resources, setResources] = useState<ResourceItem[]>([])
   const [aiTools, setAiTools] = useState<any[]>([])
+  const [toolSearch, setToolSearch] = useState("")
+  const [showToolModal, setShowToolModal] = useState(false)
+  const [savingTool, setSavingTool] = useState(false)
+  const [toolForm, setToolForm] = useState<any>({
+    id: "",
+    name: "",
+    slug: "",
+    category: "",
+    role: "",
+    icon: "⚡",
+    image: ""
+  })
   const [lives, setLives] = useState<LiveSession[]>([])
   const [allSessions, setAllSessions] = useState<BootcampSession[]>([])
   const [showCohortModal, setShowCohortModal] = useState(false)
@@ -965,6 +977,108 @@ export default function SuperAdminDashboard() {
     homework_deadline: "",
     status: "upcoming"
   })
+
+  /* ===== Outils IA (section « Nos Outils IA » de la page d'accueil) ===== */
+
+  const slugifyTool = (value: string) =>
+    String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+
+  const emptyToolForm = {
+    id: "",
+    name: "",
+    slug: "",
+    category: "",
+    role: "",
+    icon: "⚡",
+    image: ""
+  }
+
+  const handleOpenAddTool = () => {
+    setToolForm({ ...emptyToolForm })
+    setShowToolModal(true)
+  }
+
+  const handleEditTool = (tool: any) => {
+    setToolForm({
+      id: tool.id || "",
+      name: tool.name || "",
+      slug: tool.slug || "",
+      category: tool.category || "",
+      role: tool.role || "",
+      icon: tool.icon || "⚡",
+      image: tool.image || ""
+    })
+    setShowToolModal(true)
+  }
+
+  const handleSaveTool = async () => {
+    if (!toolForm.name?.trim()) {
+      alert("Le nom de l'outil est obligatoire.")
+      return
+    }
+
+    // Le slug sert de clé d'unicité côté API : on le dérive du nom s'il est vide
+    const slug = toolForm.slug?.trim() || slugifyTool(toolForm.name)
+
+    setSavingTool(true)
+    try {
+      const res = await fetch("/api/admin/tools", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(toolForm.id ? { id: toolForm.id } : {}),
+          name: toolForm.name.trim(),
+          slug,
+          category: toolForm.category?.trim() || "Modèles IA & Raisonnement",
+          role: toolForm.role?.trim() || "",
+          icon: toolForm.icon?.trim() || "⚡",
+          image: toolForm.image?.trim() || ""
+        })
+      })
+      const data = await res.json()
+
+      if (!res.ok || data?.error) {
+        alert("Erreur lors de l'enregistrement : " + (data?.error || res.status))
+        return
+      }
+
+      setAiTools(prev => {
+        const saved = data.tool
+        const exists = prev.some(t => t.id === saved.id)
+        return exists ? prev.map(t => (t.id === saved.id ? saved : t)) : [...prev, saved]
+      })
+      setShowToolModal(false)
+      setToolForm({ ...emptyToolForm })
+      showNotice(`Outil « ${toolForm.name.trim()} » enregistré.`)
+    } catch (err: any) {
+      alert("Erreur réseau : " + err.message)
+    } finally {
+      setSavingTool(false)
+    }
+  }
+
+  const handleDeleteTool = async (tool: any) => {
+    if (!tool?.id) return
+    if (!confirm(`Supprimer définitivement l'outil « ${tool.name} » ?\n\nIl disparaîtra de la section « Nos Outils IA » du site public.`)) return
+
+    try {
+      const res = await fetch(`/api/admin/tools?id=${encodeURIComponent(tool.id)}`, { method: "DELETE" })
+      const data = await res.json()
+      if (!res.ok || data?.error) {
+        alert("Erreur lors de la suppression : " + (data?.error || res.status))
+        return
+      }
+      setAiTools(prev => prev.filter(t => t.id !== tool.id))
+      showNotice(`Outil « ${tool.name} » supprimé.`)
+    } catch (err: any) {
+      alert("Erreur réseau : " + err.message)
+    }
+  }
 
   const handleUploadCoursePoster = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -4229,6 +4343,21 @@ export default function SuperAdminDashboard() {
                 {!sidebarCollapsed && <span className="text-[10px] opacity-75">({resources.length})</span>}
               </button>
 
+              {/* Outils IA affichés dans « Nos Outils IA » sur le site public */}
+              <button
+                onClick={() => setActiveTab("aitools")}
+                title={`Nos Outils IA (${aiTools.length})`}
+                className={`w-full flex items-center ${sidebarCollapsed ? "justify-center p-2.5" : "justify-between px-3.5 py-2.5"} rounded-xl text-xs font-bold transition-all cursor-pointer relative ${
+                  activeTab === "aitools" ? "bg-primary text-slate-950 shadow-lg shadow-primary/20" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "gap-2.5"}`}>
+                  <Bot className="size-4 shrink-0" />
+                  {!sidebarCollapsed && <span>Nos Outils IA</span>}
+                </div>
+                {!sidebarCollapsed && <span className="text-[10px] opacity-75">({aiTools.length})</span>}
+              </button>
+
               <button
                 onClick={() => setActiveTab("lives")}
                 title={`Calendrier & Planning (${adminCalendarEvents.length})`}
@@ -4532,6 +4661,7 @@ export default function SuperAdminDashboard() {
               {activeTab === "users" && "Gestion des Membres & Rôles RBAC"}
               {activeTab === "submissions" && "Correction des Devoirs"}
               {activeTab === "b2b" && "Demandes de Devis B2B Entreprises"}
+              {activeTab === "aitools" && "Nos Outils IA — Outils affichés sur le site public"}
               {activeTab === "settings" && "Paramètres du Site"}
               {/* {activeTab === "export" && "Exportation des Données"} */}
             </h1>
@@ -12013,6 +12143,255 @@ NOTIFY pgrst, 'reload schema';`}</pre>
         )}
 
         {/* TAB: AVIS & TÉMOIGNAGES */}
+        {/* Formulaire d'ajout / modification d'un outil IA */}
+        {showToolModal && (
+          <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-start sm:items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl w-full max-w-lg my-8 overflow-hidden">
+
+              <div className="flex items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-slate-200 bg-[#F4F6F8]">
+                <h4 className="font-heading text-sm font-black text-slate-800 flex items-center gap-2">
+                  <Bot className="size-4 text-primary" />
+                  {toolForm.id ? "Modifier l'outil IA" : "Nouvel Outil IA"}
+                </h4>
+                <button
+                  onClick={() => setShowToolModal(false)}
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors cursor-pointer"
+                  aria-label="Fermer"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <div className="p-5 sm:p-6 space-y-4 text-xs">
+                <div>
+                  <label className="block mb-1.5 font-bold text-slate-700">
+                    Nom de l&apos;outil <span className="text-rose-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ex: ChatGPT (OpenAI)"
+                    value={toolForm.name}
+                    onChange={e => setToolForm({ ...toolForm, name: e.target.value })}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-1.5 font-bold text-slate-700">
+                    Catégorie
+                  </label>
+                  <input
+                    type="text"
+                    list="tool-categories"
+                    placeholder="ex: Modèles IA & Raisonnement"
+                    value={toolForm.category}
+                    onChange={e => setToolForm({ ...toolForm, category: e.target.value })}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400"
+                  />
+                  <datalist id="tool-categories">
+                    {Array.from(new Set(aiTools.map(t => t.category).filter(Boolean))).map(c => (
+                      <option key={String(c)} value={String(c)} />
+                    ))}
+                  </datalist>
+                </div>
+
+                <div>
+                  <label className="block mb-1.5 font-bold text-slate-700">
+                    Rôle / description courte <span className="text-slate-400 font-normal">(optionnel)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="À quoi sert cet outil dans vos formations ?"
+                    value={toolForm.role}
+                    onChange={e => setToolForm({ ...toolForm, role: e.target.value })}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 resize-y"
+                  />
+                </div>
+
+                <div>
+                  <FileUploadField
+                    label="🖼️ Logo de l'outil (PNG/SVG — optionnel)"
+                    value={toolForm.image || ""}
+                    onChange={url => setToolForm({ ...toolForm, image: url })}
+                    accept="image/*"
+                    bucket="resources-files"
+                    folder="tools"
+                    placeholder="https://... ou téléversez le logo"
+                    preview="image"
+                    hint="Sans logo, l'emoji ci-dessous est affiché à la place."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-1.5 font-bold text-slate-700">
+                      Emoji de repli
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={4}
+                      placeholder="⚡"
+                      value={toolForm.icon}
+                      onChange={e => setToolForm({ ...toolForm, icon: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-center text-lg outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 font-bold text-slate-700">
+                      Identifiant <span className="text-slate-400 font-normal">(auto)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={slugifyTool(toolForm.name) || "chatgpt"}
+                      value={toolForm.slug}
+                      onChange={e => setToolForm({ ...toolForm, slug: e.target.value })}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-slate-600 outline-none focus:border-primary font-mono text-[11px]"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10.5px] text-slate-400 leading-relaxed -mt-1">
+                  L&apos;identifiant sert de clé unique : deux outils ne peuvent pas le partager.
+                  Laissez vide, il sera déduit du nom.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 px-5 sm:px-6 py-4 border-t border-slate-200 bg-[#F4F6F8]">
+                <button
+                  onClick={() => setShowToolModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSaveTool}
+                  disabled={savingTool}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-slate-950 font-black text-xs hover:opacity-90 shadow-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Save className="size-4" />
+                  <span>{savingTool ? "Enregistrement..." : toolForm.id ? "Mettre à jour l'outil" : "Ajouter l'outil"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== NOS OUTILS IA ===== */}
+        {activeTab === "aitools" && (
+          <div className="space-y-6 animate-fadeIn">
+
+            {/* Entête */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs">
+              <div className="space-y-1">
+                <h3 className="font-heading text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Bot className="size-5 text-primary shrink-0" />
+                  <span>Nos Outils IA</span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold">
+                    {aiTools.length}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
+                  Ces outils alimentent la section « Nos Outils IA » de la page d&apos;accueil et la page Formations.
+                  Ajoutez, modifiez ou retirez un outil : la mise à jour est immédiate côté public.
+                </p>
+              </div>
+              <button
+                onClick={handleOpenAddTool}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-slate-950 font-bold text-xs hover:opacity-90 shadow-lg shadow-primary/20 cursor-pointer w-full sm:w-auto shrink-0 transition-transform active:scale-95"
+              >
+                <Plus className="size-4" />
+                <span>Nouvel Outil IA</span>
+              </button>
+            </div>
+
+            {/* Recherche */}
+            <div className="flex items-center gap-3 bg-[#F4F6F8] border border-slate-200 rounded-2xl px-4 py-2.5 w-full sm:max-w-md focus-within:border-primary/50 transition-colors">
+              <Search className="size-4 text-slate-500 shrink-0" />
+              <input
+                type="text"
+                placeholder="Rechercher par nom ou catégorie..."
+                value={toolSearch}
+                onChange={e => setToolSearch(e.target.value)}
+                className="w-full bg-transparent text-xs text-slate-800 placeholder:text-slate-500 outline-none"
+              />
+              {toolSearch && (
+                <button
+                  onClick={() => setToolSearch("")}
+                  className="text-[11px] text-slate-600 hover:text-slate-900 shrink-0 cursor-pointer"
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+
+            {/* Grille des outils */}
+            {aiTools.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-slate-300 rounded-3xl bg-white">
+                <Bot className="size-8 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-700">Aucun outil enregistré</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Ajoutez votre premier outil pour qu&apos;il apparaisse sur le site public.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-5">
+                {aiTools
+                  .filter(t => {
+                    if (!toolSearch.trim()) return true
+                    const q = toolSearch.toLowerCase()
+                    return (
+                      String(t.name || "").toLowerCase().includes(q) ||
+                      String(t.category || "").toLowerCase().includes(q) ||
+                      String(t.role || "").toLowerCase().includes(q)
+                    )
+                  })
+                  .map(tool => (
+                    <div
+                      key={tool.id || tool.slug}
+                      className="rounded-3xl border border-slate-200 bg-white p-5 flex flex-col gap-3.5 shadow-xs hover:border-primary/40 transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="size-11 shrink-0 rounded-2xl bg-[#F4F6F8] border border-slate-200 flex items-center justify-center overflow-hidden">
+                          {tool.image ? (
+                            <img src={tool.image} alt={tool.name} className="size-7 object-contain" />
+                          ) : (
+                            <span className="text-lg leading-none">{tool.icon || "⚡"}</span>
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-black text-slate-800 truncate">{tool.name}</p>
+                          <p className="text-[10px] font-semibold text-primary truncate mt-0.5">
+                            {tool.category || "Sans catégorie"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {tool.role && (
+                        <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-3">{tool.role}</p>
+                      )}
+
+                      <div className="mt-auto flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => handleEditTool(tool)}
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#F4F6F8] border border-slate-200 text-slate-700 hover:border-primary/50 hover:text-primary text-[11px] font-bold transition-colors cursor-pointer"
+                        >
+                          <Edit3 className="size-3.5" />
+                          <span>Modifier</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTool(tool)}
+                          title={`Supprimer ${tool.name}`}
+                          className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === "testimonials" && (
           <div className="space-y-6 animate-fadeIn">
             {/* Header */}
@@ -12046,7 +12425,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                 placeholder="Rechercher par nom, profession ou mot-clé..."
                 value={testimonialSearch}
                 onChange={e => setTestimonialSearch(e.target.value)}
-                className="w-full bg-transparent text-xs text-white placeholder:text-slate-500 outline-none"
+                className="w-full bg-transparent text-xs text-slate-800 placeholder:text-slate-500 outline-none"
               />
               {testimonialSearch && (
                 <button 
