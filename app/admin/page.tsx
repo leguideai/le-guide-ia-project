@@ -72,6 +72,8 @@ interface BootcampSession {
   ends_at?: string
   meet_url?: string
   recording_url?: string
+  pdf_url?: string
+  pdf_name?: string
   homework_title?: string
   homework_description?: string
   homework_file_url?: string
@@ -936,6 +938,8 @@ export default function SuperAdminDashboard() {
       ends_at: defDates.ends_at,
       meet_url: "",
       recording_url: "",
+      pdf_url: "",
+      pdf_name: "",
       homework_title: "",
       homework_description: "",
       homework_file_url: "",
@@ -952,6 +956,8 @@ export default function SuperAdminDashboard() {
     ends_at: "",
     meet_url: "",
     recording_url: "",
+    pdf_url: "",
+    pdf_name: "",
     homework_title: "",
     homework_description: "",
     homework_file_url: "",
@@ -5527,6 +5533,8 @@ export default function SuperAdminDashboard() {
                                     ends_at: nextDates.ends_at,
                                     meet_url: "",
                                     recording_url: "",
+                                    pdf_url: "",
+                                    pdf_name: "",
                                     homework_title: "",
                                     homework_description: "",
                                     homework_file_url: "",
@@ -5571,6 +5579,8 @@ export default function SuperAdminDashboard() {
                                 ends_at: nextDates.ends_at,
                                 meet_url: "",
                                 recording_url: "",
+                                pdf_url: "",
+                                pdf_name: "",
                                 homework_title: "",
                                 homework_description: "",
                                 homework_file_url: "",
@@ -5692,6 +5702,24 @@ export default function SuperAdminDashboard() {
                           className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
                         />
                       </div>
+                      {/* Support de cours PDF de la session live */}
+                      <div className="sm:col-span-2">
+                        <FileUploadField
+                          label="📕 Support de cours PDF de la session (Optionnel)"
+                          value={sessionForm.pdf_url || ""}
+                          onChange={url => setSessionForm({
+                            ...sessionForm,
+                            pdf_url: url,
+                            pdf_name: url ? decodeURIComponent(url.split("/").pop() || "").replace(/^\d+_/, "") : ""
+                          })}
+                          accept=".pdf,application/pdf"
+                          bucket="resources-files"
+                          folder="supports-cours"
+                          placeholder="https://... ou téléversez le support de cours (PDF)"
+                          preview="none"
+                          hint="Si renseigné, le PDF devient visible et téléchargeable par les apprenants dans la session concernée."
+                        />
+                      </div>
                       <div>
                         <label className="text-slate-600 block mb-1 font-bold">📚 Titre du devoir <span className="text-slate-400 font-normal">(Optionnel)</span></label>
                         <input type="text" placeholder="ex: Exercice pratique — Prompt Engineering"
@@ -5761,6 +5789,8 @@ export default function SuperAdminDashboard() {
                               ends_at: nextDates.ends_at,
                               meet_url: "",
                               recording_url: "",
+                              pdf_url: "",
+                              pdf_name: "",
                               homework_title: "",
                               homework_description: "",
                               homework_file_url: "",
@@ -5807,12 +5837,31 @@ export default function SuperAdminDashboard() {
                             description: cleanText(sessionForm.description),
                             meet_url: cleanText(sessionForm.meet_url),
                             recording_url: cleanText(sessionForm.recording_url),
+                            pdf_url: cleanText(sessionForm.pdf_url),
+                            pdf_name: cleanText(sessionForm.pdf_name),
                           }
 
+                          // Repli si la migration supabase_bootcamp_sessions_pdf.sql n'a pas encore été exécutée
+                          const isMissingPdfColumn = (err: any) =>
+                            Boolean(err?.message && /pdf_(url|name)/i.test(err.message))
+                          const withoutPdf = (obj: any) => {
+                            const { pdf_url, pdf_name, ...rest } = obj
+                            return rest
+                          }
+                          const warnMissingPdfColumn = () =>
+                            alert("⚠️ La colonne 'pdf_url' n'existe pas encore dans bootcamp_sessions.\n\nExécutez le fichier supabase_bootcamp_sessions_pdf.sql dans le SQL Editor de Supabase pour activer le support de cours PDF.\n\nLa session a été enregistrée sans le PDF.")
+
                           if (sessionForm.id) {
-                            const { error } = await supabase.from("bootcamp_sessions").update(payload).eq("id", sessionForm.id)
+                            let savedPayload: any = payload
+                            let { error } = await supabase.from("bootcamp_sessions").update(payload).eq("id", sessionForm.id)
+                            if (error && isMissingPdfColumn(error)) {
+                              savedPayload = withoutPdf(payload)
+                              const retry = await supabase.from("bootcamp_sessions").update(savedPayload).eq("id", sessionForm.id)
+                              error = retry.error
+                              if (!error) warnMissingPdfColumn()
+                            }
                             if (!error) {
-                              const updatedObj = { ...payload, id: sessionForm.id } as BootcampSession
+                              const updatedObj = { ...savedPayload, id: sessionForm.id } as BootcampSession
                               const updatedList = bootcampSessions.map(s => s.id === sessionForm.id ? updatedObj : s).sort((a,b) => (a.session_number || 0) - (b.session_number || 0))
                               setBootcampSessions(updatedList)
                               setAllSessions(prev => prev.map(s => s.id === sessionForm.id ? updatedObj : s))
@@ -5831,6 +5880,8 @@ export default function SuperAdminDashboard() {
                                 ends_at: nextDates.ends_at,
                                 meet_url: "",
                                 recording_url: "",
+                                pdf_url: "",
+                                pdf_name: "",
                                 homework_title: "",
                                 homework_description: "",
                                 homework_file_url: "",
@@ -5842,7 +5893,13 @@ export default function SuperAdminDashboard() {
                               alert("Erreur de mise à jour: " + error.message)
                             }
                           } else {
-                            const { data, error } = await supabase.from("bootcamp_sessions").insert([payload]).select().single()
+                            let { data, error } = await supabase.from("bootcamp_sessions").insert([payload]).select().single()
+                            if (error && isMissingPdfColumn(error)) {
+                              const retry = await supabase.from("bootcamp_sessions").insert([withoutPdf(payload)]).select().single()
+                              data = retry.data
+                              error = retry.error
+                              if (!error) warnMissingPdfColumn()
+                            }
                             if (!error && data) {
                               const updatedList = [...bootcampSessions, data as BootcampSession].sort((a,b) => (a.session_number || 0) - (b.session_number || 0))
                               setBootcampSessions(updatedList)
@@ -5862,6 +5919,8 @@ export default function SuperAdminDashboard() {
                                 ends_at: nextDates.ends_at,
                                 meet_url: "",
                                 recording_url: "",
+                                pdf_url: "",
+                                pdf_name: "",
                                 homework_title: "",
                                 homework_description: "",
                                 homework_file_url: "",
@@ -6068,6 +6127,11 @@ export default function SuperAdminDashboard() {
                                       <span>📅 {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "Non planifiée"}</span>
                                       {s.meet_url && <span className="text-primary font-semibold">Meet ✓</span>}
                                       {s.recording_url && <span className="text-emerald-400 font-semibold">Replay Video ✓</span>}
+                                      {s.pdf_url && (
+                                        <a href={s.pdf_url} target="_blank" rel="noreferrer" className="text-purple-600 font-semibold underline">
+                                          Support PDF ✓
+                                        </a>
+                                      )}
                                     </div>
                                     {s.homework_title && (
                                       <div className="text-[10px] text-amber-300/90 pt-0.5 flex items-center gap-1.5">
@@ -6117,6 +6181,8 @@ export default function SuperAdminDashboard() {
                           ends_at: "",
                           meet_url: "",
                           recording_url: "",
+                          pdf_url: "",
+                          pdf_name: "",
                           homework_title: "",
                           homework_description: "",
                           homework_file_url: "",

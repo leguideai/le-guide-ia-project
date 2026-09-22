@@ -1298,7 +1298,9 @@ export default function DashboardPage() {
           status: dynStatus,
           scheduledAt: s.scheduled_at,
           pdfUrl: s.pdf_url || null,
-          pdfName: s.pdf_url ? "Support_de_cours.pdf" : undefined,
+          pdfName: s.pdf_url
+            ? (s.pdf_name || decodeURIComponent(String(s.pdf_url).split("?")[0].split("/").pop() || "").replace(/^\d+_/, "") || "Support_de_cours.pdf")
+            : undefined,
           description: s.description || ""
         }
       })
@@ -2358,30 +2360,23 @@ export default function DashboardPage() {
 
                             {/* PDF Attachment (Slides de cours) */}
                             {activeLesson?.pdfUrl && (
-                              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                                {activeLesson.isUpcoming || selectedBootcamp.status === "upcoming" ? (
-                                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                                    <FileText className="size-4 text-slate-400" />
-                                    <span>Support PDF des slides : <strong className="text-amber-700 font-semibold">🔒 Disponible immédiatement après la session live</strong></span>
+                              <div className="pt-3 border-t border-slate-100">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-purple-200/80 bg-purple-50/60 p-3.5">
+                                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 min-w-0">
+                                    <FileText className="size-4 text-purple-600 shrink-0" />
+                                    <span className="truncate">Support de cours : {activeLesson.pdfName || "Support_de_cours.pdf"}</span>
                                   </div>
-                                ) : (
-                                  <div className="flex items-center justify-between w-full">
-                                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
-                                      <FileText className="size-4 text-purple-600" />
-                                      <span>Support PDF des slides : {activeLesson.pdfName || "Slides_Session.pdf"}</span>
-                                    </div>
-                                    <a
-                                      href={activeLesson.pdfUrl}
-                                      download
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="flex items-center gap-1.5 text-xs font-bold text-primary hover:underline cursor-pointer shrink-0"
-                                    >
-                                      <Download className="size-3.5" />
-                                      <span>Télécharger (PDF)</span>
-                                    </a>
-                                  </div>
-                                )}
+                                  <a
+                                    href={activeLesson.pdfUrl}
+                                    download
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-4 py-2 transition-colors cursor-pointer shrink-0"
+                                  >
+                                    <Download className="size-3.5" />
+                                    <span>Télécharger (PDF)</span>
+                                  </a>
+                                </div>
                               </div>
                             )}
 

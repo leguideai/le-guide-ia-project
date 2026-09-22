@@ -59,6 +59,42 @@ async function loadSubscriptionPricing() {
   }
 }
 
+// Slugs qui ne sont PAS des bootcamps (masterclasses, abonnement VIP lui-même)
+const NON_BOOTCAMP_SLUG_HINTS = ["masterclass", "subscription-vip", "abonnement", "pass-vip"]
+
+function isBootcampSlug(slug?: string | null): boolean {
+  const s = String(slug || "").toLowerCase().trim()
+  if (!s) return false
+  return !NON_BOOTCAMP_SLUG_HINTS.some(h => s.includes(h))
+}
+
+// Helper: un apprenant inscrit (et confirmé) à un Bootcamp bénéficie du Pass VIP offert 1 an.
+// On accepte l'inscription quel que soit le montant payé (y compris les inscriptions
+// manuelles admin à 0 FCFA), c'est le statut de l'inscription qui fait foi.
+async function findBootcampEnrollment(email: string): Promise<{ slug: string; since: string } | null> {
+  try {
+    const { data: ucRows } = await supabaseServer
+      .from("user_courses")
+      .select("*")
+      .ilike("user_email", email)
+      .in("status", ["active", "confirmed", "completed", "paye"])
+    const uc = (ucRows || []).find((r: any) => isBootcampSlug(r.course_slug))
+    if (uc) return { slug: uc.course_slug, since: uc.created_at || new Date().toISOString() }
+  } catch (_) {}
+
+  try {
+    const { data: regRows } = await supabaseServer
+      .from("registrations")
+      .select("*")
+      .ilike("email", email)
+      .in("status", ["paye", "confirmed", "active", "completed"])
+    const reg = (regRows || []).find((r: any) => isBootcampSlug(r.course_slug))
+    if (reg) return { slug: reg.course_slug, since: reg.created_at || new Date().toISOString() }
+  } catch (_) {}
+
+  return null
+}
+
 // GET: Check User Subscription Status & Pricing
 export async function GET(req: Request) {
   try {
@@ -97,6 +133,9 @@ export async function GET(req: Request) {
       .in("status", ["paye", "confirmed", "active"])
       .maybeSingle()
 
+    // Accès VIP offert aux inscrits Bootcamp (1 an inclus)
+    const bootcampEnroll = await findBootcampEnrollment(email)
+
     // Priorité à l'enregistrement actif le plus probant
     let activeSub: SubscriptionItem | null = null
     if (dbSub?.status === "active") {
@@ -123,6 +162,37 @@ export async function GET(req: Request) {
       activeSub = dbSub || mirrorSub || null
     }
 
+    // Un abonnement payant encore valide prime sur l'accès offert par le Bootcamp
+    const paidIsStillActive = Boolean(
+      activeSub &&
+      activeSub.status === "active" &&
+      new Date(activeSub.expires_at).getTime() > Date.now()
+    )
+
+    if (!paidIsStillActive && bootcampEnroll) {
+      const bcStartsAt = bootcampEnroll.since
+      const bcExpiresAt = calculateSubscriptionExpiry("bootcamp_vip", new Date(bcStartsAt)).toISOString()
+
+      // On n'accorde l'accès que si l'année offerte n'est pas déjà écoulée
+      if (new Date(bcExpiresAt).getTime() > Date.now()) {
+        return NextResponse.json({
+          isSubscribed: true,
+          hasBootcampAccess: true,
+          status: "active",
+          plan: "bootcamp_vip",
+          planLabel: "Accès VIP inclus — Bootcamp",
+          amount: 0,
+          paymentMethod: "Inclus avec votre Bootcamp",
+          transactionRef: `BOOTCAMP-${bootcampEnroll.slug}`,
+          bootcampSlug: bootcampEnroll.slug,
+          startsAt: bcStartsAt,
+          expiresAt: bcExpiresAt,
+          daysRemaining: getDaysRemaining(bcExpiresAt),
+          pricing
+        })
+      }
+    }
+
     if (activeSub) {
       const expiresAtDate = new Date(activeSub.expires_at)
       const now = new Date()
@@ -132,6 +202,7 @@ export async function GET(req: Request) {
       const effectiveStatus = (activeSub.status === "active" && isExpired) ? "expired" : activeSub.status
 
       return NextResponse.json({
+        hasBootcampAccess: false,
         isSubscribed: effectiveStatus === "active",
         status: effectiveStatus,
         plan: activeSub.plan,
@@ -148,6 +219,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       isSubscribed: false,
+      hasBootcampAccess: false,
       status: "none",
       daysRemaining: 0,
       pricing
