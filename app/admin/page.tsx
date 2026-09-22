@@ -948,6 +948,7 @@ export default function SuperAdminDashboard() {
     })
     setShowSessionModal(true)
   }
+  const [pdfColumnMissing, setPdfColumnMissing] = useState(false)
   const [sessionForm, setSessionForm] = useState<Partial<BootcampSession>>({
     session_number: 1,
     title: "",
@@ -5719,6 +5720,22 @@ export default function SuperAdminDashboard() {
                           preview="none"
                           hint="Si renseigné, le PDF devient visible et téléchargeable par les apprenants dans la session concernée."
                         />
+                        {pdfColumnMissing && (
+                          <div className="mt-2 rounded-xl border border-rose-300 bg-rose-50 p-3 text-[11px] text-rose-800 space-y-1">
+                            <p className="font-black uppercase tracking-wide">⚠️ Le support PDF n'a pas pu être enregistré</p>
+                            <p>
+                              La colonne <code className="font-mono bg-white px-1 rounded border border-rose-200">pdf_url</code> n'existe pas
+                              (ou pas encore) dans la table <code className="font-mono bg-white px-1 rounded border border-rose-200">bootcamp_sessions</code>.
+                              Le reste de la session a bien été sauvegardé.
+                            </p>
+                            <p className="font-semibold">
+                              Exécutez ceci dans le SQL Editor de Supabase, puis ré-enregistrez la session :
+                            </p>
+                            <pre className="bg-white border border-rose-200 rounded-lg p-2 overflow-x-auto font-mono text-[10px] leading-relaxed">{`ALTER TABLE public.bootcamp_sessions ADD COLUMN IF NOT EXISTS pdf_url TEXT;
+ALTER TABLE public.bootcamp_sessions ADD COLUMN IF NOT EXISTS pdf_name TEXT;
+NOTIFY pgrst, 'reload schema';`}</pre>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className="text-slate-600 block mb-1 font-bold">📚 Titre du devoir <span className="text-slate-400 font-normal">(Optionnel)</span></label>
@@ -5848,12 +5865,15 @@ export default function SuperAdminDashboard() {
                             const { pdf_url, pdf_name, ...rest } = obj
                             return rest
                           }
-                          const warnMissingPdfColumn = () =>
-                            alert("⚠️ La colonne 'pdf_url' n'existe pas encore dans bootcamp_sessions.\n\nExécutez le fichier supabase_bootcamp_sessions_pdf.sql dans le SQL Editor de Supabase pour activer le support de cours PDF.\n\nLa session a été enregistrée sans le PDF.")
+                          const warnMissingPdfColumn = () => {
+                            setPdfColumnMissing(true)
+                            alert("⚠️ La colonne 'pdf_url' n'existe pas encore dans bootcamp_sessions.\n\nExécutez le fichier supabase_bootcamp_sessions_pdf.sql dans le SQL Editor de Supabase, puis ré-enregistrez la session.\n\nLe reste de la session a bien été enregistré.")
+                          }
 
                           if (sessionForm.id) {
                             let savedPayload: any = payload
                             let { error } = await supabase.from("bootcamp_sessions").update(payload).eq("id", sessionForm.id)
+                            if (!error) setPdfColumnMissing(false)
                             if (error && isMissingPdfColumn(error)) {
                               savedPayload = withoutPdf(payload)
                               const retry = await supabase.from("bootcamp_sessions").update(savedPayload).eq("id", sessionForm.id)
@@ -5894,6 +5914,7 @@ export default function SuperAdminDashboard() {
                             }
                           } else {
                             let { data, error } = await supabase.from("bootcamp_sessions").insert([payload]).select().single()
+                            if (!error) setPdfColumnMissing(false)
                             if (error && isMissingPdfColumn(error)) {
                               const retry = await supabase.from("bootcamp_sessions").insert([withoutPdf(payload)]).select().single()
                               data = retry.data
