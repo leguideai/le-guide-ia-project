@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { supabase } from "@/lib/supabase"
 import { useUserEnrollments } from "@/lib/user-enrollments"
+import { hasCourseStarted } from "@/lib/courses-visibility"
 import { 
   countries, getCountryFlag, Country, 
   PHONE_RULES, formatPhoneNumber, parsePhoneNumber 
@@ -641,6 +642,47 @@ function CheckoutContent({ params }: PageProps) {
     } else if (paymentMethod === "paytech") {
       handlePayTechCheckout(e)
     }
+  }
+
+  // Garde-fou : le bouton « Réserver ma place » est désactivé côté catalogue,
+  // mais l'URL du checkout reste devinable. On bloque donc aussi le paiement
+  // dès que la cohorte a démarré.
+  if (courseData && hasCourseStarted(courseData)) {
+    return (
+      <main className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col">
+        <Header />
+        <div className="py-16 px-4 md:px-8">
+          <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-card p-8 sm:p-10 text-center space-y-5 shadow-xs">
+            <div className="size-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto">
+              <Clock className="size-7 text-amber-700" />
+            </div>
+            <h1 className="font-heading text-xl sm:text-2xl font-black text-foreground">
+              Cette cohorte a déjà démarré
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Les inscriptions à <strong className="text-foreground">{courseData.title}</strong> sont closes :
+              les sessions en direct ont commencé. Découvrez la prochaine cohorte ouverte,
+              ou accédez aux replays depuis votre espace membre.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
+              <Link
+                href="/bootcamp"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-bold px-6 py-3 text-xs hover:opacity-90 transition-all cursor-pointer"
+              >
+                <span>Voir les prochaines cohortes</span>
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/dashboard"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-foreground font-bold px-6 py-3 text-xs hover:bg-[#F5F8FF] transition-all cursor-pointer"
+              >
+                <span>Mon espace membre</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   return (

@@ -528,12 +528,34 @@ export function BootcampCalendar({
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
               {selectedEvent.eventType === "bootcamp_launch" ? (
                 <>
-                  <a
-                    href={selectedEvent.courseSlug ? `/bootcamp?course=${selectedEvent.courseSlug}` : "/bootcamp"}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-xs hover:opacity-95 transition-all cursor-pointer"
-                  >
-                    <span>🎟️ Réserver ma place à cette Rentrée</span>
-                  </a>
+                  {(() => {
+                    // Une rentrée déjà passée n'est plus réservable
+                    const launch = selectedEvent.date ? new Date(`${String(selectedEvent.date).split("T")[0]}T00:00:00`) : null
+                    const hasStarted = Boolean(launch && !isNaN(launch.getTime()) && Date.now() >= launch.getTime())
+
+                    if (hasStarted) {
+                      return (
+                        <button
+                          type="button"
+                          disabled
+                          aria-disabled="true"
+                          title="Cette rentrée a déjà démarré : les inscriptions sont closes."
+                          className="w-full py-3.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 font-black text-xs flex items-center justify-center gap-2 cursor-not-allowed"
+                        >
+                          <span>Rentrée démarrée — inscriptions closes</span>
+                        </button>
+                      )
+                    }
+
+                    return (
+                      <a
+                        href={selectedEvent.courseSlug ? `/bootcamp?course=${selectedEvent.courseSlug}` : "/bootcamp"}
+                        className="w-full py-3.5 rounded-xl bg-gradient-to-r from-primary to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-xs hover:opacity-95 transition-all cursor-pointer"
+                      >
+                        <span>🎟️ Réserver ma place à cette Rentrée</span>
+                      </a>
+                    )
+                  })()}
                 </>
               ) : (
                 <>

@@ -6,6 +6,35 @@ import { useRouter, usePathname } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Search, Menu, X, ChevronDown, Sparkles, BookOpen, GraduationCap, Building2, User, LogOut, ShieldCheck, CreditCard } from "lucide-react"
 import { setAuthRedirect } from "@/lib/auth-redirect"
+import { hasCourseStarted } from "@/lib/courses-visibility"
+
+/**
+ * Bandeau d'annonce. Tant que les inscriptions sont ouvertes c'est un lien vers
+ * le checkout ; dès que la cohorte a démarré il devient un bloc inerte, pour ne
+ * plus envoyer un visiteur payer une place dans une session déjà lancée.
+ */
+function AnnouncementBar({
+  closed,
+  href,
+  children
+}: {
+  closed: boolean
+  href: string
+  children: React.ReactNode
+}) {
+  const base =
+    "block bg-gradient-to-r from-primary via-blue-600 to-[#D4AF37] text-white text-[11px] font-extrabold py-2 px-3 text-center shadow-xs group"
+
+  if (closed) {
+    return <div className={`${base} cursor-default`} aria-disabled="true">{children}</div>
+  }
+
+  return (
+    <Link href={href} className={`${base} transition-all hover:opacity-95`}>
+      {children}
+    </Link>
+  )
+}
 
 function getOfferEndTimestamp(rawDate?: string | null): number | null {
   if (!rawDate || String(rawDate).trim() === "") return null
@@ -105,6 +134,7 @@ export function Header() {
   const [announcementMobilePrice, setAnnouncementMobilePrice] = useState("")
   const [announcementCta, setAnnouncementCta] = useState("")
   const [announcementHref, setAnnouncementHref] = useState("/checkout/bootcamp-ia-pro")
+  const [registrationsClosed, setRegistrationsClosed] = useState(false)
 
   useEffect(() => {
     async function loadAnnouncement() {
@@ -134,7 +164,12 @@ export function Header() {
           return (a.sequence_order ?? 0) - (b.sequence_order ?? 0)
         })
 
-        const course = activeCourses[0] || courses?.[0]
+        // Une cohorte déjà démarrée ne doit plus être mise en avant :
+        // on promeut la prochaine encore ouverte aux inscriptions.
+        const openCourses = activeCourses.filter(c => !hasCourseStarted(c))
+        const course = openCourses[0] || activeCourses[0] || courses?.[0]
+
+        setRegistrationsClosed(hasCourseStarted(course))
 
         if (course) {
           setCourseTitle(course.title || "Bootcamp IA")
@@ -267,17 +302,18 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full bg-white border-b border-border/80 backdrop-blur-xl">
       
       {/* Top Announcement Bar - 100% Responsive Mobile & Desktop */}
-      <Link 
+      {/* Cohorte démarrée : le bandeau reste informatif mais n'est plus cliquable */}
+      <AnnouncementBar
+        closed={registrationsClosed}
         href={announcementHref}
-        className="block bg-gradient-to-r from-primary via-blue-600 to-[#D4AF37] text-white text-[11px] font-extrabold py-2 px-3 text-center transition-all hover:opacity-95 shadow-xs group"
       >
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-1.5 sm:gap-2 leading-tight flex-wrap sm:flex-nowrap">
-          <Sparkles className="size-3.5 shrink-0 animate-pulse text-[#8A6A1F] hidden xs:inline-block" />
+          <Sparkles className="size-3.5 shrink-0 animate-pulse text-[#F3E5AB] hidden xs:inline-block" />
           
           {/* Version Mobile : Date clairement visible + Effet Promo avec prix barré */}
           <div className="inline sm:hidden text-[10.5px] xs:text-[11px] font-bold tracking-tight">
             <span>🔥 {courseTitle} • </span>
-            <span className="text-[#8A6A1F] font-black underline decoration-amber-300/60 underline-offset-2">
+            <span className="text-[#F3E5AB] font-black underline decoration-amber-200/70 underline-offset-2">
               {announcementMobileText}
             </span>
           </div>
@@ -288,10 +324,10 @@ export function Header() {
             {isPromoActiveState && discountPercentState ? (
               <span className="inline-flex items-center gap-1.5 bg-black/30 px-2.5 py-0.5 rounded-full border border-slate-200">
                 
-                <span className="line-through text-slate-500 text-[10px]">
+                <span className="line-through text-white/70 text-[10px]">
                   {originalPriceDisplay}
                 </span>
-                <span className="text-[#8A6A1F] font-black text-xs">
+                <span className="text-[#F3E5AB] font-black text-xs">
                   {promoPriceDisplay}
                 </span>
               </span>
@@ -301,7 +337,11 @@ export function Header() {
           </div>
 
           {/* Badge CTA Mobile & Desktop */}
-          <span className="inline-flex items-center gap-1.5 font-black bg-white sm:bg-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#F3E5AB]/30 shrink-0 text-[10px] sm:text-[11px] group-hover:bg-[#F3E5AB] group-hover:text-slate-950 transition-all text-[#8A6A1F]">
+          <span className={`inline-flex items-center gap-1.5 font-black px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shrink-0 text-[10px] sm:text-[11px] transition-all ${
+            registrationsClosed
+              ? "bg-white/70 border border-white/50 text-slate-500 cursor-not-allowed"
+              : "bg-white border border-[#F3E5AB]/30 text-[#8A6A1F] group-hover:bg-[#F3E5AB] group-hover:text-slate-950"
+          }`}>
             {/* Sur Mobile : prix barré + prix promo si actif */}
             <span className="inline sm:hidden flex items-center gap-1">
               {isPromoActiveState && originalPriceDisplay && (
@@ -309,14 +349,14 @@ export function Header() {
                   {originalPriceDisplay.replace(" FCFA", "")}
                 </span>
               )}
-              <span>{announcementMobilePrice || "Réserver →"}</span>
+              <span>{registrationsClosed ? "Inscriptions closes" : (announcementMobilePrice || "Réserver →")}</span>
             </span>
 
             {/* Sur Desktop */}
-            <span className="hidden sm:inline">{announcementCta}</span>
+            <span className="hidden sm:inline">{registrationsClosed ? "Cohorte démarrée · Inscriptions closes" : announcementCta}</span>
           </span>
         </div>
-      </Link>
+      </AnnouncementBar>
 
       {/* Main Navbar */}
       <div className="mx-auto max-w-7xl px-4 md:px-8 h-16 flex items-center justify-between gap-4">

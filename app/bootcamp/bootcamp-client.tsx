@@ -12,7 +12,7 @@ import { GridBackground } from "@/components/grid-background"
 import { GraduationCap, UserCheck, Gift, ArrowRight, Sparkles, CheckCircle2, Calendar, Globe, Download, Clock } from "lucide-react"
 
 import { supabase } from "@/lib/supabase"
-import { isCourseOpenForPublic, getCourseVisibilityStatus } from "@/lib/courses-visibility"
+import { isCourseOpenForPublic, getCourseVisibilityStatus, hasCourseStarted } from "@/lib/courses-visibility"
 import { useUserEnrollments } from "@/lib/user-enrollments"
 
 function BootcampContent() {
@@ -370,6 +370,17 @@ function BootcampContent() {
                       <span>⏳ Inscription en cours de traitement · Espace Membre</span>
                       <ArrowRight className="size-4" />
                     </Link>
+                  ) : hasCourseStarted(active) ? (
+                    <button
+                      type="button"
+                      disabled
+                      aria-disabled="true"
+                      title="Cette cohorte a déjà démarré : les inscriptions sont closes."
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-xs md:text-sm font-black bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed"
+                    >
+                      <Clock className="size-4" />
+                      <span>Bootcamp démarré — inscriptions closes</span>
+                    </button>
                   ) : isCourseOpenForPublic(active) ? (
                     <Link
                       href={active?.price === 0 || active?.price === "0" || active?.price === "GRATUIT" ? "/register-account" : `/checkout/${active?.slug || active?.id}?id=${active?.id || ""}${isOfferExpired ? "&tier=standard" : ""}`}
