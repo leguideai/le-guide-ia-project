@@ -30,17 +30,17 @@ export const metadata: Metadata = {
     'Transformation digitale PME',
   ],
   alternates: {
-    canonical: 'https://leguideai.com/entreprises',
+    canonical: 'https://leguideia.ai/entreprises',
   },
   openGraph: {
     title: 'Formation IA pour Entreprises & Dirigeants | Le Guide IA',
     description:
       'Boostez la performance de vos équipes grâce à l\'IA générative. Formations certifiantes intra-entreprise et coaching stratégique pour dirigeants.',
-    url: 'https://leguideai.com/entreprises',
+    url: 'https://leguideia.ai/entreprises',
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/og-image.jpg',
+        url: 'https://leguideia.ai/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Formation IA Entreprises & Dirigeants — Le Guide IA',
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: 'Formation IA pour Entreprises & Dirigeants | Le Guide IA',
     description:
       'Accompagnement et formation IA sur mesure pour équipes et comités de direction. Développez l\'avantage concurrentiel de votre entreprise.',
-    images: ['https://leguideai.com/og-image.jpg'],
+    images: ['https://leguideia.ai/og-image.jpg'],
   },
 }
 

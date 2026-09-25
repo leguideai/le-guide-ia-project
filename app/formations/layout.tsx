@@ -23,17 +23,17 @@ export const metadata: Metadata = {
     'Parcours IA certifiant',
   ],
   alternates: {
-    canonical: 'https://leguideai.com/formations',
+    canonical: 'https://leguideia.ai/formations',
   },
   openGraph: {
     title: 'Catalogue des Formations IA Certifiantes | Le Guide IA',
     description:
       'Formations pratiques pour booster votre carrière et vos revenus grâce à l\'intelligence artificielle.',
-    url: 'https://leguideai.com/formations',
+    url: 'https://leguideia.ai/formations',
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/og-image.jpg',
+        url: 'https://leguideia.ai/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Catalogue Formations IA — Le Guide IA',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Catalogue des Formations IA Certifiantes | Le Guide IA',
     description:
       'Trouvez la formation IA adaptée à vos objectifs professionnels avec Le Guide IA.',
-    images: ['https://leguideai.com/og-image.jpg'],
+    images: ['https://leguideia.ai/og-image.jpg'],
   },
 }
 

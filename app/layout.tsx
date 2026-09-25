@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-export const metadataBase = new URL('https://leguideai.com')
+export const metadataBase = new URL('https://leguideia.ai')
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -96,31 +96,31 @@ export const metadata: Metadata = {
     'Certification IA',
     'Certificat IA',
   ],
-  authors: [{ name: 'Alfred Dah - Le Guide IA', url: 'https://leguideai.com' }],
+  authors: [{ name: 'Alfred Dah - Le Guide IA', url: 'https://leguideia.ai' }],
   metadataBase,
   publisher: 'Le Guide IA',
   verification: {
     google: 'gyjctmFrz-g1vy-5Mfq5F3ZHC1gxz8q0Bgtaf-mRI20',
   },
   alternates: {
-    canonical: 'https://leguideai.com',
+    canonical: 'https://leguideia.ai',
     languages: {
-      'fr-FR': 'https://leguideai.com',
-      fr: 'https://leguideai.com',
+      'fr-FR': 'https://leguideia.ai',
+      fr: 'https://leguideia.ai',
     },
   },
   openGraph: {
     title: 'Le Guide IA — Formations & Bootcamps en Intelligence Artificielle',
     description:
       'Maîtrisez l\'IA générative pratique : ChatGPT, Claude, Gemini, Automatisation. Formations certifiantes animées par Alfred Dah pour professionnels, entrepreneurs et entreprises.',
-    url: 'https://leguideai.com',
+    url: 'https://leguideia.ai',
     siteName: 'Le Guide IA',
     type: 'website',
     locale: 'fr_FR',
     alternateLocale: ['fr'],
     images: [
       {
-        url: 'https://leguideai.com/og-image.jpg',
+        url: 'https://leguideia.ai/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Le Guide IA – Formations Intelligence Artificielle avec Alfred Dah',
@@ -132,7 +132,7 @@ export const metadata: Metadata = {
     title: 'Le Guide IA — Formations & Bootcamps en Intelligence Artificielle',
     description:
       'Formations certifiantes, Masterclasses gratuites et Bootcamps intensifs en IA avec Alfred Dah. Boostez votre productivité et vos compétences.',
-    images: ['https://leguideai.com/og-image.jpg'],
+    images: ['https://leguideia.ai/og-image.jpg'],
     site: '@leguideia',
     creator: '@leguideia',
   },
@@ -220,12 +220,12 @@ export default function RootLayout({
               '@graph': [
                 {
                   '@type': 'Organization',
-                  '@id': 'https://leguideai.com/#organization',
+                  '@id': 'https://leguideia.ai/#organization',
                   name: 'Le Guide IA',
-                  url: 'https://leguideai.com',
+                  url: 'https://leguideia.ai',
                   logo: {
                     '@type': 'ImageObject',
-                    url: 'https://leguideai.com/Logo%20avatar.png',
+                    url: 'https://leguideia.ai/Logo%20avatar.png',
                   },
                   sameAs: [
                     'https://www.linkedin.com/in/alfreddah/',
@@ -235,16 +235,16 @@ export default function RootLayout({
                 },
                 {
                   '@type': 'EducationalOrganization',
-                  '@id': 'https://leguideai.com/#edu-organization',
+                  '@id': 'https://leguideia.ai/#edu-organization',
                   name: 'Le Guide IA',
                   alternateName: ['LeGuideIA', 'Le Guide IA Formation', 'LGIA'],
-                  url: 'https://leguideai.com',
+                  url: 'https://leguideia.ai',
                   logo: {
                     '@type': 'ImageObject',
-                    url: 'https://leguideai.com/Logo%20avatar.png',
+                    url: 'https://leguideia.ai/Logo%20avatar.png',
                   },
                   founder: {
-                    '@id': 'https://leguideai.com/#person',
+                    '@id': 'https://leguideia.ai/#person',
                   },
                   areaServed: [
                     {
@@ -273,15 +273,15 @@ export default function RootLayout({
                 },
                 {
                   '@type': 'Person',
-                  '@id': 'https://leguideai.com/#person',
+                  '@id': 'https://leguideia.ai/#person',
                   name: 'Alfred Dah',
                   givenName: 'Alfred',
                   familyName: 'Dah',
                   alternateName: ['Sanson Alfred Tanguy Dah', 'Alfred Dah IA', 'Alfred Dah Le Guide IA'],
                   jobTitle: 'Expert IA & Fondateur de Le Guide IA',
                   description: 'Fondateur de Le Guide IA. Plus de 24 ans d\'expérience professionnelle en transformation digitale, audit de systèmes d\'information et gouvernance IA.',
-                  image: 'https://leguideai.com/profile_alfred.jpg',
-                  url: 'https://leguideai.com',
+                  image: 'https://leguideia.ai/profile_alfred.jpg',
+                  url: 'https://leguideia.ai',
                   sameAs: ['https://www.linkedin.com/in/alfreddah/'],
                   knowsAbout: [
                     'Intelligence Artificielle',
@@ -293,44 +293,44 @@ export default function RootLayout({
                     'Gouvernance des Systèmes d\'Information'
                   ],
                   worksFor: {
-                    '@id': 'https://leguideai.com/#organization',
+                    '@id': 'https://leguideia.ai/#organization',
                   },
                 },
                 {
                   '@type': 'WebSite',
-                  '@id': 'https://leguideai.com/#website',
-                  url: 'https://leguideai.com',
+                  '@id': 'https://leguideia.ai/#website',
+                  url: 'https://leguideia.ai',
                   name: 'Le Guide IA',
                   description:
                     'Plateforme leader de formation en Intelligence Artificielle en Afrique et Diaspora. Bootcamps, Masterclasses gratuites et certifications.',
                   publisher: {
-                    '@id': 'https://leguideai.com/#organization',
+                    '@id': 'https://leguideia.ai/#organization',
                   },
                   potentialAction: {
                     '@type': 'SearchAction',
                     target: {
                       '@type': 'EntryPoint',
-                      urlTemplate: 'https://leguideai.com/ressources?q={search_term_string}',
+                      urlTemplate: 'https://leguideia.ai/ressources?q={search_term_string}',
                     },
                     'query-input': 'required name=search_term_string',
                   },
                 },
                 {
                   '@type': 'Course',
-                  '@id': 'https://leguideai.com/#course',
+                  '@id': 'https://leguideia.ai/#course',
                   name: 'Bootcamp IA & Carrière Certifiant',
                   description:
                     'Formation pratique et intensive en ligne pour maîtriser ChatGPT, Claude, Gemini, l\'automatisation et Canva IA avec des cas professionnels concrets.',
                   provider: {
-                    '@id': 'https://leguideai.com/#organization',
+                    '@id': 'https://leguideia.ai/#organization',
                   },
-                  url: 'https://leguideai.com/bootcamp',
+                  url: 'https://leguideia.ai/bootcamp',
                   hasCourseInstance: {
                     '@type': 'CourseInstance',
                     courseMode: 'online',
                     courseWorkload: 'PT15H',
                     instructor: {
-                      '@id': 'https://leguideai.com/#person',
+                      '@id': 'https://leguideia.ai/#person',
                     },
                   },
                   offers: [
@@ -340,7 +340,7 @@ export default function RootLayout({
                       price: '99000',
                       priceCurrency: 'XOF',
                       availability: 'https://schema.org/InStock',
-                      url: 'https://leguideai.com/bootcamp',
+                      url: 'https://leguideia.ai/bootcamp',
                     },
                     {
                       '@type': 'Offer',
@@ -348,7 +348,7 @@ export default function RootLayout({
                       price: '199000',
                       priceCurrency: 'XOF',
                       availability: 'https://schema.org/InStock',
-                      url: 'https://leguideai.com/bootcamp',
+                      url: 'https://leguideia.ai/bootcamp',
                     },
                   ],
                   aggregateRating: {
@@ -407,7 +407,7 @@ export default function RootLayout({
                 },
                 {
                   '@type': 'EducationEvent',
-                  '@id': 'https://leguideai.com/#masterclass-event',
+                  '@id': 'https://leguideia.ai/#masterclass-event',
                   name: 'Masterclass IA Interactive en Direct',
                   description:
                     'Session hebdomadaire gratuite en direct animée par Alfred Dah sur Google Meet. Démonstrations d\'outils IA, prompting avancé et Q&A interactif.',
@@ -415,13 +415,13 @@ export default function RootLayout({
                   eventStatus: 'https://schema.org/EventScheduled',
                   location: {
                     '@type': 'VirtualLocation',
-                    url: 'https://leguideai.com/masterclass',
+                    url: 'https://leguideia.ai/masterclass',
                   },
                   organizer: {
-                    '@id': 'https://leguideai.com/#organization',
+                    '@id': 'https://leguideia.ai/#organization',
                   },
                   performer: {
-                    '@id': 'https://leguideai.com/#person',
+                    '@id': 'https://leguideia.ai/#person',
                   },
                   isAccessibleForFree: true,
                   offers: {
@@ -430,12 +430,12 @@ export default function RootLayout({
                     price: '0',
                     priceCurrency: 'XOF',
                     availability: 'https://schema.org/InStock',
-                    url: 'https://leguideai.com/masterclass',
+                    url: 'https://leguideia.ai/masterclass',
                   },
                 },
                 {
                   '@type': 'FAQPage',
-                  '@id': 'https://leguideai.com/#faq',
+                  '@id': 'https://leguideia.ai/#faq',
                   mainEntity: [
                     {
                       '@type': 'Question',

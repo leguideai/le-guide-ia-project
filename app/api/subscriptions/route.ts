@@ -349,7 +349,7 @@ export async function POST(req: Request) {
     // 4. Si Stripe : Générer la session Stripe Checkout officielle et retourner l'URL de redirection
     if (isStripe) {
       const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideai.com")
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideia.ai")
 
       if (!stripeSecretKey) {
         console.warn("Stripe Secret Key not configured. Simulating Stripe redirect URL.")

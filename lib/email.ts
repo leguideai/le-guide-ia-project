@@ -19,7 +19,7 @@ export async function sendRegistrationEmail(name: string, email: string) {
     }
 
     const firstName = name.split(' ')[0]
-    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre inscription au Bootcamp PRO 2 par LE GUIDE IA a bien été enregistrée.\n\nDétails de la formation :\n- Dates : Du 31 Août au 6 Septembre 2026\n- Format : 7 Sessions intensives en direct + Replays\n- Instructeur : Alfred Dah (Expert & IA)\n\nPour accéder à votre espace membre : https://leguideai.com/login\n\nÀ très bientôt,\nL'équipe LE GUIDE IA & Alfred Dah`
+    const textContent = `Bonjour ${firstName},\n\nFélicitations ! Votre inscription au Bootcamp PRO 2 par LE GUIDE IA a bien été enregistrée.\n\nDétails de la formation :\n- Dates : Du 31 Août au 6 Septembre 2026\n- Format : 7 Sessions intensives en direct + Replays\n- Instructeur : Alfred Dah (Expert & IA)\n\nPour accéder à votre espace membre : https://leguideia.ai/login\n\nÀ très bientôt,\nL'équipe LE GUIDE IA & Alfred Dah`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -62,7 +62,7 @@ export async function sendRegistrationEmail(name: string, email: string) {
 
               <p>Pour accéder dès maintenant à votre espace apprenant et consulter le programme détaillé :</p>
               <p style="text-align: center;">
-                <a href="https://leguideai.com/login" class="cta-button">Accéder à mon Espace Membre</a>
+                <a href="https://leguideia.ai/login" class="cta-button">Accéder à mon Espace Membre</a>
               </p>
               
               <p>Si vous avez la moindre question, répondez directement à cet email ou contactez-nous sur WhatsApp.</p>
@@ -93,7 +93,7 @@ export async function sendPaymentConfirmationEmail(name: string, email: string, 
     }
 
     const firstName = name.split(' ')[0]
-    const textContent = `Bonjour ${firstName},\n\nNous avons bien reçu votre demande de validation de paiement pour le Bootcamp PRO 2.\nMoyen de paiement : ${method}\nStatut : En cours de vérification par notre équipe (sous 24h)\n\nDès la validation, votre accès sera activé dans votre Espace Membre : https://leguideai.com/dashboard\n\nMerci pour votre confiance,\nL'équipe LE GUIDE IA`
+    const textContent = `Bonjour ${firstName},\n\nNous avons bien reçu votre demande de validation de paiement pour le Bootcamp PRO 2.\nMoyen de paiement : ${method}\nStatut : En cours de vérification par notre équipe (sous 24h)\n\nDès la validation, votre accès sera activé dans votre Espace Membre : https://leguideia.ai/dashboard\n\nMerci pour votre confiance,\nL'équipe LE GUIDE IA`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -135,7 +135,7 @@ export async function sendPaymentConfirmationEmail(name: string, email: string, 
               <p>Dès la validation effective de la transaction, votre accès complet au Bootcamp et à toutes les ressources sera activé dans votre Espace Membre.</p>
               
               <p style="text-align: center;">
-                <a href="https://leguideai.com/dashboard" class="cta-button">Voir mon Espace Membre</a>
+                <a href="https://leguideia.ai/dashboard" class="cta-button">Voir mon Espace Membre</a>
               </p>
               
               <p>Merci pour votre confiance !<br><strong>L'équipe LE GUIDE IA</strong></p>
@@ -188,7 +188,7 @@ export async function sendManualEnrollmentEmail(params: ManualEnrollmentEmailPar
     const firstName = fullName ? fullName.split(' ')[0] : email.split('@')[0]
     const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideai.com"
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideia.ai"
     const loginUrl = `${siteUrl}/login`
     const dashboardUrl = `${siteUrl}/dashboard`
 
@@ -349,7 +349,7 @@ export async function sendAdminNewEnrollmentNotification(params: AdminNewEnrollm
 
     const targetAdmins = Array.from(new Set(adminEmails))
     const cleanPhone = (whatsapp || '').replace(/[^0-9]/g, '')
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leguideai.com'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leguideia.ai'
     const adminUrl = `${siteUrl}/admin`
     const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
     const hasDeduction = subscriptionCredit && Number(subscriptionCredit) > 0
@@ -521,7 +521,7 @@ export async function sendStripeSuccessEmail(params: StripeSuccessEmailParams) {
     const formattedOriginal = originalPrice ? (typeof originalPrice === "number" ? `${originalPrice.toLocaleString('fr-FR')} FCFA` : String(originalPrice)) : null
     const formattedDeduction = hasDeduction ? `${Number(subscriptionCredit).toLocaleString('fr-FR')} FCFA` : null
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideai.com"
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://leguideia.ai"
     const loginUrl = `${siteUrl}/login`
     const dashboardUrl = `${siteUrl}/dashboard`
 
@@ -937,7 +937,7 @@ export async function sendMasterclassPlatformInvitationEmail(
     const sessionTitle = session.title || "Masterclass IA Interactive en Direct"
     const instructor = session.instructor || "Alfred Dah"
     const dateFormatted = session.dateDisplay || (session.scheduledAt ? new Date(session.scheduledAt).toLocaleString("fr-FR", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : "Ce Dimanche à 19h00 GMT")
-    const registerUrl = `https://leguideai.com/masterclass?auto_register=true&email=${encodeURIComponent(email)}`
+    const registerUrl = `https://leguideia.ai/masterclass?auto_register=true&email=${encodeURIComponent(email)}`
 
     const subject = `🎙️ Invitation Spéciale : Prochaine Masterclass IA avec ${instructor}`
 
@@ -1160,7 +1160,7 @@ export async function forwardB2BQuoteToAlfred(params: B2BQuoteEmailParams & { cu
     const { companyName, contactName, email, phone, serviceType = "Formation & Audit IA", companySize = "10-50", message, customNote } = params
 
     const subject = `📥 [DEVIS B2B] Nouvelle demande transmise : ${companyName} (${contactName})`
-    const textContent = `Bonjour Alfred,\n\nUne demande de devis B2B a été transmise depuis le Dashboard d'administration :\n\n- Entreprise : ${companyName}\n- Contact : ${contactName}\n- Email : ${email}\n- Téléphone / WhatsApp : ${phone || 'Non renseigné'}\n- Service souhaité : ${serviceType}\n- Effectif estimé : ${companySize}\n- Message / Besoins : ${message || 'Non renseigné'}\n${customNote ? `\nNote : ${customNote}\n` : ''}\nLien Admin : https://leguideai.com/admin\n\nÀ très vite,\nConsole Admin Le Guide IA`
+    const textContent = `Bonjour Alfred,\n\nUne demande de devis B2B a été transmise depuis le Dashboard d'administration :\n\n- Entreprise : ${companyName}\n- Contact : ${contactName}\n- Email : ${email}\n- Téléphone / WhatsApp : ${phone || 'Non renseigné'}\n- Service souhaité : ${serviceType}\n- Effectif estimé : ${companySize}\n- Message / Besoins : ${message || 'Non renseigné'}\n${customNote ? `\nNote : ${customNote}\n` : ''}\nLien Admin : https://leguideia.ai/admin\n\nÀ très vite,\nConsole Admin Le Guide IA`
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -1406,7 +1406,7 @@ export async function sendAdminNewSubscriptionNotification(params: AdminNewSubsc
 
     const targetAdmins = Array.from(new Set(adminEmails))
     const cleanPhone = (whatsapp || '').replace(/[^0-9]/g, '')
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leguideai.com'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://leguideia.ai'
     const adminUrl = `${siteUrl}/admin`
     const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
 
@@ -1534,7 +1534,7 @@ export async function sendSubscriptionPendingEmail(name: string, email: string, 
     const firstName = name.split(' ')[0]
     const formattedAmount = typeof amount === "number" ? `${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : String(amount)
 
-    const textContent = `Bonjour ${firstName},\n\nNous avons bien reçu votre demande de souscription à l'abonnement VIP LE GUIDE IA (${planLabel}).\nMontant : ${formattedAmount}\nMoyen de paiement : ${paymentMethod}\n\nVotre accès sera activé par notre équipe dès vérification de votre transaction (sous 2 à 4 heures max).\n\nDès validation, vous recevrez un email de confirmation et vos accès aux Replays Masterclasses et à la Bibliothèque de Prompts seront débloqués dans votre Espace Membre : https://leguideai.com/dashboard\n\nMerci pour votre confiance,\nL'équipe LE GUIDE IA & Alfred Dah`
+    const textContent = `Bonjour ${firstName},\n\nNous avons bien reçu votre demande de souscription à l'abonnement VIP LE GUIDE IA (${planLabel}).\nMontant : ${formattedAmount}\nMoyen de paiement : ${paymentMethod}\n\nVotre accès sera activé par notre équipe dès vérification de votre transaction (sous 2 à 4 heures max).\n\nDès validation, vous recevrez un email de confirmation et vos accès aux Replays Masterclasses et à la Bibliothèque de Prompts seront débloqués dans votre Espace Membre : https://leguideia.ai/dashboard\n\nMerci pour votre confiance,\nL'équipe LE GUIDE IA & Alfred Dah`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -1577,7 +1577,7 @@ export async function sendSubscriptionPendingEmail(name: string, email: string, 
               
               <p>Vous pouvez consulter l'état de votre abonnement à tout moment dans votre Espace Membre :</p>
               <p style="text-align: center; margin: 24px 0;">
-                <a href="https://leguideai.com/dashboard" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; display: inline-block;">Accéder à mon Espace Membre</a>
+                <a href="https://leguideia.ai/dashboard" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; display: inline-block;">Accéder à mon Espace Membre</a>
               </p>
 
               <p>Si vous avez la moindre question, écrivez-nous directement à <a href="mailto:alfred@leguideai.com" style="color: #60a5fa;">alfred@leguideai.com</a> ou sur WhatsApp.</p>
@@ -1611,7 +1611,7 @@ export async function sendSubscriptionActivatedEmail(name: string, email: string
       year: "numeric"
     })
 
-    const textContent = `Bonjour ${firstName},\n\n🎉 Félicitations ! Votre abonnement VIP LE GUIDE IA (${planLabel}) est désormais ACTIF.\nDate de validité : Jusqu'au ${formattedDate}\n\nCe qui est désormais débloqué sur votre compte :\n✓ Accès illimité à tous les Replays des Masterclasses en HD\n✓ Accès complet à la Bibliothèque de Prompts IA & Modèles Business Plans\n✓ Nouveautés et mises à jour continues\n\nAccédez à vos contenus dès maintenant : https://leguideai.com/dashboard\n\nExcellente formation,\nAlfred Dah & L'équipe LE GUIDE IA`
+    const textContent = `Bonjour ${firstName},\n\n🎉 Félicitations ! Votre abonnement VIP LE GUIDE IA (${planLabel}) est désormais ACTIF.\nDate de validité : Jusqu'au ${formattedDate}\n\nCe qui est désormais débloqué sur votre compte :\n✓ Accès illimité à tous les Replays des Masterclasses en HD\n✓ Accès complet à la Bibliothèque de Prompts IA & Modèles Business Plans\n✓ Nouveautés et mises à jour continues\n\nAccédez à vos contenus dès maintenant : https://leguideia.ai/dashboard\n\nExcellente formation,\nAlfred Dah & L'équipe LE GUIDE IA`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -1656,7 +1656,7 @@ export async function sendSubscriptionActivatedEmail(name: string, email: string
               </div>
 
               <div style="text-align: center; margin: 28px 0;">
-                <a href="https://leguideai.com/dashboard" class="btn">Accéder à mes Contenus VIP</a>
+                <a href="https://leguideia.ai/dashboard" class="btn">Accéder à mes Contenus VIP</a>
               </div>
 
               <p>Si vous avez des questions ou besoin d'assistance, notre équipe reste à votre entière disposition.</p>
@@ -1700,7 +1700,7 @@ export async function sendSubscriptionExpiringSoonEmail(
       ? "expire demain" 
       : `arrive à échéance dans ${daysRemaining} jours`
 
-    const textContent = `Bonjour ${firstName},\n\n⏳ Votre abonnement VIP LE GUIDE IA (${planLabel}) ${urgencyText} (le ${formattedDate}).\n\nPour conserver vos accès ininterrompus à tous les Replays HD et à la bibliothèque de Prompts IA métier, vous pouvez renouveler votre Pass en 1 clic :\nhttps://leguideai.com/dashboard?tab=subscription\n\nExcellente continuation,\nAlfred Dah & L'équipe LE GUIDE IA`
+    const textContent = `Bonjour ${firstName},\n\n⏳ Votre abonnement VIP LE GUIDE IA (${planLabel}) ${urgencyText} (le ${formattedDate}).\n\nPour conserver vos accès ininterrompus à tous les Replays HD et à la bibliothèque de Prompts IA métier, vous pouvez renouveler votre Pass en 1 clic :\nhttps://leguideia.ai/dashboard?tab=subscription\n\nExcellente continuation,\nAlfred Dah & L'équipe LE GUIDE IA`
 
     const data = await resend.emails.send({
       from: fromEmail,
@@ -1747,7 +1747,7 @@ export async function sendSubscriptionExpiringSoonEmail(
               <p>Pour éviter toute interruption de vos accès, vous pouvez prolonger votre Pass VIP dès aujourd'hui (vos jours restants sont automatiquement cumulés) :</p>
 
               <div style="text-align: center; margin: 28px 0;">
-                <a href="https://leguideai.com/dashboard?tab=subscription" class="btn">Renouveler mon Pass VIP en 1 Clic</a>
+                <a href="https://leguideia.ai/dashboard?tab=subscription" class="btn">Renouveler mon Pass VIP en 1 Clic</a>
               </div>
 
               <p>Besoin d'assistance ? Répondez simplement à cet email ou contactez-nous directement sur WhatsApp.</p>

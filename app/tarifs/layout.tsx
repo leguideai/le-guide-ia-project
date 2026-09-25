@@ -23,17 +23,17 @@ export const metadata: Metadata = {
     'Abonnement prompts ChatGPT',
   ],
   alternates: {
-    canonical: 'https://leguideai.com/tarifs',
+    canonical: 'https://leguideia.ai/tarifs',
   },
   openGraph: {
     title: 'Tarifs & Abonnements IA — Bootcamps, Replays & Prompts | Le Guide IA',
     description:
       'Consultez nos tarifs officiels clairs et sans frais cachés : pass replays & prompts dès 3 000 FCFA/mois, bootcamps certifiants en direct et offres B2B.',
-    url: 'https://leguideai.com/tarifs',
+    url: 'https://leguideia.ai/tarifs',
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/og-image.jpg',
+        url: 'https://leguideia.ai/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Tarifs et Abonnements — Le Guide IA',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Tarifs & Abonnements IA | Le Guide IA',
     description:
       'Tous nos tarifs : abonnements replays & prompts, bootcamps intensifs certifiants et formations sur-mesure.',
-    images: ['https://leguideai.com/og-image.jpg'],
+    images: ['https://leguideia.ai/og-image.jpg'],
   },
 }
 

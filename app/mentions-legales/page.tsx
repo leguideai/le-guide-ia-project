@@ -4,7 +4,7 @@ import { Header } from "@/components/header"
 
 export const metadata: Metadata = {
   title: "Mentions Légales | Le Guide IA",
-  description: "Mentions légales du site leguideai.com — Le Guide IA, formation intelligence artificielle.",
+  description: "Mentions légales du site leguideia.ai — Le Guide IA, formation intelligence artificielle.",
   robots: { index: false, follow: false },
 }
 
@@ -21,7 +21,7 @@ export default function MentionsLegalesPage() {
         <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
           <section>
             <h2 className="font-heading text-lg font-bold text-foreground mb-3">1. Éditeur du site</h2>
-            <p>Le site <strong className="text-foreground">leguideai.com</strong> est édité par :</p>
+            <p>Le site <strong className="text-foreground">leguideia.ai</strong> est édité par :</p>
             <ul className="mt-3 space-y-1 list-disc list-inside">
               <li><strong className="text-foreground">Responsable de publication :</strong> Alfred Dah</li>
               <li><strong className="text-foreground">Dénomination :</strong> Le Guide IA</li>

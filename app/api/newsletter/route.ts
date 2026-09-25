@@ -93,7 +93,7 @@ export async function POST(req: Request) {
           to: [emailClean],
           replyTo: "alfred@leguideai.com",
           subject: "⚡ Bienvenue dans la Newsletter Officielle — LE GUIDE IA",
-          text: `Bonjour et bienvenue !\n\nMerci de vous être inscrit(e) à la newsletter LE GUIDE IA. Vous recevrez nos veilles IA exclusives, prompts métiers et invitations à nos sessions live.\n\nÀ très vite,\nAlfred Dah · LE GUIDE IA\nhttps://leguideai.com`,
+          text: `Bonjour et bienvenue !\n\nMerci de vous être inscrit(e) à la newsletter LE GUIDE IA. Vous recevrez nos veilles IA exclusives, prompts métiers et invitations à nos sessions live.\n\nÀ très vite,\nAlfred Dah · LE GUIDE IA\nhttps://leguideia.ai`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; line-height: 1.6; background-color: #ffffff;">
               <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #0284c7;">
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
               </div>
 
               <div style="text-align: center; margin-bottom: 24px;">
-                <a href="https://leguideai.com/bootcamp" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-weight: bold; font-size: 14px;">
+                <a href="https://leguideia.ai/bootcamp" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 12px; font-weight: bold; font-size: 14px;">
                   Découvrir les Prochains Bootcamps →
                 </a>
               </div>

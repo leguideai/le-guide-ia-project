@@ -102,7 +102,7 @@ export async function POST(req: Request) {
 
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 24px 0; text-align: center;">
           <p style="margin: 0 0 10px 0; font-weight: bold; color: #0f172a; font-size: 14px;">Besoin d'un accompagnement personnalisé ?</p>
-          <a href="https://leguideai.com/bootcamp" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; font-size: 13px;">
+          <a href="https://leguideia.ai/bootcamp" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; font-size: 13px;">
             Accéder à la plateforme LE GUIDE IA →
           </a>
         </div>

@@ -23,17 +23,17 @@ export const metadata: Metadata = {
     'Masterclass IA hebdomadaire',
   ],
   alternates: {
-    canonical: 'https://leguideai.com/masterclass',
+    canonical: 'https://leguideia.ai/masterclass',
   },
   openGraph: {
     title: 'Masterclass IA Gratuite en Direct | Le Guide IA',
     description:
       'Chaque dimanche, découvrez les meilleurs cas d\'usage et outils IA en direct avec Alfred Dah. Réservez votre place gratuite dès maintenant.',
-    url: 'https://leguideai.com/masterclass',
+    url: 'https://leguideia.ai/masterclass',
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/og-masterclass.jpg',
+        url: 'https://leguideia.ai/og-masterclass.jpg',
         width: 1200,
         height: 630,
         alt: 'Masterclass IA Gratuite en Direct — Le Guide IA',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Masterclass IA Gratuite en Direct | Le Guide IA',
     description:
       '1h30 de formation intensive et interactive en direct sur Google Meet chaque dimanche avec Alfred Dah. 100% gratuit.',
-    images: ['https://leguideai.com/og-masterclass.jpg'],
+    images: ['https://leguideia.ai/og-masterclass.jpg'],
   },
 }
 

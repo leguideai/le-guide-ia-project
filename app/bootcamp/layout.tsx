@@ -26,17 +26,17 @@ export const metadata: Metadata = {
     'IA générative formation intensive',
   ],
   alternates: {
-    canonical: 'https://leguideai.com/bootcamp',
+    canonical: 'https://leguideia.ai/bootcamp',
   },
   openGraph: {
     title: 'Bootcamp IA & Carrière Certifiant | Le Guide IA',
     description:
       'Passez de spectateur à acteur de la révolution IA. Formation accélérée en ligne avec accompagnement direct par Alfred Dah.',
-    url: 'https://leguideai.com/bootcamp',
+    url: 'https://leguideia.ai/bootcamp',
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/og-bootcamp.jpg',
+        url: 'https://leguideia.ai/og-bootcamp.jpg',
         width: 1200,
         height: 630,
         alt: 'Bootcamp IA & Carrière Certifiant — Le Guide IA',
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     title: 'Bootcamp IA & Carrière Certifiant | Le Guide IA',
     description:
       'Formation intensive en direct pour maîtriser ChatGPT, Claude, Gemini et l\'automatisation des tâches professionnelles. Certificat officiel.',
-    images: ['https://leguideai.com/og-bootcamp.jpg'],
+    images: ['https://leguideia.ai/og-bootcamp.jpg'],
   },
 }
 

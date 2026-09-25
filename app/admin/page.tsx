@@ -10335,7 +10335,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                             <button
                               type="button"
                               onClick={() => {
-                                const url = prompt("Entrez l'adresse du lien (URL) :", "https://leguideai.com")
+                                const url = prompt("Entrez l'adresse du lien (URL) :", "https://leguideia.ai")
                                 if (url) {
                                   insertFormatting(`<a href="${url}" style="color: #0284c7; text-decoration: underline; font-weight: bold;">`, '</a>', 'Texte du lien')
                                 }
@@ -10350,7 +10350,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                             <button
                               type="button"
                               onClick={() => {
-                                const url = prompt("Lien du bouton CTA :", "https://leguideai.com/bootcamp")
+                                const url = prompt("Lien du bouton CTA :", "https://leguideia.ai/bootcamp")
                                 const label = prompt("Texte du bouton :", "Découvrir le Bootcamp IA")
                                 if (url && label) {
                                   insertFormatting(
@@ -10457,7 +10457,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                             <div className="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-500 space-y-1">
                               <p className="font-bold text-slate-700">Alfred Dah · Fondateur LE GUIDE IA</p>
                               <p>Contact : <a href="mailto:alfred@leguideai.com" className="text-[#0284c7] underline">alfred@leguideai.com</a> | WhatsApp : +226 0505 0577</p>
-                              <p className="text-[10px] text-slate-400 pt-2">Vous recevez cet email car vous êtes inscrit(e) sur la plateforme leguideai.com</p>
+                              <p className="text-[10px] text-slate-400 pt-2">Vous recevez cet email car vous êtes inscrit(e) sur la plateforme leguideia.ai</p>
                             </div>
                           </div>
                         </div>
