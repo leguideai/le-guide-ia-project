@@ -7,7 +7,7 @@ import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react"
 
 import { supabase } from "@/lib/supabase"
 
-import { isCourseOpenForPublic } from "@/lib/courses-visibility"
+import { pickUpcomingCourse } from "@/lib/courses-visibility"
 import { useUserEnrollments } from "@/lib/user-enrollments"
 
 export function HeroBanner() {
@@ -32,8 +32,8 @@ export function HeroBanner() {
           .order("sequence_order", { ascending: true })
 
         if (coursesData && coursesData.length > 0) {
-          const openCourses = coursesData.filter(isCourseOpenForPublic)
-          const c = openCourses[0] || coursesData[0]
+          // Prochain bootcamp à venir, pas la cohorte en cours
+          const c = pickUpcomingCourse(coursesData)
           setActiveCourseObj(c)
           if (c.thumbnail || c.poster) setPosterUrl(c.thumbnail || c.poster)
           if (c.dates) setDates(c.dates)

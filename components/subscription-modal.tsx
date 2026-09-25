@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import { setAuthRedirect } from "@/lib/auth-redirect"
 import { 
   X, Check, Copy, Upload, ArrowRight, ShieldCheck, 
   Lock, Sparkles, CheckCircle2, AlertCircle, CreditCard, 
@@ -83,20 +84,30 @@ export function SubscriptionModal({
   const [successData, setSuccessData] = useState<any>(null)
   const [existingSubscription, setExistingSubscription] = useState<any>(null)
 
+  // Le Pass VIP est rattaché à un compte : connexion obligatoire avant de souscrire.
+  // undefined = vérification de la session en cours
+  const [sessionUser, setSessionUser] = useState<any>(undefined)
+  const authUser = user || sessionUser
+
+  useEffect(() => {
+    if (!isOpen || user) return
+    supabase.auth.getSession().then(({ data: { session } }) => setSessionUser(session?.user ?? null))
+  }, [isOpen, user])
+
   // Hydrater les données utilisateur et le pays du profil si connecté
   useEffect(() => {
     async function loadUserProfile() {
-      if (user) {
-        setEmail(user.email || "")
-        let name = user.user_metadata?.full_name || user.email?.split("@")[0] || ""
-        let phone = user.user_metadata?.whatsapp || user.user_metadata?.phone || ""
-        let userCountry = user.user_metadata?.country || user.user_metadata?.country_name || ""
+      if (authUser) {
+        setEmail(authUser.email || "")
+        let name = authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || ""
+        let phone = authUser.user_metadata?.whatsapp || authUser.user_metadata?.phone || ""
+        let userCountry = authUser.user_metadata?.country || authUser.user_metadata?.country_name || ""
 
         try {
           const { data: profile } = await supabase
             .from("profiles")
             .select("full_name, whatsapp, phone, country")
-            .eq("id", user.id)
+            .eq("id", authUser.id)
             .maybeSingle()
           if (profile) {
             if (profile.full_name) name = profile.full_name
@@ -126,12 +137,12 @@ export function SubscriptionModal({
       }
     }
     loadUserProfile()
-  }, [user])
+  }, [authUser])
 
   // Charger les prix dynamiques et le statut actuel depuis l'API
   useEffect(() => {
     if (isOpen) {
-      const emailToCheck = user?.email || email
+      const emailToCheck = authUser?.email || email
       const url = emailToCheck ? `/api/subscriptions?email=${encodeURIComponent(emailToCheck)}` : "/api/subscriptions"
       fetch(url)
         .then(res => res.json())
@@ -145,9 +156,69 @@ export function SubscriptionModal({
         })
         .catch(() => {})
     }
-  }, [isOpen, user?.email])
+  }, [isOpen, authUser?.email])
 
   if (!isOpen) return null
+
+  if (!authUser) {
+    const goToAuth = (path: "/login" | "/register-account") => {
+      const target = window.location.pathname + window.location.search
+      setAuthRedirect(target)
+      window.location.href = `${path}?redirect=${encodeURIComponent(target)}`
+    }
+
+    return (
+      <div
+        onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+        className="fixed inset-0 z-[999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
+      >
+        <div className="bg-[#0b0f19] border border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-left relative">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <X className="size-5" />
+          </button>
+
+          {sessionUser === undefined ? (
+            <div className="p-10 flex justify-center">
+              <Loader2 className="size-6 text-primary animate-spin" />
+            </div>
+          ) : (
+            <div className="p-6 sm:p-8 space-y-5">
+              <div className="size-12 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                <Lock className="size-6 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-heading text-lg sm:text-xl font-black text-white">Connexion requise</h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  Le Pass VIP est rattaché à votre espace membre. Connectez-vous ou créez votre compte gratuit
+                  pour débloquer les replays et la bibliothèque de prompts.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => goToAuth("/login")}
+                  className="w-full py-3 rounded-xl bg-primary hover:opacity-90 text-slate-950 text-sm font-black transition-opacity cursor-pointer"
+                >
+                  Se connecter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToAuth("/register-account")}
+                  className="w-full py-3 rounded-xl border border-slate-700 hover:bg-slate-800 text-white text-sm font-bold transition-colors cursor-pointer"
+                >
+                  Créer un compte gratuit
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   const currentPrice = selectedPlan === "1_year" ? pricing.price1y : pricing.price3m
   const currentPriceDisplay = selectedPlan === "1_year" ? pricing.price1yDisplay : pricing.price3mDisplay
