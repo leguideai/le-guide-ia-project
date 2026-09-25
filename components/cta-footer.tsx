@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/language-context"
 import { supabase } from "@/lib/supabase"
 import { useUserEnrollments } from "@/lib/user-enrollments"
+import { pickUpcomingCourse } from "@/lib/courses-visibility"
 
 const socials = [
   {
@@ -28,6 +29,12 @@ const socials = [
     path: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
   },
 ]
+
+// Accepte un nombre ou un texte (« 149000 », « 199 000 FCFA ») et renvoie « 199 000 FCFA »
+function formatFcfa(value: unknown): string | null {
+  const amount = Number(String(value ?? "").replace(/[^\d.]/g, ""))
+  return amount > 0 ? `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA` : null
+}
 
 function getOfferEndTimestamp(rawDate?: string | null): number | null {
   if (!rawDate || String(rawDate).trim() === "") return null
@@ -137,10 +144,10 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
           .from("courses")
           .select("*")
           .order("sequence_order", { ascending: true })
-          .limit(1)
 
+        // On promeut le prochain bootcamp, jamais une cohorte déjà démarrée ou terminée
         if (data && data.length > 0) {
-          setActiveCourse(data[0])
+          setActiveCourse(pickUpcomingCourse(data))
         }
       } catch (e) {}
     }
@@ -160,9 +167,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
     ? (activeCourse?.original_price || activeCourse?.price)
     : activeCourse?.price
 
-  const formattedPrice = typeof finalPriceToDisplay === "number"
-    ? `${finalPriceToDisplay.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} FCFA`
-    : String(finalPriceToDisplay || "149 000 FCFA")
+  const formattedPrice = formatFcfa(finalPriceToDisplay) || "149 000 FCFA"
 
   const isEnrolled = isEnrolledInCourse(activeCourse)
 
@@ -245,7 +250,7 @@ export function CtaFooter({ hideCta = false }: CtaFooterProps) {
                       ) : (
                         <>
                           {!isOfferExpired && activeCourse?.original_price && (
-                            <span className="font-bold text-white line-through opacity-75">{activeCourse.original_price} FCFA {activeCourse?.offer_badge_text ? `• Offre Standard` : ""}</span>
+                            <span className="font-bold text-white line-through opacity-75">{formatFcfa(activeCourse.original_price)} {activeCourse?.offer_badge_text ? `• Offre Standard` : ""}</span>
                           )}
                           {!isOfferExpired && activeCourse?.offer_end_date && <InlineCountdown targetEndDate={activeCourse.offer_end_date} />}
                         </>
