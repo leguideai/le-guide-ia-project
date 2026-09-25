@@ -21,6 +21,18 @@ function extractYouTubeId(urlOrId: string): string {
   return clean
 }
 
+// Un replay est soit une vidéo YouTube, soit un fichier vidéo hébergé sur Cloudflare R2
+function resolveReplaySource(replayData: any): { youtubeId: string; youtubeUrl: string; videoUrl: string } | null {
+  const source = String(replayData.videoUrl || replayData.youtubeUrl || replayData.youtubeId || "").trim()
+  if (!source) return null
+  if (/youtube\.com|youtu\.be/i.test(source) || /^[a-zA-Z0-9_-]{11}$/.test(source)) {
+    const youtubeId = extractYouTubeId(source)
+    const youtubeUrl = /^https?:\/\//i.test(source) ? source : `https://www.youtube.com/watch?v=${youtubeId}`
+    return { youtubeId, youtubeUrl, videoUrl: "" }
+  }
+  return { youtubeId: "", youtubeUrl: "", videoUrl: source }
+}
+
 const DEFAULT_REPLAYS = [
   {
     id: "rep-1",
@@ -524,15 +536,17 @@ export async function POST(req: Request) {
         } catch (e) {}
       }
 
-      const cleanYtId = extractYouTubeId(replayData.youtubeUrl || replayData.youtubeId || "")
+      const source = resolveReplaySource(replayData)
 
       if (action === "add_replay") {
+        if (!source) {
+          return NextResponse.json({ success: false, error: "Vidéo du replay manquante." }, { status: 400 })
+        }
         const newReplay = {
           id: "rep-" + Date.now(),
           title: replayData.title,
           description: replayData.description || "",
-          youtubeId: cleanYtId,
-          youtubeUrl: replayData.youtubeUrl || `https://www.youtube.com/watch?v=${cleanYtId}`,
+          ...source,
           duration: replayData.duration || "1h 30min",
           category: replayData.category || "Prompting",
           instructor: replayData.instructor || "Alfred Dah",
@@ -548,8 +562,7 @@ export async function POST(req: Request) {
             return {
               ...r,
               ...replayData,
-              youtubeId: cleanYtId || r.youtubeId,
-              youtubeUrl: replayData.youtubeUrl || (cleanYtId ? `https://www.youtube.com/watch?v=${cleanYtId}` : r.youtubeUrl),
+              ...(source || { youtubeId: r.youtubeId, youtubeUrl: r.youtubeUrl, videoUrl: r.videoUrl }),
               updated_at: new Date().toISOString()
             }
           }

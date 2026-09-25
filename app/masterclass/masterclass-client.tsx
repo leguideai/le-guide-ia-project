@@ -13,6 +13,7 @@ import {
   Tv, Award, Zap, Mail, MessageCircle, Lock, Crown
 } from "lucide-react"
 import { SubscriptionModal } from "@/components/subscription-modal"
+import { ReplayThumbnail, ReplayPlayer } from "@/components/replay-video"
 import { 
   setAuthRedirect, 
   setPendingMasterclassRegistration, 
@@ -26,6 +27,7 @@ interface ReplayItem {
   description: string
   youtubeId: string
   youtubeUrl: string
+  videoUrl?: string
   duration: string
   category: string
   instructor: string
@@ -1100,12 +1102,7 @@ export function MasterclassClient() {
                     }}
                     className="relative aspect-video bg-black/80 overflow-hidden cursor-pointer group"
                   >
-                    <img
-                      src={`https://img.youtube.com/vi/${replay.youtubeId}/hqdefault.jpg`}
-                      alt={replay.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
-                    />
+                    <ReplayThumbnail replay={replay} className="group-hover:scale-105 transition-transform duration-300" />
                     
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center group-hover:bg-black/30 transition-colors">
                       {isSubscribed ? (
@@ -1222,13 +1219,7 @@ export function MasterclassClient() {
 
             <div className="px-4">
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
-                <iframe
-                  src={`https://www.youtube.com/embed/${activeVideoModal.youtubeId}?autoplay=1&rel=0`}
-                  title={activeVideoModal.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full border-0"
-                />
+                <ReplayPlayer replay={activeVideoModal} />
               </div>
             </div>
 
