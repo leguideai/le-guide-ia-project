@@ -5,6 +5,8 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { FileUploadField } from "@/components/ui/file-upload-field"
 import { formatVideoEmbedUrl, HeroVslVideo } from "@/components/vsl-hero-video"
+import { ReplayThumbnail } from "@/components/replay-video"
+import { R2_VIDEO_ACCEPT } from "@/lib/r2-upload-client"
 import { FormationItem, FormationCategory } from "@/lib/formations-data"
 import { RESOURCE_CATEGORIES } from "@/lib/resources-data"
 import { 
@@ -255,7 +257,7 @@ export default function SuperAdminDashboard() {
   const [replayForm, setReplayForm] = useState<any>({
     title: "",
     description: "",
-    youtubeUrl: "",
+    videoUrl: "",
     duration: "1h 30min",
     category: "Prompting",
     instructor: "Alfred Dah",
@@ -1453,7 +1455,7 @@ export default function SuperAdminDashboard() {
     setReplayForm({
       title: "",
       description: "",
-      youtubeUrl: "",
+      videoUrl: "",
       duration: "1h 30min",
       category: "Prompting",
       instructor: "Alfred Dah",
@@ -1469,7 +1471,7 @@ export default function SuperAdminDashboard() {
       id: r.id,
       title: r.title || "",
       description: r.description || "",
-      youtubeUrl: r.youtubeUrl || (r.youtubeId ? `https://www.youtube.com/watch?v=${r.youtubeId}` : ""),
+      videoUrl: r.videoUrl || r.youtubeUrl || (r.youtubeId ? `https://www.youtube.com/watch?v=${r.youtubeId}` : ""),
       duration: r.duration || "1h 30min",
       category: r.category || "Prompting",
       instructor: r.instructor || "Alfred Dah",
@@ -1481,8 +1483,8 @@ export default function SuperAdminDashboard() {
 
   async function handleSaveReplay(e: React.FormEvent) {
     e.preventDefault()
-    if (!replayForm.title || !replayForm.youtubeUrl) {
-      alert("Veuillez renseigner le titre et l'URL YouTube.")
+    if (!replayForm.title || !replayForm.videoUrl) {
+      alert("Veuillez renseigner le titre et la vidéo (téléversement ou lien YouTube).")
       return
     }
     setSavingReplay(true)
@@ -1708,7 +1710,7 @@ export default function SuperAdminDashboard() {
     setReplayForm({
       title: s.title || "Replay Masterclass",
       description: s.description || "",
-      youtubeUrl: s.youtubeLiveUrl || "https://www.youtube.com/@leguideai",
+      videoUrl: s.replayUrl || (/youtu\.?be/i.test(s.youtubeLiveUrl || "") ? s.youtubeLiveUrl : ""),
       duration: s.duration || "1h 30min",
       category: "Prompting",
       instructor: s.instructor || "Alfred Dah",
@@ -5696,11 +5698,15 @@ export default function SuperAdminDashboard() {
                         />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="text-slate-600 block mb-1 font-bold">📺 Lien enregistrement replay <span className="text-slate-400 font-normal">(Optionnel — rend le replay disponible immédiatement)</span></label>
-                        <input type="url" placeholder="https://youtube.com/... ou vimeo.com/..."
+                        <FileUploadField
+                          label="📺 Replay vidéo de la session (Optionnel — rend le replay disponible immédiatement)"
                           value={sessionForm.recording_url || ""}
-                          onChange={e => setSessionForm({ ...sessionForm, recording_url: e.target.value })}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary placeholder:text-slate-400 font-mono text-[11px]"
+                          onChange={url => setSessionForm({ ...sessionForm, recording_url: url })}
+                          accept={R2_VIDEO_ACCEPT}
+                          folder="bootcamps"
+                          placeholder="Téléversez la vidéo (MP4) ou collez un lien YouTube / Vimeo"
+                          preview="none"
+                          hint="La vidéo est envoyée directement sur Cloudflare R2 (media.leguideia.ai). Pensez à enregistrer la session une fois l'envoi terminé."
                         />
                       </div>
                       {/* Support de cours PDF de la session live */}
@@ -8116,10 +8122,9 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                       label="Replay Vidéo HD (Optionnel - Laisser vide si direct à venir)"
                       value={liveForm.replay_url || ""}
                       onChange={url => setLiveForm({ ...liveForm, replay_url: url })}
-                      accept="video/*,image/*,.mp4,.webm"
-                      bucket="course-replays"
-                      folder="replays"
-                      placeholder="https://youtube.com/... ou URL du replay HD (Optionnel)"
+                      accept={R2_VIDEO_ACCEPT}
+                      folder="lives"
+                      placeholder="Téléversez la vidéo (MP4) ou collez un lien YouTube (Optionnel)"
                       preview="none"
                       hint="Optionnel. Si non fourni, le bouton de replay ne s'affichera pas dans les détails."
                     />
@@ -9905,12 +9910,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                     className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-md transition-shadow"
                   >
                     <div className="relative aspect-video bg-black overflow-hidden">
-                      <img
-                        src={`https://img.youtube.com/vi/${rep.youtubeId}/hqdefault.jpg`}
-                        alt={rep.title}
-                        className="w-full h-full object-cover"
-                        onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
-                      />
+                      <ReplayThumbnail replay={rep} />
                       <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-mono font-bold">
                         {rep.duration}
                       </span>
@@ -10335,7 +10335,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                             <button
                               type="button"
                               onClick={() => {
-                                const url = prompt("Entrez l'adresse du lien (URL) :", "https://leguideai.com")
+                                const url = prompt("Entrez l'adresse du lien (URL) :", "https://leguideia.ai")
                                 if (url) {
                                   insertFormatting(`<a href="${url}" style="color: #0284c7; text-decoration: underline; font-weight: bold;">`, '</a>', 'Texte du lien')
                                 }
@@ -10350,7 +10350,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                             <button
                               type="button"
                               onClick={() => {
-                                const url = prompt("Lien du bouton CTA :", "https://leguideai.com/bootcamp")
+                                const url = prompt("Lien du bouton CTA :", "https://leguideia.ai/bootcamp")
                                 const label = prompt("Texte du bouton :", "Découvrir le Bootcamp IA")
                                 if (url && label) {
                                   insertFormatting(
@@ -10457,7 +10457,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                             <div className="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-500 space-y-1">
                               <p className="font-bold text-slate-700">Alfred Dah · Fondateur LE GUIDE IA</p>
                               <p>Contact : <a href="mailto:alfred@leguideai.com" className="text-[#0284c7] underline">alfred@leguideai.com</a> | WhatsApp : +226 0505 0577</p>
-                              <p className="text-[10px] text-slate-400 pt-2">Vous recevez cet email car vous êtes inscrit(e) sur la plateforme leguideai.com</p>
+                              <p className="text-[10px] text-slate-400 pt-2">Vous recevez cet email car vous êtes inscrit(e) sur la plateforme leguideia.ai</p>
                             </div>
                           </div>
                         </div>
@@ -12261,7 +12261,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                           )}
 
                           <div className="p-2 rounded-lg bg-white border border-slate-200/90 shadow-xs text-[10px] font-mono text-slate-500 truncate">
-                            {isDirect ? "📁 Fichier direct MP4/Supabase" : "🔴 YouTube Embed / Lien"} : {v.video_url}
+                            {isDirect ? "📁 Fichier vidéo direct (R2 / MP4)" : "🔴 YouTube Embed / Lien"} : {v.video_url}
                           </div>
                         </div>
 
@@ -12407,11 +12407,10 @@ NOTIFY pgrst, 'reload schema';`}</pre>
 
                 <div className="space-y-1.5">
                   <FileUploadField
-                    label="Lien Vidéo YouTube OU Téléversement MP4 Supabase *"
+                    label="Lien Vidéo YouTube OU Téléversement MP4 *"
                     value={vslForm.video_url}
                     onChange={url => setVslForm({ ...vslForm, video_url: url })}
-                    accept="video/*,.mp4,.webm"
-                    bucket="resources-files"
+                    accept={R2_VIDEO_ACCEPT}
                     folder="vsl"
                     placeholder="https://www.youtube.com/watch?v=... ou téléversez un fichier MP4"
                     preview="none"
@@ -13003,7 +13002,7 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                     <h3 className="font-heading text-sm sm:text-base font-bold text-slate-800">
                       {editingReplay ? "Modifier le Replay Masterclass" : "Ajouter un Replay / Vidéo Masterclass"}
                     </h3>
-                    <p className="text-[11px] text-slate-500">Lien YouTube intégré sans consommer d'espace disque</p>
+                    <p className="text-[11px] text-slate-500">Vidéo hébergée sur Cloudflare R2 ou lien YouTube</p>
                   </div>
                 </div>
                 <button
@@ -13028,18 +13027,16 @@ NOTIFY pgrst, 'reload schema';`}</pre>
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Lien YouTube ou ID de la Vidéo *</label>
-                  <input
-                    type="text"
-                    required
-                    value={replayForm.youtubeUrl}
-                    onChange={e => setReplayForm({ ...replayForm, youtubeUrl: e.target.value })}
-                    placeholder="Ex: https://www.youtube.com/watch?v=XXXXX ou https://youtu.be/XXXXX"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-none focus:border-primary font-mono text-[11px]"
-                  />
-                  <p className="text-[10px] text-slate-400">Le système extrait automatiquement l'identifiant pour la lecture fluide.</p>
-                </div>
+                <FileUploadField
+                  label="Vidéo du replay *"
+                  value={replayForm.videoUrl || ""}
+                  onChange={url => setReplayForm({ ...replayForm, videoUrl: url })}
+                  accept={R2_VIDEO_ACCEPT}
+                  folder="masterclasses"
+                  placeholder="Téléversez la vidéo (MP4) ou collez un lien YouTube"
+                  preview="none"
+                  hint="Vidéo envoyée directement sur Cloudflare R2. Un lien YouTube (watch, youtu.be, live) reste accepté."
+                />
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1">

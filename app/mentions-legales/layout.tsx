@@ -4,7 +4,7 @@ export const metadata: Metadata = {
   title: 'Mentions Légales',
   description: 'Mentions légales et informations éditoriales de la plateforme Le Guide IA.',
   alternates: {
-    canonical: 'https://leguideai.com/mentions-legales',
+    canonical: 'https://leguideia.ai/mentions-legales',
   },
   robots: {
     index: true,

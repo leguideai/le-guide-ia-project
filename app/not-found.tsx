@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
 export default function NotFound() {
-  redirect("https://www.leguideai.com/#inscription")
+  redirect("/#inscription")
 }

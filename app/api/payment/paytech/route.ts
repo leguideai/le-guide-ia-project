@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.PAYTECH_API_KEY?.trim()
     const apiSecret = process.env.PAYTECH_API_SECRET?.trim()
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideai.com")
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://leguideia.ai")
 
     if (!apiKey || !apiSecret) {
       console.warn("PayTech API keys not configured. Simulating PayTech redirect URL.")
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
     const ipnUrl = baseUrl.startsWith("https://")
       ? `${baseUrl}/api/webhooks/paytech`
-      : "https://leguideai.com/api/webhooks/paytech"
+      : "https://leguideia.ai/api/webhooks/paytech"
 
     const createPaytechRequest = (envMode: string) => JSON.stringify({
       item_name: courseTitle,

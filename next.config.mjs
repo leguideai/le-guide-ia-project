@@ -13,6 +13,14 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // Domaine canonique unique pour le référencement : www.leguideia.ai → leguideia.ai
+      // (/api exclu pour ne pas casser les webhooks de paiement déjà configurés sur www)
+      {
+        source: '/:path((?!api/).*)',
+        has: [{ type: 'host', value: 'www.leguideia.ai' }],
+        destination: 'https://leguideia.ai/:path',
+        permanent: true,
+      },
       {
         source: '/pricing',
         destination: '/tarifs',

@@ -1,8 +1,14 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Upload, X, ExternalLink, FileImage, FileText, Film, AlertCircle } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { isVideoFile, uploadVideoToR2, type R2UploadProgress } from "@/lib/r2-upload-client"
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(2)} Go`
+  return `${Math.round(bytes / 1024 ** 2)} Mo`
+}
 
 interface FileUploadFieldProps {
   label: string
@@ -31,7 +37,19 @@ export function FileUploadField({
 }: FileUploadFieldProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [videoProgress, setVideoProgress] = useState<R2UploadProgress | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+
+  // Empêche de fermer l'onglet par erreur pendant l'envoi d'une vidéo (peut durer plusieurs minutes)
+  useEffect(() => {
+    if (!videoProgress) return
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener("beforeunload", warn)
+    return () => window.removeEventListener("beforeunload", warn)
+  }, [videoProgress])
+
+  useEffect(() => () => abortRef.current?.abort(), [])
 
   const isImage = accept.startsWith("image")
   const isPdf = accept.includes("pdf") || accept.includes("application")
@@ -45,6 +63,28 @@ export function FileUploadField({
 
     setError(null)
     setUploading(true)
+
+    // Les vidéos partent directement sur Cloudflare R2, le reste sur Supabase Storage
+    if (isVideoFile(file)) {
+      const controller = new AbortController()
+      abortRef.current = controller
+      setVideoProgress({ loaded: 0, total: file.size, percent: 0 })
+      try {
+        const url = await uploadVideoToR2(file, { folder, onProgress: setVideoProgress, signal: controller.signal })
+        onChange(url)
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.error("R2 video upload error:", err)
+          setError(err?.message || "Erreur lors de l'envoi de la vidéo.")
+        }
+      } finally {
+        abortRef.current = null
+        setVideoProgress(null)
+        setUploading(false)
+        if (inputRef.current) inputRef.current.value = ""
+      }
+      return
+    }
 
     const targetBucket = bucket || "resources-files"
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
@@ -91,7 +131,7 @@ export function FileUploadField({
         data = JSON.parse(resText)
       } catch (jsonErr) {
         if (res.status === 413 || resText.toLowerCase().includes("too large") || resText.startsWith("Request En")) {
-          throw new Error("Ce fichier dépasse la limite autorisée par le serveur Vercel (4.5MB max). Pour une vidéo longue, nous vous conseillons de coller son lien YouTube.")
+          throw new Error("Ce fichier dépasse la limite autorisée par le serveur Vercel (4.5MB max).")
         }
         throw new Error(`Erreur serveur (${res.status}) : ${resText.slice(0, 100)}`)
       }
@@ -128,7 +168,7 @@ export function FileUploadField({
         {uploading ? (
           <>
             <div className="size-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
-            <span>Téléversement direct vers Supabase...</span>
+            <span>{videoProgress ? `Envoi de la vidéo vers Cloudflare R2… ${videoProgress.percent} %` : "Téléversement direct vers Supabase..."}</span>
           </>
         ) : (
           <>
@@ -145,6 +185,25 @@ export function FileUploadField({
           className="hidden"
         />
       </label>
+
+      {/* Progression de l'envoi vidéo */}
+      {videoProgress && (
+        <div className="space-y-1.5">
+          <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+            <div className="h-full bg-primary transition-[width] duration-300" style={{ width: `${videoProgress.percent}%` }} />
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-slate-500">
+            <span>{formatBytes(videoProgress.loaded)} / {formatBytes(videoProgress.total)} — ne fermez pas cette page</span>
+            <button
+              type="button"
+              onClick={() => abortRef.current?.abort()}
+              className="font-bold text-red-500 hover:text-red-600 cursor-pointer"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* URL Input */}
       <div className="relative flex items-center gap-2">

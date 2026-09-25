@@ -23,17 +23,17 @@ export const metadata: Metadata = {
     'Bibliothèque prompts IA',
   ],
   alternates: {
-    canonical: 'https://leguideai.com/ressources',
+    canonical: 'https://leguideia.ai/ressources',
   },
   openGraph: {
     title: 'Ressources & Prompts IA Gratuits | Le Guide IA',
     description:
       'Modèles de Business Plans adaptés aux secteurs porteurs et prompts IA optimisés prêts à employer.',
-    url: 'https://leguideai.com/ressources',
+    url: 'https://leguideia.ai/ressources',
     siteName: 'Le Guide IA',
     images: [
       {
-        url: 'https://leguideai.com/og-image.jpg',
+        url: 'https://leguideia.ai/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Ressources & Prompts IA – Le Guide IA',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: 'Ressources & Prompts IA Gratuits | Le Guide IA',
     description:
       'Téléchargez des modèles de Business Plans et copiez des prompts IA optimisés pour booster votre productivité.',
-    images: ['https://leguideai.com/og-image.jpg'],
+    images: ['https://leguideia.ai/og-image.jpg'],
   },
 }
 

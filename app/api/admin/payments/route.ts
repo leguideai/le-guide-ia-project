@@ -212,7 +212,7 @@ export async function POST(req: Request) {
                 <h2 style="color: #16a34a;">Bonjour ${fullName},</h2>
                 <p>Vous avez été officiellement inscrit(e) au Bootcamp <strong>${courseTitle || courseSlug}</strong> par l'équipe d'administration LE GUIDE IA.</p>
                 <p>Vos accès aux replays, ressources et sessions en direct sont désormais <strong>100% ACTIFS</strong> sur votre espace membre (associé à l'adresse <code>${emailClean}</code>).</p>
-                <a href="https://leguideai.com/dashboard" style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 16px;">
+                <a href="https://leguideia.ai/dashboard" style="background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 16px;">
                   Accéder à mon Espace Membre →
                 </a>
               </div>
@@ -441,7 +441,7 @@ export async function POST(req: Request) {
                 </div>
 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://leguideai.com/dashboard" style="background-color: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);">
+                  <a href="https://leguideia.ai/dashboard" style="background-color: #16a34a; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);">
                     Accéder à mon Espace Membre →
                   </a>
                 </div>

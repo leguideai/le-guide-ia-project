@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { resourcesData, ResourceItem, RESOURCE_CATEGORIES } from "@/lib/resources-data"
+import { ReplayThumbnail, ReplayPlayer, DirectVideoPlayer, isDirectVideoUrl } from "@/components/replay-video"
 import { 
   countries, Country, getCountryFlag, PHONE_RULES, 
   PRIORITY_COUNTRY_CODES, formatPhoneNumber, parsePhoneNumber,
@@ -2348,13 +2349,17 @@ export default function DashboardPage() {
 
                               return (
                                 <div className="relative aspect-video rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-md">
-                                  <iframe
-                                    src={embedUrl}
-                                    title={activeLesson?.title || "Session"}
-                                    className="w-full h-full border-none"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                  />
+                                  {isDirectVideoUrl(embedUrl) ? (
+                                    <DirectVideoPlayer src={embedUrl} />
+                                  ) : (
+                                    <iframe
+                                      src={embedUrl}
+                                      title={activeLesson?.title || "Session"}
+                                      className="w-full h-full border-none"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                    />
+                                  )}
                                 </div>
                               )
                             })()
@@ -2828,12 +2833,7 @@ export default function DashboardPage() {
                           }}
                           className="relative aspect-video bg-black overflow-hidden cursor-pointer group"
                         >
-                          <img
-                            src={`https://img.youtube.com/vi/${replay.youtubeId}/hqdefault.jpg`}
-                            alt={replay.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e: any) => { e.currentTarget.src = "/Logo avatar.png" }}
-                          />
+                          <ReplayThumbnail replay={replay} className="group-hover:scale-105 transition-transform duration-300" />
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
                             {subscriptionData?.isSubscribed ? (
                               <div className="size-11 rounded-full bg-primary text-slate-950 flex items-center justify-center pl-0.5 shadow-lg group-hover:scale-110 transition-transform">
@@ -2926,7 +2926,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Modal Lecteur Replay YouTube */}
+            {/* Modal Lecteur Replay (YouTube ou vidéo R2) */}
             {activeMasterclassReplayModal && (
               <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
                 <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl space-y-4">
@@ -2945,13 +2945,7 @@ export default function DashboardPage() {
 
                   <div className="px-4">
                     <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${activeMasterclassReplayModal.youtubeId}?autoplay=1&rel=0`}
-                        title={activeMasterclassReplayModal.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full border-0"
-                      />
+                      <ReplayPlayer replay={activeMasterclassReplayModal} />
                     </div>
                   </div>
 
